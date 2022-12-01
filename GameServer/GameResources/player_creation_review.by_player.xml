@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player_creation_review.by_player">
+  <request method="GET" url="player_creation_reviews/by_player.xml" login_required="true">
+    <param name="player_id" type="integer" required="false"/>
+    <param name="page" type="integer" required="false" default="1"/>
+    <param name="per_page" type="integer" required="false" default="25"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="reviews" type="anchor">
+      <attribute name="page" type="integer"/>
+      <attribute name="row_end" type="integer"/>
+      <attribute name="row_start" type="integer"/>
+      <attribute name="total" type="integer"/>
+      <attribute name="total_pages" type="integer"/>
+      <vector name="review" type="anchor">
+        <attribute name="content" type="string"/>
+        <attribute name="id" type="integer"/>
+        <attribute name="mine" type="string"/>
+        <attribute name="player_creation_id" type="integer"/>
+        <attribute name="player_creation_name" type="string"/>
+        <attribute name="player_creation_username" type="string"/>
+        <attribute name="player_creation_associated_item_ids" type="string"/>
+        <attribute name="player_creation_level_mode" type="string"/>
+        <attribute name="player_creation_is_team_pick" type="string"/>
+        <attribute name="player_id" type="integer"/>
+        <attribute name="rated_by_me" type="string"/>
+        <attribute name="rating_down" type="string"/>
+        <attribute name="rating_up" type="string"/>
+        <attribute name="username" type="string"/>
+        <attribute name="tags" type="string"/>
+      </vector>
+    </element>
+  </response>
+</resource>

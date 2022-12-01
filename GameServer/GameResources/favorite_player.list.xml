@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="favorite_player.list">
+  <request method="GET" url="favorite_players.xml" login_required="true">
+    <param name="player_id_or_username" type="string" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="favorite_players" type="anchor">
+      <attribute name="total" type="integer"/>
+      <vector name="favorite_player" type="anchor">
+        <attribute name="favorite_player_id" type="integer"/>
+        <attribute name="hearted_by_me" type="integer"/>
+        <attribute name="hearts" type="integer"/>
+        <attribute name="id" type="integer"/>
+        <attribute name="quote" type="string"/>
+        <attribute name="total_tracks" type="integer"/>
+        <attribute name="username" type="string"/>
+      </vector>
+    </element>
+  </response>
+</resource>

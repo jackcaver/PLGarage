@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player_creation_bookmark.tally">
+  <request method="GET" url="player_creation_bookmarks/tally.xml" login_required="true"/>
+  <response name="response" type="anchor">
+    <element name="player_creations" type="anchor">
+      <attribute name="total" type="integer"/>
+    </element>
+  </response>
+</resource>

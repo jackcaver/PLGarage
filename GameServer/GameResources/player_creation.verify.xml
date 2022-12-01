@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player_creation.verify">
+  <request method="POST" url="player_creations/verify.xml" login_required="true">
+    <param name="id" type="array" required="false"/>
+    <param name="offline_id" type="array" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_creations" type="anchor">
+      <attribute name="total" type="integer"/>
+      <vector name="player_creation" type="anchor">
+        <attribute name="id" type="integer"/>
+        <attribute name="type" type="string"/>
+        <attribute name="suggested_action" type="string"/>
+      </vector>
+    </element>
+  </response>
+</resource>

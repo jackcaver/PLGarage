@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="grief_report.create">
+  <request method="POST" url="grief_report.xml" login_required="true">
+    <param name="grief_report[context]" type="string" required="true"/>
+    <param name="grief_report[reason]" type="string" required="true"/>
+    <param name="grief_report[comments]" type="string" required="false"/>
+    <param name="grief_report[preview]" type="file" required="true"/>
+    <param name="grief_report[bad_rect_data][top]" type="string" required="true"/>
+    <param name="grief_report[bad_rect_data][bottom]" type="string" required="true"/>
+    <param name="grief_report[data]" type="file" required="true"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

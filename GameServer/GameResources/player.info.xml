@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player.info">
+  <request method="GET" url="players/:id/info.xml" login_required="true">
+    <param name="id" type="integer" required="true"/>
+    <param name="platform" type="string" required="false" options="PS2,PSP,PS3,WEB,PSV"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="player" type="PlayerPresenter">
+      <attribute name="id" type="integer"/>
+      <attribute name="username" type="string"/>
+      <attribute name="hearts" type="integer"/>
+      <attribute name="presence" type="string"/>
+      <attribute name="player_creation_quota" type="string"/>
+      <attribute name="created_at" type="string"/>
+      <attribute name="updated_at" type="string"/>
+      <attribute name="quote" type="string"/>
+      <attribute name="city" type="string"/>
+      <attribute name="state" type="string"/>
+      <attribute name="province" type="string"/>
+      <attribute name="country" type="string"/>
+      <attribute name="hearted_by_me" type="string"/>
+      <attribute name="total_tracks" type="integer"/>
+      <attribute name="rank" type="integer"/>
+      <attribute name="points" type="integer"/>
+      <attribute name="online_races" type="integer"/>
+      <attribute name="online_wins" type="integer"/>
+      <attribute name="online_finished" type="integer"/>
+      <attribute name="online_forfeit" type="integer"/>
+      <attribute name="online_disconnected" type="integer"/>
+      <attribute name="win_streak" type="integer"/>
+      <attribute name="longest_win_streak" type="integer"/>
+      <attribute name="online_races_this_week" type="integer"/>
+      <attribute name="online_wins_this_week" type="integer"/>
+      <attribute name="online_finished_this_week" type="integer"/>
+      <attribute name="online_races_last_week" type="integer"/>
+      <attribute name="online_wins_last_week" type="integer"/>
+      <attribute name="online_finished_last_week" type="integer"/>
+    </element>
+  </response>
+</resource>

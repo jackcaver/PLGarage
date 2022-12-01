@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="planet.profile">
+  <request method="GET" url="planet/profile.xml" login_required="true">
+    <param name="player_id" type="integer" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="planet" type="anchor">
+      <attribute name="id" type="integer"/>
+      <attribute name="name" type="string"/>
+      <attribute name="username" type="string"/>
+      <attribute name="player_id" type="integer"/>
+      <element name="tracks" type="anchor">
+        <attribute name="total" type="integer"/>
+        <vector name="track" type="anchor">
+          <attribute name="ai" type="boolean"/>
+          <attribute name="associated_item_ids" type="string"/>
+          <attribute name="auto_reset" type="boolean"/>
+          <attribute name="battle_friendly_fire" type="boolean"/>
+          <attribute name="battle_kill_count" type="integer"/>
+          <attribute name="battle_time_limit" type="integer"/>
+          <attribute name="coolness" type="float"/>
+          <attribute name="created_at" type="datetime"/>
+          <attribute name="description" type="string"/>
+          <attribute name="difficulty" type="string"/>
+          <attribute name="dlc_keys" type="string"/>
+          <attribute name="downloads" type="integer"/>
+          <attribute name="downloads_last_week" type="integer"/>
+          <attribute name="downloads_this_week" type="integer"/>
+          <attribute name="first_published" type="datetime"/>
+          <attribute name="hearts" type="integer"/>
+          <attribute name="id" type="integer"/>
+          <attribute name="is_remixable" type="boolean"/>
+          <attribute name="is_team_pick" type="boolean"/>
+          <attribute name="last_published" type="datetime"/>
+          <attribute name="level_mode" type="integer"/>
+          <attribute name="longest_drift" type="float"/>
+          <attribute name="longest_hang_time" type="float"/>
+          <attribute name="name" type="string"/>
+          <attribute name="num_laps" type="integer"/>
+          <attribute name="num_racers" type="integer"/>
+          <attribute name="platform" type="string"/>
+          <attribute name="player_creation_type" type="string"/>
+          <attribute name="player_id" type="integer"/>
+          <attribute name="race_type" type="string"/>
+          <attribute name="races_finished" type="integer"/>
+          <attribute name="races_started" type="integer"/>
+          <attribute name="races_started_this_month" type="integer"/>
+          <attribute name="races_started_this_week" type="integer"/>
+          <attribute name="races_won" type="integer"/>
+          <attribute name="rank" type="integer"/>
+          <attribute name="rating_down" type="integer"/>
+          <attribute name="rating_up" type="integer"/>
+          <attribute name="scoreboard_mode" type="integer"/>
+          <attribute name="speed" type="string"/>
+          <attribute name="tags" type="string"/>
+          <attribute name="track_theme" type="integer"/>
+          <attribute name="unique_racer_count" type="integer"/>
+          <attribute name="updated_at" type="datetime"/>
+          <attribute name="user_tags" type="string"/>
+          <attribute name="username" type="string"/>
+          <attribute name="version" type="integer"/>
+          <attribute name="views" type="integer"/>
+          <attribute name="views_last_week" type="integer"/>
+          <attribute name="views_this_week" type="integer"/>
+          <attribute name="votes" type="integer"/>
+          <attribute name="weapon_set" type="string"/>
+        </vector>
+      </element>
+    </element>
+  </response>
+</resource>

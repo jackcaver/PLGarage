@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="single_player_game.create_finish_and_post_stats">
+  <request method="POST" url="single_player_games/create_finish_and_post_stats.xml" login_required="true">
+    <param name="game[game_type]" type="string" required="true" options="OVERALL,RACE,BATTLE,BUBBLE_CHASE,SCORE_ATTACK"/>
+    <param name="game[track_idx]" type="integer" required="true"/>
+    <param name="game[game_state]" type="string" required="false" options="PENDING,ACTIVE,FINISHED,QUIT,QUIT_ON,CONCEDE,CONCEDE_ON,DISCONNECTED,DISCONNECTED_ON,DIVERGENCE,CANCELLED,FORFEIT,FORFEIT_ON,FRIENDLY_QUIT,FRIENDLY_QUIT_ON,PROCESSED" default="FINISHED"/>
+    <param name="game[host_player_id]" type="integer" required="false"/>
+    <param name="game[platform]" type="string" required="false" options="PS2,PSP,PS3,WEB,PSV"/>
+    <param name="game[name]" type="string" required="false"/>
+    <param name="game[is_ranked]" type="boolean" required="false" default="true"/>
+    <param name="game_player[player_id]" type="integer" required="false"/>
+    <param name="game_player[team_id]" type="integer" required="false"/>
+    <param name="game_player[game_state]" type="string" required="false" options="PENDING,ACTIVE,FINISHED,QUIT,QUIT_ON,CONCEDE,CONCEDE_ON,DISCONNECTED,DISCONNECTED_ON,DIVERGENCE,CANCELLED,FORFEIT,FORFEIT_ON,FRIENDLY_QUIT,FRIENDLY_QUIT_ON,PROCESSED" default="FINISHED"/>
+    <param name="game_player_stats[is_complete]" type="boolean" required="false" default="true"/>
+    <param name="game_player_stats[stat_1]" type="integer" required="false"/>
+    <param name="game_player_stats[stat_2]" type="integer" required="false"/>
+    <param name="game_player_stats[score]" type="float" required="false"/>
+    <param name="game_player_stats[is_winner]" type="integer" required="false"/>
+    <param name="game_player_stats[finish_place]" type="integer" required="false"/>
+    <param name="game_player_stats[finish_time]" type="float" required="false"/>
+    <param name="game_player_stats[laps_completed]" type="integer" required="false"/>
+    <param name="game_player_stats[points]" type="float" required="false"/>
+    <param name="game_player_stats[volatility]" type="float" required="false"/>
+    <param name="game_player_stats[deviation]" type="float" required="false"/>
+    <param name="game_player_stats[playgroup_size]" type="integer" required="false"/>
+    <param name="game_player_stats[num_kills]" type="integer" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="game" type="anchor">
+      <attribute name="id" type="integer"/>
+      <attribute name="game_player_id" type="integer"/>
+      <attribute name="game_player_stats_id" type="integer"/>
+    </element>
+  </response>
+</resource>

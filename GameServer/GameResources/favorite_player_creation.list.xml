@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="favorite_player_creation.list">
+  <request method="GET" url="favorite_player_creations.xml" login_required="true">
+    <param name="player_id_or_username" type="string" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="favorite_player_creations" type="anchor">
+      <attribute name="total" type="integer"/>
+      <vector name="favorite_player_creation" type="anchor">
+        <attribute name="player_creation_id" type="integer"/>
+        <attribute name="player_creation_name" type="string"/>
+      </vector>
+    </element>
+  </response>
+</resource>

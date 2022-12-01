@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player_profile.view">
+  <request method="GET" url="player_profile/view.xml">
+    <param name="player_id" type="integer" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_profile" type="anchor">
+      <attribute name="player_id" type="integer"/>
+      <attribute name="quote" type="string"/>
+      <attribute name="username" type="string"/>
+    </element>
+  </response>
+</resource>

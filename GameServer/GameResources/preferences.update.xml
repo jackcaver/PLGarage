@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="preferences.update">
+  <request method="PUT" url="preferences.xml">
+    <param name="preference[language_code]" type="string" required="false" options="en-us,en-gb,es,es-mx,da,de,fi,fr,it,ja,ko,nl,pt,pt-br,ru,sv,no,zh-cn,zh-tw,pl"/>
+    <param name="preference[timezone]" type="string" required="false"/>
+    <param name="preference[region_code]" type="string" required="false" options="scea,scee,scej,sceasia,scek,sceeuk,scesa"/>
+    <param name="preference[domain]" type="string" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="preferences" type="Hash">
+      <attribute name="language_code" type="string"/>
+      <attribute name="domain" type="string"/>
+      <attribute name="ip_address" type="string"/>
+      <attribute name="region_code" type="string"/>
+      <attribute name="timezone" type="string"/>
+    </element>
+  </response>
+</resource>

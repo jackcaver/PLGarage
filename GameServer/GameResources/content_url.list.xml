@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="content_url.list">
+  <request method="GET" url="content_urls.xml"/>
+  <response name="response" type="anchor">
+    <element name="content_urls" type="anchor">
+      <attribute name="total" type="integer"/>
+      <attribute name="server_uuid" type="string"/>
+      <vector name="content_url" type="string">
+        <attribute name="formats" type="string"/>
+        <attribute name="name" type="string"/>
+      </vector>
+    </element>
+    <element name="magic_moment" type="anchor">
+      <attribute name="scea" type="boolean"/>
+      <attribute name="scee" type="boolean"/>
+      <attribute name="sceasia" type="boolean"/>
+      <attribute name="scej" type="boolean"/>
+    </element>
+  </response>
+</resource>

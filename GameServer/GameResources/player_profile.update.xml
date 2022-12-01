@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player_profile.update">
+  <request method="PUT" url="player_profile.xml" login_required="true">
+    <param name="player_profile[first_name]" type="string" required="false" maxlength="30"/>
+    <param name="player_profile[middle_name]" type="string" required="false" maxlength="30"/>
+    <param name="player_profile[last_name]" type="string" required="false" maxlength="30"/>
+    <param name="player_profile[addr_line1]" type="string" required="false" maxlength="50"/>
+    <param name="player_profile[addr_line2]" type="string" required="false" maxlength="50"/>
+    <param name="player_profile[addr_line3]" type="string" required="false" maxlength="50"/>
+    <param name="player_profile[city]" type="string" required="false" maxlength="50"/>
+    <param name="player_profile[state]" type="string" required="false" maxlength="2"/>
+    <param name="player_profile[postal_code]" type="string" required="false" maxlength="10"/>
+    <param name="player_profile[province]" type="string" required="false" maxlength="50"/>
+    <param name="player_profile[country]" type="string" required="false" maxlength="50"/>
+    <param name="player_profile[birthdate]" type="datetime" required="false"/>
+    <param name="player_profile[email]" type="string" required="false" maxlength="200"/>
+    <param name="player_profile[email_confirmation]" type="string" required="false" maxlength="200"/>
+    <param name="player_profile[cell_phone]" type="string" required="false" maxlength="20"/>
+    <param name="player_profile[quote]" type="string" required="false" maxlength="400"/>
+    <param name="player_profile[im_yahoo]" type="string" required="false" maxlength="33"/>
+    <param name="player_profile[im_aol]" type="string" required="false" maxlength="16"/>
+    <param name="player_profile[im_msn]" type="string" required="false" maxlength="200"/>
+    <param name="player_profile[im_icq]" type="string" required="false" maxlength="200"/>
+    <param name="player_profile[team_id]" type="integer" required="false"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

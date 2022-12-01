@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="photo.create">
+  <request method="POST" url="photos/create.xml" login_required="true">
+    <param name="photo[name]" type="string" required="true"/>
+    <param name="photo[description]" type="string" required="false"/>
+    <param name="photo[platform]" type="string" required="false"/>
+    <param name="photo[associated_usernames]" type="string" required="false"/>
+    <param name="photo[associated_coordinates]" type="string" required="false"/>
+    <param name="photo[track_id]" type="integer" required="false"/>
+    <param name="photo[data]" type="file" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_creation" type="anchor">
+      <attribute name="id" type="integer"/>
+    </element>
+  </response>
+</resource>

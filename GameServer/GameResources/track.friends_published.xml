@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="track.friends_published">
+  <request method="GET" url="tracks/friends_published.xml" login_required="true">
+    <param name="platform" type="string" required="false" options="PS2,PSP,PS3,WEB,PSV"/>
+    <param name="filters[username]" type="array" required="true"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_creations" type="anchor">
+      <attribute name="friends_published" type="boolean"/>
+    </element>
+  </response>
+</resource>

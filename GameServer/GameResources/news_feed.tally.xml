@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="news_feed.tally">
+  <request method="GET" url="news_feed/tally.xml" login_required="true"/>
+  <response name="response" type="anchor">
+    <element name="activities" type="anchor">
+      <attribute name="total" type="integer"/>
+    </element>
+  </response>
+</resource>

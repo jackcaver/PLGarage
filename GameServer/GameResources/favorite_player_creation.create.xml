@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="favorite_player_creation.create">
+  <request method="POST" url="favorite_player_creations.xml" login_required="true">
+    <param name="player_creation_id" type="integer" required="true"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

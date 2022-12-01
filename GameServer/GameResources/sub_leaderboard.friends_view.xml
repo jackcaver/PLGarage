@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="sub_leaderboard.friends_view">
+  <request method="GET" url="sub_leaderboards/friends_view.xml" login_required="true">
+    <param name="sub_group_id" type="integer" required="true"/>
+    <param name="sub_key_id" type="integer" required="true"/>
+    <param name="type" type="string" required="false" options="LIFETIME,DAILY,WEEKLY,MONTHLY,LAST_WEEK,LAST_MONTH" default="LIFETIME"/>
+    <param name="platform" type="string" required="false" options="PS2,PSP,PS3,WEB,PSV"/>
+    <param name="page" type="integer" required="false" default="1"/>
+    <param name="per_page" type="integer" required="false" default="10"/>
+    <param name="column_page" type="integer" required="false" default="1"/>
+    <param name="cols_per_page" type="integer" required="false" default="9"/>
+    <param name="sort_column" type="string" required="false" default="finish_time"/>
+    <param name="sort_order" type="string" required="false" options="asc,desc" default="asc"/>
+    <param name="limit" type="integer" required="false"/>
+    <param name="playgroup_size" type="integer" required="false" default="1"/>
+    <param name="filters[username]" type="array" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="my_stats" type="anchor">
+      <attribute name="created_at" type="datetime"/>
+      <attribute name="id" type="integer"/>
+      <attribute name="platform" type="string"/>
+      <attribute name="player_id" type="integer"/>
+      <attribute name="playgroup_size" type="integer"/>
+      <attribute name="rank" type="integer"/>
+      <attribute name="sub_group_id" type="integer"/>
+      <attribute name="sub_key_id" type="integer"/>
+      <attribute name="updated_at" type="datetime"/>
+      <attribute name="username" type="string"/>
+      <attribute name="score" type="float"/>
+      <attribute name="finish_time" type="float"/>
+    </element>
+    <element name="friends_leaderboard" type="anchor">
+      <attribute name="page" type="integer"/>
+      <attribute name="row_end" type="integer"/>
+      <attribute name="row_start" type="integer"/>
+      <attribute name="sub_group_id" type="integer"/>
+      <attribute name="sub_key_id" type="integer"/>
+      <attribute name="playgroup_size" type="integer"/>
+      <attribute name="total" type="integer"/>
+      <attribute name="total_pages" type="integer"/>
+      <attribute name="type" type="string"/>
+      <vector name="player" type="anchor">
+        <attribute name="created_at" type="datetime"/>
+        <attribute name="id" type="integer"/>
+        <attribute name="platform" type="string"/>
+        <attribute name="player_id" type="integer"/>
+        <attribute name="playgroup_size" type="integer"/>
+        <attribute name="rank" type="integer"/>
+        <attribute name="sub_group_id" type="integer"/>
+        <attribute name="sub_key_id" type="integer"/>
+        <attribute name="updated_at" type="datetime"/>
+        <attribute name="username" type="string"/>
+        <attribute name="score" type="float"/>
+        <attribute name="finish_time" type="float"/>
+      </vector>
+    </element>
+  </response>
+</resource>

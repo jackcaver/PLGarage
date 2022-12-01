@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player_comment.list">
+  <request method="GET" url="player_comments.xml" login_required="true">
+    <param name="page" type="integer" required="false" default="1"/>
+    <param name="per_page" type="integer" required="false" default="30"/>
+    <param name="sort_column" type="string" required="false" options="id,author_id,player_id,author_username,username,body,platform,rating_up,rating_down,moderation_status,created_at,updated_at" default="created_at"/>
+    <param name="sort_order" type="string" required="false" options="asc,desc" default="asc"/>
+    <param name="limit" type="integer" required="false"/>
+    <param name="platform" type="string" required="false"/>
+    <param name="filters[author_id]" type="integer" required="false"/>
+    <param name="filters[player_id]" type="integer" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_comments" type="anchor">
+      <attribute name="page" type="integer"/>
+      <attribute name="row_end" type="integer"/>
+      <attribute name="row_start" type="integer"/>
+      <attribute name="total" type="integer"/>
+      <attribute name="total_pages" type="integer"/>
+      <vector name="player_comment" type="anchor">
+        <attribute name="body" type="string"/>
+        <attribute name="created_at" type="datetime"/>
+        <attribute name="id" type="integer"/>
+        <attribute name="platform" type="string"/>
+        <attribute name="author_id" type="integer"/>
+        <attribute name="player_id" type="integer"/>
+        <attribute name="updated_at" type="datetime"/>
+        <attribute name="author_username" type="string"/>
+        <attribute name="username" type="string"/>
+        <attribute name="rating_up" type="integer"/>
+        <attribute name="rating_down" type="integer"/>
+        <attribute name="rated_by_me" type="boolean"/>
+      </vector>
+    </element>
+  </response>
+</resource>

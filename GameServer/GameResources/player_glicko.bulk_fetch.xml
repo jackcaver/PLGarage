@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player_glicko.bulk_fetch">
+  <request method="GET" url="player_glickos/bulk_fetch.xml" login_required="true">
+    <param name="player_ids" type="array" required="true"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_metrics" type="anchor">
+      <attribute name="total" type="integer"/>
+      <vector name="player_metric" type="anchor">
+        <attribute name="deviation" type="string"/>
+        <attribute name="num_games" type="string"/>
+        <attribute name="player_id" type="integer"/>
+        <attribute name="points" type="integer"/>
+        <attribute name="volatility" type="string"/>
+      </vector>
+    </element>
+  </response>
+</resource>

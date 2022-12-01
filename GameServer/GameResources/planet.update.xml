@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="planet.update">
+  <request method="PUT" url="planet.xml" login_required="true">
+    <param name="planet[name]" type="string" required="false"/>
+    <param name="planet[data]" type="file" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="planet" type="anchor">
+      <attribute name="id" type="integer"/>
+    </element>
+  </response>
+</resource>

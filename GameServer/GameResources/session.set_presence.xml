@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="session.set_presence">
+  <request method="POST" url="session/set_presence.xml" login_required="true">
+    <param name="presence" type="string" required="true" options="OFFLINE,ONLINE,INGAME,LOBBY,WEB,CAREER_CHALLENGE,CASUAL_RACE,IDLING,INGAME,IN_POD,IN_STUDIO,KART_PARK_CHALLENGE,RANKED_RACE,ROAMING"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

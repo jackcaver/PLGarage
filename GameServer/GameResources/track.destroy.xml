@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="track.destroy">
+  <request method="DELETE" url="tracks/:id.xml" login_required="true">
+    <param name="id" type="integer" required="true"/>
+    <param name="is_counted" type="boolean" required="false" default="true"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

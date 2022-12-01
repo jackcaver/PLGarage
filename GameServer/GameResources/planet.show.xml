@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="planet.show">
+  <request method="GET" url="planet.xml" login_required="true">
+    <param name="player_id" type="integer" required="false"/>
+    <param name="is_counted" type="boolean" required="false" default="true"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="planet" type="anchor">
+      <attribute name="auto_tags" type="string"/>
+      <attribute name="coolness" type="float"/>
+      <attribute name="created_at" type="datetime"/>
+      <attribute name="description" type="string"/>
+      <attribute name="dlc_keys" type="string"/>
+      <attribute name="downloads" type="integer"/>
+      <attribute name="downloads_last_week" type="integer"/>
+      <attribute name="downloads_this_week" type="integer"/>
+      <attribute name="first_published" type="datetime"/>
+      <attribute name="hearts" type="integer"/>
+      <attribute name="id" type="integer"/>
+      <attribute name="is_remixable" type="boolean"/>
+      <attribute name="last_published" type="datetime"/>
+      <attribute name="moderation_status" type="string"/>
+      <attribute name="name" type="string"/>
+      <attribute name="platform" type="string"/>
+      <attribute name="player_creation_type" type="string"/>
+      <attribute name="player_id" type="integer"/>
+      <attribute name="rating_down" type="integer"/>
+      <attribute name="rating_up" type="integer"/>
+      <attribute name="tags" type="string"/>
+      <attribute name="updated_at" type="datetime"/>
+      <attribute name="user_tags" type="string"/>
+      <attribute name="username" type="string"/>
+      <attribute name="version" type="integer"/>
+      <attribute name="views" type="integer"/>
+      <attribute name="views_last_week" type="integer"/>
+      <attribute name="views_this_week" type="integer"/>
+    </element>
+  </response>
+</resource>

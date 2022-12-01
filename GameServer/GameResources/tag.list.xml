@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="tag.list">
+  <request method="GET" url="tags.xml"/>
+  <response name="response" type="anchor">
+    <element name="tags" type="anchor">
+      <attribute name="language" type="string"/>
+      <attribute name="language_code" type="string"/>
+      <vector name="tag" type="anchor">
+        <attribute name="category" type="string"/>
+        <attribute name="key" type="string"/>
+        <attribute name="name" type="string"/>
+        <attribute name="type" type="string"/>
+      </vector>
+    </element>
+  </response>
+</resource>

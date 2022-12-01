@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player_creation_bookmark.remove">
+  <request method="DELETE" url="player_creation_bookmarks/remove.xml" login_required="true">
+    <param name="player_creation_id" type="integer" required="true"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

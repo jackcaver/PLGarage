@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="privacy_setting.show">
+  <request method="GET" url="privacy_setting.xml" login_required="true"/>
+  <response name="response" type="anchor">
+    <element name="privacy_settings" type="anchor">
+      <element name="profile_acls" type="anchor">
+        <attribute name="allow_all" type="boolean"/>
+        <attribute name="allow_psn" type="boolean"/>
+        <attribute name="deny_all" type="boolean"/>
+      </element>
+      <element name="player_creation_acls" type="anchor">
+        <attribute name="allow_all" type="boolean"/>
+        <attribute name="allow_psn" type="boolean"/>
+        <attribute name="deny_all" type="boolean"/>
+      </element>
+    </element>
+  </response>
+</resource>

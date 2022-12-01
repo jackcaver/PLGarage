@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="event.create">
+  <request method="POST" url="event.xml" login_required="true">
+    <param name="topic" type="string" required="true" options="race_event,player_event,player_creation_event,trophy_event"/>
+    <param name="list_name" type="string" required="true" options="news_feed,activity_log"/>
+    <param name="creator_id" type="integer" required="true"/>
+    <param name="event[type]" type="string" required="true"/>
+    <param name="event[player_creation_id]" type="string" required="false"/>
+    <param name="event[player_id]" type="string" required="false"/>
+    <param name="event[description]" type="string" required="false"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

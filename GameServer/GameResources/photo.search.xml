@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="photo.search">
+  <request method="GET" url="photos/search.xml" login_required="true">
+    <param name="track_id" type="integer" required="false"/>
+    <param name="username" type="string" required="false"/>
+    <param name="associated_usernames" type="array" required="false"/>
+    <param name="page" type="integer" required="false" default="1"/>
+    <param name="per_page" type="integer" required="false" default="25"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="photos" type="anchor">
+      <attribute name="current_page" type="string"/>
+      <attribute name="row_end" type="integer"/>
+      <attribute name="row_start" type="integer"/>
+      <attribute name="total" type="integer"/>
+      <attribute name="total_pages" type="integer"/>
+      <vector name="photo" type="anchor">
+        <attribute name="associated_usernames" type="string"/>
+        <attribute name="id" type="integer"/>
+        <attribute name="track_id" type="integer"/>
+        <attribute name="username" type="string"/>
+      </vector>
+    </element>
+  </response>
+</resource>

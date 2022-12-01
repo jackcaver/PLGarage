@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="profanity_filter.list">
+  <request method="GET" url="profanity_filters.xml">
+    <param name="options[use_advanced_anchors]" type="boolean" required="false"/>
+    <param name="options[use_special_chars]" type="boolean" required="false" default="true"/>
+    <param name="options[use_one_big_pattern]" type="boolean" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="profanity_filters" type="anchor">
+      <vector name="profanity_filter" type="anchor">
+        <attribute name="pattern" type="string"/>
+        <attribute name="replace" type="string"/>
+      </vector>
+    </element>
+  </response>
+</resource>

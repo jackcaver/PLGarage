@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="favorite_player.remove">
+  <request method="DELETE" url="favorite_players/remove.xml" login_required="true">
+    <param name="favorite_player[username]" type="string" required="false"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="track_feed.show">
+  <request method="GET" url="track_feed.xml" login_required="true">
+    <param name="player_creation_id" type="integer" required="true"/>
+    <param name="page" type="integer" required="false" default="1"/>
+    <param name="per_page" type="integer" required="false" default="10"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="activities" type="anchor">
+      <attribute name="page" type="integer"/>
+      <attribute name="row_end" type="integer"/>
+      <attribute name="row_start" type="integer"/>
+      <attribute name="total" type="integer"/>
+      <attribute name="total_pages" type="integer"/>
+      <vector name="activity" type="anchor">
+        <attribute name="player_creation_associated_item_ids" type="string"/>
+        <attribute name="player_creation_description" type="string"/>
+        <attribute name="player_creation_hearts" type="string"/>
+        <attribute name="player_creation_id" type="integer"/>
+        <attribute name="player_creation_is_team_pick" type="boolean"/>
+        <attribute name="player_creation_level_mode" type="integer"/>
+        <attribute name="player_creation_name" type="string"/>
+        <attribute name="player_creation_player_id" type="integer"/>
+        <attribute name="player_creation_races_started" type="string"/>
+        <attribute name="player_creation_rating_down" type="string"/>
+        <attribute name="player_creation_rating_up" type="string"/>
+        <attribute name="player_creation_username" type="string"/>
+        <attribute name="player_hearts" type="string"/>
+        <attribute name="player_id" type="integer"/>
+        <attribute name="player_username" type="string"/>
+        <attribute name="type" type="string"/>
+        <element name="events" type="anchor">
+          <vector name="event" type="anchor">
+            <attribute name="allusion_id" type="integer"/>
+            <attribute name="allusion_type" type="string"/>
+            <attribute name="author_id" type="integer"/>
+            <attribute name="author_username" type="integer"/>
+            <attribute name="creator_id" type="integer"/>
+            <attribute name="creator_username" type="string"/>
+            <attribute name="details" type="string"/>
+            <attribute name="player_id" type="integer"/>
+            <attribute name="seconds_ago" type="string"/>
+            <attribute name="tags" type="string"/>
+            <attribute name="timestamp" type="string"/>
+            <attribute name="topic" type="topic"/>
+            <attribute name="type" type="string"/>
+            <attribute name="username" type="string"/>
+          </vector>
+        </element>
+      </vector>
+    </element>
+  </response>
+</resource>

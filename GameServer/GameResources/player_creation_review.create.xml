@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player_creation_review.create">
+  <request method="POST" url="player_creation_reviews.xml" login_required="true">
+    <param name="player_creation_id" type="integer" required="true"/>
+    <param name="content" type="string" required="true"/>
+    <param name="player_id" type="integer" required="false"/>
+    <param name="tags" type="array" required="false"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

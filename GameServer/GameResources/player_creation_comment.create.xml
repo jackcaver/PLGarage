@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player_creation_comment.create">
+  <request method="POST" url="player_creation_comments.xml" login_required="true">
+    <param name="player_creation_comment[player_creation_id]" type="integer" required="true"/>
+    <param name="player_creation_comment[body]" type="string" required="true" maxlength="1024"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

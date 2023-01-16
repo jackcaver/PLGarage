@@ -8,7 +8,7 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public int player_creation_id { get; set; }
         [XmlAttribute]
-        public int player_creation_name { get; set; }
+        public string player_creation_name { get; set; }
     }
 
     public class favorite_player_creations

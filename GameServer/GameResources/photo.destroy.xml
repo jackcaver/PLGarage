@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resource name="photo.destroy">
+  <request method="DELETE" url="photos/:id.xml" login_required="true">
+    <param name="id" type="integer" required="true"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

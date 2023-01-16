@@ -15,8 +15,8 @@ namespace GameServer.Controllers
         [Route("servers/select.xml")]
         public IActionResult ServerSelect(ServerType server_type, string server_version)
         {
+            var session_uuid = Guid.NewGuid().ToString();
             Server server = ServerConfig.Instance.ServerList[server_type];
-            Log.Information(server_type.ToString());
             var resp = new Response<List<server>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
@@ -24,10 +24,10 @@ namespace GameServer.Controllers
                     server_type = server_type.ToString(), 
                     address = server.Address, 
                     port = server.Port, 
-                    session_uuid = "9aa555a8-cc1a-11e8-81c9-22000acbd9b1", 
+                    session_uuid = session_uuid, 
                     server_private_key = server.ServerPrivateKey, 
                     ticket = new ticket { 
-                        session_uuid = "9aa555a8-cc1a-11e8-81c9-22000acbd9b1", 
+                        session_uuid = session_uuid, 
                         player_id = 1, 
                         username = Request.Cookies["username"], 
                         expiration_date = "Tue Oct 09 23:25:57 +0000 2023", 

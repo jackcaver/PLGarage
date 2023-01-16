@@ -8,6 +8,6 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public string comments { get; set; }
         [XmlAttribute]
-        public int rating { get; set; }
+        public bool rating { get; set; }
     }
 }

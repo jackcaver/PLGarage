@@ -26,7 +26,7 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public string data_md5 { get; set; }
         [XmlAttribute]
-        public int data_size { get; set; }
+        public long data_size { get; set; }
         [XmlAttribute]
         public string description { get; set; }
         [XmlAttribute]
@@ -76,7 +76,7 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public string preview_md5 { get; set; }
         [XmlAttribute]
-        public int preview_size { get; set; }
+        public long preview_size { get; set; }
         [XmlAttribute]
         public string race_type { get; set; }
         [XmlAttribute]
@@ -150,13 +150,13 @@ namespace GameServer.Models.Response
         public int total { get; set; }
     }
 
-    public class PlayerCreation {
+    public class PlayerCreationToVerify {
         [XmlAttribute]
         public int id { get; set; }
         [XmlAttribute]
-        public int type { get; set; }
+        public string type { get; set; }
         [XmlAttribute]
-        public int suggested_action { get; set; }
+        public string suggested_action { get; set; }
     }
 
     [XmlType(TypeName = "player_creations")]
@@ -165,6 +165,6 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public int total { get; set; }
         [XmlElement("player_creation")]
-        public List<PlayerCreation> PlayerCreationsList { get; set; }
+        public List<PlayerCreationToVerify> PlayerCreationsList { get; set; }
     }
 }

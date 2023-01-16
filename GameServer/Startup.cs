@@ -1,9 +1,11 @@
+using GameServer.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Events;
 
 namespace GameServer
 {
@@ -20,6 +22,7 @@ namespace GameServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddDbContext<Database>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -29,7 +32,13 @@ namespace GameServer
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseSerilogRequestLogging();
+#if DEBUG
+            app.UseSerilogRequestLogging(options =>
+            {
+                options.MessageTemplate = "Handled {RequestPath}";
+                options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Debug;
+            });
+#endif
 
             app.UseRouting();
 

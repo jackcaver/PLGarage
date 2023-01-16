@@ -1,0 +1,29 @@
+﻿namespace GameServer.Models.Request
+{
+    public enum SortColumn
+    {
+        finish_time,
+        score,
+        rating_up,
+        rating_up_this_week,
+        rating_up_this_month,
+        hearts,
+        hearts_this_week,
+        hearts_this_month,
+        races_started,
+        races_started_this_week,
+        races_started_this_month,
+        coolness,
+        created_at,
+        id, 
+        author_id,
+        player_id,
+        author_username, 
+        username, 
+        body,
+        platform, 
+        rating_down, 
+        moderation_status, 
+        updated_at
+    }
+}

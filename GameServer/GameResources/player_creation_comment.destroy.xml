@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player_creation_comment.destroy">
+  <request method="DELETE" url="player_creation_comments/:id.xml" login_required="true">
+    <param name="id" type="integer" required="true"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

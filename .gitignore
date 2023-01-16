@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Project files
+ExampleConfig.json
+config.json
+# User Generated Content
+/GameServer/UGC/

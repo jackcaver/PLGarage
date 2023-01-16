@@ -21,6 +21,7 @@ namespace GameServer.Models.Response
     {
         [XmlAttribute]
         public int total { get; set; }
-        public List<favorite_player> Players { get; set; }
+        [XmlElement("player_metric")]
+        public List<player_metric> Metrics { get; set; }
     }
 }

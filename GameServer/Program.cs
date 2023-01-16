@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using GameServer.Models.Config;
 using Serilog;
 using GameServer.Utils;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer
 {
@@ -17,23 +16,21 @@ namespace GameServer
 
             Log.Logger = log;
 
-            Log.Information($"Server external URL is {ServerConfig.Instance.ServerUrl}");
+            Database database = new Database();
+            database.Database.Migrate();
 
             CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+#if DEBUG
                 .UseSerilog()
+#endif
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
                     webBuilder.UseWebRoot("GameResources");
-                })
-                .ConfigureLogging(logging =>
-                {
-                    logging.ClearProviders();
-                    logging.AddConsole();
                 });
     }
 }

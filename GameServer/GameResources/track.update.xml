@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="track.update">
+  <request method="POST" url="tracks/:id/update.xml" login_required="true">
+    <param name="id" type="integer" required="true"/>
+    <param name="player_creation[name]" type="string" required="true"/>
+    <param name="player_creation[player_creation_type]" type="string" required="true" options="PHOTO,PLANET,TRACK,ITEM"/>
+    <param name="player_creation[data]" type="file" required="true"/>
+    <param name="player_creation[platform]" type="string" required="true" options="PS2,PSP,PS3,WEB,PSV"/>
+    <param name="player_creation[description]" type="string" required="false"/>
+    <param name="player_creation[tags]" type="array" required="false"/>
+    <param name="player_creation[auto_tags]" type="array" required="false"/>
+    <param name="player_creation[user_tags]" type="array" required="false"/>
+    <param name="player_creation[preview]" type="file" required="false"/>
+    <param name="player_creation[requires_dlc]" type="boolean" required="false"/>
+    <param name="player_creation[dlc_keys]" type="string" required="false"/>
+    <param name="player_creation[is_remixable]" type="boolean" required="false" default="true"/>
+    <param name="player_creation[longest_hang_time]" type="float" required="false"/>
+    <param name="player_creation[longest_drift]" type="float" required="false"/>
+    <param name="player_creation[races_started]" type="integer" required="false"/>
+    <param name="player_creation[races_won]" type="integer" required="false"/>
+    <param name="player_creation[votes]" type="integer" required="false"/>
+    <param name="player_creation[races_started_this_week]" type="integer" required="false"/>
+    <param name="player_creation[races_started_this_month]" type="integer" required="false"/>
+    <param name="player_creation[races_finished]" type="integer" required="false"/>
+    <param name="player_creation[track_theme]" type="integer" required="false"/>
+    <param name="player_creation[auto_reset]" type="boolean" required="false"/>
+    <param name="player_creation[ai]" type="boolean" required="false"/>
+    <param name="player_creation[num_laps]" type="integer" required="false" options="0,1,2,3,4,5,6,7,8,9,10"/>
+    <param name="player_creation[speed]" type="string" required="false" options="FAST,FASTER,FASTEST"/>
+    <param name="player_creation[race_type]" type="string" required="false" options="RACE,BATTLE,BUBBLE_CHASE,SCORE_ATTACK"/>
+    <param name="player_creation[weapon_set]" type="string" required="false"/>
+    <param name="player_creation[difficulty]" type="string" required="false" options="EASY,MEDIUM,HARD,EXPERT"/>
+    <param name="player_creation[battle_kill_count]" type="integer" required="false" options="0,1,2,3,4,5,6,7,8,9,10"/>
+    <param name="player_creation[battle_time_limit]" type="integer" required="false"/>
+    <param name="player_creation[battle_friendly_fire]" type="boolean" required="false"/>
+    <param name="player_creation[num_racers]" type="integer" required="false" options="0,1,2,3,4,5,6,7,8,9,10,11,12"/>
+    <param name="player_creation[max_humans]" type="integer" required="false" options="0,1,2,3,4,5,6,7,8,9,10,11,12"/>
+    <param name="player_creation[unique_racer_count]" type="integer" required="false"/>
+    <param name="player_creation[associated_item_ids]" type="string" required="false"/>
+    <param name="player_creation[is_team_pick]" type="boolean" required="false"/>
+    <param name="player_creation[level_mode]" type="integer" required="false"/>
+    <param name="player_creation[scoreboard_mode]" type="integer" required="false"/>
+    <param name="player_creation[associated_usernames]" type="string" required="false"/>
+    <param name="player_creation[associated_coordinates]" type="string" required="false"/>
+    <param name="player_creation[track_id]" type="integer" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_creation" type="anchor">
+      <attribute name="id" type="integer"/>
+    </element>
+  </response>
+</resource>

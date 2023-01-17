@@ -15,7 +15,6 @@ namespace GameServer.Controllers
     [Route("preferences.xml")] 
     public class PrefferencesController : Controller
     {
-        [HttpPut]
         [HttpPost]
         public IActionResult UpdatePreferences(ClientPreferences preference)
         {

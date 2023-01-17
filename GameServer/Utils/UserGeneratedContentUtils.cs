@@ -134,7 +134,7 @@ namespace GameServer.Utils
             Directory.Delete($"UGC/PlayerCreations/{id}/", true);
         }
 
-        public static void AddStoryLevel(Database database, int id, SortColumn sortColumn) 
+        public static void AddStoryLevel(Database database, int raceType, int id, SortColumn sortColumn) 
         {
             var UFGUser = database.Users.FirstOrDefault(match => match.Username == "ufg");
 
@@ -170,7 +170,8 @@ namespace GameServer.Utils
                     LastPublished = DateTime.Parse("2012-11-06"),
                     CreatedAt = DateTime.Parse("2012-11-06"),
                     UpdatedAt = DateTime.Parse("2012-11-06"),
-                    Platform = Platform.PS3
+                    Platform = Platform.PS3,
+                    RaceType = (raceType == 702) ? RaceType.BATTLE : RaceType.RACE
                 });
                 database.SaveChanges();
             }

@@ -45,7 +45,7 @@ namespace GameServer.Controllers
             TrackComments.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
             TrackReviews.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
 
-            if (Track == null)
+            if (Track == null || id < 9000)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -54,6 +54,11 @@ namespace GameServer.Controllers
                 };
                 return Content(errorResp.Serialize(), "application/xml;charset=utf-8");
             }
+
+            if (Track.ScoreboardMode == 1)
+                TrackScores.Sort((curr, prev) => prev.FinishTime.CompareTo(curr.FinishTime));
+            else
+                TrackScores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
 
             if (requestedBy == null)
             {
@@ -159,7 +164,7 @@ namespace GameServer.Controllers
                         num_laps = Track.NumLaps,
                         num_racers = Track.NumRacers,
                         platform = Track.Platform.ToString(),
-                        player_creation_type = Track.Type.ToString(),
+                        player_creation_type = (Track.Type == PlayerCreationType.STORY) ? PlayerCreationType.TRACK.ToString() : Track.Type.ToString(),
                         player_id = Track.PlayerId,
                         races_finished = Track.RacesFinished,
                         races_started = Track.RacesStarted,

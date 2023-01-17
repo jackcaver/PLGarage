@@ -343,7 +343,7 @@ namespace GameServer.Controllers
         public IActionResult Create(PlayerCreationComment player_creation_comment)
         {
             var author = this.database.Users.FirstOrDefault(match => match.Username == Request.Cookies["username"]);
-            var Creation = this.database.Users.FirstOrDefault(match => match.UserId == player_creation_comment.player_creation_id);
+            var Creation = this.database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == player_creation_comment.player_creation_id);
 
             if (author == null || Creation == null)
             {
@@ -713,7 +713,6 @@ namespace GameServer.Controllers
         public IActionResult Create(int player_creation_id, string content, int? player_id, string tags)
         {
             var user = this.database.Users.FirstOrDefault(match => match.Username == Request.Cookies["username"]);
-            var Review = this.database.PlayerCreationReviews.FirstOrDefault(match => match.PlayerCreationId == player_creation_id && match.PlayerId == player_id);
 
             if (user == null)
             {
@@ -724,6 +723,8 @@ namespace GameServer.Controllers
                 };
                 return Content(errorResp.Serialize(), "application/xml;charset=utf-8");
             }
+
+            var Review = this.database.PlayerCreationReviews.FirstOrDefault(match => match.PlayerCreationId == player_creation_id && match.PlayerId == user.UserId);
 
             if (Review == null)
             {

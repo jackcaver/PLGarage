@@ -205,7 +205,7 @@ namespace GameServer.Controllers
                 699, 705, 939, 903, 609, 647, 529, 915, 684, 849, 582, 790, 857, 715, 738, 625, 959, 998, 520, 881, 828, 712, 840, 624, 811, 823, 918, 614, 
                 1049, 821, 702, 913, 766, 606, 550, 708, 648, 772, 688, 579, 539, 698, 759, 763, 941, 630, 697, 808, 1023, 703 };
             if (storyLevelIds.Contains(sub_key_id))
-                UserGeneratedContentUtils.AddStoryLevel(this.database, sub_key_id, sort_column);
+                UserGeneratedContentUtils.AddStoryLevel(this.database, sub_group_id, sub_key_id, sort_column);
             
             if (usernameFilterQuery != null)
             {

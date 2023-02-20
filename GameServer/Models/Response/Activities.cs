@@ -95,7 +95,7 @@ namespace GameServer.Models.Response
         public List<activity> ActivityList { get; set; }
     }
 
-    [XmlType(TypeName = "player_creations")]
+    [XmlType(TypeName = "activities")]
     public class NewsFeedTally
     {
         [XmlAttribute]

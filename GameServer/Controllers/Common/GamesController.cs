@@ -11,7 +11,7 @@ using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
-namespace GameServer.Controllers
+namespace GameServer.Controllers.Common
 {
     public class GamesController : Controller
     {
@@ -24,11 +24,11 @@ namespace GameServer.Controllers
 
         [HttpPost]
         [Route("single_player_games/create_finish_and_post_stats.xml")]
-        public IActionResult PostSinglePlayerGameStats(Game game, GamePlayer game_player, GamePlayerStats game_player_stats) 
+        public IActionResult PostSinglePlayerGameStats(Game game, GamePlayer game_player, GamePlayerStats game_player_stats)
         {
-            int GameID = this.database.Games.Count()+1,
-                GamePlayerID = this.database.GamePlayers.Count()+1,
-                GamePlayerStatsID = this.database.GamePlayerStats.Count()+1;
+            int GameID = database.Games.Count() + 1,
+                GamePlayerID = database.GamePlayers.Count() + 1,
+                GamePlayerStatsID = database.GamePlayerStats.Count() + 1;
             string FormScore = Request.Form["game_player_stats[score]"];
             string FormFinishTime = Request.Form["game_player_stats[finish_time]"];
             string FormPoints = Request.Form["game_player_stats[points]"];
@@ -36,39 +36,34 @@ namespace GameServer.Controllers
             string FormDeviation = Request.Form["game_player_stats[deviation]"];
 
             if (FormScore != null)
-                if (FormScore.Contains('.'))
-                    game_player_stats.score = float.Parse(FormScore, CultureInfo.InvariantCulture.NumberFormat);
+                game_player_stats.score = float.Parse(FormScore, CultureInfo.InvariantCulture.NumberFormat);
             if (FormFinishTime != null)
-                if (FormFinishTime.Contains('.'))
-                    game_player_stats.finish_time = float.Parse(FormFinishTime, CultureInfo.InvariantCulture.NumberFormat);
+                game_player_stats.finish_time = float.Parse(FormFinishTime, CultureInfo.InvariantCulture.NumberFormat);
             if (FormPoints != null)
-                if (FormPoints.Contains('.'))
-                    game_player_stats.points = float.Parse(FormPoints, CultureInfo.InvariantCulture.NumberFormat);
+                game_player_stats.points = float.Parse(FormPoints, CultureInfo.InvariantCulture.NumberFormat);
             if (FormVolatility != null)
-                if (FormVolatility.Contains('.'))
-                    game_player_stats.volatility = float.Parse(FormVolatility, CultureInfo.InvariantCulture.NumberFormat);
+                game_player_stats.volatility = float.Parse(FormVolatility, CultureInfo.InvariantCulture.NumberFormat);
             if (FormDeviation != null)
-                if (FormDeviation.Contains('.'))
-                    game_player_stats.deviation = float.Parse(FormDeviation, CultureInfo.InvariantCulture.NumberFormat);
+                game_player_stats.deviation = float.Parse(FormDeviation, CultureInfo.InvariantCulture.NumberFormat);
 
-            var score = this.database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id 
-                && match.SubKeyId == game.track_idx 
-                && match.SubGroupId == (int)game.game_type+700 
+            var score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id
+                && match.SubKeyId == game.track_idx
+                && match.SubGroupId == (int)game.game_type + 700
                 && match.Platform == game.platform
                 && match.PlaygroupSize == game_player_stats.playgroup_size);
 
-            this.database.Games.Add(new GameData 
-            { 
+            database.Games.Add(new GameData
+            {
                 Id = GameID,
-                GameState = game.game_state, 
-                GameType = game.game_type, 
-                HostPlayerId = game.host_player_id, 
+                GameState = game.game_state,
+                GameType = game.game_type,
+                HostPlayerId = game.host_player_id,
                 IsRanked = game.is_ranked,
                 Name = game.name,
                 Platform = game.platform,
                 TrackIdx = game.track_idx
             });
-            this.database.GamePlayers.Add(new GamePlayerData
+            database.GamePlayers.Add(new GamePlayerData
             {
                 Id = GamePlayerID,
                 GameId = GameID,
@@ -76,7 +71,7 @@ namespace GameServer.Controllers
                 PlayerId = game_player.player_id,
                 TeamId = game_player.team_id
             });
-            this.database.GamePlayerStats.Add(new GamePlayerStatsData
+            database.GamePlayerStats.Add(new GamePlayerStatsData
             {
                 Id = GamePlayerStatsID,
                 GameId = GameID,
@@ -109,7 +104,7 @@ namespace GameServer.Controllers
             }
             else
             {
-                this.database.Scores.Add(new Score
+                database.Scores.Add(new Score
                 {
                     CreatedAt = DateTime.UtcNow,
                     FinishTime = game_player_stats.finish_time,
@@ -122,14 +117,15 @@ namespace GameServer.Controllers
                     UpdatedAt = DateTime.UtcNow
                 });
             }
-            this.database.SaveChanges();
+            database.SaveChanges();
 
-            var resp = new Response<List<game>> {
+            var resp = new Response<List<game>>
+            {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<game> { new game { 
-                    id = this.database.Games.Count(), 
-                    game_player_id = this.database.GamePlayers.Count(), 
-                    game_player_stats_id = this.database.GamePlayerStats.Count()
+                response = new List<game> { new game {
+                    id = database.Games.Count(),
+                    game_player_id = database.GamePlayers.Count(),
+                    game_player_stats_id = database.GamePlayerStats.Count()
                 } }
             };
 

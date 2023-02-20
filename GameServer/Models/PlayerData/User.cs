@@ -8,7 +8,7 @@ namespace GameServer.Models.PlayerData
 {
     public class User
     {
-        private Database? _database;
+        private Database _database;
         private Database database
         {
             get

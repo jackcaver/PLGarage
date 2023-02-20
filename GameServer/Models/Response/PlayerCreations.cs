@@ -144,7 +144,7 @@ namespace GameServer.Models.Response
     }
 
     [XmlType(TypeName = "player_creations")]
-    public class PlayerCreationBookmarks
+    public class PlayerCreationBookmarksCount
     {
         [XmlAttribute]
         public int total { get; set; }

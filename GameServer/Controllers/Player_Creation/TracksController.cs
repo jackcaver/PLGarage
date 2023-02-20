@@ -1,0 +1,101 @@
+using GameServer.Implementation.Player_Creation;
+using GameServer.Models.PlayerData;
+using GameServer.Models.PlayerData.PlayerCreations;
+using GameServer.Models.Request;
+using GameServer.Utils;
+using Microsoft.AspNetCore.Mvc;
+
+namespace GameServer.Controllers.Player_Creation
+{
+    public class TracksController : Controller
+    {
+        private readonly Database database;
+
+        public TracksController(Database database)
+        {
+            this.database = database;
+        }
+
+        [HttpGet]
+        [Route("tracks/{id}/profile.xml")]
+        public IActionResult GetProfile(int id)
+        {
+            return Content(PlayerCreations.GetTrackProfile(database, Request.Cookies["username"], id), "application/xml;charset=utf-8");
+        }
+
+        [HttpGet]
+        [Route("tracks/{id}.xml")]
+        public IActionResult Get(int id, bool is_counted)
+        {
+            return Content(PlayerCreations.GetPlayerCreation(database, Request.Cookies["username"], id), "application/xml;charset=utf-8");
+        }
+
+        [HttpPost]
+        [Route("tracks/{id}/download.xml")]
+        public IActionResult Download(int id, bool is_counted)
+        {
+            return Content(PlayerCreations.GetPlayerCreation(database, Request.Cookies["username"], id, true), "application/xml;charset=utf-8");
+        }
+
+        [HttpGet]
+        [Route("tracks/friends_published.xml")]
+        public IActionResult FriendsPublished(Platform platform)
+        {
+            return Content(PlayerCreations.PlayerCreationsFriendsPublished(database, Request.Query["filters[username]"], PlayerCreationType.TRACK),
+                "application/xml;charset=utf-8");
+        }
+
+        [HttpGet]
+        [Route("tracks/lucky_dip.xml")]
+        public IActionResult LuckyDip(int page, int per_page, string keyword, int limit, Platform platform)
+        {
+            return Content(PlayerCreations.SearchPlayerCreations(database, page, per_page, SortColumn.created_at, SortOrder.desc, limit, platform, keyword,
+                Request.Query["filters[id]"], Request.Query["filters[username]"], Request.Query["filters[race_type]"], Request.Query["filters[tags]"],
+                false, true), "application/xml;charset=utf-8");
+        }
+
+        [HttpGet]
+        [Route("tracks/ufg_picks.xml")]
+        public IActionResult GetTeamPicks(int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Platform platform)
+        {
+            return Content(PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, keyword,
+                Request.Query["filters[id]"], Request.Query["filters[username]"], Request.Query["filters[race_type]"], Request.Query["filters[tags]"],
+                true), "application/xml;charset=utf-8");
+        }
+
+        [HttpGet]
+        [Route("tracks.xml")]
+        public IActionResult Search(int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Platform platform)
+        {
+            return Content(PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, keyword,
+                Request.Query["filters[id]"], Request.Query["filters[username]"], Request.Query["filters[race_type]"], Request.Query["filters[tags]"]),
+                "application/xml;charset=utf-8");
+        }
+
+        [HttpPost]
+        [Route("tracks.xml")]
+        public IActionResult Create(PlayerCreation player_creation)
+        {
+            player_creation.data = Request.Form.Files.GetFile("player_creation[data]");
+            player_creation.preview = Request.Form.Files.GetFile("player_creation[preview]");
+            return Content(PlayerCreations.CreatePlayerCreation(database, Request.Cookies["username"], player_creation));
+        }
+
+        [HttpPost]
+        [Route("tracks/{id}/update.xml")]
+        public IActionResult Update(int id, PlayerCreation player_creation)
+        {
+            player_creation.data = Request.Form.Files.GetFile("player_creation[data]");
+            player_creation.preview = Request.Form.Files.GetFile("player_creation[preview]");
+            return Content(PlayerCreations.UpdatePlayerCreation(database, Request.Cookies["username"], player_creation, id),
+                "application/xml;charset=utf-8");
+        }
+
+        [HttpPost]
+        [Route("tracks/{id}.xml")]
+        public IActionResult Delete(int id)
+        {
+            return Content(PlayerCreations.RemovePlayerCreation(database, Request.Cookies["username"], id), "application/xml;charset=utf-8");
+        }
+    }
+}

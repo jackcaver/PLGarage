@@ -7,7 +7,7 @@ using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
-namespace GameServer.Controllers
+namespace GameServer.Controllers.Player
 {
     public class ActivityLogController : Controller
     {
@@ -35,7 +35,8 @@ namespace GameServer.Controllers
         [Route("news_feed.xml")]
         public IActionResult NewsFeed(int page, int per_page)
         {
-            var resp = new Response<List<activities>> {
+            var resp = new Response<List<activities>>
+            {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = new List<activities> { new activities { total = 1, page = page, row_end = 1, row_start = 0, total_pages = 1,
                     ActivityList = new List<activity> {
@@ -68,7 +69,8 @@ namespace GameServer.Controllers
         [Route("activity_log.xml")]
         public IActionResult ActivityLog(int page, int per_page, int player_id)
         {
-            var resp = new Response<List<activities>> {
+            var resp = new Response<List<activities>>
+            {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = new List<activities> { new activities { total = 0 } }
             };

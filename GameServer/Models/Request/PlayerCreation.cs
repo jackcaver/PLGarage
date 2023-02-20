@@ -9,13 +9,13 @@ namespace GameServer.Models.Request
     {
         public string name { get; set; }
         public PlayerCreationType player_creation_type { get; set; }
-        //public IFormFile data { get; set; }
+        public IFormFile data { get; set; }
         public Platform platform { get; set; }
         public string description { get; set; }
         public string tags { get; set; }
         public string auto_tags { get; set; }
         public string user_tags { get; set; }
-        //public IFormFile preview { get; set; }
+        public IFormFile preview { get; set; }
         public bool requires_dlc { get; set; }
         public string dlc_keys { get; set; }
         public bool is_remixable { get; set; }

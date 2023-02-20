@@ -24,6 +24,9 @@ namespace GameServer.Models.Config
 			}
 		}
 
+        public string NotRegisteredText { get; set; } = "User \"%username\" is not registered on this instance";
+        public string EulaText { get; set; } = "Welcome %username! You have successfully logged in from %platform";
+        public string ExternalURL { get; set; } = "auto:10050";
         public string MysqlConnectionString { get; set; } = "server=127.0.0.1;uid=root;pwd=password;database=PLGarage";
         public Dictionary<ServerType, Server> ServerList { get; set; } = new Dictionary<ServerType, Server> { { ServerType.DIRECTORY, new Server() } };
 

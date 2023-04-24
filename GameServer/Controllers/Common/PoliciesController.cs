@@ -37,7 +37,7 @@ namespace GameServer.Controllers.Common
         [Route("policies/{id}/accept.xml")]
         public IActionResult AcceptPolicy(int id, string username)
         {
-            return Content(Policy.Accept(database, id, username), "application/xml;charset=utf-8");
+            return Content(Policy.Accept(database, id, username.Split("\0")[0]), "application/xml;charset=utf-8");
         }
     }
 }

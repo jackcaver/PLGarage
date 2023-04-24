@@ -17,7 +17,7 @@ namespace GameServer.Implementation.Common
             string text = ServerConfig.Instance.NotRegisteredText.Replace("%username", username).Replace("%platform", platform.ToString());
             var user = database.Users.FirstOrDefault(match => match.Username == username);
 
-            if (user != null || username != "ufg")
+            if (user != null && username != "ufg")
             {
                 is_accepted = user.PolicyAccepted;
                 text = ServerConfig.Instance.EulaText.Replace("%username", username).Replace("%platform", platform.ToString());
@@ -35,7 +35,7 @@ namespace GameServer.Implementation.Common
         {
             var user = database.Users.FirstOrDefault(match => match.Username == username);
 
-            if (user != null || username != "ufg")
+            if (user != null && username != "ufg")
             {
                 user.PolicyAccepted = true;
                 database.SaveChanges();

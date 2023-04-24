@@ -11,6 +11,10 @@ namespace GameServer
         public static void Main(string[] args)
         {
             var log = new LoggerConfiguration()
+#if RELEASE
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+#endif
                 .WriteTo.Console()
                 .CreateLogger();
 
@@ -24,9 +28,7 @@ namespace GameServer
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-#if DEBUG
                 .UseSerilog()
-#endif
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

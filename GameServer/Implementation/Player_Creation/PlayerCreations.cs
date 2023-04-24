@@ -114,6 +114,7 @@ namespace GameServer.Implementation.Player_Creation
         {
             int id = database.PlayerCreations.Count(match => match.Type != PlayerCreationType.STORY) + 10000;
             var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var deletedCreation = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.DELETED);
 
             if (user == null)
             {
@@ -123,6 +124,23 @@ namespace GameServer.Implementation.Player_Creation
                     response = new EmptyResponse { }
                 };
                 return errorResp.Serialize();
+            }
+
+            int quota = database.PlayerCreations.Count(match => match.PlayerId == user.UserId && match.Type == PlayerCreationType.TRACK);
+            if (quota >= user.Quota && Creation.player_creation_type == PlayerCreationType.TRACK)
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+
+            if (deletedCreation != null)
+            {
+                id = deletedCreation.PlayerCreationId;
+                database.Remove(deletedCreation);
             }
 
             database.PlayerCreations.Add(new PlayerCreationData
@@ -229,6 +247,15 @@ namespace GameServer.Implementation.Player_Creation
             database.SaveChanges();
 
             UserGeneratedContentUtils.RemovePlayerCreation(id);
+
+            database.PlayerCreations.Add(new PlayerCreationData
+            {
+                PlayerCreationId = id,
+                PlayerId = user.UserId,
+                Platform = Platform.PS3,
+                Type = PlayerCreationType.DELETED
+            });
+            database.SaveChanges();
 
             var resp = new Response<EmptyResponse>
             {

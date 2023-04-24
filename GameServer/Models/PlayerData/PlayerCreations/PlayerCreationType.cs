@@ -6,6 +6,7 @@
         PLANET,
         TRACK,
         ITEM,
-        STORY
+        STORY,
+        DELETED
     }
 }

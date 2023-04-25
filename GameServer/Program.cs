@@ -3,6 +3,9 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
+#if RELEASE
+using Serilog.Events;
+#endif
 
 namespace GameServer
 {

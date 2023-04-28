@@ -19,15 +19,15 @@ namespace GameServer.Utils
             {
                 Directory.CreateDirectory($"UGC/PlayerAvatars/{UserId}/");
             }
-            FileStream file = File.Create($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type}.png");
+            FileStream file = File.Create($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type.ToString().ToLower()}.png");
             stream.CopyTo(file);
             file.Close();
             stream.Close();
 
             if (avatar.player_avatar_type == PlayerAvatarType.PRIMARY)
             {
-                file = File.OpenRead($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type}.png");
-                FileStream file_128x128 = File.Create($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type}_128x128.png");
+                file = File.OpenRead($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type.ToString().ToLower()}.png");
+                FileStream file_128x128 = File.Create($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type.ToString().ToLower()}_128x128.png");
                 file.CopyTo(file_128x128);
                 file_128x128.Close();
                 file.Close();

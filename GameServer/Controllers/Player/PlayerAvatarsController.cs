@@ -39,7 +39,7 @@ namespace GameServer.Controllers.Player
         [Route("player_avatars/{id}/{file}")]
         public IActionResult GetData(int id, string file)
         {
-            var avatar = UserGeneratedContentUtils.LoadPlayerAvatar(id, file);
+            var avatar = UserGeneratedContentUtils.LoadPlayerAvatar(id, file.ToLower());
             if (avatar == null)
                 return NotFound();
             return File(avatar, "image/png");

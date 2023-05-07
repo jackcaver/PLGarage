@@ -1,8 +1,10 @@
 ﻿using GameServer.Implementation.Player_Creation;
 using GameServer.Models.PlayerData;
+using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace GameServer.Controllers.Player_Creation
 {
@@ -17,10 +19,16 @@ namespace GameServer.Controllers.Player_Creation
 
         [HttpGet]
         [Route("player_creation_bookmarks.xml")]
-        public IActionResult Get(int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Platform platform)
+        public IActionResult Get(int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Platform platform, Filters filters)
         {
-            return Content(PlayerCreationBookmarks.ListBookmarks(database, page, per_page, sort_column, sort_order, keyword, limit, platform,
-                Request.Cookies["username"], Request.Query["filters[race_type]"], Request.Query["filters[tags]"]), "application/xml;charset=utf-8");
+            string playerCreationTypeString = Request.Query["filters[player_creation_type]"];
+            PlayerCreationType playerCreationType = PlayerCreationType.PHOTO;
+            Enum.TryParse(playerCreationTypeString, out playerCreationType);
+            filters.player_creation_type = playerCreationType;
+            filters.race_type = Request.Query["filters[race_type]"];
+            filters.tags = Request.Query["filters[tags]"];
+            return Content(PlayerCreationBookmarks.ListBookmarks(database, page, per_page, sort_column, sort_order, keyword, limit, platform, 
+                filters, Request.Cookies["username"]), "application/xml;charset=utf-8");
         }
 
         [HttpPost]

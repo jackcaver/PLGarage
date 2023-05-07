@@ -60,7 +60,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public int ScoreboardMode { get; set; }
         public string AssociatedUsernames { get; set; }
         public string AssociatedCoordinates { get; set; }
-        public float Coolness { get; set; }
+        public float Coolness => (RatingUp-RatingDown)+((RacesStarted+RacesFinished)/2)+Hearts;
         public DateTime CreatedAt { get; set; }
         public int Downloads => this.database.PlayerCreationDownloads.Count(match => match.PlayerCreationId == PlayerCreationId);
         public int DownloadsLastWeek => this.database.PlayerCreationDownloads.Count(match => match.PlayerCreationId == PlayerCreationId && match.DownloadedAt >= DateTime.UtcNow.AddDays(-14) && match.DownloadedAt <= DateTime.UtcNow.AddDays(-7));

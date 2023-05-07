@@ -39,7 +39,7 @@ namespace GameServer
                 options.MessageTemplate = "{RemoteIpAddress} {RequestScheme} {RequestHost} {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
 
                 // Emit debug-level events instead of the defaults
-                options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Debug;
+                options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Information;
 
                 // Attach additional properties to the request completion event
                 options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>

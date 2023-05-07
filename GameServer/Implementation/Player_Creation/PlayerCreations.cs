@@ -388,36 +388,35 @@ namespace GameServer.Implementation.Player_Creation
         }
 
         public static string SearchPlayerCreations(Database database, int page, int per_page, SortColumn sort_column, SortOrder sort_order,
-            int limit, Platform platform, string keyword = null, string idFilter = null, string usernameFilter = null, string raceTypeFilter = null, string tagsFilter = null,
-            bool TeamPicks = false, bool LuckyDip = false, PlayerCreationType PlayerCreationType = PlayerCreationType.TRACK)
+            int limit, Platform platform, Filters filters, string keyword = null, bool TeamPicks = false, bool LuckyDip = false)
         {
             var Creations = new List<PlayerCreationData> { };
 
-            if (usernameFilter == null && idFilter == null)
-                Creations = database.PlayerCreations.Where(match => match.Type == PlayerCreationType && match.Platform == platform).ToList();
+            if (filters.username == null && filters.id == null)
+                Creations = database.PlayerCreations.Where(match => match.Type == filters.player_creation_type && match.Platform == platform).ToList();
 
             //filters
-            if (usernameFilter != null)
+            if (filters.username != null)
             {
-                foreach (string username in usernameFilter.Split(','))
+                foreach (string username in filters.username)
                 {
                     var user = database.Users.FirstOrDefault(match => match.Username == username);
                     if (user != null)
                     {
                         var userTracks = database.PlayerCreations.Where(match => match.PlayerId == user.UserId
-                            && match.Type == PlayerCreationType && match.Platform == platform).ToList();
+                            && match.Type == filters.player_creation_type && match.Platform == platform).ToList();
                         if (userTracks != null)
                             Creations.AddRange(userTracks);
                     }
                 }
             }
 
-            if (idFilter != null)
+            if (filters.id != null)
             {
-                foreach (string id in idFilter.Split(','))
+                foreach (string id in filters.id)
                 {
                     var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId.ToString() == id &&
-                        (match.Type == PlayerCreationType || match.Type == PlayerCreationType.STORY));
+                        (match.Type == filters.player_creation_type || match.Type == PlayerCreationType.STORY));
                     if (Creation != null)
                         Creations.Add(Creation);
                 }
@@ -426,15 +425,15 @@ namespace GameServer.Implementation.Player_Creation
             if (keyword != null)
                 Creations.RemoveAll(match => !match.Name.Contains(keyword));
 
-            if (raceTypeFilter != null)
-                Creations.RemoveAll(match => !raceTypeFilter.Contains(match.RaceType.ToString()));
+            if (filters.race_type != null)
+                Creations.RemoveAll(match => !filters.race_type.Equals(match.RaceType.ToString()));
 
-            if (tagsFilter != null)
+            if (filters.tags != null && filters.tags.Count() != 0)
             {
                 Creations.RemoveAll(match => match.Tags == null);
-                foreach (string tag in tagsFilter.Split(','))
+                foreach (string tag in filters.tags)
                 {
-                    Creations.RemoveAll(match => !match.Tags.Contains(tag));
+                    Creations.RemoveAll(match => !match.Tags.Split(',').Contains(tag));
                 }
             }
 
@@ -518,7 +517,7 @@ namespace GameServer.Implementation.Player_Creation
                         num_laps = Creation.NumLaps,
                         num_racers = Creation.NumRacers,
                         platform = Creation.Platform.ToString(),
-                        player_creation_type = Creation.Type.ToString(),
+                        player_creation_type = (Creation.Type == PlayerCreationType.STORY) ? PlayerCreationType.TRACK.ToString() : Creation.Type.ToString(),
                         player_id = Creation.PlayerId,
                         races_finished = Creation.RacesFinished,
                         races_started = Creation.RacesStarted,

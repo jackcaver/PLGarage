@@ -12,7 +12,7 @@ namespace GameServer.Implementation.Player_Creation
 {
     public class PlayerCreationBookmarks
     {
-        public static string ListBookmarks(Database database, int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Platform platform, string username, string raceTypeFilter = null, string tagsFilter = null)
+        public static string ListBookmarks(Database database, int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Platform platform, Filters filters, string username)
         {
             var user = database.Users.FirstOrDefault(match => match.Username == username);
             if (user == null)
@@ -34,7 +34,9 @@ namespace GameServer.Implementation.Player_Creation
                 idFilter += $"{bookmark.BookmarkedPlayerCreationId},";
             }
 
-            return PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, keyword, idFilter, null, raceTypeFilter, tagsFilter);
+            filters.id = idFilter.Split(',');
+
+            return PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, filters, keyword);
         }
 
         public static string CreateBookmark(Database database, string username, int id)

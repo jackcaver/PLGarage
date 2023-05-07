@@ -3,9 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
-#if RELEASE
 using Serilog.Events;
-#endif
 
 namespace GameServer
 {
@@ -14,10 +12,8 @@ namespace GameServer
         public static void Main(string[] args)
         {
             var log = new LoggerConfiguration()
-#if RELEASE
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-#endif
                 .WriteTo.Console()
                 .CreateLogger();
 

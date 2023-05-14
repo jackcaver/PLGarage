@@ -22,8 +22,21 @@ namespace GameServer.Controllers.Common
         [Route("grief_report.xml")]
         public IActionResult GriefReport(GriefReport grief_report)
         {
+            var user = this.database.Users.FirstOrDefault(match => match.Username == Request.Cookies["username"]);
+
+            if (user == null)
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return Content(errorResp.Serialize(), "application/xml;charset=utf-8");
+            }
+
             database.GriefReports.Add(new GriefReportData
             {
+                UserId = user.UserId,
                 BadRectTop = grief_report.bad_rect_data.top,
                 BadRectBottom = grief_report.bad_rect_data.bottom,
                 Comments = grief_report.comments,

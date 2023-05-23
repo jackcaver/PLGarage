@@ -2,6 +2,7 @@ using GameServer.Implementation.Player;
 using GameServer.Models.PlayerData;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace GameServer.Controllers.Player
 {
@@ -23,7 +24,10 @@ namespace GameServer.Controllers.Player
         [Route("players/{id}/info.xml")]
         public IActionResult GetPlayerInfo(int id, Platform platfom)
         {
-            return Content(PlayerProfiles.GetPlayerInfo(database, id, Request.Cookies["username"]), "application/xml;charset=utf-8");
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(PlayerProfiles.GetPlayerInfo(database, id, SessionID), "application/xml;charset=utf-8");
         }
     }
 }

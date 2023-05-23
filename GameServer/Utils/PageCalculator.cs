@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
-
-namespace GameServer.Utils
+﻿namespace GameServer.Utils
 {
     public class PageCalculator
     {

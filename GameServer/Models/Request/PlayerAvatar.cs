@@ -1,9 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Buffers.Text;
-using System.IO;
-
-namespace GameServer.Models.Request
+﻿namespace GameServer.Models.Request
 {
     public class PlayerAvatar
     {

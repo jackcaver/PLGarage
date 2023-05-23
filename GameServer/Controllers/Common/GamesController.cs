@@ -9,7 +9,6 @@ using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 
 namespace GameServer.Controllers.Common
 {

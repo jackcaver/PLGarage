@@ -2,6 +2,7 @@
 using GameServer.Models.Request;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace GameServer.Controllers.Player_Creation
 {
@@ -18,21 +19,30 @@ namespace GameServer.Controllers.Player_Creation
         [Route("player_creation_ratings/view.xml")]
         public IActionResult View(int player_creation_id, int player_id)
         {
-            return Content(PlayerCreationRatings.View(database, Request.Cookies["username"], player_creation_id, player_id), "application/xml;charset=utf-8");
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(PlayerCreationRatings.View(database, SessionID, player_creation_id, player_id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
         [Route("player_creation_ratings.xml")]
         public IActionResult Create(PlayerCreationRating player_creation_rating)
         {
-            return Content(PlayerCreationRatings.Create(database, Request.Cookies["username"], player_creation_rating), "application/xml;charset=utf-8");
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(PlayerCreationRatings.Create(database, SessionID, player_creation_rating), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
         [Route("player_creation_ratings/clear.xml")]
         public IActionResult Clear(int player_creation_id)
         {
-            return Content(PlayerCreationRatings.Clear(database, Request.Cookies["username"], player_creation_id), "application/xml;charset=utf-8");
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(PlayerCreationRatings.Clear(database, SessionID, player_creation_id), "application/xml;charset=utf-8");
         }
     }
 }

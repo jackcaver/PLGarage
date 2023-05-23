@@ -21,21 +21,30 @@ namespace GameServer.Controllers.Player_Creation
         [Route("tracks/{id}/profile.xml")]
         public IActionResult GetProfile(int id)
         {
-            return Content(PlayerCreations.GetTrackProfile(database, Request.Cookies["username"], id), "application/xml;charset=utf-8");
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(PlayerCreations.GetTrackProfile(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
         [Route("tracks/{id}.xml")]
         public IActionResult Get(int id, bool is_counted)
         {
-            return Content(PlayerCreations.GetPlayerCreation(database, Request.Cookies["username"], id), "application/xml;charset=utf-8");
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(PlayerCreations.GetPlayerCreation(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
         [Route("tracks/{id}/download.xml")]
         public IActionResult Download(int id, bool is_counted)
         {
-            return Content(PlayerCreations.GetPlayerCreation(database, Request.Cookies["username"], id, true), "application/xml;charset=utf-8");
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(PlayerCreations.GetPlayerCreation(database, SessionID, id, true), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -87,18 +96,24 @@ namespace GameServer.Controllers.Player_Creation
         [Route("tracks.xml")]
         public IActionResult Create(PlayerCreation player_creation)
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
             player_creation.data = Request.Form.Files.GetFile("player_creation[data]");
             player_creation.preview = Request.Form.Files.GetFile("player_creation[preview]");
-            return Content(PlayerCreations.CreatePlayerCreation(database, Request.Cookies["username"], player_creation));
+            return Content(PlayerCreations.CreatePlayerCreation(database, SessionID, player_creation));
         }
 
         [HttpPost]
         [Route("tracks/{id}/update.xml")]
         public IActionResult Update(int id, PlayerCreation player_creation)
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
             player_creation.data = Request.Form.Files.GetFile("player_creation[data]");
             player_creation.preview = Request.Form.Files.GetFile("player_creation[preview]");
-            return Content(PlayerCreations.UpdatePlayerCreation(database, Request.Cookies["username"], player_creation, id),
+            return Content(PlayerCreations.UpdatePlayerCreation(database, SessionID, player_creation, id),
                 "application/xml;charset=utf-8");
         }
 
@@ -106,7 +121,10 @@ namespace GameServer.Controllers.Player_Creation
         [Route("tracks/{id}.xml")]
         public IActionResult Delete(int id)
         {
-            return Content(PlayerCreations.RemovePlayerCreation(database, Request.Cookies["username"], id), "application/xml;charset=utf-8");
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(PlayerCreations.RemovePlayerCreation(database, SessionID, id), "application/xml;charset=utf-8");
         }
     }
 }

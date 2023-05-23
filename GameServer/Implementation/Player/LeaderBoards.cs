@@ -1,8 +1,10 @@
-﻿using GameServer.Models;
+﻿using GameServer.Implementation.Common;
+using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,12 +12,13 @@ namespace GameServer.Implementation.Player
 {
     public class LeaderBoards
     {
-        public static string ViewSubLeaderBoard(Database database, string username, int sub_group_id, int sub_key_id, LeaderboardType type, Platform platform,
+        public static string ViewSubLeaderBoard(Database database, Guid SessionID, int sub_group_id, int sub_key_id, LeaderboardType type, Platform platform,
             int page, int per_page, int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int? num_above_below, int limit, int playgroup_size,
             string usernameFilter = null, bool FriendsView = false)
         {
             var scores = new List<Score> { };
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             //genious story level check
             List<int> storyLevelIds = new List<int> { 845, 576, 753, 734, 510, 612, 861, 755, 758, 657, 930, 951, 610, 501, 777, 689, 814, 869, 729, 596, 760,
@@ -160,12 +163,13 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string ViewSubLeaderBoardAroundMe(Database database, string username, int sub_group_id, int sub_key_id, LeaderboardType type, Platform platform,
+        public static string ViewSubLeaderBoardAroundMe(Database database, Guid SessionID, int sub_group_id, int sub_key_id, LeaderboardType type, Platform platform,
             int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int num_above_below, int playgroup_size, int limit)
         {
             var scores = database.Scores.Where(match => match.SubKeyId == sub_key_id && match.SubGroupId == match.SubGroupId
                 && match.PlaygroupSize == playgroup_size).ToList();
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (sort_column == SortColumn.finish_time)
                 scores.Sort((curr, prev) => prev.FinishTime.CompareTo(curr.FinishTime));

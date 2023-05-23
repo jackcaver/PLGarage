@@ -1,10 +1,11 @@
+using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
+using System;
 using System.Linq;
 
 namespace GameServer.Controllers.Common
@@ -22,7 +23,11 @@ namespace GameServer.Controllers.Common
         [Route("grief_report.xml")]
         public IActionResult GriefReport(GriefReport grief_report)
         {
-            var user = this.database.Users.FirstOrDefault(match => match.Username == Request.Cookies["username"]);
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var session = Session.GetSession(SessionID);
+            var user = this.database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
             {

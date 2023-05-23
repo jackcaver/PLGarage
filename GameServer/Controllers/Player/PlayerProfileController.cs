@@ -3,6 +3,7 @@ using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace GameServer.Controllers.Player
 {
@@ -26,7 +27,10 @@ namespace GameServer.Controllers.Player
         [Route("player_profile.xml")]
         public IActionResult UpdateProfile(PlayerProfile player_profile)
         {
-            return Content(PlayerProfiles.UpdateProfile(database, Request.Cookies["username"], player_profile), "application/xml;charset=utf-8");
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(PlayerProfiles.UpdateProfile(database, SessionID, player_profile), "application/xml;charset=utf-8");
         }
     }
 }

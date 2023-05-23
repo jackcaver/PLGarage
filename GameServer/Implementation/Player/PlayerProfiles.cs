@@ -1,8 +1,10 @@
-﻿using GameServer.Models;
+﻿using GameServer.Implementation.Common;
+using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -31,11 +33,12 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string UpdateProfile(Database database, string username, PlayerProfile player_profile)
+        public static string UpdateProfile(Database database, Guid SessionID, PlayerProfile player_profile)
         {
             int id = -130;
             string message = "The player doesn't exist";
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             if (user != null)
             {
                 id = 0;
@@ -74,10 +77,11 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string GetPlayerInfo(Database database, int id, string username)
+        public static string GetPlayerInfo(Database database, int id, Guid SessionID)
         {
+            var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.UserId == id);
-            var requestedBy = database.Users.FirstOrDefault(match => match.Username == username);
+            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null || requestedBy == null)
             {

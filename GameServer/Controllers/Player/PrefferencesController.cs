@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
@@ -12,6 +14,13 @@ namespace GameServer.Controllers.Player
         [HttpPost]
         public IActionResult UpdatePreferences(ClientPreferences preference)
         {
+            if (Request.Cookies["session_id"] == null)
+            {
+                Guid SessionID = Guid.NewGuid();
+                Response.Cookies.Append("session_id", SessionID.ToString());
+                Session.StartSession(SessionID);
+            }
+
             var resp = new Response<List<preference>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },

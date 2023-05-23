@@ -2,7 +2,7 @@
 using GameServer.Utils;
 using System;
 using System.Linq;
-using System.Text.RegularExpressions;
+using GameServer.Implementation.Common;
 
 namespace GameServer.Models.PlayerData
 {
@@ -22,11 +22,13 @@ namespace GameServer.Models.PlayerData
         public int UserId { get; set; }
         public string Username { get; set; }
         public int Hearts => this.database.HeartedProfiles.Count(match => match.HeartedUserId == this.UserId);
-        public Presence Presence { get; set; }
+        public Presence Presence => Session.GetPresence(this.Username);
         public int Quota { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public string Quote { get; set; }
+        public ulong PSNID { get; set; }
+        public ulong RPCNID { get; set; }
         public int TotalTracks => this.database.PlayerCreations.Count(match => match.PlayerId == this.UserId && match.Type == PlayerCreationType.TRACK);
         public int Rank { get; set; }
         public int Points { get; set; }

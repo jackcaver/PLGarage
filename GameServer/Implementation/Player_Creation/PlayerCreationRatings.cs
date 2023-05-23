@@ -7,14 +7,16 @@ using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.PlayerData;
 using System;
 using GameServer.Models.Request;
+using GameServer.Implementation.Common;
 
 namespace GameServer.Implementation.Player_Creation
 {
     public class PlayerCreationRatings
     {
-        public static string View(Database database, string username, int player_creation_id, int player_id)
+        public static string View(Database database, Guid SessionID, int player_creation_id, int player_id)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var rating = database.PlayerCreationRatings.FirstOrDefault(match => match.PlayerCreationId == player_creation_id && match.PlayerId == user.UserId);
 
             if (user == null)
@@ -38,9 +40,10 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string Create(Database database, string username, PlayerCreationRating player_creation_rating)
+        public static string Create(Database database, Guid SessionID, PlayerCreationRating player_creation_rating)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Creation = database.PlayerCreationComments.FirstOrDefault(match => match.Id == player_creation_rating.player_creation_id);
 
             if (user == null)
@@ -75,9 +78,10 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string Clear(Database database, string username, int player_creation_id)
+        public static string Clear(Database database, Guid SessionID, int player_creation_id)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var rating = database.PlayerCreationRatings.FirstOrDefault(match => match.PlayerId == user.UserId && match.PlayerCreationId == player_creation_id);
 
             if (user == null)

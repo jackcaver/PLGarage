@@ -1,0 +1,16 @@
+﻿using NPTicket;
+using System;
+
+namespace GameServer.Models.PlayerData
+{
+    public class SessionInfo
+    {
+        public string Username => Authenticated ? Ticket.Username : "";
+        public Presence Presence { get; set; } = Presence.OFFLINE;
+        public DateTime ExpiryDate => DateTime.FromBinary((long)Ticket.ExpiryDate);
+        public Ticket Ticket { get; set; }
+        public bool Authenticated => Ticket != null;
+        public bool PolicyAccepted {  get; set; } = false;
+        public DateTime LastPing { get; set; } = DateTime.UtcNow;
+    }
+}

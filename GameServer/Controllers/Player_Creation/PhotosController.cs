@@ -2,6 +2,7 @@
 using GameServer.Models.Request;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace GameServer.Controllers.Player_Creation
 {
@@ -25,15 +26,21 @@ namespace GameServer.Controllers.Player_Creation
         [Route("photos/{id}.xml")]
         public IActionResult Delete(int id)
         {
-            return Content(PlayerCreations.RemovePlayerCreation(database, Request.Cookies["username"], id), "application/xml;charset=utf-8");
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(PlayerCreations.RemovePlayerCreation(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
         [Route("photos/create.xml")]
         public IActionResult Create(PlayerCreation photo)
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
             photo.data = Request.Form.Files.GetFile("photo[data]");
-            return Content(PlayerCreations.CreatePlayerCreation(database, Request.Cookies["username"], photo));
+            return Content(PlayerCreations.CreatePlayerCreation(database, SessionID, photo));
         }
     }
 }

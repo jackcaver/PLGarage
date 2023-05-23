@@ -1,10 +1,7 @@
-﻿using GameServer.Models;
-using GameServer.Models.PlayerData;
+﻿using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -142,7 +139,6 @@ namespace GameServer.Utils
             {
                 database.Users.Add(new User
                 {
-                    Presence = Presence.OFFLINE,
                     Username = "ufg",
                     CreatedAt = DateTime.Parse("2012-11-06"),
                     UpdatedAt = DateTime.Parse("2012-11-06"),

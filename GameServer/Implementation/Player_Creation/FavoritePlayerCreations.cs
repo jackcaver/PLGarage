@@ -5,14 +5,16 @@ using System;
 using GameServer.Utils;
 using System.Linq;
 using System.Collections.Generic;
+using GameServer.Implementation.Common;
 
 namespace GameServer.Implementation.Player_Creation
 {
     public class FavoritePlayerCreations
     {
-        public static string AddToFavorites(Database database, string username, int id)
+        public static string AddToFavorites(Database database, Guid SessionID, int id)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
 
             if (user == null)
@@ -54,9 +56,10 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string RemoveFromFavorites(Database database, string username, int id)
+        public static string RemoveFromFavorites(Database database, Guid SessionID, int id)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
             {

@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
+using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
@@ -21,7 +23,11 @@ namespace GameServer.Controllers.Player
         [Route("player_avatars/update.xml")]
         public IActionResult Upload(PlayerAvatar player_avatar)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == Request.Cookies["username"]);
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             if (user != null)
             {
                 Stream stream = Request.Form.Files.GetFile("player_avatar[avatar]").OpenReadStream();

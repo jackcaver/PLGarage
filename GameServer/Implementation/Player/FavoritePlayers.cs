@@ -6,14 +6,16 @@ using GameServer.Utils;
 using System.Linq;
 using GameServer.Models.Request;
 using System.Collections.Generic;
+using GameServer.Implementation.Common;
 
 namespace GameServer.Implementation.Player
 {
     public class FavoritePlayers
     {
-        public static string AddToFavorites(Database database, string username, FavoritePlayer favorite_player)
+        public static string AddToFavorites(Database database, Guid SessionID, FavoritePlayer favorite_player)
         {
-            var requestedBy = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var user = database.Users.FirstOrDefault(match => match.Username == favorite_player.username);
 
             if (user == null || requestedBy == null)
@@ -45,9 +47,10 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string RemoveFromFavorites(Database database, string username, FavoritePlayer favorite_player)
+        public static string RemoveFromFavorites(Database database, Guid SessionID, FavoritePlayer favorite_player)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             int id = database.Users.FirstOrDefault(match => match.Username == favorite_player.username).UserId;
 
             if (user == null)
@@ -83,9 +86,10 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string ListFavorites(Database database, string username, string player_id_or_username)
+        public static string ListFavorites(Database database, Guid SessionID, string player_id_or_username)
         {
-            var requestedBy = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var user = database.Users.FirstOrDefault(match => match.Username == player_id_or_username || match.UserId.ToString() == player_id_or_username);
 
             if (user == null || requestedBy == null)

@@ -6,6 +6,7 @@ using GameServer.Models.Response;
 using GameServer.Utils;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace GameServer.Implementation.Common
 {
@@ -13,15 +14,17 @@ namespace GameServer.Implementation.Common
     {
         public static string View(Database database, PolicyType policy_type, Platform platform, string username)
         {
+            List<string> whitelist = new();
+            if (ServerConfig.Instance.Whitelist)
+                whitelist = Session.LoadWhitelist();
             bool is_accepted = false;
-            string text = ServerConfig.Instance.NotRegisteredText.Replace("%username", username).Replace("%platform", platform.ToString());
+            string text = ServerConfig.Instance.NotWhitelistedText.Replace("%username", username).Replace("%platform", platform.ToString());
             var user = database.Users.FirstOrDefault(match => match.Username == username);
 
             if (user != null && username != "ufg")
-            {
                 is_accepted = user.PolicyAccepted;
+            if ((user != null || (!ServerConfig.Instance.Whitelist || whitelist.Contains(username))) && username != "ufg")
                 text = ServerConfig.Instance.EulaText.Replace("%username", username).Replace("%platform", platform.ToString());
-            }
 
             var resp = new Response<List<policy>>
             {
@@ -31,7 +34,7 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string Accept(Database database, int id, string username)
+        public static string Accept(Database database, Guid SessionID, int id, string username)
         {
             var user = database.Users.FirstOrDefault(match => match.Username == username);
 
@@ -40,6 +43,9 @@ namespace GameServer.Implementation.Common
                 user.PolicyAccepted = true;
                 database.SaveChanges();
             }
+
+            if (user == null && username != "ufg")
+                Session.AcceptPolicy(SessionID);
 
             var resp = new Response<EmptyResponse>
             {

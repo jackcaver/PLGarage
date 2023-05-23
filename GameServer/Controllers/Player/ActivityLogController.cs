@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using GameServer.Models;
-using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 
 namespace GameServer.Controllers.Player
 {

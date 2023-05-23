@@ -365,5 +365,6 @@ FodyWeavers.xsd
 # Project files
 ExampleConfig.json
 config.json
+whitelist.json
 # User Generated Content
 /GameServer/UGC/

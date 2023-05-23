@@ -1,7 +1,6 @@
 ﻿using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using Microsoft.AspNetCore.Http;
-using System.Collections.Generic;
 
 namespace GameServer.Models.Request
 {

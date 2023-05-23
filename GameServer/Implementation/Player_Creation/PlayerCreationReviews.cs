@@ -6,14 +6,16 @@ using System.Linq;
 using GameServer.Models.PlayerData.PlayerCreations;
 using System;
 using GameServer.Models.PlayerData;
+using GameServer.Implementation.Common;
 
 namespace GameServer.Implementation.Player_Creation
 {
     public class PlayerCreationReviews
     {
-        public static string ListReviews(Database database, string username, int player_creation_id, int page, int per_page, int player_id = 0, bool byPlayer = false)
+        public static string ListReviews(Database database, Guid SessionID, int player_creation_id, int page, int per_page, int player_id = 0, bool byPlayer = false)
         {
-            var requestedBy = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var user = database.Users.FirstOrDefault(match => match.UserId == player_id);
             var Reviews = byPlayer ? database.PlayerCreationReviews.Where(match => match.PlayerId == player_id).ToList() :
                 database.PlayerCreationReviews.Where(match => match.PlayerCreationId == player_creation_id).ToList();
@@ -79,9 +81,10 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string CreateReview(Database database, string username, int player_creation_id, string content, int? player_id, string tags)
+        public static string CreateReview(Database database, Guid SessionID, int player_creation_id, string content, int? player_id, string tags)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
             {
@@ -117,9 +120,10 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string RemoveReview(Database database, string username, int id)
+        public static string RemoveReview(Database database, Guid SessionID, int id)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Review = database.PlayerCreationReviews.FirstOrDefault(match => match.Id == id && match.PlayerId == user.UserId);
 
             if (user == null || Review == null)
@@ -143,9 +147,10 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string RateReview(Database database, string username, int id, bool rating)
+        public static string RateReview(Database database, Guid SessionID, int id, bool rating)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var review = database.PlayerCreationReviews.FirstOrDefault(match => match.Id == id);
 
             if (user == null || review == null)

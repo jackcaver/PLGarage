@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Http;
-
 namespace GameServer.Models.Request
 {
     public class BadRectangleData 

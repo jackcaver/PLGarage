@@ -7,14 +7,16 @@ using System;
 using GameServer.Utils;
 using System.Linq;
 using System.Collections.Generic;
+using GameServer.Implementation.Common;
 
 namespace GameServer.Implementation.Player_Creation
 {
     public class PlayerCreationBookmarks
     {
-        public static string ListBookmarks(Database database, int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Platform platform, Filters filters, string username)
+        public static string ListBookmarks(Database database, Guid SessionID, int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Platform platform, Filters filters)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -39,9 +41,10 @@ namespace GameServer.Implementation.Player_Creation
             return PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, filters, keyword);
         }
 
-        public static string CreateBookmark(Database database, string username, int id)
+        public static string CreateBookmark(Database database, Guid SessionID, int id)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
 
             if (user == null)
@@ -83,9 +86,10 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string RemoveBookmark(Database database, string username, int id)
+        public static string RemoveBookmark(Database database, Guid SessionID, int id)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
             {
@@ -120,9 +124,10 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string Tally(Database database, string username)
+        public static string Tally(Database database, Guid SessionID)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
             {

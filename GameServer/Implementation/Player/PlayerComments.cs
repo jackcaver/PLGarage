@@ -3,20 +3,21 @@ using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Models;
 using GameServer.Utils;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using GameServer.Implementation.Common;
 
 namespace GameServer.Implementation.Player
 {
     public class PlayerComments
     {
-        public static string ListComments(Database database, string username, int page, int per_page, int limit, SortColumn sort_column,
+        public static string ListComments(Database database, Guid SessionID, int page, int per_page, int limit, SortColumn sort_column,
             Platform platform, string PlayerIDFilter, string AuthorIDFilter)
         {
             var Comments = new List<PlayerCommentData> { };
-            var requestedBy = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             foreach (string id in PlayerIDFilter.Split(','))
             {
@@ -76,9 +77,10 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string CreateComment(Database database, string username, PlayerComment player_comment)
+        public static string CreateComment(Database database, Guid SessionID, PlayerComment player_comment)
         {
-            var author = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var author = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var user = database.Users.FirstOrDefault(match => match.UserId == player_comment.player_id);
 
             if (user == null || author == null)
@@ -110,9 +112,10 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string RemoveComment(Database database, string username, int id)
+        public static string RemoveComment(Database database, Guid SessionID, int id)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var comment = database.PlayerComments.FirstOrDefault(match => match.Id == id);
 
             if (user == null || comment == null)
@@ -146,9 +149,10 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string RateComment(Database database, string username, PlayerCommentRating player_comment_rating)
+        public static string RateComment(Database database, Guid SessionID, PlayerCommentRating player_comment_rating)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var comment = database.PlayerComments.FirstOrDefault(match => match.Id == player_comment_rating.player_comment_id);
 
             if (user == null || comment == null)

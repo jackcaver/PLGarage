@@ -1,15 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using GameServer.Implementation.Common;
-using GameServer.Models;
-using GameServer.Models.Config;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
-using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 
 namespace GameServer.Controllers.Common
 {
@@ -25,10 +19,8 @@ namespace GameServer.Controllers.Common
         [Route("/policies/view.xml")]
         public IActionResult ViewPolicy(PolicyType policy_type, Platform platform, string username)
         {
-            if (Request.Cookies["username"] != null)
-                username = Request.Cookies["username"];
-            else
-                Response.Cookies.Append("username", username);
+            if (Request.Cookies["session_id"] != null && username == null)
+                username = Session.GetSession(Guid.Parse(Request.Cookies["session_id"])).Username;
 
             return Content(Policy.View(database, policy_type, platform, username), "application/xml;charset=utf-8");
         }
@@ -37,7 +29,10 @@ namespace GameServer.Controllers.Common
         [Route("policies/{id}/accept.xml")]
         public IActionResult AcceptPolicy(int id, string username)
         {
-            return Content(Policy.Accept(database, id, username.Split("\0")[0]), "application/xml;charset=utf-8");
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(Policy.Accept(database, SessionID, id, username.Split("\0")[0]), "application/xml;charset=utf-8");
         }
     }
 }

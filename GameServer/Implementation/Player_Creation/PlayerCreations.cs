@@ -7,15 +7,16 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 using GameServer.Models.PlayerData.PlayerCreations;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using GameServer.Implementation.Common;
 
 namespace GameServer.Implementation.Player_Creation
 {
     public class PlayerCreations
     {
-        public static string UpdatePlayerCreation(Database database, string username, PlayerCreation PlayerCreation, int id = 0)
+        public static string UpdatePlayerCreation(Database database, Guid SessionID, PlayerCreation PlayerCreation, int id = 0)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
             {
@@ -34,7 +35,7 @@ namespace GameServer.Implementation.Player_Creation
 
             if (Creation == null && PlayerCreation.player_creation_type == PlayerCreationType.PLANET)
             {
-                return CreatePlayerCreation(database, username, PlayerCreation);
+                return CreatePlayerCreation(database, SessionID, PlayerCreation);
             }
 
             if (Creation == null)
@@ -110,10 +111,11 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string CreatePlayerCreation(Database database, string username, PlayerCreation Creation)
+        public static string CreatePlayerCreation(Database database, Guid SessionID, PlayerCreation Creation)
         {
+            var session = Session.GetSession(SessionID);
             int id = database.PlayerCreations.Count(match => match.Type != PlayerCreationType.STORY) + 10000;
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var deletedCreation = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.DELETED);
 
             if (user == null)
@@ -218,9 +220,10 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string RemovePlayerCreation(Database database, string username, int id)
+        public static string RemovePlayerCreation(Database database, Guid SessionID, int id)
         {
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
             {
@@ -265,10 +268,11 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string GetPlayerCreation(Database database, string username, int id, bool download = false)
+        public static string GetPlayerCreation(Database database, Guid SessionID, int id, bool download = false)
         {
+            var session = Session.GetSession(SessionID);
             var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
-            var User = database.Users.FirstOrDefault(match => match.Username == username);
+            var User = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (Creation == null)
             {
@@ -620,10 +624,11 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string GetTrackProfile(Database database, string username, int id)
+        public static string GetTrackProfile(Database database, Guid SessionID, int id)
         {
+            var session = Session.GetSession(SessionID);
             var Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
-            var requestedBy = database.Users.FirstOrDefault(match => match.Username == username);
+            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var TrackPhotos = database.PlayerCreations.Where(match => match.TrackId == id && match.Type == PlayerCreationType.PHOTO).ToList();
             var TrackScores = database.Scores.Where(match => match.SubKeyId == id).ToList();
             var TrackComments = database.PlayerCreationComments.Where(match => match.PlayerCreationId == id).ToList();

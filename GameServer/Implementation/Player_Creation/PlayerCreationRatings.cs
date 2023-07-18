@@ -44,9 +44,9 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var Creation = database.PlayerCreationComments.FirstOrDefault(match => match.Id == player_creation_rating.player_creation_id);
+            var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == player_creation_rating.player_creation_id);
 
-            if (user == null)
+            if (user == null || Creation == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -67,6 +67,19 @@ namespace GameServer.Implementation.Player_Creation
                     Type = RatingType.YAY,
                     RatedAt = DateTime.UtcNow
                 });
+                database.ActivityLog.Add(new ActivityEvent
+                {
+                    AuthorId = user.UserId,
+                    Type = ActivityType.player_creation_event,
+                    List = ActivityList.activity_log,
+                    Topic = "player_creation_rated_up",
+                    Description = "",
+                    PlayerId = 0,
+                    PlayerCreationId = Creation.PlayerCreationId,
+                    CreatedAt = DateTime.UtcNow,
+                    AllusionId = Creation.PlayerCreationId,
+                    AllusionType = "PlayerCreation::Track"
+                });
                 database.SaveChanges();
             }
 
@@ -84,7 +97,7 @@ namespace GameServer.Implementation.Player_Creation
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var rating = database.PlayerCreationRatings.FirstOrDefault(match => match.PlayerId == user.UserId && match.PlayerCreationId == player_creation_id);
 
-            if (user == null)
+            if (user == null || rating == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {

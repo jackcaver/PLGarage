@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.Games;
@@ -28,11 +29,27 @@ namespace GameServer.Controllers.Common
             int GameID = database.Games.Count() + 1,
                 GamePlayerID = database.GamePlayers.Count() + 1,
                 GamePlayerStatsID = database.GamePlayerStats.Count() + 1;
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.track_idx);
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             string FormScore = Request.Form["game_player_stats[score]"];
             string FormFinishTime = Request.Form["game_player_stats[finish_time]"];
             string FormPoints = Request.Form["game_player_stats[points]"];
             string FormVolatility = Request.Form["game_player_stats[volatility]"];
             string FormDeviation = Request.Form["game_player_stats[deviation]"];
+
+            if (Track == null || user == null)
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -620, message = "No player creation exists for the given ID" },
+                    response = new EmptyResponse { }
+                };
+                return Content(errorResp.Serialize(), "application/xml;charset=utf-8");
+            }
 
             if (FormScore != null)
                 game_player_stats.score = float.Parse(FormScore, CultureInfo.InvariantCulture.NumberFormat);
@@ -88,6 +105,53 @@ namespace GameServer.Controllers.Common
                 Stat2 = game_player_stats.stat_2,
                 Volatility = game_player_stats.volatility
             });
+
+            var leaderboard = database.Scores.Where(match => match.SubKeyId == game.track_idx && match.SubGroupId == (int)game.game_type + 700 &&
+                match.PlaygroupSize == game_player_stats.playgroup_size && match.Platform == game.platform).ToList();
+
+            if (Track.ScoreboardMode == 1)
+                leaderboard.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
+            else
+                leaderboard.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+
+            if (leaderboard != null)
+            {
+                var FastestTime = leaderboard.FirstOrDefault();
+                var HighScore = leaderboard.FirstOrDefault();
+                if (Track.ScoreboardMode == 1 && FastestTime != null && FastestTime.FinishTime > game_player_stats.finish_time)
+                {
+                    database.ActivityLog.Add(new ActivityEvent
+                    {
+                        AuthorId = user.UserId,
+                        Type = ActivityType.player_event,
+                        List = ActivityList.both,
+                        Topic = "player_beat_finish_time",
+                        Description = $"{game_player_stats.finish_time}",
+                        PlayerId = 0,
+                        PlayerCreationId = Track.PlayerCreationId,
+                        CreatedAt = DateTime.UtcNow,
+                        AllusionId = Track.PlayerCreationId,
+                        AllusionType = "PlayerCreation::Track"
+                    });
+                }
+                if (Track.ScoreboardMode == 0 && HighScore != null && HighScore.Points < game_player_stats.score)
+                {
+                    database.ActivityLog.Add(new ActivityEvent
+                    {
+                        AuthorId = user.UserId,
+                        Type = ActivityType.player_event,
+                        List = ActivityList.both,
+                        Topic = "player_beat_score",
+                        Description = $"{game_player_stats.score}",
+                        PlayerId = 0,
+                        PlayerCreationId = Track.PlayerCreationId,
+                        CreatedAt = DateTime.UtcNow,
+                        AllusionId = Track.PlayerCreationId,
+                        AllusionType = "PlayerCreation::Track"
+                    });
+                }
+            }
+
             if (score != null)
             {
                 if (score.FinishTime > game_player_stats.finish_time)

@@ -6,6 +6,7 @@ using GameServer.Utils;
 using System.Linq;
 using System.Collections.Generic;
 using GameServer.Implementation.Common;
+using GameServer.Models.PlayerData;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -44,6 +45,19 @@ namespace GameServer.Implementation.Player_Creation
                     HeartedPlayerCreationId = Creation.PlayerCreationId,
                     UserId = user.UserId,
                     HeartedAt = DateTime.UtcNow,
+                });
+                database.ActivityLog.Add(new ActivityEvent
+                {
+                    AuthorId = user.UserId,
+                    Type = ActivityType.player_creation_event,
+                    List = ActivityList.activity_log,
+                    Topic = "player_creation_hearted",
+                    Description = "",
+                    PlayerId = 0,
+                    PlayerCreationId = Creation.PlayerCreationId,
+                    CreatedAt = DateTime.UtcNow,
+                    AllusionId = Creation.PlayerCreationId,
+                    AllusionType = "PlayerCreation::Track"
                 });
                 database.SaveChanges();
             }

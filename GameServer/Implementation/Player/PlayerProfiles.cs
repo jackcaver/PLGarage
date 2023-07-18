@@ -83,7 +83,7 @@ namespace GameServer.Implementation.Player
             var user = database.Users.FirstOrDefault(match => match.UserId == id);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
-            if (user == null || requestedBy == null)
+            if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -104,7 +104,7 @@ namespace GameServer.Implementation.Player
                         province = "",
                         country = "",
                         created_at = user.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        hearted_by_me = user.IsHeartedByMe(requestedBy.UserId),
+                        hearted_by_me = requestedBy == null ? user.IsHeartedByMe(requestedBy.UserId) : false,
                         hearts = user.Hearts,
                         longest_win_streak = user.LongestWinStreak,
                         online_disconnected = user.OnlineDisconnected,

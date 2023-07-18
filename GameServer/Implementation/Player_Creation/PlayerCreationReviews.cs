@@ -22,7 +22,7 @@ namespace GameServer.Implementation.Player_Creation
 
             Reviews.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
 
-            if (requestedBy == null || byPlayer && user == null)
+            if (byPlayer && user == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -51,12 +51,12 @@ namespace GameServer.Implementation.Player_Creation
                     {
                         id = Review.Id,
                         content = Review.Content,
-                        mine = Review.IsMine(requestedBy.UserId).ToString().ToLower(),
+                        mine = requestedBy != null ? Review.IsMine(requestedBy.UserId).ToString().ToLower() : "false",
                         player_creation_id = Review.PlayerCreationId,
                         player_creation_name = Review.PlayerCreationName,
                         player_creation_username = Review.PlayerCreationUsername,
                         player_id = Review.PlayerId,
-                        rated_by_me = Review.IsRatedByMe(requestedBy.UserId).ToString().ToLower(),
+                        rated_by_me = requestedBy != null ? Review.IsRatedByMe(requestedBy.UserId).ToString().ToLower() : "false",
                         rating_down = Review.RatingDown.ToString(),
                         rating_up = Review.RatingUp.ToString(),
                         username = Review.Username,
@@ -85,8 +85,9 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == player_creation_id);
 
-            if (user == null)
+            if (user == null || Creation == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -110,6 +111,29 @@ namespace GameServer.Implementation.Player_Creation
                     Tags = tags
                 });
                 database.SaveChanges();
+                database.ActivityLog.Add(new ActivityEvent
+                {
+                    AuthorId = user.UserId,
+                    Type = ActivityType.player_creation_event,
+                    List = ActivityList.activity_log,
+                    Topic = "player_creation_reviewed",
+                    Description = content,
+                    PlayerCreationId = player_creation_id,
+                    CreatedAt = DateTime.UtcNow,
+                    AllusionId = database.PlayerCreationReviews.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.PlayerCreationId == Creation.PlayerCreationId && match.PlayerId == user.UserId).Id,
+                    AllusionType = "PlayerCreation::Review",
+                    Tags = tags
+                });
+                database.SaveChanges();
+            }
+            else
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
             }
 
             var resp = new Response<EmptyResponse>

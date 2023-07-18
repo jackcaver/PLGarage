@@ -18,15 +18,18 @@ namespace GameServer.Utils
         public DbSet<GamePlayerStatsData> GamePlayerStats { get; set; }
         public DbSet<PlayerCreationData> PlayerCreations { get; set; }
         public DbSet<PlayerCreationDownload> PlayerCreationDownloads { get; set; }
+        public DbSet<PlayerCreationRaceStarted> PlayerCreationRacesStarted { get; set; }
         public DbSet<PlayerCreationView> PlayerCreationViews { get; set; }
         public DbSet<PlayerCreationCommentData> PlayerCreationComments { get; set; }
         public DbSet<PlayerCreationReview> PlayerCreationReviews { get; set; }
         public DbSet<PlayerCreationReviewRatingData> PlayerCreationReviewRatings { get; set; }
         public DbSet<PlayerCreationRatingData> PlayerCreationRatings { get; set; }
         public DbSet<PlayerCreationCommentRatingData> PlayerCreationCommentRatings { get; set; }
+        public DbSet<PlayerCreationUniqueRacer> PlayerCreationUniqueRacers { get; set; }
         public DbSet<HeartedPlayerCreation> HeartedPlayerCreations { get; set; }
         public DbSet<PlayerCreationBookmark> PlayerCreationBookmarks { get; set; }
         public DbSet<GriefReportData> GriefReports { get; set; }
+        public DbSet<ActivityEvent> ActivityLog { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options) =>
             options.UseMySql(ServerConfig.Instance.MysqlConnectionString, MySqlServerVersion.LatestSupportedServerVersion);

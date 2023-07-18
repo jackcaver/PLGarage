@@ -49,7 +49,7 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public string player_creation_description { get; set; }
         [XmlAttribute]
-        public string player_creation_hearts { get; set; }
+        public int player_creation_hearts { get; set; }
         [XmlAttribute]
         public int player_creation_id { get; set; }
         [XmlAttribute]
@@ -61,15 +61,15 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public int player_creation_player_id { get; set; }
         [XmlAttribute]
-        public string player_creation_races_started { get; set; }
+        public int player_creation_races_started { get; set; }
         [XmlAttribute]
-        public string player_creation_rating_down { get; set; }
+        public int player_creation_rating_down { get; set; }
         [XmlAttribute]
-        public string player_creation_rating_up { get; set; }
+        public int player_creation_rating_up { get; set; }
         [XmlAttribute]
         public string player_creation_username { get; set; }
         [XmlAttribute]
-        public string player_hearts { get; set; }
+        public int player_hearts { get; set; }
         [XmlAttribute]
         public int player_id { get; set; }
         [XmlAttribute]
@@ -93,12 +93,5 @@ namespace GameServer.Models.Response
         public int total_pages { get; set; }
         [XmlElement("activity")]
         public List<activity> ActivityList { get; set; }
-    }
-
-    [XmlType(TypeName = "activities")]
-    public class NewsFeedTally
-    {
-        [XmlAttribute]
-        public int total { get; set; }
     }
 }

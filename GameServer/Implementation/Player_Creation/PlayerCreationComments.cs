@@ -55,7 +55,7 @@ namespace GameServer.Implementation.Player_Creation
                         username = Comment.Username,
                         rating_down = Comment.RatingDown,
                         rating_up = Comment.RatingUp,
-                        rated_by_me = Comment.IsRatedByMe(requestedBy.UserId)
+                        rated_by_me = requestedBy != null ? Comment.IsRatedByMe(requestedBy.UserId) : false
                     });
                 }
             }
@@ -100,6 +100,20 @@ namespace GameServer.Implementation.Player_Creation
                 UpdatedAt = DateTime.UtcNow,
                 Platform = Platform.PS3,
                 PlayerCreationId = player_creation_comment.player_creation_id
+            });
+            database.SaveChanges();
+            database.ActivityLog.Add(new ActivityEvent
+            {
+                AuthorId = author.UserId,
+                Type = ActivityType.player_creation_event,
+                List = ActivityList.activity_log,
+                Topic = "player_creation_commented_on",
+                Description = player_creation_comment.body,
+                PlayerId = 0,
+                PlayerCreationId = Creation.PlayerCreationId,
+                CreatedAt = DateTime.UtcNow,
+                AllusionId = database.PlayerCreationComments.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.PlayerCreationId == Creation.PlayerCreationId && match.PlayerId == author.UserId).Id,
+                AllusionType = "PlayerCreation::Comment"
             });
             database.SaveChanges();
 

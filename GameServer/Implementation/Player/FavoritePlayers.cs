@@ -7,6 +7,7 @@ using System.Linq;
 using GameServer.Models.Request;
 using System.Collections.Generic;
 using GameServer.Implementation.Common;
+using Microsoft.Extensions.Logging;
 
 namespace GameServer.Implementation.Player
 {
@@ -16,6 +17,8 @@ namespace GameServer.Implementation.Player
         {
             var session = Session.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            if (favorite_player.username.Contains("\0"))
+                favorite_player.username = favorite_player.username.Split("\0")[0];
             var user = database.Users.FirstOrDefault(match => match.Username == favorite_player.username);
 
             if (user == null || requestedBy == null)
@@ -36,6 +39,19 @@ namespace GameServer.Implementation.Player
                     UserId = requestedBy.UserId,
                     HeartedAt = DateTime.UtcNow,
                 });
+                database.ActivityLog.Add(new ActivityEvent
+                {
+                    AuthorId = requestedBy.UserId,
+                    Type = ActivityType.player_event,
+                    List = ActivityList.activity_log,
+                    Topic = "player_hearted",
+                    Description = "",
+                    PlayerId = user.UserId,
+                    PlayerCreationId = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    AllusionId = user.UserId,
+                    AllusionType = "Player"
+                });
                 database.SaveChanges();
             }
 
@@ -51,6 +67,8 @@ namespace GameServer.Implementation.Player
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            if (favorite_player.username.Contains("\0"))
+                favorite_player.username = favorite_player.username.Split("\0")[0];
             int id = database.Users.FirstOrDefault(match => match.Username == favorite_player.username).UserId;
 
             if (user == null)
@@ -92,7 +110,7 @@ namespace GameServer.Implementation.Player
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var user = database.Users.FirstOrDefault(match => match.Username == player_id_or_username || match.UserId.ToString() == player_id_or_username);
 
-            if (user == null || requestedBy == null)
+            if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -115,7 +133,7 @@ namespace GameServer.Implementation.Player
                     Players.Add(new favorite_player
                     {
                         favorite_player_id = profile.HeartedUserId,
-                        hearted_by_me = heartedUser.IsHeartedByMe(requestedBy.UserId) ? 1 : 0,
+                        hearted_by_me = requestedBy != null && heartedUser.IsHeartedByMe(requestedBy.UserId) ? 1 : 0,
                         hearts = heartedUser.Hearts,
                         id = Players.Count + 1,
                         quote = heartedUser.Quote,

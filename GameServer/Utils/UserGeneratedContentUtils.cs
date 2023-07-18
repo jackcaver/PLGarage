@@ -20,15 +20,6 @@ namespace GameServer.Utils
             stream.CopyTo(file);
             file.Close();
             stream.Close();
-
-            if (avatar.player_avatar_type == PlayerAvatarType.PRIMARY)
-            {
-                file = File.OpenRead($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type.ToString().ToLower()}.png");
-                FileStream file_128x128 = File.Create($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type.ToString().ToLower()}_128x128.png");
-                file.CopyTo(file_128x128);
-                file_128x128.Close();
-                file.Close();
-            }
         }
 
         public static void SaveGriefReportData(int id, Stream data, Stream preview)
@@ -62,11 +53,6 @@ namespace GameServer.Utils
             preview.CopyTo(previewFile);
             previewFile.Close();
             preview.Close();
-            previewFile = File.OpenRead($"UGC/PlayerCreations/{id}/preview_image.png");
-            FileStream file_128x128 = File.Create($"UGC/PlayerCreations/{id}/preview_image_128x128.png");
-            previewFile.CopyTo(file_128x128);
-            file_128x128.Close();
-            previewFile.Close();
         }
 
         public static void SavePlayerCreation(int id, Stream data)
@@ -97,6 +83,8 @@ namespace GameServer.Utils
         {
             if (File.Exists($"UGC/PlayerCreations/{id}/{file}"))
                 return File.OpenRead($"UGC/PlayerCreations/{id}/{file}");
+            else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}"))
+                return File.OpenRead($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}");
             else
                 return null;
         }
@@ -105,6 +93,8 @@ namespace GameServer.Utils
         {
             if (File.Exists($"UGC/PlayerAvatars/{id}/{file}"))
                 return File.OpenRead($"UGC/PlayerAvatars/{id}/{file}");
+            else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}"))
+                return File.OpenRead($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}");
             else
                 return null;
         }

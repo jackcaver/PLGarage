@@ -46,22 +46,12 @@ namespace GameServer.Implementation.Player
             }
 
             if (sort_column == SortColumn.finish_time)
-                scores.Sort((curr, prev) => prev.FinishTime.CompareTo(curr.FinishTime));
+                scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
             if (sort_column == SortColumn.score)
                 scores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
 
-            if (user == null)
-            {
-                var errorResp = new Response<EmptyResponse>
-                {
-                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
-                    response = new EmptyResponse { }
-                };
-                return errorResp.Serialize();
-            }
-
-            var MyStats = database.Scores.FirstOrDefault(match => match.PlayerId == user.UserId
-                && match.SubKeyId == sub_key_id && match.SubGroupId == match.SubGroupId && match.PlaygroupSize == playgroup_size);
+            var MyStats = user != null ? database.Scores.FirstOrDefault(match => match.PlayerId == user.UserId
+                && match.SubKeyId == sub_key_id && match.SubGroupId == match.SubGroupId && match.PlaygroupSize == playgroup_size) : null;
             var mystats = new LeaderboardPlayer { };
 
             if (MyStats != null)
@@ -172,7 +162,7 @@ namespace GameServer.Implementation.Player
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (sort_column == SortColumn.finish_time)
-                scores.Sort((curr, prev) => prev.FinishTime.CompareTo(curr.FinishTime));
+                scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
             if (sort_column == SortColumn.score)
                 scores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
 

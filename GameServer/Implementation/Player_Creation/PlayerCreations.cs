@@ -77,12 +77,28 @@ namespace GameServer.Implementation.Player_Creation
             Creation.Tags = PlayerCreation.tags;
             Creation.TrackTheme = PlayerCreation.track_theme;
             Creation.Type = PlayerCreation.player_creation_type;
-            Creation.UniqueRacerCount = PlayerCreation.unique_racer_count;
             Creation.UpdatedAt = DateTime.UtcNow;
             Creation.UserTags = PlayerCreation.user_tags;
             Creation.WeaponSet = PlayerCreation.weapon_set;
             Creation.Votes = PlayerCreation.votes;
             Creation.Version++;
+
+            if (Creation.Type == PlayerCreationType.TRACK)
+            {
+                database.ActivityLog.Add(new ActivityEvent
+                {
+                    AuthorId = user.UserId,
+                    Type = ActivityType.player_creation_event,
+                    List = ActivityList.both,
+                    Topic = "player_creation_updated",
+                    Description = "",
+                    PlayerId = 0,
+                    PlayerCreationId = Creation.PlayerCreationId,
+                    CreatedAt = DateTime.UtcNow,
+                    AllusionId = Creation.PlayerCreationId,
+                    AllusionType = "PlayerCreation::Track"
+                });
+            }
 
             database.SaveChanges();
 
@@ -181,7 +197,6 @@ namespace GameServer.Implementation.Player_Creation
                 Tags = Creation.tags,
                 TrackTheme = Creation.track_theme,
                 Type = Creation.player_creation_type,
-                UniqueRacerCount = Creation.unique_racer_count,
                 UpdatedAt = DateTime.UtcNow,
                 UserTags = Creation.user_tags,
                 WeaponSet = Creation.weapon_set,
@@ -190,7 +205,25 @@ namespace GameServer.Implementation.Player_Creation
                 Version = 1
             });
 
+            if (Creation.player_creation_type == PlayerCreationType.TRACK)
+            {
+                database.ActivityLog.Add(new ActivityEvent
+                {
+                    AuthorId = user.UserId,
+                    Type = ActivityType.player_creation_event,
+                    List = ActivityList.both,
+                    Topic = "player_creation_created",
+                    Description = "",
+                    PlayerId = 0,
+                    PlayerCreationId = id,
+                    CreatedAt = DateTime.UtcNow,
+                    AllusionId = id,
+                    AllusionType = "PlayerCreation::Track"
+                });
+            }
+
             database.SaveChanges();
+
 
             if (Creation.player_creation_type == PlayerCreationType.PHOTO)
                 UserGeneratedContentUtils.SavePlayerPhoto(id,
@@ -247,6 +280,19 @@ namespace GameServer.Implementation.Player_Creation
             }
 
             database.PlayerCreations.Remove(Creation);
+
+            foreach (var item in database.PlayerCreations.Where(match => match.TrackId == id).ToList())
+            {
+                var Photo = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item.PlayerCreationId);
+                Photo.TrackId = 4912;
+            }
+
+            foreach (var item in database.ActivityLog.Where(match => match.PlayerCreationId == id).ToList())
+            {
+                var Activity = database.ActivityLog.FirstOrDefault(match => match.Id == item.Id);
+                database.ActivityLog.Remove(Activity);
+            }
+
             database.SaveChanges();
 
             UserGeneratedContentUtils.RemovePlayerCreation(id);
@@ -294,7 +340,78 @@ namespace GameServer.Implementation.Player_Creation
 
                 if (User.UserId != Creation.PlayerId && download)
                 {
-                    database.PlayerCreationDownloads.Add(new PlayerCreationDownload { PlayerCreationId = Creation.PlayerCreationId, DownloadedAt = DateTime.UtcNow });
+                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = Creation.PlayerCreationId, StartedAt = DateTime.UtcNow });
+                    var uniqueRacer = database.PlayerCreationUniqueRacers.FirstOrDefault(match => match.PlayerId == User.UserId);
+
+                    if (uniqueRacer == null)
+                    {
+                        database.PlayerCreationUniqueRacers.Add(new PlayerCreationUniqueRacer
+                        {
+                            PlayerId = User.UserId,
+                            PlayerCreationId = Creation.PlayerCreationId,
+                            Version = Creation.Version
+                        });
+                        database.PlayerCreationDownloads.Add(new PlayerCreationDownload { PlayerCreationId = Creation.PlayerCreationId, DownloadedAt = DateTime.UtcNow });
+                        database.ActivityLog.Add(new ActivityEvent
+                        {
+                            AuthorId = User.UserId,
+                            Type = ActivityType.player_creation_event,
+                            List = ActivityList.activity_log,
+                            Topic = "player_creation_downloaded",
+                            Description = "",
+                            PlayerId = 0,
+                            PlayerCreationId = Creation.PlayerCreationId,
+                            CreatedAt = DateTime.UtcNow,
+                            AllusionId = Creation.PlayerCreationId,
+                            AllusionType = "PlayerCreation::Track"
+                        });
+                        database.ActivityLog.Add(new ActivityEvent
+                        {
+                            AuthorId = User.UserId,
+                            Type = ActivityType.player_creation_event,
+                            List = ActivityList.activity_log,
+                            Topic = "player_creation_played",
+                            Description = "",
+                            PlayerId = 0,
+                            PlayerCreationId = Creation.PlayerCreationId,
+                            CreatedAt = DateTime.UtcNow,
+                            AllusionId = Creation.PlayerCreationId,
+                            AllusionType = "PlayerCreation::Track"
+                        });
+                    }
+
+                    if (uniqueRacer != null && uniqueRacer.Version != Creation.Version)
+                    {
+                        database.PlayerCreationDownloads.Add(new PlayerCreationDownload { PlayerCreationId = Creation.PlayerCreationId, DownloadedAt = DateTime.UtcNow });
+                        database.ActivityLog.Add(new ActivityEvent
+                        {
+                            AuthorId = User.UserId,
+                            Type = ActivityType.player_creation_event,
+                            List = ActivityList.activity_log,
+                            Topic = "player_creation_downloaded",
+                            Description = "",
+                            PlayerId = 0,
+                            PlayerCreationId = Creation.PlayerCreationId,
+                            CreatedAt = DateTime.UtcNow,
+                            AllusionId = Creation.PlayerCreationId,
+                            AllusionType = "PlayerCreation::Track"
+                        });
+                        database.ActivityLog.Add(new ActivityEvent
+                        {
+                            AuthorId = User.UserId,
+                            Type = ActivityType.player_creation_event,
+                            List = ActivityList.activity_log,
+                            Topic = "player_creation_played",
+                            Description = "",
+                            PlayerId = 0,
+                            PlayerCreationId = Creation.PlayerCreationId,
+                            CreatedAt = DateTime.UtcNow,
+                            AllusionId = Creation.PlayerCreationId,
+                            AllusionType = "PlayerCreation::Track"
+                        });
+                        uniqueRacer.Version = Creation.Version;
+                    }
+
                     database.SaveChanges();
                 }
             }
@@ -633,14 +750,17 @@ namespace GameServer.Implementation.Player_Creation
             var TrackScores = database.Scores.Where(match => match.SubKeyId == id).ToList();
             var TrackComments = database.PlayerCreationComments.Where(match => match.PlayerCreationId == id).ToList();
             var TrackReviews = database.PlayerCreationReviews.Where(match => match.PlayerCreationId == id).ToList();
+            var TrackActivity = database.ActivityLog.Where(match => match.PlayerCreationId == id).ToList();
             List<photo> PhotoList = new List<photo> { };
             List<LeaderboardPlayer> ScoresList = new List<LeaderboardPlayer> { };
             List<comment> CommentsList = new List<comment> { };
             List<review> ReviewsList = new List<review> { };
+            List<activity> ActivityList = new List<activity> { };
 
             TrackPhotos.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
             TrackComments.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
             TrackReviews.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
+            TrackActivity.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
 
             if (Track == null || id < 9000)
             {
@@ -653,19 +773,9 @@ namespace GameServer.Implementation.Player_Creation
             }
 
             if (Track.ScoreboardMode == 1)
-                TrackScores.Sort((curr, prev) => prev.FinishTime.CompareTo(curr.FinishTime));
+                TrackScores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
             else
                 TrackScores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
-
-            if (requestedBy == null)
-            {
-                var errorResp = new Response<EmptyResponse>
-                {
-                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
-                    response = new EmptyResponse { }
-                };
-                return errorResp.Serialize();
-            }
 
             foreach (PlayerCreationData Photo in TrackPhotos.Take(3))
             {
@@ -727,6 +837,42 @@ namespace GameServer.Implementation.Player_Creation
                 }
             }
 
+            foreach (var Activity in TrackActivity.Take(3))
+            {
+                ActivityList.Add(new activity
+                {
+                    player_creation_id = id,
+                    player_creation_hearts = Track.Hearts,
+                    player_creation_rating_up = Track.RatingUp,
+                    player_creation_rating_down = Track.RatingDown,
+                    player_creation_races_started = Track.RacesStarted,
+                    player_creation_username = Track.Username,
+                    player_creation_description = Track.Description,
+                    player_creation_name = Track.Name,
+                    player_creation_player_id = Track.PlayerId,
+                    player_creation_associated_item_ids = Track.AssociatedItemIds,
+                    player_creation_level_mode = Track.LevelMode,
+                    player_creation_is_team_pick = Track.IsTeamPick,
+                    type = "player_creation_activity",
+                    events = new List<Event> {
+                            new Event
+                            {
+                                topic = Activity.Type.ToString(),
+                                type = Activity.Topic,
+                                details = Activity.Description,
+                                creator_username = Track.Username,
+                                creator_id = Activity.AuthorId,
+                                timestamp = Activity.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                                seconds_ago = (int)new TimeSpan(DateTime.UtcNow.Ticks - Activity.CreatedAt.Ticks).TotalSeconds,
+                                tags = Activity.Tags,
+                                allusion_type = Activity.AllusionType,
+                                allusion_id = Activity.AllusionId,
+                                player_id = Activity.PlayerId
+                            }
+                        }
+                });
+            }
+
             var resp = new Response<List<track>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
@@ -786,10 +932,10 @@ namespace GameServer.Implementation.Player_Creation
                         views_this_week = Track.ViewsThisWeek,
                         votes = Track.Votes,
                         weapon_set = Track.WeaponSet,
-                        hearted_by_me = Track.IsHeartedByMe(requestedBy.UserId).ToString().ToLower(),
-                        queued_by_me = Track.IsBookmarkedByMe(requestedBy.UserId).ToString().ToLower(),
-                        reviewed_by_me = Track.IsReviewedByMe(requestedBy.UserId).ToString().ToLower(),
-                        activities = new List<activities> { new activities { total = 0 } },
+                        hearted_by_me = (requestedBy == null) ? "false" : Track.IsHeartedByMe(requestedBy.UserId).ToString().ToLower(),
+                        queued_by_me = (requestedBy == null) ? "false" : Track.IsBookmarkedByMe(requestedBy.UserId).ToString().ToLower(),
+                        reviewed_by_me = (requestedBy == null) ? "false" : Track.IsReviewedByMe(requestedBy.UserId).ToString().ToLower(),
+                        activities = new List<activities> { new activities { total = TrackActivity.Count, ActivityList = ActivityList } },
                         comments = CommentsList,
                         leaderboard = new List<leaderboard> { new leaderboard { total = TrackScores.Count, LeaderboardPlayersList = ScoresList } },
                         photos = new List<photos> { new photos { total = PhotoList.Count, PhotoList = PhotoList } },

@@ -84,7 +84,7 @@ namespace GameServer.Implementation.Common
             }
 
             if (user == null && (!ServerConfig.Instance.Whitelist || whitelist.Contains(NPTicket.Username)) 
-                && database.Users.FirstOrDefault(match => match.Username == NPTicket.Username) != null)
+                && database.Users.FirstOrDefault(match => match.Username == NPTicket.Username) == null)
             {
                 var newUser = new User
                 {

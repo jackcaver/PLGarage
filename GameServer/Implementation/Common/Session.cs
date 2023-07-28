@@ -10,16 +10,19 @@ using Serilog;
 using GameServer.Models.Config;
 using System.IO;
 using Newtonsoft.Json;
+using NPTicket.Verification;
+using NPTicket.Verification.Keys;
 
 namespace GameServer.Implementation.Common
 {
-    public class Session //TODO: proper session handling...
+    public class Session
     {
         private static Dictionary<Guid, SessionInfo> Sessions = new();
 
         public static string Login(Database database, string ip, Platform platform, string ticket, string hmac, string console_id, Guid SessionID)
         {
             ClearSessions();
+            byte[] ticketData = Convert.FromBase64String(ticket.Split("\n\0")[0]);
             List<string> whitelist = new();
             if (ServerConfig.Instance.Whitelist)
                 whitelist = LoadWhitelist();
@@ -27,7 +30,7 @@ namespace GameServer.Implementation.Common
             Ticket NPTicket;
             try
             {
-                NPTicket = Ticket.FromBytes(Convert.FromBase64String(ticket.Split("\n\0")[0]));
+                NPTicket = Ticket.ReadFromBytes(ticketData);
             }
             catch (Exception exception)
             {
@@ -39,8 +42,26 @@ namespace GameServer.Implementation.Common
                 };
                 return errorResp.Serialize();
             }
-            if (NPTicket.Username == "ufg")
+
+            TicketVerifier verifier;
+            switch (NPTicket.IssuerId)
             {
+                case 0x100:
+                    verifier = new(ticketData, NPTicket, new LbpkSigningKey());
+                    break;
+
+                case 0x33333333:
+                    verifier = new(ticketData, NPTicket, RpcnSigningKey.Instance);
+                    break;
+
+                default:
+                    verifier = null;
+                    break;
+            }
+
+            if (NPTicket.Username == "ufg" || verifier == null || !verifier.IsTicketValid())
+            {
+                Log.Error($"Invalid ticket from {NPTicket.Username}");
                 var errorResp = new Response<EmptyResponse>
                 {
                     status = new ResponseStatus { id = -130, message = "The player doesn't exist" },

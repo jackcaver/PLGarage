@@ -7,7 +7,7 @@ namespace GameServer.Models.PlayerData
     {
         public string Username => Authenticated ? Ticket.Username : "";
         public Presence Presence { get; set; } = Presence.OFFLINE;
-        public DateTime ExpiryDate => DateTime.FromBinary((long)Ticket.ExpiryDate);
+        public DateTime ExpiryDate => Ticket.ExpiryDate.UtcDateTime;
         public Ticket Ticket { get; set; }
         public bool Authenticated => Ticket != null;
         public bool PolicyAccepted {  get; set; } = false;

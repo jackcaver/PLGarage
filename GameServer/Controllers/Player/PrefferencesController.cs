@@ -22,10 +22,10 @@ namespace GameServer.Controllers.Player
                 Session.StartSession(SessionID);
             }
 
-            var resp = new Response<List<preference>>
+            var resp = new Response<List<Preference>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<preference> { new preference {
+                response = new List<Preference> { new Preference {
                     domain = preference.domain, ip_address = HttpContext.Connection.RemoteIpAddress.ToString(),
                     language_code = preference.language_code, region_code = preference.region_code, timezone = preference.timezone
                 } }

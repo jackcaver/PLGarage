@@ -31,7 +31,8 @@ namespace GameServer.Models.Response
         public float finish_time { get; set; }
     }
 
-    public class leaderboard
+    [XmlType(TypeName = "leaderboard")]
+    public class Leaderboard
     {
         [XmlAttribute]
         public int page { get; set; }
@@ -57,11 +58,11 @@ namespace GameServer.Models.Response
 
     public class SubLeaderboardViewResponse {
         public LeaderboardPlayer my_stats { get; set; }
-        public leaderboard leaderboard { get; set; }
+        public Leaderboard leaderboard { get; set; }
     }
 
     public class SubLeaderboardFriendsViewResponse {
         public LeaderboardPlayer my_stats { get; set; }
-        public leaderboard friends_leaderboard { get; set; }
+        public Leaderboard friends_leaderboard { get; set; }
     }
 }

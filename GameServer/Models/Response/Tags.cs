@@ -3,7 +3,8 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class tag 
+    [XmlType(TypeName = "tag")]
+    public class Tag 
     {
         
         [XmlAttribute]
@@ -16,13 +17,14 @@ namespace GameServer.Models.Response
         public string type { get; set; }
     }
 
-    public class tags
+    [XmlType(TypeName = "tags")]
+    public class Tags
     {
         [XmlAttribute]
         public string language { get; set; }
         [XmlAttribute]
         public string language_code { get; set; }
         [XmlElement("tag")]
-        public List<tag> TagList { get; set; }
+        public List<Tag> TagList { get; set; }
     }
 }

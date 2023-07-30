@@ -2,7 +2,8 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class player
+    [XmlType(TypeName = "player")]
+    public class PlayerProfileResponse
     {
         [XmlAttribute]
         public int id { get; set; }

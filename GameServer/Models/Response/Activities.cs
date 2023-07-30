@@ -42,7 +42,8 @@ namespace GameServer.Models.Response
         public string subject { get; set; }
     }
 
-    public class activity
+    [XmlType(TypeName = "activity")]
+    public class Activity
     {
         [XmlAttribute]
         public string player_creation_associated_item_ids { get; set; }
@@ -79,7 +80,8 @@ namespace GameServer.Models.Response
         public List<Event> events { get; set; }
     }
 
-    public class activities
+    [XmlType(TypeName = "activities")]
+    public class Activities
     {
         [XmlAttribute]
         public int page { get; set; }
@@ -92,6 +94,6 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public int total_pages { get; set; }
         [XmlElement("activity")]
-        public List<activity> ActivityList { get; set; }
+        public List<Activity> ActivityList { get; set; }
     }
 }

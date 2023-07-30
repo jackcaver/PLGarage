@@ -26,7 +26,7 @@ namespace GameServer.Implementation.Common
             List<string> whitelist = new();
             if (ServerConfig.Instance.Whitelist)
                 whitelist = LoadWhitelist();
-            
+
             Ticket NPTicket;
             try
             {

@@ -2,7 +2,8 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class preference
+    [XmlType(TypeName = "preference")]
+    public class Preference
     {
         [XmlAttribute]
         public string domain { get; set; }

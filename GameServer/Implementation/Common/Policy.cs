@@ -26,10 +26,10 @@ namespace GameServer.Implementation.Common
             if ((user != null || (!ServerConfig.Instance.Whitelist || whitelist.Contains(username))) && username != "ufg")
                 text = ServerConfig.Instance.EulaText.Replace("%username", username).Replace("%platform", platform.ToString());
 
-            var resp = new Response<List<policy>>
+            var resp = new Response<List<PolicyResponse>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<policy> { new policy { id = (int)policy_type, is_accepted = is_accepted, name = "Online User Agreement", text = text } }
+                response = new List<PolicyResponse> { new PolicyResponse { id = (int)policy_type, is_accepted = is_accepted, name = "Online User Agreement", text = text } }
             };
             return resp.Serialize();
         }

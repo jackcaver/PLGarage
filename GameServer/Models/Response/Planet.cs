@@ -3,14 +3,16 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class tracks {
+    [XmlType(TypeName = "tracks")]
+    public class Tracks {
         [XmlAttribute]
         public int total { get; set; }
         [XmlElement("track")]
-        public List<track> TrackList { get; set; }
+        public List<Track> TrackList { get; set; }
     }
 
-    public class planet
+    [XmlType(TypeName = "planet")]
+    public class Planet
     {
         //[XmlAttribute]
         //public string auto_tags { get; set; }
@@ -68,6 +70,6 @@ namespace GameServer.Models.Response
         //public int views_last_week { get; set; }
         //[XmlAttribute]
         //public int views_this_week { get; set; }
-        public tracks tracks { get; set; }
+        public Tracks tracks { get; set; }
     }
 }

@@ -182,10 +182,10 @@ namespace GameServer.Controllers.Common
             }
             database.SaveChanges();
 
-            var resp = new Response<List<game>>
+            var resp = new Response<List<GameResponse>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<game> { new game {
+                response = new List<GameResponse> { new GameResponse {
                     id = database.Games.Count(),
                     game_player_id = database.GamePlayers.Count(),
                     game_player_stats_id = database.GamePlayerStats.Count()

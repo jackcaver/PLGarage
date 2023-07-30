@@ -3,7 +3,8 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class photo 
+    [XmlType(TypeName = "photo")]
+    public class Photo 
     {        
         [XmlAttribute]
         public string associated_usernames { get; set; }
@@ -15,7 +16,8 @@ namespace GameServer.Models.Response
         public string username { get; set; }
     }
 
-    public class photos
+    [XmlType(TypeName = "photos")]
+    public class Photos
     {
         [XmlAttribute]
         public int current_page { get; set; }
@@ -28,6 +30,6 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public int total_pages { get; set; }
         [XmlElement("photo")]
-        public List<photo> PhotoList { get; set; }
+        public List<Photo> PhotoList { get; set; }
     }
 }

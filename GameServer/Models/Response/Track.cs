@@ -3,7 +3,8 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class comment 
+    [XmlType(TypeName = "comment")]
+    public class Comment 
     {
         [XmlAttribute]
         public int id { get; set; }
@@ -21,7 +22,8 @@ namespace GameServer.Models.Response
         public string updated_at { get; set; }
     }
 
-    public class track
+    [XmlType(TypeName = "track")]
+    public class Track
     {
         [XmlAttribute]
         public bool ai { get; set; }
@@ -135,14 +137,14 @@ namespace GameServer.Models.Response
         public int votes { get; set; }
         [XmlAttribute]
         public string weapon_set { get; set; }
-        public List<comment> comments { get; set; }
+        public List<Comment> comments { get; set; }
         [XmlElement("reviews")]
-        public List<reviews> reviews { get; set; }
+        public List<Reviews> reviews { get; set; }
         [XmlElement("activities")]
-        public List<activities> activities { get; set; }
+        public List<Activities> activities { get; set; }
         [XmlElement("photos")]
-        public List<photos> photos { get; set; }
+        public List<Photos> photos { get; set; }
         [XmlElement("leaderboard")]
-        public List<leaderboard> leaderboard { get; set; }
+        public List<Leaderboard> leaderboard { get; set; }
     }
 }

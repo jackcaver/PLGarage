@@ -63,7 +63,7 @@ namespace GameServer.Implementation.Common
             if (pageEnd > Activities.Count)
                 pageEnd = Activities.Count;
 
-            var activityList = new List<activity> { };
+            var activityList = new List<Activity> { };
 
             for (int i = pageStart; i < pageEnd; i++)
             {
@@ -74,7 +74,7 @@ namespace GameServer.Implementation.Common
 
                 if (Activity.Type == ActivityType.system_event) 
                 {
-                    activityList.Add(new activity
+                    activityList.Add(new Activity
                     {
                         type = "system_activity",
                         events = new List<Event> {
@@ -97,7 +97,7 @@ namespace GameServer.Implementation.Common
                 }
                 else if ((Activity.Type == ActivityType.player_event && Activity.PlayerCreationId == 0) || Activity.Type == ActivityType.trophy_event)
                 {
-                    activityList.Add(new activity
+                    activityList.Add(new Activity
                     {
                         player_hearts = Player != null ? Player.Hearts : 0,
                         player_id = Activity.PlayerId,
@@ -125,7 +125,7 @@ namespace GameServer.Implementation.Common
                     || Activity.Type == ActivityType.race_event 
                     || (Activity.Type == ActivityType.player_event && Activity.PlayerCreationId != 0))
                 {
-                    activityList.Add(new activity
+                    activityList.Add(new Activity
                     {
                         player_creation_id = Activity.PlayerCreationId,
                         player_creation_hearts = PlayerCreation != null ? PlayerCreation.Hearts : 0,
@@ -160,11 +160,11 @@ namespace GameServer.Implementation.Common
                 }
             }
 
-            var resp = new Response<List<activities>>
+            var resp = new Response<List<Activities>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<activities> {
-                    new activities
+                response = new List<Activities> {
+                    new Activities
                     {
                         total = Activities.Count,
                         page = page,
@@ -201,10 +201,10 @@ namespace GameServer.Implementation.Common
                 }
             }
 
-            var resp = new Response<List<activities>>
+            var resp = new Response<List<Activities>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<activities> { new activities { total = Activities.Count } }
+                response = new List<Activities> { new Activities { total = Activities.Count } }
             };
 
             return resp.Serialize();

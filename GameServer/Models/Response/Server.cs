@@ -2,7 +2,8 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class ticket
+    [XmlType(TypeName = "ticket")]
+    public class TicketResponse
     {
         [XmlAttribute]
         public string expiration_date { get; set; }
@@ -16,7 +17,8 @@ namespace GameServer.Models.Response
         public string username { get; set; }
     }
 
-    public class server
+    [XmlType(TypeName = "server")]
+    public class ServerResponse
     {
         [XmlAttribute]
         public string address { get; set; }
@@ -29,6 +31,6 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public string session_uuid { get; set; }
 
-        public ticket ticket { get; set; }
+        public TicketResponse ticket { get; set; }
     }
 }

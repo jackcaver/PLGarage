@@ -3,7 +3,8 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class review 
+    [XmlType(TypeName = "review")]
+    public class Review 
     {
         [XmlAttribute]
         public string content { get; set; }
@@ -39,7 +40,8 @@ namespace GameServer.Models.Response
         public string updated_at { get; set; }
     }
 
-    public class reviews
+    [XmlType(TypeName = "reviews")]
+    public class Reviews
     {
         [XmlAttribute]
         public int page { get; set; }
@@ -52,6 +54,6 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public int total_pages { get; set; }
         [XmlElement("review")]
-        public List<review> ReviewList { get; set; }
+        public List<Review> ReviewList { get; set; }
     }
 }

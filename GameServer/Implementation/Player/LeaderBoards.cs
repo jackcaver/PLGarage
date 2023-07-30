@@ -111,7 +111,7 @@ namespace GameServer.Implementation.Player
                     response = new SubLeaderboardFriendsViewResponse
                     {
                         my_stats = mystats,
-                        friends_leaderboard = new leaderboard
+                        friends_leaderboard = new Leaderboard
                         {
                             page = page,
                             playgroup_size = playgroup_size,
@@ -135,7 +135,7 @@ namespace GameServer.Implementation.Player
                 response = new SubLeaderboardViewResponse
                 {
                     my_stats = mystats,
-                    leaderboard = new leaderboard
+                    leaderboard = new Leaderboard
                     {
                         page = page,
                         playgroup_size = playgroup_size,
@@ -211,10 +211,10 @@ namespace GameServer.Implementation.Player
                 }
             }
 
-            var resp = new Response<List<leaderboard>>
+            var resp = new Response<List<Leaderboard>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<leaderboard> { new leaderboard {
+                response = new List<Leaderboard> { new Leaderboard {
                     playgroup_size = playgroup_size,
                     sub_group_id = sub_group_id,
                     sub_key_id = sub_key_id,

@@ -1,6 +1,7 @@
+using System.IO;
+using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using GameServer.Utils;
 
 namespace GameServer.Models
 {
@@ -17,11 +18,13 @@ namespace GameServer.Models
 
         public T response { get; set; }
 
-        public string Serialize() {
+        public string Serialize()
+        {
             XmlSerializer serializer = new XmlSerializer(this.GetType());
-            Utf8StringWriter sw = new Utf8StringWriter();
-            serializer.Serialize(sw, this, new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty }));
-            return sw.ToString();
+            MemoryStream stream = new MemoryStream();
+            XmlTextWriter writer = new XmlTextWriter(stream, Encoding.UTF8);
+            serializer.Serialize(writer, this, new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty }));
+            return Encoding.UTF8.GetString(stream.ToArray());
         }
     }
 }

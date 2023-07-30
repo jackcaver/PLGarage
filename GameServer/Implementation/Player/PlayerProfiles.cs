@@ -93,18 +93,18 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            var resp = new Response<List<player>>
+            var resp = new Response<List<PlayerProfileResponse>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<player> {
-                    new player {
+                response = new List<PlayerProfileResponse> {
+                    new PlayerProfileResponse {
                         id = user.UserId,
                         city = "",
                         state = "",
                         province = "",
                         country = "",
                         created_at = user.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        hearted_by_me = requestedBy == null ? user.IsHeartedByMe(requestedBy.UserId) : false,
+                        hearted_by_me = requestedBy != null ? user.IsHeartedByMe(requestedBy.UserId) : false,
                         hearts = user.Hearts,
                         longest_win_streak = user.LongestWinStreak,
                         online_disconnected = user.OnlineDisconnected,

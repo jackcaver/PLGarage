@@ -10,10 +10,10 @@ namespace GameServer.Controllers.Player
         [Route("achievements.xml")]
         public IActionResult Get()
         {
-            var resp = new Response<List<achievements>>
+            var resp = new Response<List<Achievements>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<achievements> { new achievements { total = 0, AchievementList = new List<achievement> { } } }
+                response = new List<Achievements> { new Achievements { total = 0, AchievementList = new List<Achievement> { } } }
             };
             return Content(resp.Serialize(), "application/xml;charset=utf-8");
         }

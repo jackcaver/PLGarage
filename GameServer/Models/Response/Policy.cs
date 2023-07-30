@@ -2,7 +2,8 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class policy
+    [XmlType(TypeName = "policy")]
+    public class PolicyResponse
     {
         [XmlAttribute]
         public int id { get; set; }

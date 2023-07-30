@@ -32,7 +32,7 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var ReviewList = new List<review> { };
+            var ReviewList = new List<Review> { };
 
             //calculating pages
             int pageEnd = PageCalculator.GetPageEnd(page, per_page);
@@ -47,7 +47,7 @@ namespace GameServer.Implementation.Player_Creation
                 var Review = Reviews[i];
                 if (Review != null)
                 {
-                    ReviewList.Add(new review
+                    ReviewList.Add(new Review
                     {
                         id = Review.Id,
                         content = Review.Content,
@@ -66,10 +66,10 @@ namespace GameServer.Implementation.Player_Creation
                 }
             }
 
-            var resp = new Response<List<reviews>>
+            var resp = new Response<List<Reviews>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<reviews> { new reviews {
+                response = new List<Reviews> { new Reviews {
                     page = page,
                     row_start = pageStart,
                     row_end = pageEnd,

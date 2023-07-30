@@ -42,16 +42,16 @@ namespace GameServer.Controllers.Common
                 return Content(errorResp.Serialize(), "application/xml;charset=utf-8");
             }
 
-            var resp = new Response<List<server>>
+            var resp = new Response<List<ServerResponse>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<server> { new server {
+                response = new List<ServerResponse> { new ServerResponse {
                     server_type = server_type.ToString(),
                     address = server.Address,
                     port = server.Port,
                     session_uuid = SessionID.ToString(),
                     server_private_key = server.ServerPrivateKey,
-                    ticket = new ticket {
+                    ticket = new TicketResponse {
                         session_uuid = SessionID.ToString(),
                         player_id = user.UserId,
                         username = user.Username,

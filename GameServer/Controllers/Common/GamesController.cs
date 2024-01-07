@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using GameServer.Implementation.Common;
 using GameServer.Models;
@@ -22,6 +23,36 @@ namespace GameServer.Controllers.Common
             this.database = database;
         }
 
+        [HttpGet]
+        [Route("locations.xml")]
+        public IActionResult Locations()
+        {
+            var resp = new Response<EmptyResponse>
+            {
+                status = new ResponseStatus { id = 0, message = "Successful completion" },
+                response = new EmptyResponse { }
+            };
+            return Content(resp.Serialize(), "application/xml;charset=utf-8");
+        }
+
+        [HttpGet]
+        [Route("/resources/single_player_game.create_finish_and_post_stats.xml")]
+        public IActionResult GetSinglePlayerXML()
+        { //Because for whatever reason MNR: Road Trip Refuses to take my xml with LBPK variables in it -_-
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var session = Session.GetSession(SessionID);
+            string resp;
+            if (session.IsMNR && System.IO.File.Exists("GameResources/MNR.single_player_game.create_finish_and_post_stats.xml"))
+                resp = System.IO.File.ReadAllText("GameResources/MNR.single_player_game.create_finish_and_post_stats.xml");
+            else if (System.IO.File.Exists("GameResources/single_player_game.create_finish_and_post_stats.xml"))
+                resp = System.IO.File.ReadAllText("GameResources/single_player_game.create_finish_and_post_stats.xml");
+            else
+                return NotFound();
+            return Content(resp, "application/xml;charset=utf-8");
+        }
+
         [HttpPost]
         [Route("single_player_games/create_finish_and_post_stats.xml")]
         public IActionResult PostSinglePlayerGameStats(Game game, GamePlayer game_player, GamePlayerStats game_player_stats)
@@ -40,6 +71,18 @@ namespace GameServer.Controllers.Common
             string FormPoints = Request.Form["game_player_stats[points]"];
             string FormVolatility = Request.Form["game_player_stats[volatility]"];
             string FormDeviation = Request.Form["game_player_stats[deviation]"];
+            string FormBestLapTime = Request.Form["game_player_stats[best_lap_time]"];
+            string FormLongestDrift = Request.Form["game_player_stats[longest_drift]"];
+            string FormLongestHangTime = Request.Form["game_player_stats[longest_hang_time]"];
+            string FormLatitude = Request.Form["game_player_stats[latitude]"];
+            string FormLongitude = Request.Form["game_player_stats[longitude]"];
+
+            if (session.IsMNR)
+            {
+                Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game_player_stats.track_idx);
+                game.host_player_id = database.Users.FirstOrDefault(match => match.Username == session.Username).UserId;
+                game.track_idx = game_player_stats.track_idx;
+            }
 
             if (Track == null || user == null)
             {
@@ -61,12 +104,48 @@ namespace GameServer.Controllers.Common
                 game_player_stats.volatility = float.Parse(FormVolatility, CultureInfo.InvariantCulture.NumberFormat);
             if (FormDeviation != null)
                 game_player_stats.deviation = float.Parse(FormDeviation, CultureInfo.InvariantCulture.NumberFormat);
+            if (FormBestLapTime != null)
+                game_player_stats.best_lap_time = float.Parse(FormBestLapTime, CultureInfo.InvariantCulture.NumberFormat);
+            if (FormLongestDrift != null)
+                game_player_stats.longest_drift = float.Parse(FormLongestDrift, CultureInfo.InvariantCulture.NumberFormat);
+            if (FormLongestHangTime != null)
+                game_player_stats.longest_hang_time = float.Parse(FormLongestHangTime, CultureInfo.InvariantCulture.NumberFormat);
+            if (FormLatitude != null)
+                game_player_stats.latitude = float.Parse(FormLatitude, CultureInfo.InvariantCulture.NumberFormat);
+            if (FormLongitude != null)
+                game_player_stats.longitude = float.Parse(FormLongitude, CultureInfo.InvariantCulture.NumberFormat);
+            if (session.IsMNR)
+                game_player_stats.ghost_car_data = Request.Form.Files.GetFile("game_player_stats[ghost_car_data]");
 
-            var score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id
-                && match.SubKeyId == game.track_idx
-                && match.SubGroupId == (int)game.game_type + 700
-                && match.Platform == game.platform
-                && match.PlaygroupSize == game_player_stats.playgroup_size);
+            Score score;
+
+            if(session.IsMNR && session.Platform == Platform.PS3 && user.CharacterIdx != game_player_stats.character_idx)
+                user.CharacterIdx = game_player_stats.character_idx;
+
+            if (session.IsMNR && session.Platform == Platform.PS3 && user.KartIdx != game_player_stats.kart_idx)
+                user.KartIdx = game_player_stats.kart_idx;
+
+            if (user.LongestDrift < game_player_stats.longest_drift)
+                user.LongestDrift = game_player_stats.longest_drift;
+
+            if (user.LongestHangTime < game_player_stats.longest_hang_time)
+                user.LongestHangTime = game_player_stats.longest_hang_time;
+
+            if (!session.IsMNR)
+            {
+                score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id
+                    && match.SubKeyId == game.track_idx
+                    && match.SubGroupId == (int)game.game_type
+                    && match.Platform == game.platform
+                    && match.PlaygroupSize == game_player_stats.playgroup_size && match.IsMNR == session.IsMNR);
+            }
+            else
+            {
+                score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id
+                    && match.SubKeyId == game_player_stats.track_idx
+                    && match.SubGroupId == (int)game.game_type - 10
+                    && match.Platform == session.Platform && match.IsMNR == session.IsMNR);
+            }
 
             database.Games.Add(new GameData
             {
@@ -77,7 +156,13 @@ namespace GameServer.Controllers.Common
                 IsRanked = game.is_ranked,
                 Name = game.name,
                 Platform = game.platform,
-                TrackIdx = game.track_idx
+                //MNR
+                TrackIdx = game.track_idx,
+                NumberLaps = game.number_laps,
+                Privacy = game.privacy,
+                SpeedClass = game.speed_class,
+                Track = game.track,
+                TrackGroup = game.track_group
             });
             database.GamePlayers.Add(new GamePlayerData
             {
@@ -103,10 +188,24 @@ namespace GameServer.Controllers.Common
                 Score = game_player_stats.score,
                 Stat1 = game_player_stats.stat_1,
                 Stat2 = game_player_stats.stat_2,
-                Volatility = game_player_stats.volatility
+                Volatility = game_player_stats.volatility,
+                //MNR
+                Bank = game_player_stats.bank,
+                BestLapTime = game_player_stats.best_lap_time,
+                CharacterIdx = game_player_stats.character_idx,
+                KartIdx = game_player_stats.kart_idx,
+                LongestDrift = game_player_stats.longest_drift,
+                LongestHangTime = game_player_stats.longest_hang_time,
+                TrackIdx = game_player_stats.track_idx,
+                MusicIdx = game_player_stats.music_idx,
+                //MNR: Road Trip
+                Latitude = game_player_stats.latitude,
+                Longitude = game_player_stats.longitude,
+                LocationTag = game_player_stats.location_tag,
+                TrackPlatform = game_player_stats.track_platform
             });
 
-            var leaderboard = database.Scores.Where(match => match.SubKeyId == game.track_idx && match.SubGroupId == (int)game.game_type + 700 &&
+            var leaderboard = database.Scores.Where(match => match.SubKeyId == game.track_idx && match.SubGroupId == (int)game.game_type &&
                 match.PlaygroupSize == game_player_stats.playgroup_size && match.Platform == game.platform).ToList();
 
             if (Track.ScoreboardMode == 1)
@@ -114,7 +213,7 @@ namespace GameServer.Controllers.Common
             else
                 leaderboard.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
 
-            if (leaderboard != null)
+            if (leaderboard != null && !session.IsMNR)
             {
                 var FastestTime = leaderboard.FirstOrDefault();
                 var HighScore = leaderboard.FirstOrDefault();
@@ -151,18 +250,44 @@ namespace GameServer.Controllers.Common
                     });
                 }
             }
+            string GhostDataMD5 = "";
+            MemoryStream GhostData = new MemoryStream();
+            if (session.IsMNR)
+            {
+                game_player_stats.ghost_car_data.OpenReadStream().CopyTo(GhostData);
+                GhostDataMD5 = UserGeneratedContentUtils.CalculateGhostCarDataMD5(new MemoryStream(GhostData.ToArray()));
+            }
+            bool SaveGhost = false;
 
             if (score != null)
-            {
+            {               
                 if (score.FinishTime > game_player_stats.finish_time)
                 {
                     score.FinishTime = game_player_stats.finish_time;
                     score.UpdatedAt = DateTime.UtcNow;
+                    score.CharacterIdx = game_player_stats.character_idx;
+                    score.KartIdx = game_player_stats.kart_idx;
+                    SaveGhost = true;
                 }
                 if (score.Points < game_player_stats.score)
                 {
                     score.Points = game_player_stats.score;
                     score.UpdatedAt = DateTime.UtcNow;
+                }
+                if (score.BestLapTime > game_player_stats.best_lap_time)
+                {
+                    score.BestLapTime = game_player_stats.best_lap_time;
+                    score.UpdatedAt = DateTime.UtcNow;
+                    score.CharacterIdx = game_player_stats.character_idx;
+                    score.KartIdx = game_player_stats.kart_idx;
+                    SaveGhost = true;
+                }
+                if (SaveGhost)
+                    score.GhostCarDataMD5 = GhostDataMD5;
+                if (session.Platform == Platform.PSV)
+                {
+                    score.Latitude = game_player_stats.latitude;
+                    score.Longitude = game_player_stats.longitude;
                 }
             }
             else
@@ -171,14 +296,29 @@ namespace GameServer.Controllers.Common
                 {
                     CreatedAt = DateTime.UtcNow,
                     FinishTime = game_player_stats.finish_time,
-                    Platform = game.platform,
+                    Platform = session.Platform == Platform.PSV ? game_player_stats.track_platform : session.Platform,
                     PlayerId = game.host_player_id,
                     PlaygroupSize = game_player_stats.playgroup_size,
                     Points = game_player_stats.score,
-                    SubGroupId = (int)game.game_type + 700,
+                    SubGroupId = session.IsMNR ? (int)game.game_type - 10 : (int)game.game_type,
                     SubKeyId = game.track_idx,
-                    UpdatedAt = DateTime.UtcNow
+                    UpdatedAt = DateTime.UtcNow,
+                    Latitude = game_player_stats.latitude,
+                    Longitude = game_player_stats.longitude,
+                    BestLapTime = game_player_stats.best_lap_time,
+                    KartIdx = game_player_stats.kart_idx,
+                    CharacterIdx = game_player_stats.character_idx,
+                    GhostCarDataMD5 = GhostDataMD5,
+                    IsMNR = session.IsMNR
                 });
+                SaveGhost = true;
+            }
+            if (session.IsMNR && SaveGhost)
+            {
+                GhostData.Position = 0;
+                UserGeneratedContentUtils.SaveGhostCarData(game.game_type, session.Platform,
+                    game_player_stats.track_idx, database.Users.FirstOrDefault(match => match.Username == session.Username).UserId,
+                    GhostData);
             }
             database.SaveChanges();
 

@@ -12,5 +12,7 @@ namespace GameServer.Models.PlayerData
         public bool Authenticated => Ticket != null;
         public bool PolicyAccepted {  get; set; } = false;
         public DateTime LastPing { get; set; } = DateTime.UtcNow;
+        public Platform Platform { get; set; }
+        public bool IsMNR { get; set; }
     }
 }

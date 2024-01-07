@@ -7,7 +7,7 @@
   <response name="response" type="anchor">
     <element name="player_creation_rating" type="anchor">
       <attribute name="comments" type="string"/>
-      <attribute name="rating" type="boolean"/>
+      <attribute name="rating" type="integer"/>
     </element>
   </response>
 </resource>

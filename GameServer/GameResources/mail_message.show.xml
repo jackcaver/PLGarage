@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="mail_message.show" login_required="true">
+  <request method="GET" url="mail_messages/:id.xml">
+    <param name="id" type="integer" required="true" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="mail_message" type="anchor">
+      <attribute name="attachment_reference" type="string"/>
+      <attribute name="created_at" type="datetime"/>
+      <attribute name="has_deleted" type="boolean"/>
+      <attribute name="has_forwarded" type="boolean"/>
+      <attribute name="has_read" type="boolean"/>
+      <attribute name="has_replied" type="boolean"/>
+      <attribute name="id" type="integer"/>
+      <attribute name="sender_id" type="integer"/>
+      <attribute name="sender_name" type="string"/>
+      <attribute name="updated_at" type="datetime"/>
+      <element name="subject" type="string"/>
+      <element name="body" type="string"/>
+    </element>
+  </response>
+</resource>

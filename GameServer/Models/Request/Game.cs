@@ -12,5 +12,11 @@ namespace GameServer.Models.Request
         public Platform platform { get; set; }
         public string name { get; set; }
         public bool is_ranked { get; set; }
+        //MNR
+        public string speed_class { get; set; }
+        public int track { get; set; }
+        public string track_group { get; set; }
+        public string privacy { get; set; }
+        public int number_laps { get; set; }
     }
 }

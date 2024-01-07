@@ -25,10 +25,30 @@ namespace GameServer.Models.Config
 		}
 
         public string NotWhitelistedText { get; set; } = "User \"%username\" is not whitelisted on this instance";
-        public string EulaText { get; set; } = "Welcome %username! You have successfully logged in from %platform";
+        [JsonIgnore]
+        public string EulaText 
+        { 
+            get
+            {
+                if (!File.Exists("./eula.txt"))
+                {
+                    string defaultText = "Welcome %username! You have successfully logged in from %platform";
+                    File.WriteAllText("./eula.txt", defaultText);
+                    return defaultText;
+                }
+                return File.ReadAllText("./eula.txt");
+            }
+            set
+            {
+                File.WriteAllText("./eula.txt", value);
+            }
+        }
         public string ExternalURL { get; set; } = "auto:10050";
         public string MysqlConnectionString { get; set; } = "server=127.0.0.1;uid=root;pwd=password;database=PLGarage";
         public bool Whitelist { get; set; } = false;
+        public bool BlockMNR { get; set; } = false;
+        public bool BlockLBPK { get; set; } = false;
+        public string InstanceName { get; set; } = "PLGarage";
         public Dictionary<ServerType, Server> ServerList { get; set; } = new Dictionary<ServerType, Server> { { ServerType.DIRECTORY, new Server() } };
 
         private static ServerConfig GetFromFile()

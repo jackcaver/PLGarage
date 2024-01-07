@@ -39,6 +39,15 @@ namespace GameServer.Models.PlayerData
         public string Username => this.database.Users.FirstOrDefault(match => match.UserId == this.PlayerId).Username;
         public float Points { get; set; }
         public float FinishTime { get; set; }
+        //MNR
+        public bool IsMNR { get; set; }
+        public float BestLapTime { get; set; }
+        public int CharacterIdx { get; set; }
+        public string GhostCarDataMD5 { get; set; }
+        public int KartIdx { get; set; }
+        //MNR: Road Trip
+        public float Latitude { get; set; }
+        public float Longitude { get; set; }
 
         public int GetRank(SortColumn sortColumn)
         {
@@ -50,6 +59,8 @@ namespace GameServer.Models.PlayerData
                 scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
             if (sortColumn == SortColumn.score)
                 scores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+            if (sortColumn == SortColumn.best_lap_time)
+                scores.Sort((curr, prev) => curr.BestLapTime.CompareTo(prev.BestLapTime));
             return scores.FindIndex(match => match == this)+1;
         }
     }

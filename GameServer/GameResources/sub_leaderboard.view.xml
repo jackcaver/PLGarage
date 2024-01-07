@@ -28,6 +28,13 @@
       <attribute name="username" type="string"/>
       <attribute name="score" type="float"/>
       <attribute name="finish_time" type="float"/>
+      <!--MNR-->
+      <attribute name="best_lap_time" type="float"/>
+      <attribute name="character_idx" type="integer"/>
+      <attribute name="ghost_car_data_md5" type="string"/>
+      <attribute name="kart_idx" type="integer"/>
+      <attribute name="skill_level_id" type="integer"/>
+      <attribute name="skill_level_name" type="string"/>
     </element>
     <element name="leaderboard" type="anchor">
       <attribute name="page" type="integer"/>
@@ -52,6 +59,13 @@
         <attribute name="username" type="string"/>
         <attribute name="score" type="float"/>
         <attribute name="finish_time" type="float"/>
+        <!--MNR-->
+        <attribute name="best_lap_time" type="float"/>
+        <attribute name="character_idx" type="integer"/>
+        <attribute name="ghost_car_data_md5" type="string"/>
+        <attribute name="kart_idx" type="integer"/>
+        <attribute name="skill_level_id" type="integer"/>
+        <attribute name="skill_level_name" type="string"/>
       </vector>
     </element>
   </response>

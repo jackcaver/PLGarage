@@ -35,6 +35,24 @@
       <attribute name="online_races_last_week" type="integer"/>
       <attribute name="online_wins_last_week" type="integer"/>
       <attribute name="online_finished_last_week" type="integer"/>
+      <!--MNR-->
+      <attribute name="creator_points" type="string"/>
+      <attribute name="creator_points_last_week" type="string"/>
+      <attribute name="creator_points_this_week" type="string"/>
+      <attribute name="experience_points" type="string"/>
+      <attribute name="experience_points_last_week" type="string"/>
+      <attribute name="experience_points_this_week" type="string"/>
+      <attribute name="longest_drift" type="string"/>
+      <attribute name="longest_hang_time" type="datetime"/>
+      <attribute name="player_id" type="integer"/>
+      <attribute name="rating" type="integer"/>
+      <attribute name="skill_level" type="string"/>
+      <attribute name="skill_level_id" type="integer"/>
+      <attribute name="skill_level_name" type="string"/>
+      <attribute name="star_rating" type="string"/>
+      <attribute name="total_characters" type="integer"/>
+      <attribute name="total_karts" type="integer"/>
+      <attribute name="total_player_creations" type="integer"/>
     </element>
   </response>
 </resource>

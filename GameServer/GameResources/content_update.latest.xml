@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="content_update.latest">
+  <request method="GET" url="content_updates/latest.xml">
+    <param name="platform" type="string" default="[session]" options="PS2,PS3,PSP,WEB,PSV" />
+    <param name="content_update_type" type="string" options="AUTO_CIRCLE_PLAYLIST,HOT_SEAT_PLAYLIST,ROM_STATUES,THEMED_EVENTS" required="true" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="content_update" type="anchor">
+      <attribute name="available_date" type="datetime"/>
+      <attribute name="content_update_type" type="string"/>
+      <attribute name="content_url" type="string"/>
+      <attribute name="created_at" type="datetime"/>
+      <attribute name="data_md5" type="string"/>
+      <attribute name="description" type="string"/>
+      <attribute name="has_been_uploaded" type="boolean"/>
+      <attribute name="id" type="integer"/>
+      <attribute name="name" type="string"/>
+      <attribute name="platform" type="string"/>
+      <attribute name="updated_at" type="datetime"/>
+      <attribute name="uuid" type="string"/>
+      <element name="data" type="binary"/>
+    </element>
+  </response>
+</resource>

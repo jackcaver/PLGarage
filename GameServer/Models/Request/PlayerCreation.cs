@@ -47,5 +47,10 @@ namespace GameServer.Models.Request
         public string associated_usernames { get; set; }
         public string associated_coordinates { get; set; }
         public int track_id { get; set; }
+        //MNR
+        public int parent_creation_id { get; set; }
+        public int parent_player_id { get; set; }
+        public int original_player_id { get; set; }
+        public float best_lap_time { get; set; }
     }
 }

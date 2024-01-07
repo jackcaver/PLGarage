@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="player.skill_levels" login_required="true">
+  <request method="GET" url="players/skill_levels.xml">
+    <param name="id" type="array" required="true" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="players" type="anchor">
+      <attribute name="total" type="integer"/>
+      <vector name="player" type="anchor">
+        <attribute name="id" type="integer"/>
+        <attribute name="skill_level_id" type="integer"/>
+        <attribute name="skill_level_name" type="string"/>
+        <attribute name="username" type="string"/>
+      </vector>
+    </element>
+  </response>
+</resource>

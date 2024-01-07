@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="player_creation.download" login_required="true">
+  <request method="POST" url="player_creations/:id/download.xml">
+    <param name="id" type="integer" minvalue="10000" required="true" />
+    <param name="is_counted" type="boolean" default="true" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_creation" type="anchor">
+      <attribute name="created_at" type="datetime"/>
+      <attribute name="data_md5" type="string"/>
+      <attribute name="data_size" type="integer"/>
+      <attribute name="description" type="string"/>
+      <attribute name="id" type="integer"/>
+      <attribute name="is_remixable" type="boolean"/>
+      <attribute name="moderation_status" type="string"/>
+      <attribute name="name" type="string"/>
+      <attribute name="original_player_id" type="integer"/>
+      <attribute name="original_player_username" type="string"/>
+      <attribute name="parent_creation_id" type="integer"/>
+      <attribute name="parent_creation_name" type="string"/>
+      <attribute name="parent_player_id" type="integer"/>
+      <attribute name="parent_player_username" type="string"/>
+      <attribute name="player_creation_type" type="string"/>
+      <attribute name="player_id" type="integer"/>
+      <attribute name="points" type="float"/>
+      <attribute name="points_last_week" type="float"/>
+      <attribute name="points_this_week" type="float"/>
+      <attribute name="points_today" type="float"/>
+      <attribute name="points_yesterday" type="float"/>
+      <attribute name="preview_md5" type="string"/>
+      <attribute name="preview_size" type="integer"/>
+      <attribute name="tags" type="string"/>
+      <attribute name="updated_at" type="datetime"/>
+      <attribute name="username" type="string"/>
+      <attribute name="version" type="integer"/>
+    </element>
+  </response>
+</resource>

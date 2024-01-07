@@ -7,6 +7,8 @@
         TRACK,
         ITEM,
         STORY,
-        DELETED
+        DELETED,
+        CHARACTER, 
+        KART
     }
 }

@@ -26,7 +26,7 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public string data_md5 { get; set; }
         [XmlAttribute]
-        public long data_size { get; set; }
+        public string data_size { get; set; }
         [XmlAttribute]
         public string description { get; set; }
         [XmlAttribute]
@@ -76,7 +76,7 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public string preview_md5 { get; set; }
         [XmlAttribute]
-        public long preview_size { get; set; }
+        public string preview_size { get; set; }
         [XmlAttribute]
         public string race_type { get; set; }
         [XmlAttribute]
@@ -123,6 +123,37 @@ namespace GameServer.Models.Response
         public int votes { get; set; }
         [XmlAttribute]
         public string weapon_set { get; set; }
+        //MNR
+        [XmlAttribute]
+        public float points { get; set; }
+        [XmlAttribute]
+        public float points_last_week { get; set; }
+        [XmlAttribute]
+        public float points_this_week { get; set; }
+        [XmlAttribute]
+        public float points_today { get; set; }
+        [XmlAttribute]
+        public float points_yesterday { get; set; }
+        [XmlAttribute]
+        public string rating { get; set; }
+        [XmlAttribute]
+        public string star_rating { get; set; }
+        [XmlAttribute]
+        public int original_player_id { get; set; }
+        [XmlAttribute]
+        public string original_player_username { get; set; }
+        [XmlAttribute]
+        public string parent_creation_id { get; set; }
+        [XmlAttribute]
+        public string parent_creation_name { get; set; }
+        [XmlAttribute]
+        public string parent_player_id { get; set; }
+        [XmlAttribute]
+        public string parent_player_username { get; set; }
+        [XmlAttribute]
+        public int moderation_status_id { get; set; }
+        [XmlAttribute]
+        public float best_lap_time { get; set; }
     }
 
     public class player_creations

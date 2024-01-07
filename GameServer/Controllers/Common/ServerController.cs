@@ -29,10 +29,9 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             var session = Session.GetSession(SessionID);
-            Server server = ServerConfig.Instance.ServerList[server_type];
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
-            if (user == null)
+            if (user == null || !ServerConfig.Instance.ServerList.ContainsKey(server_type))
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -41,6 +40,8 @@ namespace GameServer.Controllers.Common
                 };
                 return Content(errorResp.Serialize(), "application/xml;charset=utf-8");
             }
+
+            Server server = ServerConfig.Instance.ServerList[server_type];
 
             var resp = new Response<List<ServerResponse>>
             {

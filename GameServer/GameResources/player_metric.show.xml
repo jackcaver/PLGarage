@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="player_metric.show">
+  <request method="GET" url="player_metrics.xml">
+    <param name="player_metric_type" type="string" options="ANALYTICS,GLICKO" required="true" />
+    <param name="player_id" type="integer" default="[session]" minvalue="1" required="false" />
+    <param name="username" type="string" required="false" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_metric" type="anchor">
+      <attribute name="created_at" type="datetime"/>
+      <attribute name="data" type="text"/>
+      <attribute name="deviation" type="float"/>
+      <attribute name="id" type="integer"/>
+      <attribute name="num_games" type="integer"/>
+      <attribute name="player_id" type="integer"/>
+      <attribute name="player_metric_type" type="string"/>
+      <attribute name="points" type="float"/>
+      <attribute name="updated_at" type="datetime"/>
+      <attribute name="username" type="string"/>
+      <attribute name="volatility" type="float"/>
+    </element>
+  </response>
+</resource>

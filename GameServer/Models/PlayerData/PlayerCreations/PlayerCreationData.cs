@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Globalization;
 using System.Linq;
 
 namespace GameServer.Models.PlayerData.PlayerCreations
@@ -35,7 +36,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public float LongestDrift { get; set; }
         public int RacesStarted => this.database.PlayerCreationRacesStarted.Count(match => match.PlayerCreationId == PlayerCreationId);
         public int RacesWon => this.database.GamePlayerStats.Count(match => match.GameId == this.database.Games.FirstOrDefault(game => game.Id == match.GameId && game.TrackIdx == this.TrackId).Id && match.IsWinner == 1);
-        public int Votes { get; set; }
+        public int Votes => this.database.PlayerCreationRatings.Count(match => match.PlayerCreationId == PlayerCreationId && (!IsMNR || match.Rating != 0));
         public int RacesStartedThisWeek => this.database.PlayerCreationRacesStarted.Count(match => match.PlayerCreationId == PlayerCreationId && match.StartedAt >= DateTime.UtcNow.AddDays(-7) && match.StartedAt <= DateTime.UtcNow);
         public int RacesStartedThisMonth => this.database.PlayerCreationRacesStarted.Count(match => match.PlayerCreationId == PlayerCreationId && match.StartedAt >= DateTime.UtcNow.AddMonths(-1) && match.StartedAt <= DateTime.UtcNow);
         public int RacesFinished => this.database.GamePlayerStats.Count(match => match.GameId == this.database.Games.FirstOrDefault(game => game.Id == match.GameId && game.TrackIdx == this.TrackId).Id);
@@ -86,7 +87,20 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public int ViewsLastWeek => this.database.PlayerCreationViews.Count(match => match.PlayerCreationId == PlayerCreationId && match.ViewedAt >= DateTime.UtcNow.AddDays(-14) && match.ViewedAt <= DateTime.UtcNow.AddDays(-7));
         public int ViewsThisWeek => this.database.PlayerCreationViews.Count(match => match.PlayerCreationId == PlayerCreationId && match.ViewedAt >= DateTime.UtcNow.AddDays(-7) && match.ViewedAt <= DateTime.UtcNow);
         public int TrackId { get; set; }
-        public string ModerationStatus { get; set; }
+        public ModerationStatus ModerationStatus { get; set; }
+        //MNR
+        public bool IsMNR { get; set; }
+        public float Points => this.database.PlayerCreationPoints.Where(match => match.PlayerCreationId == PlayerCreationId).Sum(p => p.Amount);
+        public float PointsLastWeek => this.database.PlayerCreationPoints.Where(match => match.PlayerCreationId == PlayerCreationId && match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount);
+        public float PointsThisWeek => this.database.PlayerCreationPoints.Where(match => match.PlayerCreationId == PlayerCreationId && match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount);
+        public float PointsToday => this.database.PlayerCreationPoints.Where(match => match.PlayerCreationId == PlayerCreationId && match.CreatedAt >= DateTime.UtcNow.Date && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount);
+        public float PointsYesterday => this.database.PlayerCreationPoints.Where(match => match.PlayerCreationId == PlayerCreationId && match.CreatedAt >= DateTime.UtcNow.AddDays(-1).Date && match.CreatedAt <= DateTime.UtcNow.Date).Sum(p => p.Amount);
+        public float Rating => this.database.PlayerCreationRatings.Count(match => match.PlayerCreationId == PlayerCreationId) != 0 ? (float)this.database.PlayerCreationRatings.Where(match => match.PlayerCreationId == PlayerCreationId).Average(r => r.Rating) : 0;
+        public string StarRating => this.Rating.ToString("0.0", CultureInfo.InvariantCulture);
+        public int ParentCreationId { get; set; }
+        public int ParentPlayerId { get; set; }
+        public int OriginalPlayerId { get; set; }
+        public float BestLapTime { get; set; }
 
         public bool IsHeartedByMe(int id)
         {

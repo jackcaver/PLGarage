@@ -30,8 +30,17 @@ namespace GameServer.Utils
         public DbSet<PlayerCreationBookmark> PlayerCreationBookmarks { get; set; }
         public DbSet<GriefReportData> GriefReports { get; set; }
         public DbSet<ActivityEvent> ActivityLog { get; set; }
+        //MNR
+        public DbSet<PlayerRatingData> PlayerRatings { get; set; }
+        public DbSet<PlayerCreationPoint> PlayerCreationPoints { get; set; }
+        public DbSet<PlayerPoint> PlayerPoints { get; set; }
+        public DbSet<PlayerExperiencePoint> PlayerExperiencePoints { get; set; }
+        public DbSet<MailMessageData> MailMessages { get; set; }
+        public DbSet<PlayerComplaintData> PlayerComplaints { get; set; }
+        public DbSet<PlayerCreationComplaintData> PlayerCreationComplaints { get; set; }
+        public DbSet<AnnouncementData> Announcements { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options) =>
-            options.UseMySql(ServerConfig.Instance.MysqlConnectionString, MySqlServerVersion.LatestSupportedServerVersion);
+            options.UseMySql(ServerConfig.Instance.MysqlConnectionString, ServerVersion.AutoDetect(ServerConfig.Instance.MysqlConnectionString));
     }
 }

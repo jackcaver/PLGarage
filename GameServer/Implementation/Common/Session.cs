@@ -126,7 +126,8 @@ namespace GameServer.Implementation.Common
                 user = database.Users.FirstOrDefault(match => match.Username == NPTicket.Username);
             }
 
-            if (user == null || !Sessions.ContainsKey(SessionID) || (ServerConfig.Instance.Whitelist && !whitelist.Contains(user.Username)))
+            if (user == null || !Sessions.ContainsKey(SessionID) || user.IsBanned
+                || (ServerConfig.Instance.Whitelist && !whitelist.Contains(user.Username)))
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -136,13 +137,39 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
 
-            foreach (var Session in Sessions.Where(match => match.Value.Username == user.Username))
+            foreach (var Session in Sessions.Where(match => match.Value.Username == user.Username && match.Key != SessionID))
             {
                 Sessions.Remove(Session.Key);
             }
 
             Sessions[SessionID].Ticket = NPTicket;
             Sessions[SessionID].LastPing = DateTime.UtcNow;
+            Sessions[SessionID].Platform = platform;
+
+            List<string> MNR_IDs = new List<string> { "BCUS98167", "BCES00701", "BCES00764", "BCJS30041", "BCAS20105", 
+                "BCKS10122", "NPEA00291", "NPUA80535", "BCET70020", "NPUA70074", "NPEA90062", "NPUA70096", "NPJA90132" };
+
+            if (platform != Platform.PS3)
+                Sessions[SessionID].IsMNR = true;
+            if (MNR_IDs.Contains(NPTicket.TitleId))
+                Sessions[SessionID].IsMNR = true;
+
+            if (Sessions[SessionID].IsMNR && !user.PlayedMNR)
+            {
+                user.PlayedMNR = true;
+                database.SaveChanges();
+            }
+
+            if ((ServerConfig.Instance.BlockMNR && Sessions[SessionID].IsMNR) 
+                || (ServerConfig.Instance.BlockLBPK && !Sessions[SessionID].IsMNR))
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
 
             var resp = new Response<List<login_data>>
             {
@@ -163,7 +190,7 @@ namespace GameServer.Implementation.Common
 
         public static string SetPresence(string presence, Guid SessionID)
         {
-            ClearSessions();
+            Ping(SessionID);
             int id = -130;
             string message = "The player doesn't exist";
 
@@ -231,7 +258,7 @@ namespace GameServer.Implementation.Common
         private static void ClearSessions()
         {
             foreach (var Session in Sessions.Where(match => match.Value.Authenticated
-                && DateTime.UtcNow > match.Value.LastPing.AddMinutes(30) && DateTime.UtcNow > match.Value.ExpiryDate))
+                && (DateTime.UtcNow > match.Value.LastPing.AddMinutes(60) /*|| DateTime.UtcNow > match.Value.ExpiryDate*/)))
             {
                 Sessions.Remove(Session.Key);
             }
@@ -245,7 +272,7 @@ namespace GameServer.Implementation.Common
 
         public static SessionInfo GetSession(Guid SessionID)
         {
-            ClearSessions();
+            Ping(SessionID);
 
             if (!Sessions.ContainsKey(SessionID))
             {

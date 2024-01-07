@@ -18,6 +18,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public PlayerCreationData Creation { get; set; }
 
         public RatingType Type { get; set; }
+        public int Rating { get; set; }
         public string Comment { get; set; }
     }
 }

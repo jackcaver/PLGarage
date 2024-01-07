@@ -3,6 +3,12 @@ namespace GameServer.Models.Config
     public enum ServerType
     {
         DIRECTORY,
-        FLS
+        FLS,
+        BOMBD, 
+        JOB, 
+        NAT, 
+        RHTML, 
+        RXML, 
+        SIMSERVER
     }
 }

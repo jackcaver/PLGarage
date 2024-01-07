@@ -18,5 +18,11 @@ namespace GameServer.Models.PlayerData.Games
         public Platform Platform { get; set; }
         public string Name { get; set; }
         public bool IsRanked { get; set; }
+        //MNR
+        public string SpeedClass { get; set; }
+        public int Track { get; set; }
+        public string TrackGroup { get; set; }
+        public string Privacy { get; set; }
+        public int NumberLaps { get; set; }
     }
 }

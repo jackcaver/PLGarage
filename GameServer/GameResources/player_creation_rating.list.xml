@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="player_creation_rating.list" login_required="true">
+  <request method="GET" url="player_creation_ratings.xml">
+    <param name="player_creation_id" type="integer" minvalue="10000" required="true" />
+    <param name="page" type="integer" default="1" minvalue="1" />
+    <param name="per_page" type="integer" default="10" minvalue="1" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_creation_ratings" type="anchor">
+      <attribute name="page" type="integer"/>
+      <attribute name="row_end" type="integer"/>
+      <attribute name="row_start" type="integer"/>
+      <attribute name="total" type="integer"/>
+      <attribute name="total_pages" type="integer"/>
+      <vector name="player_creation_rating" type="anchor">
+        <attribute name="comments" type="string"/>
+        <attribute name="player_id" type="integer"/>
+        <attribute name="rating" type="integer"/>
+        <attribute name="username" type="string"/>
+      </vector>
+    </element>
+  </response>
+</resource>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="ps3.player_creation_ratings.view">
+  <request method="GET" url="player_creation_ratings/view.xml" login_required="true">
+    <param name="player_creation_id" type="integer" required="true"/>
+    <param name="player_id" type="integer" required="false"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_creation_rating" type="anchor">
+      <attribute name="comments" type="string"/>
+      <attribute name="rating" type="integer"/>
+    </element>
+  </response>
+</resource>

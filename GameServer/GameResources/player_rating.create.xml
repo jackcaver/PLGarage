@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="player_rating.create" login_required="true">
+  <request method="POST" url="player_ratings.xml">
+    <param name="player_rating[player_id]" type="integer" minvalue="1" required="true" />
+    <param name="player_rating[rating]" type="integer" options="1,2,3,4,5" required="true" />
+    <param name="player_rating[comments]" type="string" />
+  </request>
+</resource>

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="mail_message.create" login_required="true">
+  <request method="POST" url="mail_messages.xml">
+    <param name="reply_to_mail_message_id" type="integer" />
+    <param name="mail_message[recipient_list]" type="string" maxlength="255" minlength="3" required="true" />
+    <param name="mail_message[subject]" type="string" maxlength="255" required="true" />
+    <param name="mail_message[body]" type="string" maxlength="2000" required="true" />
+    <param name="mail_message[attachment_reference]" type="string" />
+    <param name="mail_message[mail_message_type]" type="string" options="ALERT,GAME,WEBSITE" required="false" />
+  </request>
+</resource>

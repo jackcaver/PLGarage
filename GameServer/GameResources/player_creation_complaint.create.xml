@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="player_creation_complaint.create" login_required="true">
+  <request method="POST" url="player_creation_complaints.xml" content_type="multipart/form-data">
+    <param name="player_creation_complaint[owner_player_id]" type="integer" required="true" />
+    <param name="player_creation_complaint[player_creation_id]" type="integer" minvalue="1" required="true" />
+    <param name="player_creation_complaint[player_complaint_reason]" type="string" options="COPYRIGHT,HARASS,ILLEGAL,MATURE,OFFENSIVE,OTHER,RACIAL,SEXUAL,TOS,VIOLENCE,VULGAR" required="true" />
+    <param name="player_creation_complaint[player_comments]" type="string" />
+    <param name="player_creation_complaint[preview]" type="file" />
+  </request>
+</resource>

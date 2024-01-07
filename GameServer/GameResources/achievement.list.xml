@@ -17,6 +17,9 @@
         <attribute name="player_creation_name" type="string"/>
         <attribute name="player_id" type="integer"/>
         <attribute name="updated_at" type="datetime"/>
+        <!--MNR-->
+        <attribute name="relevant" type="boolean"/>
+        <attribute name="value" type="integer"/>
       </vector>
     </element>
   </response>

@@ -63,5 +63,41 @@ namespace GameServer.Models.Response
         public int online_wins_last_week { get; set; }
         [XmlAttribute]
         public int online_finished_last_week { get; set; }
+
+        //MNR
+        [XmlAttribute]
+        public int total_characters { get; set; }
+        [XmlAttribute]
+        public int total_karts { get; set; }
+        [XmlAttribute]
+        public int total_player_creations { get; set; }
+        [XmlAttribute]
+        public float creator_points { get; set; }
+        [XmlAttribute]
+        public float creator_points_last_week { get; set; }
+        [XmlAttribute]
+        public float creator_points_this_week { get; set; }
+        [XmlAttribute]
+        public float experience_points { get; set; }
+        [XmlAttribute]
+        public float experience_points_last_week { get; set; }
+        [XmlAttribute]
+        public float experience_points_this_week { get; set; }
+        [XmlAttribute]
+        public float longest_drift { get; set; }
+        [XmlAttribute]
+        public string longest_hang_time { get; set; }
+        [XmlAttribute]
+        public int player_id { get; set; }
+        [XmlAttribute]
+        public string skill_level { get; set; }
+        [XmlAttribute]
+        public int skill_level_id { get; set; }
+        [XmlAttribute]
+        public string skill_level_name { get; set; }
+        [XmlAttribute]
+        public string star_rating { get; set; }
+        [XmlAttribute]
+        public string rating { get; set; }
     }
 }

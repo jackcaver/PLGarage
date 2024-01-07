@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.Config;
 using GameServer.Models.Response;
@@ -11,6 +13,10 @@ namespace GameServer.Controllers.Common
         [Route("content_urls.xml")]
         public IActionResult Get()
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var session = Session.GetSession(SessionID);
             string protocol = Request.IsHttps ? "https://" : "http://";
             string serverURL = ServerConfig.Instance.ExternalURL.Replace("auto", $"{protocol}{Request.Host.Host}", System.StringComparison.CurrentCultureIgnoreCase);
             var resp = new Response<ContentURLsResponse>
@@ -20,13 +26,16 @@ namespace GameServer.Controllers.Common
                 {
                     content_urls = new ContentURLs
                     {
-                        total = 4,
+                        total = 7,
                         server_uuid = "c139bd86-26a7-11e2-910b-02163e142639",
                         ContentURLList = new List<ContentURL> {
                             new ContentURL { name = "s3_bucket", formats = "", url = $"{serverURL}/" },
-                            new ContentURL { name = "player_avatars", formats = ".png", url = $"{serverURL}/player_avatars/" },
+                            new ContentURL { name = "player_avatars", formats = ".png", url = session.IsMNR ? $"{serverURL}/player_avatars/MNR/" : $"{serverURL}/player_avatars/" },
                             new ContentURL { name = "announcements", formats = "png", url = $"{serverURL}/announcements/" },
-                            new ContentURL { name = "player_creations", formats = "data.bin, preview_image.png, data.jpg", url = $"{serverURL}/player_creations/" }
+                            new ContentURL { name = "player_creations", formats = "data.bin, preview_image.png, data.jpg", url = $"{serverURL}/player_creations/" },
+                            new ContentURL { name = "ps3_player_creations", formats = "data.bin, preview_image.png", url = $"{serverURL}/player_creations/" },
+                            new ContentURL { name = "content_updates", formats = "data.bin", url = $"{serverURL}/content_updates/" },
+                            new ContentURL { name = "ghost_car_data", formats = "data.bin", url = $"{serverURL}/ghost_car_data/" }
                         }
                     },
                     magic_moment = new MagicMoment { scea = true, scee = true, sceasia = true, scej = true }

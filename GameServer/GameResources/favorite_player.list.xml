@@ -2,6 +2,7 @@
 <resource name="favorite_player.list">
   <request method="GET" url="favorite_players.xml" login_required="true">
     <param name="player_id_or_username" type="string" required="false"/>
+    <param name="player_id" type="integer" default="[session]" />
   </request>
   <response name="response" type="anchor">
     <element name="favorite_players" type="anchor">

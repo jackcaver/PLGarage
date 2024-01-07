@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="leaderboard.view" login_required="true">
+  <request method="GET" url="leaderboards/view.xml">
+    <param name="type" type="string" default="LIFETIME" options="DAILY,LAST_MONTH,LAST_WEEK,LIFETIME,MONTHLY,WEEKLY" />
+    <param name="game_type" type="string" default="OVERALL" options="CHARACTER_CREATORS,KART_CREATORS,ONLINE_ACTION_RACE,ONLINE_HOT_SEAT_RACE,ONLINE_LKS_RACE,ONLINE_PURE_RACE,ONLINE_TIME_TRIAL_RACE,OVERALL,OVERALL_CREATORS,OVERALL_RACE,TRACK_CREATORS" />
+    <param name="platform" type="string" default="[session]" options="PS2,PS3,PSP,WEB,PSV" />
+    <param name="page" type="integer" default="1" minvalue="1" />
+    <param name="per_page" type="integer" default="10" minvalue="1" />
+    <param name="column_page" type="integer" default="1" minvalue="1" />
+    <param name="cols_per_page" type="integer" default="9" minvalue="1" />
+    <param name="sort_column" type="string" default="points" />
+    <param name="sort_order" type="string" default="desc" />
+    <param name="limit" type="integer" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="my_stats" type="anchor">
+      <attribute name="best_lap_time" type="float"/>
+      <attribute name="character_idx" type="integer"/>
+      <attribute name="created_at" type="datetime"/>
+      <attribute name="creator_points" type="float"/>
+      <attribute name="deviation" type="float"/>
+      <attribute name="experience_points" type="float"/>
+      <attribute name="game_end" type="datetime"/>
+      <attribute name="game_start" type="datetime"/>
+      <attribute name="game_type" type="string"/>
+      <attribute name="ghost_car_data_md5" type="string"/>
+      <attribute name="id" type="integer"/>
+      <attribute name="kart_idx" type="integer"/>
+      <attribute name="longest_drift" type="float"/>
+      <attribute name="longest_hang_time" type="float"/>
+      <attribute name="longest_win_streak" type="integer"/>
+      <attribute name="online_disconnected" type="integer"/>
+      <attribute name="online_finished" type="integer"/>
+      <attribute name="online_forfeit" type="integer"/>
+      <attribute name="online_quits" type="integer"/>
+      <attribute name="online_races" type="integer"/>
+      <attribute name="online_wins" type="integer"/>
+      <attribute name="platform" type="string"/>
+      <attribute name="player_id" type="integer"/>
+      <attribute name="points" type="float"/>
+      <attribute name="rank" type="integer"/>
+      <attribute name="skill_level_id" type="integer"/>
+      <attribute name="skill_level_name" type="string"/>
+      <attribute name="track_idx" type="integer"/>
+      <attribute name="updated_at" type="datetime"/>
+      <attribute name="username" type="string"/>
+      <attribute name="volatility" type="float"/>
+      <attribute name="win_streak" type="integer"/>
+    </element>
+    <element name="leaderboard" type="anchor">
+      <attribute name="game_type" type="string"/>
+      <attribute name="page" type="integer"/>
+      <attribute name="row_end" type="integer"/>
+      <attribute name="row_start" type="integer"/>
+      <attribute name="total" type="integer"/>
+      <attribute name="total_pages" type="integer"/>
+      <attribute name="type" type="string"/>
+      <vector name="player" type="anchor">
+        <attribute name="best_lap_time" type="float"/>
+        <attribute name="character_idx" type="integer"/>
+        <attribute name="created_at" type="datetime"/>
+        <attribute name="creator_points" type="float"/>
+        <attribute name="deviation" type="float"/>
+        <attribute name="experience_points" type="float"/>
+        <attribute name="game_end" type="datetime"/>
+        <attribute name="game_start" type="datetime"/>
+        <attribute name="game_type" type="string"/>
+        <attribute name="ghost_car_data_md5" type="string"/>
+        <attribute name="id" type="integer"/>
+        <attribute name="kart_idx" type="integer"/>
+        <attribute name="longest_drift" type="float"/>
+        <attribute name="longest_hang_time" type="float"/>
+        <attribute name="longest_win_streak" type="integer"/>
+        <attribute name="online_disconnected" type="integer"/>
+        <attribute name="online_finished" type="integer"/>
+        <attribute name="online_forfeit" type="integer"/>
+        <attribute name="online_quits" type="integer"/>
+        <attribute name="online_races" type="integer"/>
+        <attribute name="online_wins" type="integer"/>
+        <attribute name="platform" type="string"/>
+        <attribute name="player_id" type="integer"/>
+        <attribute name="points" type="float"/>
+        <attribute name="rank" type="integer"/>
+        <attribute name="skill_level_id" type="integer"/>
+        <attribute name="skill_level_name" type="string"/>
+        <attribute name="track_idx" type="integer"/>
+        <attribute name="updated_at" type="datetime"/>
+        <attribute name="username" type="string"/>
+        <attribute name="volatility" type="float"/>
+        <attribute name="win_streak" type="integer"/>
+      </vector>
+    </element>
+    <element name="leaderboard_columns" type="anchor">
+      <vector name="column" type="anchor">
+        <attribute name="display_name" type="string"/>
+        <attribute name="name" type="string"/>
+      </vector>
+    </element>
+  </response>
+</resource>

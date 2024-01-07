@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="player_creation.list" login_required="true">
+  <request method="GET" url="player_creations.xml">
+    <param name="platform" type="string" options="PS2,PS3,PSP,WEB,PSV" />
+    <param name="page" type="integer" default="1" minvalue="1" />
+    <param name="per_page" type="integer" default="10" maxvalue="100" minvalue="1" />
+    <param name="sort_column" type="string" default="points" options="id,player_id,player_creation_type,rating,downloads,downloads_this_week,downloads_last_week,views,views_this_week,views_last_week,version,name,description,created_at,updated_at,rank,points,points_today,points_yesterday,points_this_week,points_last_week,longest_hang_time,longest_drift,races_started,races_won,votes,races_finished,best_lap_time,track_theme,auto_reset,ai" />
+    <param name="sort_order" type="string" default="asc" options="asc,desc" />
+    <param name="limit" type="integer" maxvalue="10000" minvalue="1" />
+    <param name="filters[id]" type="integer" minvalue="10000" />
+    <param name="filters[player_id]" type="integer" />
+    <param name="filters[player_creation_type]" type="string" options="CHARACTER,KART,PHOTO,TRACK" />
+    <param name="filters[downloads]" type="integer" />
+    <param name="filters[rating]" type="integer" />
+    <param name="filters[views]" type="integer" />
+    <param name="filters[name]" type="string" />
+    <param name="filters[description]" type="string" />
+    <param name="filters[created_at]" type="datetime" />
+    <param name="filters[updated_at]" type="datetime" />
+    <param name="filters[is_remixable]" type="boolean" />
+    <param name="filters[longest_hang_time]" type="float" required="false" />
+    <param name="filters[longest_drift]" type="float" required="false" />
+    <param name="filters[races_started]" type="integer" required="false" />
+    <param name="filters[races_won]" type="integer" required="false" />
+    <param name="filters[votes]" type="integer" required="false" />
+    <param name="filters[races_finished]" type="integer" required="false" />
+    <param name="filters[best_lap_time]" type="float" required="false" />
+    <param name="filters[track_theme]" type="integer" required="false" />
+    <param name="filters[auto_reset]" type="boolean" required="false" />
+    <param name="filters[ai]" type="boolean" required="false" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_creations" type="anchor">
+      <attribute name="page" type="integer"/>
+      <attribute name="row_end" type="integer"/>
+      <attribute name="row_start" type="integer"/>
+      <attribute name="total" type="integer"/>
+      <attribute name="total_pages" type="integer"/>
+      <vector name="player_creation" type="anchor">
+        <attribute name="created_at" type="datetime"/>
+        <attribute name="description" type="string"/>
+        <attribute name="dlc_keys" type="string"/>
+        <attribute name="downloads" type="integer"/>
+        <attribute name="downloads_last_week" type="integer"/>
+        <attribute name="downloads_this_week" type="integer"/>
+        <attribute name="id" type="integer"/>
+        <attribute name="is_remixable" type="boolean"/>
+        <attribute name="name" type="string"/>
+        <attribute name="platform" type="string"/>
+        <attribute name="player_creation_type" type="string"/>
+        <attribute name="player_id" type="integer"/>
+        <attribute name="points" type="float"/>
+        <attribute name="points_last_week" type="float"/>
+        <attribute name="points_this_week" type="float"/>
+        <attribute name="points_today" type="float"/>
+        <attribute name="points_yesterday" type="float"/>
+        <attribute name="rank" type="integer"/>
+        <attribute name="rating" type="float"/>
+        <attribute name="star_rating" type="string"/>
+        <attribute name="updated_at" type="datetime"/>
+        <attribute name="username" type="string"/>
+        <attribute name="version" type="integer"/>
+        <attribute name="views" type="integer"/>
+        <attribute name="views_last_week" type="integer"/>
+        <attribute name="views_this_week" type="integer"/>
+      </vector>
+    </element>
+  </response>
+</resource>

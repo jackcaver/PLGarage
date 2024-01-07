@@ -15,13 +15,18 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public int id { get; set; }
         [XmlAttribute]
-        public int player_creation_id { get; set; }
+        public string player_creation_id { get; set; }
         [XmlAttribute]
         public string player_creation_name { get; set; }
         [XmlAttribute]
         public int player_id { get; set; }
         [XmlAttribute]
         public string updated_at { get; set; }
+        //MNR
+        [XmlAttribute]
+        public bool relevant { get; set; }
+        [XmlAttribute]
+        public string value { get; set; }
     }
 
     [XmlType(TypeName = "achievements")]

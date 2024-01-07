@@ -7,7 +7,6 @@ using System.Linq;
 using GameServer.Models.Request;
 using System.Collections.Generic;
 using GameServer.Implementation.Common;
-using Microsoft.Extensions.Logging;
 
 namespace GameServer.Implementation.Player
 {
@@ -31,27 +30,31 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            if (!user.IsHeartedByMe(requestedBy.UserId))
+            if (!user.IsHeartedByMe(requestedBy.UserId, session.IsMNR))
             {
                 database.HeartedProfiles.Add(new HeartedProfile
                 {
                     HeartedUserId = user.UserId,
                     UserId = requestedBy.UserId,
                     HeartedAt = DateTime.UtcNow,
+                    IsMNR = session.IsMNR
                 });
-                database.ActivityLog.Add(new ActivityEvent
+                if (!session.IsMNR)
                 {
-                    AuthorId = requestedBy.UserId,
-                    Type = ActivityType.player_event,
-                    List = ActivityList.activity_log,
-                    Topic = "player_hearted",
-                    Description = "",
-                    PlayerId = user.UserId,
-                    PlayerCreationId = 0,
-                    CreatedAt = DateTime.UtcNow,
-                    AllusionId = user.UserId,
-                    AllusionType = "Player"
-                });
+                    database.ActivityLog.Add(new ActivityEvent
+                    {
+                        AuthorId = requestedBy.UserId,
+                        Type = ActivityType.player_event,
+                        List = ActivityList.activity_log,
+                        Topic = "player_hearted",
+                        Description = "",
+                        PlayerId = user.UserId,
+                        PlayerCreationId = 0,
+                        CreatedAt = DateTime.UtcNow,
+                        AllusionId = user.UserId,
+                        AllusionType = "Player"
+                    });
+                }
                 database.SaveChanges();
             }
 
@@ -81,7 +84,8 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            var HeartedUser = database.HeartedProfiles.FirstOrDefault(match => match.HeartedUserId == id && match.UserId == user.UserId);
+            var HeartedUser = database.HeartedProfiles.FirstOrDefault(match => match.HeartedUserId == id && match.UserId == user.UserId 
+                && match.IsMNR == session.IsMNR);
 
             if (HeartedUser == null)
             {
@@ -121,7 +125,7 @@ namespace GameServer.Implementation.Player
             }
 
             var Players = new List<favorite_player> { };
-            var HeartedUsers = database.HeartedProfiles.Where(match => match.UserId == user.UserId).ToList();
+            var HeartedUsers = database.HeartedProfiles.Where(match => match.UserId == user.UserId && match.IsMNR == session.IsMNR).ToList();
 
             HeartedUsers.Sort((curr, prev) => prev.HeartedAt.CompareTo(curr.HeartedAt));
 
@@ -133,7 +137,7 @@ namespace GameServer.Implementation.Player
                     Players.Add(new favorite_player
                     {
                         favorite_player_id = profile.HeartedUserId,
-                        hearted_by_me = requestedBy != null && heartedUser.IsHeartedByMe(requestedBy.UserId) ? 1 : 0,
+                        hearted_by_me = requestedBy != null && heartedUser.IsHeartedByMe(requestedBy.UserId, session.IsMNR) ? 1 : 0,
                         hearts = heartedUser.Hearts,
                         id = Players.Count + 1,
                         quote = heartedUser.Quote,

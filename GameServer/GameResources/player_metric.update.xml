@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="player_metric.update">
+  <request method="PUT" url="player_metrics.xml">
+    <param name="username" type="string" required="false" />
+    <param name="player_metric_type" type="string" options="ANALYTICS,GLICKO" required="true" />
+    <param name="player_metric[data]" type="binary" />
+    <param name="player_metric[points]" type="decimal" required="false" />
+    <param name="player_metric[volatility]" type="decimal" required="false" />
+    <param name="player_metric[deviation]" type="decimal" required="false" />
+    <param name="player_metric[num_games]" type="integer" required="false" />
+  </request>
+</resource>

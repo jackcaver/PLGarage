@@ -18,5 +18,6 @@ namespace GameServer.Models.PlayerData
         [ForeignKey(nameof(HeartedUserId))]
         public User HeartedUser { get; set; }
         public DateTime HeartedAt { get; set; }
+        public bool IsMNR { get; set; }
     }
 }

@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="player_complaint.create" login_required="true">
+  <request method="POST" url="player_complaints.xml">
+    <param name="player_complaint[player_id]" type="integer" minvalue="1" required="true" />
+    <param name="player_complaint[player_complaint_reason]" type="string" options="COPYRIGHT,HARASS,ILLEGAL,MATURE,OFFENSIVE,OTHER,RACIAL,SEXUAL,TOS,VIOLENCE,VULGAR" required="true" />
+    <param name="player_complaint[player_comments]" type="string" />
+  </request>
+</resource>

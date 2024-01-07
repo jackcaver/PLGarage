@@ -25,5 +25,19 @@ namespace GameServer.Models.PlayerData.Games
         public float Deviation { get; set; }
         public int PlaygroupSize { get; set; }
         public int NumKills { get; set; }
+        //MNR
+        public int TrackIdx { get; set; }
+        public int KartIdx { get; set; }
+        public int CharacterIdx { get; set; }
+        public float BestLapTime { get; set; }
+        public int MusicIdx { get; set; }
+        public int Bank { get; set; }
+        public float LongestDrift { get; set; }
+        public float LongestHangTime { get; set; }
+        //MNR: Road Trip
+        public float Latitude { get; set; }
+        public float Longitude { get; set; }
+        public string LocationTag { get; set; }
+        public Platform TrackPlatform { get; set; }
     }
 }

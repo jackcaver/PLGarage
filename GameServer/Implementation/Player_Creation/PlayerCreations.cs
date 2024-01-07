@@ -8,6 +8,8 @@ using System;
 using System.Linq;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Implementation.Common;
+using System.Globalization;
+using Serilog;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -80,10 +82,9 @@ namespace GameServer.Implementation.Player_Creation
             Creation.UpdatedAt = DateTime.UtcNow;
             Creation.UserTags = PlayerCreation.user_tags;
             Creation.WeaponSet = PlayerCreation.weapon_set;
-            Creation.Votes = PlayerCreation.votes;
             Creation.Version++;
 
-            if (Creation.Type == PlayerCreationType.TRACK)
+            if (Creation.Type == PlayerCreationType.TRACK && !session.IsMNR)
             {
                 database.ActivityLog.Add(new ActivityEvent
                 {
@@ -200,12 +201,17 @@ namespace GameServer.Implementation.Player_Creation
                 UpdatedAt = DateTime.UtcNow,
                 UserTags = Creation.user_tags,
                 WeaponSet = Creation.weapon_set,
-                Votes = Creation.votes,
                 TrackId = Creation.track_id == 0 ? id : Creation.track_id,
-                Version = 1
+                Version = 1,
+                //MNR
+                IsMNR = session.IsMNR,
+                ParentCreationId = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Creation.parent_creation_id) != null || Creation.parent_creation_id < 10000 ? Creation.parent_creation_id : 0,
+                ParentPlayerId = database.Users.FirstOrDefault(match => match.UserId == Creation.parent_player_id) != null ? Creation.parent_player_id == 0 ? Creation.parent_player_id : Creation.parent_player_id : 0,
+                OriginalPlayerId = database.Users.FirstOrDefault(match => match.UserId == Creation.original_player_id) != null ? Creation.original_player_id == 0 ? Creation.original_player_id : user.UserId : user.UserId,
+                BestLapTime = Creation.best_lap_time
             });
 
-            if (Creation.player_creation_type == PlayerCreationType.TRACK)
+            if (Creation.player_creation_type == PlayerCreationType.TRACK && !session.IsMNR)
             {
                 database.ActivityLog.Add(new ActivityEvent
                 {
@@ -314,7 +320,7 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string GetPlayerCreation(Database database, Guid SessionID, int id, bool download = false)
+        public static string GetPlayerCreation(Database database, Guid SessionID, int id, bool IsCounted, bool download = false)
         {
             var session = Session.GetSession(SessionID);
             var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
@@ -332,16 +338,18 @@ namespace GameServer.Implementation.Player_Creation
 
             if (User != null)
             {
-                if (User.UserId != Creation.PlayerId && !download)
+                if (IsCounted && !download)
                 {
                     database.PlayerCreationViews.Add(new PlayerCreationView { PlayerCreationId = Creation.PlayerCreationId, ViewedAt = DateTime.UtcNow });
                     database.SaveChanges();
                 }
 
-                if (User.UserId != Creation.PlayerId && download)
+                if (IsCounted && download)
                 {
                     database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = Creation.PlayerCreationId, StartedAt = DateTime.UtcNow });
                     var uniqueRacer = database.PlayerCreationUniqueRacers.FirstOrDefault(match => match.PlayerId == User.UserId);
+                    database.PlayerCreationDownloads.Add(new PlayerCreationDownload { PlayerCreationId = Creation.PlayerCreationId, DownloadedAt = DateTime.UtcNow });
+                    database.PlayerCreationPoints.Add(new PlayerCreationPoint { PlayerCreationId = Creation.PlayerCreationId, PlayerId = Creation.PlayerId, Platform = Creation.Platform, Type = Creation.Type, CreatedAt = DateTime.UtcNow, Amount = 100 });
 
                     if (uniqueRacer == null)
                     {
@@ -351,64 +359,69 @@ namespace GameServer.Implementation.Player_Creation
                             PlayerCreationId = Creation.PlayerCreationId,
                             Version = Creation.Version
                         });
-                        database.PlayerCreationDownloads.Add(new PlayerCreationDownload { PlayerCreationId = Creation.PlayerCreationId, DownloadedAt = DateTime.UtcNow });
-                        database.ActivityLog.Add(new ActivityEvent
+                        if (!session.IsMNR)
                         {
-                            AuthorId = User.UserId,
-                            Type = ActivityType.player_creation_event,
-                            List = ActivityList.activity_log,
-                            Topic = "player_creation_downloaded",
-                            Description = "",
-                            PlayerId = 0,
-                            PlayerCreationId = Creation.PlayerCreationId,
-                            CreatedAt = DateTime.UtcNow,
-                            AllusionId = Creation.PlayerCreationId,
-                            AllusionType = "PlayerCreation::Track"
-                        });
-                        database.ActivityLog.Add(new ActivityEvent
-                        {
-                            AuthorId = User.UserId,
-                            Type = ActivityType.player_creation_event,
-                            List = ActivityList.activity_log,
-                            Topic = "player_creation_played",
-                            Description = "",
-                            PlayerId = 0,
-                            PlayerCreationId = Creation.PlayerCreationId,
-                            CreatedAt = DateTime.UtcNow,
-                            AllusionId = Creation.PlayerCreationId,
-                            AllusionType = "PlayerCreation::Track"
-                        });
+                            database.ActivityLog.Add(new ActivityEvent
+                            {
+                                AuthorId = User.UserId,
+                                Type = ActivityType.player_creation_event,
+                                List = ActivityList.activity_log,
+                                Topic = "player_creation_downloaded",
+                                Description = "",
+                                PlayerId = 0,
+                                PlayerCreationId = Creation.PlayerCreationId,
+                                CreatedAt = DateTime.UtcNow,
+                                AllusionId = Creation.PlayerCreationId,
+                                AllusionType = "PlayerCreation::Track"
+                            });
+                            database.ActivityLog.Add(new ActivityEvent
+                            {
+                                AuthorId = User.UserId,
+                                Type = ActivityType.player_creation_event,
+                                List = ActivityList.activity_log,
+                                Topic = "player_creation_played",
+                                Description = "",
+                                PlayerId = 0,
+                                PlayerCreationId = Creation.PlayerCreationId,
+                                CreatedAt = DateTime.UtcNow,
+                                AllusionId = Creation.PlayerCreationId,
+                                AllusionType = "PlayerCreation::Track"
+                            });
+                        }
                     }
 
                     if (uniqueRacer != null && uniqueRacer.Version != Creation.Version)
                     {
                         database.PlayerCreationDownloads.Add(new PlayerCreationDownload { PlayerCreationId = Creation.PlayerCreationId, DownloadedAt = DateTime.UtcNow });
-                        database.ActivityLog.Add(new ActivityEvent
+                        if (!session.IsMNR)
                         {
-                            AuthorId = User.UserId,
-                            Type = ActivityType.player_creation_event,
-                            List = ActivityList.activity_log,
-                            Topic = "player_creation_downloaded",
-                            Description = "",
-                            PlayerId = 0,
-                            PlayerCreationId = Creation.PlayerCreationId,
-                            CreatedAt = DateTime.UtcNow,
-                            AllusionId = Creation.PlayerCreationId,
-                            AllusionType = "PlayerCreation::Track"
-                        });
-                        database.ActivityLog.Add(new ActivityEvent
-                        {
-                            AuthorId = User.UserId,
-                            Type = ActivityType.player_creation_event,
-                            List = ActivityList.activity_log,
-                            Topic = "player_creation_played",
-                            Description = "",
-                            PlayerId = 0,
-                            PlayerCreationId = Creation.PlayerCreationId,
-                            CreatedAt = DateTime.UtcNow,
-                            AllusionId = Creation.PlayerCreationId,
-                            AllusionType = "PlayerCreation::Track"
-                        });
+                            database.ActivityLog.Add(new ActivityEvent
+                            {
+                                AuthorId = User.UserId,
+                                Type = ActivityType.player_creation_event,
+                                List = ActivityList.activity_log,
+                                Topic = "player_creation_downloaded",
+                                Description = "",
+                                PlayerId = 0,
+                                PlayerCreationId = Creation.PlayerCreationId,
+                                CreatedAt = DateTime.UtcNow,
+                                AllusionId = Creation.PlayerCreationId,
+                                AllusionType = "PlayerCreation::Track"
+                            });
+                            database.ActivityLog.Add(new ActivityEvent
+                            {
+                                AuthorId = User.UserId,
+                                Type = ActivityType.player_creation_event,
+                                List = ActivityList.activity_log,
+                                Topic = "player_creation_played",
+                                Description = "",
+                                PlayerId = 0,
+                                PlayerCreationId = Creation.PlayerCreationId,
+                                CreatedAt = DateTime.UtcNow,
+                                AllusionId = Creation.PlayerCreationId,
+                                AllusionType = "PlayerCreation::Track"
+                            });
+                        }
                         uniqueRacer.Version = Creation.Version;
                     }
 
@@ -433,7 +446,7 @@ namespace GameServer.Implementation.Player_Creation
                         created_at = Creation.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                         description = Creation.Description,
                         difficulty = Creation.Difficulty.ToString(),
-                        dlc_keys = Creation.DLCKeys,
+                        dlc_keys = Creation.DLCKeys != null ? Creation.DLCKeys : "",
                         downloads = Creation.Downloads,
                         downloads_last_week = Creation.DownloadsLastWeek,
                         downloads_this_week = Creation.DownloadsThisWeek,
@@ -474,7 +487,28 @@ namespace GameServer.Implementation.Player_Creation
                         views_last_week = Creation.ViewsLastWeek,
                         views_this_week = Creation.ViewsThisWeek,
                         votes = Creation.Votes,
-                        weapon_set = Creation.WeaponSet
+                        weapon_set = Creation.WeaponSet,
+                        data_md5 = download ? UserGeneratedContentUtils.CalculateMD5(id, "data.bin") : null,
+                        data_size = download ? UserGeneratedContentUtils.CalculateSize(id, "data.bin").ToString() : null,
+                        preview_md5 = download ? UserGeneratedContentUtils.CalculateMD5(id, "preview_image.png") : null,
+                        preview_size = download ? UserGeneratedContentUtils.CalculateSize(id, "preview_image.png").ToString() : null,
+                        //MNR
+                        points = Creation.Points,
+                        points_last_week = Creation.PointsLastWeek,
+                        points_this_week = Creation.PointsThisWeek,
+                        points_today = Creation.PointsToday,
+                        points_yesterday = Creation.PointsYesterday,
+                        rating = Creation.Rating.ToString("0.00", CultureInfo.InvariantCulture),
+                        star_rating = Creation.StarRating,
+                        original_player_id = Creation.OriginalPlayerId,
+                        original_player_username = database.Users.FirstOrDefault(match => match.UserId == Creation.OriginalPlayerId) != null ? database.Users.FirstOrDefault(match => match.UserId == Creation.OriginalPlayerId).Username : "",
+                        parent_creation_id = Creation.ParentCreationId != 0 ? Creation.ParentCreationId.ToString() : "",
+                        parent_creation_name = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Creation.ParentCreationId) != null ? database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Creation.ParentCreationId).Name : "",
+                        parent_player_id = Creation.ParentPlayerId != 0 ? Creation.ParentPlayerId.ToString() : "",
+                        parent_player_username = database.Users.FirstOrDefault(match => match.UserId == Creation.ParentPlayerId) != null ? database.Users.FirstOrDefault(match => match.UserId == Creation.ParentPlayerId).Username : "",
+                        best_lap_time = Creation.BestLapTime,
+                        moderation_status = "APPROVED",
+                        moderation_status_id = 1202,
                     }
                 }
             };
@@ -509,12 +543,14 @@ namespace GameServer.Implementation.Player_Creation
         }
 
         public static string SearchPlayerCreations(Database database, int page, int per_page, SortColumn sort_column, SortOrder sort_order,
-            int limit, Platform platform, Filters filters, string keyword = null, bool TeamPicks = false, bool LuckyDip = false)
+            int limit, Platform platform, Filters filters, string keyword = null, bool TeamPicks = false, 
+            bool LuckyDip = false, bool IsMNR = false)
         {
             var Creations = new List<PlayerCreationData> { };
 
-            if (filters.username == null && filters.id == null)
-                Creations = database.PlayerCreations.Where(match => match.Type == filters.player_creation_type && match.Platform == platform).ToList();
+            if (filters.username == null && filters.id == null && filters.player_id == null)
+                Creations = database.PlayerCreations.Where(match => match.Type == filters.player_creation_type && match.Platform == platform 
+                    && match.IsMNR == IsMNR).ToList();
 
             //filters
             if (filters.username != null)
@@ -525,7 +561,7 @@ namespace GameServer.Implementation.Player_Creation
                     if (user != null)
                     {
                         var userTracks = database.PlayerCreations.Where(match => match.PlayerId == user.UserId
-                            && match.Type == filters.player_creation_type && match.Platform == platform).ToList();
+                            && match.Type == filters.player_creation_type && match.Platform == platform && match.IsMNR == IsMNR).ToList();
                         if (userTracks != null)
                             Creations.AddRange(userTracks);
                     }
@@ -537,11 +573,29 @@ namespace GameServer.Implementation.Player_Creation
                 foreach (string id in filters.id)
                 {
                     var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId.ToString() == id &&
-                        (match.Type == filters.player_creation_type || match.Type == PlayerCreationType.STORY));
+                        (match.Type == filters.player_creation_type || match.Type == PlayerCreationType.STORY) && match.IsMNR == IsMNR);
                     if (Creation != null)
                         Creations.Add(Creation);
                 }
             }
+
+            if (filters.player_id != null)
+            {
+                foreach (string player_id in filters.player_id)
+                {
+                    var user = database.Users.FirstOrDefault(match => match.UserId.ToString() == player_id);
+                    if (user != null)
+                    {
+                        var userTracks = database.PlayerCreations.Where(match => match.PlayerId == user.UserId
+                            && match.Type == filters.player_creation_type && match.Platform == platform && match.IsMNR == IsMNR).ToList();
+                        if (userTracks != null)
+                            Creations.AddRange(userTracks);
+                    }
+                }
+            }
+
+            Creations.RemoveAll(match => match.ModerationStatus == ModerationStatus.BANNED 
+                || match.ModerationStatus == ModerationStatus.ILLEGAL);
 
             if (keyword != null)
                 Creations.RemoveAll(match => !match.Name.Contains(keyword));
@@ -549,7 +603,7 @@ namespace GameServer.Implementation.Player_Creation
             if (filters.race_type != null)
                 Creations.RemoveAll(match => !filters.race_type.Equals(match.RaceType.ToString()));
 
-            if (filters.tags != null && filters.tags.Count() != 0)
+            if (filters.tags != null && filters.tags.Length != 0)
             {
                 Creations.RemoveAll(match => match.Tags == null);
                 foreach (string tag in filters.tags)
@@ -557,6 +611,15 @@ namespace GameServer.Implementation.Player_Creation
                     Creations.RemoveAll(match => !match.Tags.Split(',').Contains(tag));
                 }
             }
+
+            if (filters.auto_reset != null)
+                Creations.RemoveAll(match => match.AutoReset != filters.auto_reset);
+
+            if (filters.ai != null)
+                Creations.RemoveAll(match => match.AI != filters.ai);
+
+            if (filters.is_remixable != null)
+                Creations.RemoveAll(match => match.IsRemixable != filters.is_remixable);
 
             if (TeamPicks)
                 Creations.RemoveAll(match => !match.IsTeamPick);
@@ -592,6 +655,35 @@ namespace GameServer.Implementation.Player_Creation
                 Creations.Sort((curr, prev) => prev.HeartsThisWeek.CompareTo(curr.HeartsThisWeek));
             if (sort_column == SortColumn.hearts_this_month)
                 Creations.Sort((curr, prev) => prev.HeartsThisMonth.CompareTo(curr.HeartsThisMonth));
+
+            //MNR
+            if (sort_column == SortColumn.rating)
+                Creations.Sort((curr, prev) => prev.Rating.CompareTo(curr.Rating));
+            //points
+            if (sort_column == SortColumn.points)
+                Creations.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+            if (sort_column == SortColumn.points_today)
+                Creations.Sort((curr, prev) => prev.PointsToday.CompareTo(curr.PointsYesterday));
+            if (sort_column == SortColumn.points_yesterday)
+                Creations.Sort((curr, prev) => prev.PointsYesterday.CompareTo(curr.PointsYesterday));
+            if (sort_column == SortColumn.points_this_week)
+                Creations.Sort((curr, prev) => prev.PointsThisWeek.CompareTo(curr.PointsThisWeek));
+            if (sort_column == SortColumn.points_last_week)
+                Creations.Sort((curr, prev) => prev.PointsLastWeek.CompareTo(curr.PointsLastWeek));
+            //download
+            if (sort_column == SortColumn.downloads)
+                Creations.Sort((curr, prev) => prev.Downloads.CompareTo(curr.Downloads));
+            if (sort_column == SortColumn.downloads_this_week)
+                Creations.Sort((curr, prev) => prev.DownloadsThisWeek.CompareTo(curr.DownloadsThisWeek));
+            if (sort_column == SortColumn.downloads_last_week)
+                Creations.Sort((curr, prev) => prev.DownloadsLastWeek.CompareTo(curr.DownloadsLastWeek));
+            //views
+            if (sort_column == SortColumn.views)
+                Creations.Sort((curr, prev) => prev.Views.CompareTo(curr.Views));
+            if (sort_column == SortColumn.views_this_week)
+                Creations.Sort((curr, prev) => prev.ViewsThisWeek.CompareTo(curr.ViewsThisWeek));
+            if (sort_column == SortColumn.views_last_week)
+                Creations.Sort((curr, prev) => prev.ViewsLastWeek.CompareTo(curr.ViewsLastWeek));
 
             //calculating pages
             int pageEnd = PageCalculator.GetPageEnd(page, per_page);
@@ -662,7 +754,15 @@ namespace GameServer.Implementation.Player_Creation
                         views_last_week = Creation.ViewsLastWeek,
                         views_this_week = Creation.ViewsThisWeek,
                         votes = Creation.Votes,
-                        weapon_set = Creation.WeaponSet
+                        weapon_set = Creation.WeaponSet,
+                        //MNR
+                        points = Creation.Points,
+                        points_last_week = Creation.PointsLastWeek,
+                        points_this_week = Creation.PointsThisWeek,
+                        points_today = Creation.PointsToday,
+                        points_yesterday = Creation.PointsYesterday,
+                        rating = Creation.Rating.ToString("0.0", CultureInfo.InvariantCulture),
+                        star_rating = Creation.StarRating
                     });
                 }
             }
@@ -683,6 +783,29 @@ namespace GameServer.Implementation.Player_Creation
                 }
             };
             return resp.Serialize();
+        }
+
+        public static string Mine(Database database, Guid SessionID, int page, int per_page, SortColumn sort_column, SortOrder sort_order,
+            int limit, Filters filters, string keyword = null, Platform? platformOverride = null) 
+        {
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            if (user == null)
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+
+            Platform platform = session.Platform;
+            if (platformOverride != null)
+                platform = (Platform)platformOverride;
+
+            filters.player_id = new string[1] { user.UserId.ToString() };
+            return SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, filters, keyword, false, false, true);
         }
 
         public static string SearchPhotos(Database database, int? track_id, string username, string associated_usernames, int page, int per_page)
@@ -752,7 +875,7 @@ namespace GameServer.Implementation.Player_Creation
             var TrackReviews = database.PlayerCreationReviews.Where(match => match.PlayerCreationId == id).ToList();
             var TrackActivity = database.ActivityLog.Where(match => match.PlayerCreationId == id).ToList();
             List<Photo> PhotoList = new List<Photo> { };
-            List<LeaderboardPlayer> ScoresList = new List<LeaderboardPlayer> { };
+            List<SubLeaderboardPlayer> ScoresList = new List<SubLeaderboardPlayer> { };
             List<Comment> CommentsList = new List<Comment> { };
             List<Review> ReviewsList = new List<Review> { };
             List<Activity> ActivityList = new List<Activity> { };
@@ -787,7 +910,7 @@ namespace GameServer.Implementation.Player_Creation
 
             foreach (Score Score in TrackScores.Take(3))
             {
-                ScoresList.Add(new LeaderboardPlayer
+                ScoresList.Add(new SubLeaderboardPlayer
                 {
                     player_id = Score.PlayerId,
                     username = Score.Username,
@@ -839,6 +962,7 @@ namespace GameServer.Implementation.Player_Creation
 
             foreach (var Activity in TrackActivity.Take(3))
             {
+                var Author = database.Users.FirstOrDefault(match => match.UserId == Activity.AuthorId);
                 ActivityList.Add(new Activity
                 {
                     player_creation_id = id,
@@ -860,7 +984,7 @@ namespace GameServer.Implementation.Player_Creation
                                 topic = Activity.Type.ToString(),
                                 type = Activity.Topic,
                                 details = Activity.Description,
-                                creator_username = Track.Username,
+                                creator_username = Author != null ? Author.Username : "",
                                 creator_id = Activity.AuthorId,
                                 timestamp = Activity.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                                 seconds_ago = (int)new TimeSpan(DateTime.UtcNow.Ticks - Activity.CreatedAt.Ticks).TotalSeconds,
@@ -937,7 +1061,7 @@ namespace GameServer.Implementation.Player_Creation
                         reviewed_by_me = (requestedBy == null) ? "false" : Track.IsReviewedByMe(requestedBy.UserId).ToString().ToLower(),
                         activities = new List<Activities> { new Activities { total = TrackActivity.Count, ActivityList = ActivityList } },
                         comments = CommentsList,
-                        leaderboard = new List<Leaderboard> { new Leaderboard { total = TrackScores.Count, LeaderboardPlayersList = ScoresList } },
+                        leaderboard = new List<SubLeaderboard> { new SubLeaderboard { total = TrackScores.Count, LeaderboardPlayersList = ScoresList } },
                         photos = new List<Photos> { new Photos { total = PhotoList.Count, PhotoList = PhotoList } },
                         reviews = new List<Reviews> { new Reviews { total = TrackReviews.Count, ReviewList = ReviewsList } }
                     }
@@ -952,13 +1076,26 @@ namespace GameServer.Implementation.Player_Creation
             foreach (int item in id)
             {
                 var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item);
-                if (creation != null)
+                Log.Information($"verifying {item}");
+                if (creation != null || (creation != null && (creation.ModerationStatus != ModerationStatus.BANNED
+                    || creation.ModerationStatus != ModerationStatus.ILLEGAL)))
                 {
+                    Log.Information($"{item} allow");
                     creations.Add(new PlayerCreationToVerify
                     {
                         id = item,
                         type = creation.Type.ToString(),
                         suggested_action = "allow"
+                    });
+                }
+                else
+                {
+                    Log.Information($"{item} ban");
+                    creations.Add(new PlayerCreationToVerify
+                    {
+                        id = item,
+                        type = PlayerCreationType.TRACK.ToString(),
+                        suggested_action = "ban"
                     });
                 }
             }
@@ -1008,7 +1145,7 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
             var trackList = new List<Track> { };
-            var creations = database.PlayerCreations.Where(match => match.PlayerId == player_id && match.Type == PlayerCreationType.TRACK).ToList();
+            var creations = database.PlayerCreations.Where(match => match.PlayerId == player_id && match.Type == PlayerCreationType.TRACK && !match.IsMNR).ToList();
             foreach (PlayerCreationData Track in creations)
             {
                 trackList.Add(new Track

@@ -17,7 +17,6 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var rating = database.PlayerCreationRatings.FirstOrDefault(match => match.PlayerCreationId == player_creation_id && match.PlayerId == user.UserId);
 
             if (user == null)
             {
@@ -29,13 +28,59 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
+            var rating = database.PlayerCreationRatings.FirstOrDefault(match => match.PlayerCreationId == player_creation_id && match.PlayerId == user.UserId);
+            
             var resp = new Response<List<player_creation_rating>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = new List<player_creation_rating> { new player_creation_rating {
-                    comments = rating != null ? rating.Comment : null,
-                    rating = rating != null
+                    comments = rating != null ? rating.Comment : "",
+                    rating = session.IsMNR ? (rating != null ? rating.Rating.ToString() : "0") : (rating != null ? "true" : "false"),
                 } }
+            };
+            return resp.Serialize();
+        }
+
+        public static string List(Database database, int player_creation_id, int page, int per_page)
+        {
+            var ratings = database.PlayerCreationRatings.Where(match => match.PlayerCreationId == player_creation_id).ToList();
+
+            //calculating pages
+            int pageEnd = PageCalculator.GetPageEnd(page, per_page);
+            int pageStart = PageCalculator.GetPageStart(page, per_page);
+            int totalPages = PageCalculator.GetTotalPages(per_page, ratings.Count);
+
+            if (pageEnd > ratings.Count)
+                pageEnd = ratings.Count;
+
+            var ratingsList = new List<player_creation_rating>();
+
+            for (int i = pageStart; i < pageEnd; i++)
+            {
+                var rating = ratings[i];
+                ratingsList.Add(new player_creation_rating
+                {
+                    comments = rating.Comment,
+                    rating = rating.Rating.ToString(),
+                    player_id = rating.PlayerId.ToString(),
+                    username = database.Users.FirstOrDefault(match => match.UserId == rating.PlayerId).Username
+                });
+            }
+
+            var resp = new Response<List<player_creation_ratings>>
+            {
+                status = new ResponseStatus { id = 0, message = "Successful completion" },
+                response = new List<player_creation_ratings> {
+                    new player_creation_ratings
+                    {
+                        page = page,
+                        row_end = pageEnd,
+                        row_start = pageStart,
+                        total = ratings.Count,
+                        total_pages = totalPages,
+                        PlayerCreationRatingList = ratingsList,
+                    }
+                }
             };
             return resp.Serialize();
         }
@@ -65,7 +110,9 @@ namespace GameServer.Implementation.Player_Creation
                     PlayerCreationId = player_creation_rating.player_creation_id,
                     PlayerId = user.UserId,
                     Type = RatingType.YAY,
-                    RatedAt = DateTime.UtcNow
+                    RatedAt = DateTime.UtcNow,
+                    Rating = player_creation_rating.rating,
+                    Comment = player_creation_rating.comments
                 });
                 database.ActivityLog.Add(new ActivityEvent
                 {
@@ -80,6 +127,36 @@ namespace GameServer.Implementation.Player_Creation
                     AllusionId = Creation.PlayerCreationId,
                     AllusionType = "PlayerCreation::Track"
                 });
+                database.SaveChanges();
+            }
+
+            if (player_creation_rating.comments != null && (rating == null || rating.Comment == null))
+            {
+                database.PlayerCreationPoints.Add(new PlayerCreationPoint { PlayerCreationId = Creation.PlayerCreationId, PlayerId = Creation.PlayerId, Platform = Creation.Platform, Type = Creation.Type, CreatedAt = DateTime.UtcNow, Amount = 20 });
+                database.MailMessages.Add(new MailMessageData
+                {
+                    Body = player_creation_rating.comments,
+                    Subject = Creation.Name,
+                    RecipientList = Creation.Username,
+                    Type = MailMessageType.ALERT,
+                    RecipientId = Creation.PlayerId,
+                    SenderId = user.UserId,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+                database.SaveChanges();
+            }
+
+            if (player_creation_rating.rating != 0 && (rating == null || rating.Rating == 0))
+            {
+                database.PlayerCreationPoints.Add(new PlayerCreationPoint { PlayerCreationId = Creation.PlayerCreationId, PlayerId = Creation.PlayerId, Platform = Creation.Platform, Type = Creation.Type, CreatedAt = DateTime.UtcNow, Amount = 20 });
+                database.SaveChanges();
+            }
+
+            if (rating != null)
+            {
+                rating.Rating = player_creation_rating.rating;
+                rating.Comment = player_creation_rating.comments;
                 database.SaveChanges();
             }
 

@@ -26,6 +26,7 @@ namespace GameServer.Controllers.Player
         }
 
         [HttpPost]
+        [HttpDelete]
         [Route("favorite_players/remove.xml")]
         public IActionResult Remove(FavoritePlayer favorite_player)
         {
@@ -37,11 +38,13 @@ namespace GameServer.Controllers.Player
 
         [HttpGet]
         [Route("favorite_players.xml")]
-        public IActionResult Get(string player_id_or_username)
+        public IActionResult Get(string player_id_or_username, int? player_id)
         {
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            if (player_id != null)
+                player_id_or_username = player_id.ToString();
             return Content(FavoritePlayers.ListFavorites(database, SessionID, player_id_or_username), "application/xml;charset=utf-8");
         }
     }

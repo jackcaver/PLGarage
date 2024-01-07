@@ -4,6 +4,7 @@ using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Player

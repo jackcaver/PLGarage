@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="skill_level.list">
+  <request method="GET" url="skill_levels.xml"/>
+  <response name="response" type="anchor">
+    <element name="skill_levels" type="anchor">
+      <attribute name="total" type="integer"/>
+      <vector name="skill_level" type="anchor">
+        <attribute name="id" type="integer"/>
+        <attribute name="name" type="string"/>
+        <attribute name="points" type="integer"/>
+      </vector>
+    </element>
+  </response>
+</resource>

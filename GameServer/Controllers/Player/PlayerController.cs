@@ -1,4 +1,5 @@
 using GameServer.Implementation.Player;
+using GameServer.Models.Config;
 using GameServer.Models.PlayerData;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,21 @@ namespace GameServer.Controllers.Player
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             return Content(PlayerProfiles.GetPlayerInfo(database, id, SessionID), "application/xml;charset=utf-8");
+        }
+
+        [Route("players/skill_levels.xml")]
+        public IActionResult GetSkillLevel(int[] id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(PlayerProfiles.GetSkillLevel(database, SessionID, id), "application/xml;charset=utf-8");
+        }
+
+        [Route("skill_levels.xml")]
+        public IActionResult GetSkillLevels()
+        {
+            return Content(SkillConfig.Instance.GetSkillLevelList(), "application/xml;charset=utf-8");
         }
     }
 }

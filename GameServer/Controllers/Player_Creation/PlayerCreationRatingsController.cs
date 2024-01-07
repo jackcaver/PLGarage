@@ -25,6 +25,13 @@ namespace GameServer.Controllers.Player_Creation
             return Content(PlayerCreationRatings.View(database, SessionID, player_creation_id, player_id), "application/xml;charset=utf-8");
         }
 
+        [HttpGet]
+        [Route("player_creation_ratings.xml")]
+        public IActionResult View(int player_creation_id, int page, int per_page)
+        {
+            return Content(PlayerCreationRatings.List(database, player_creation_id, page, per_page), "application/xml;charset=utf-8");
+        }
+
         [HttpPost]
         [Route("player_creation_ratings.xml")]
         public IActionResult Create(PlayerCreationRating player_creation_rating)

@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="player_creation.destroy" login_required="true">
+  <request method="DELETE" url="player_creations/:id.xml">
+    <param name="id" type="integer" required="true" />
+  </request>
+</resource>

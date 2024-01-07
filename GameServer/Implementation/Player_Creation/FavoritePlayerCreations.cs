@@ -46,19 +46,22 @@ namespace GameServer.Implementation.Player_Creation
                     UserId = user.UserId,
                     HeartedAt = DateTime.UtcNow,
                 });
-                database.ActivityLog.Add(new ActivityEvent
+                if (!session.IsMNR)
                 {
-                    AuthorId = user.UserId,
-                    Type = ActivityType.player_creation_event,
-                    List = ActivityList.activity_log,
-                    Topic = "player_creation_hearted",
-                    Description = "",
-                    PlayerId = 0,
-                    PlayerCreationId = Creation.PlayerCreationId,
-                    CreatedAt = DateTime.UtcNow,
-                    AllusionId = Creation.PlayerCreationId,
-                    AllusionType = "PlayerCreation::Track"
-                });
+                    database.ActivityLog.Add(new ActivityEvent
+                    {
+                        AuthorId = user.UserId,
+                        Type = ActivityType.player_creation_event,
+                        List = ActivityList.activity_log,
+                        Topic = "player_creation_hearted",
+                        Description = "",
+                        PlayerId = 0,
+                        PlayerCreationId = Creation.PlayerCreationId,
+                        CreatedAt = DateTime.UtcNow,
+                        AllusionId = Creation.PlayerCreationId,
+                        AllusionType = "PlayerCreation::Track"
+                    });
+                }
                 database.SaveChanges();
             }
 
@@ -108,8 +111,9 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string ListFavorites(Database database, string player_id_or_username)
+        public static string ListFavorites(Database database, Guid SessionID, string player_id_or_username)
         {
+            var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == player_id_or_username || match.UserId.ToString() == player_id_or_username);
 
             if (user == null)
@@ -128,7 +132,7 @@ namespace GameServer.Implementation.Player_Creation
             foreach (var Creation in favoriteCrations)
             {
                 var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Creation.HeartedPlayerCreationId);
-                if (creation != null)
+                if (creation != null && creation.IsMNR == session.IsMNR)
                 {
                     favoriteCreationsList.Add(new favorite_player_creation
                     {

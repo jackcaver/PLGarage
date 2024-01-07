@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="player_creation.search" login_required="true">
+  <request method="GET" url="player_creations/search.xml">
+    <param name="search" type="string" minlength="2" required="false" />
+    <param name="search_tags" type="string" minlength="2" required="false" />
+    <param name="page" type="integer" default="1" minvalue="1" />
+    <param name="per_page" type="integer" default="10" maxvalue="100" minvalue="1" />
+    <param name="platform" type="string" options="PS2,PS3,PSP,WEB,PSV" />
+    <param name="player_creation_type" type="string" options="CHARACTER,KART,PHOTO,TRACK" />
+    <param name="is_remixable" type="boolean" options="true,false" required="false" />
+    <param name="ai" type="boolean" options="true,false" required="false" />
+    <param name="auto_reset" type="boolean" options="true,false" required="false" />
+    <param name="username" type="array" required="false" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_creations" type="anchor">
+      <attribute name="page" type="integer"/>
+      <attribute name="row_end" type="integer"/>
+      <attribute name="row_start" type="integer"/>
+      <attribute name="total" type="integer"/>
+      <attribute name="total_pages" type="integer"/>
+      <vector name="player_creation" type="anchor">
+        <attribute name="created_at" type="datetime"/>
+        <attribute name="description" type="string"/>
+        <attribute name="dlc_keys" type="string"/>
+        <attribute name="downloads" type="integer"/>
+        <attribute name="downloads_last_week" type="integer"/>
+        <attribute name="downloads_this_week" type="integer"/>
+        <attribute name="id" type="integer"/>
+        <attribute name="is_remixable" type="boolean"/>
+        <attribute name="name" type="string"/>
+        <attribute name="platform" type="string"/>
+        <attribute name="player_creation_type" type="string"/>
+        <attribute name="player_id" type="integer"/>
+        <attribute name="points" type="float"/>
+        <attribute name="points_last_week" type="float"/>
+        <attribute name="points_this_week" type="float"/>
+        <attribute name="points_today" type="float"/>
+        <attribute name="points_yesterday" type="float"/>
+        <attribute name="rating" type="float"/>
+        <attribute name="star_rating" type="string"/>
+        <attribute name="updated_at" type="datetime"/>
+        <attribute name="username" type="string"/>
+        <attribute name="version" type="integer"/>
+        <attribute name="views" type="integer"/>
+        <attribute name="views_last_week" type="integer"/>
+        <attribute name="views_this_week" type="integer"/>
+      </vector>
+    </element>
+  </response>
+</resource>

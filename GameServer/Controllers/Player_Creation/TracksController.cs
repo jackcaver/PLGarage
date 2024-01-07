@@ -34,7 +34,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreations.GetPlayerCreation(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(PlayerCreations.GetPlayerCreation(database, SessionID, id, is_counted), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -44,7 +44,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreations.GetPlayerCreation(database, SessionID, id, true), "application/xml;charset=utf-8");
+            return Content(PlayerCreations.GetPlayerCreation(database, SessionID, id, is_counted, true), "application/xml;charset=utf-8");
         }
 
         [HttpGet]

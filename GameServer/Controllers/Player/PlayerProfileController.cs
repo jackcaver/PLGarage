@@ -23,6 +23,7 @@ namespace GameServer.Controllers.Player
             return Content(PlayerProfiles.ViewProfile(database, player_id, platform), "application/xml;charset=utf-8");
         }
 
+        [HttpPut]
         [HttpPost]
         [Route("player_profile.xml")]
         public IActionResult UpdateProfile(PlayerProfile player_profile)

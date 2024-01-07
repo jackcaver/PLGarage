@@ -366,5 +366,8 @@ FodyWeavers.xsd
 ExampleConfig.json
 config.json
 whitelist.json
+skill_levels.json
+hotlap.json
+eula.txt
 # User Generated Content
 /GameServer/UGC/

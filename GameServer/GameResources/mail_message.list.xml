@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="mail_message.list" login_required="true">
+  <request method="GET" url="mail_messages.xml">
+    <param name="page" type="integer" default="1" minvalue="1" />
+    <param name="per_page" type="integer" default="25" minvalue="1" />
+    <param name="mail_message_types" type="array" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="mail_messages" type="anchor">
+      <attribute name="page" type="integer"/>
+      <attribute name="player_id" type="integer"/>
+      <attribute name="row_end" type="integer"/>
+      <attribute name="row_start" type="integer"/>
+      <attribute name="total" type="integer"/>
+      <attribute name="total_pages" type="integer"/>
+      <attribute name="unread_count" type="integer"/>
+      <vector name="mail_message" type="anchor">
+        <attribute name="attachment_reference" type="string"/>
+        <attribute name="created_at" type="datetime"/>
+        <attribute name="has_deleted" type="boolean"/>
+        <attribute name="has_forwarded" type="boolean"/>
+        <attribute name="has_read" type="boolean"/>
+        <attribute name="has_replied" type="boolean"/>
+        <attribute name="id" type="integer"/>
+        <attribute name="mail_message_type" type="string"/>
+        <attribute name="recipient_id" type="integer"/>
+        <attribute name="recipient_list" type="string"/>
+        <attribute name="sender_id" type="integer"/>
+        <attribute name="sender_name" type="string"/>
+        <attribute name="subject" type="string"/>
+        <attribute name="updated_at" type="datetime"/>
+      </vector>
+    </element>
+  </response>
+</resource>

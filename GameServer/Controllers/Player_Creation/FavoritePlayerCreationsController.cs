@@ -38,7 +38,10 @@ namespace GameServer.Controllers.Player_Creation
         [Route("favorite_player_creations.xml")]
         public IActionResult Get(string player_id_or_username)
         {
-            return Content(FavoritePlayerCreations.ListFavorites(database, player_id_or_username), "application/xml;charset=utf-8");
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(FavoritePlayerCreations.ListFavorites(database, SessionID, player_id_or_username), "application/xml;charset=utf-8");
         }
     }
 }

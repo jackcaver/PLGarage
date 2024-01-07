@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="player_creation.create" login_required="true">
+  <request method="POST" url="player_creations.xml" content_type="multipart/form-data">
+    <param name="player_creation[name]" type="string" minlength="3" required="true" />
+    <param name="player_creation[description]" type="string" minlength="2" />
+    <param name="player_creation[tags]" type="array" />
+    <param name="player_creation[player_creation_type]" type="string" options="CHARACTER,KART,PHOTO,TRACK" required="true" />
+    <param name="player_creation[parent_creation_id]" type="integer" minvalue="1" />
+    <param name="player_creation[parent_player_id]" type="integer" minvalue="1" />
+    <param name="player_creation[original_player_id]" type="integer" minvalue="1" />
+    <param name="player_creation[data]" type="file" required="true" />
+    <param name="player_creation[preview]" type="file" />
+    <param name="player_creation[requires_dlc]" type="boolean" />
+    <param name="player_creation[dlc_keys]" type="string" />
+    <param name="player_creation[platform]" type="string" default="[session]" options="PS2,PS3,PSP,WEB,PSV" required="true" />
+    <param name="player_creation[is_remixable]" type="boolean" default="true" required="false" />
+    <param name="player_creation[longest_hang_time]" type="float" required="false" />
+    <param name="player_creation[longest_drift]" type="float" required="false" />
+    <param name="player_creation[races_started]" type="integer" required="false" />
+    <param name="player_creation[races_won]" type="integer" required="false" />
+    <param name="player_creation[votes]" type="integer" required="false" />
+    <param name="player_creation[races_finished]" type="integer" required="false" />
+    <param name="player_creation[best_lap_time]" type="float" required="false" />
+    <param name="player_creation[track_theme]" type="integer" required="false" />
+    <param name="player_creation[auto_reset]" type="boolean" required="false" />
+    <param name="player_creation[ai]" type="boolean" required="false" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_creation" type="anchor">
+      <attribute name="id" type="integer"/>
+    </element>
+  </response>
+</resource>

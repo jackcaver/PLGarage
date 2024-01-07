@@ -19,6 +19,7 @@ namespace GameServer.Controllers.Player
             this.database = database;
         }
 
+        [HttpPut]
         [HttpPost]
         [Route("player_avatars/update.xml")]
         public IActionResult Upload(PlayerAvatar player_avatar)
@@ -31,7 +32,7 @@ namespace GameServer.Controllers.Player
             if (user != null)
             {
                 Stream stream = Request.Form.Files.GetFile("player_avatar[avatar]").OpenReadStream();
-                UserGeneratedContentUtils.SaveAvatar(user.UserId, player_avatar, stream);
+                UserGeneratedContentUtils.SaveAvatar(user.UserId, player_avatar, stream, session.IsMNR);
             }
             var resp = new Response<EmptyResponse>
             {
@@ -46,6 +47,22 @@ namespace GameServer.Controllers.Player
         public IActionResult GetData(int id, string file)
         {
             var avatar = UserGeneratedContentUtils.LoadPlayerAvatar(id, file.ToLower());
+            Response.Headers.Add("ETag", $"\"{UserGeneratedContentUtils.CalculateAvatarMD5(id, file)}\"");
+            Response.Headers.Add("Accept-Ranges", "bytes");
+            Response.Headers.Add("Cache-Control", "private, max-age=0, must-revalidate");
+            if (avatar == null)
+                return NotFound();
+            return File(avatar, "image/png");
+        }
+
+        [HttpGet]
+        [Route("player_avatars/MNR/{id}/{file}")]
+        public IActionResult GetMNRData(int id, string file)
+        {
+            var avatar = UserGeneratedContentUtils.LoadPlayerAvatar(id, file.ToLower(), true);
+            Response.Headers.Add("ETag", $"\"{UserGeneratedContentUtils.CalculateAvatarMD5(id, file, true)}\"");
+            Response.Headers.Add("Accept-Ranges", "bytes");
+            Response.Headers.Add("Cache-Control", "private, max-age=0, must-revalidate");
             if (avatar == null)
                 return NotFound();
             return File(avatar, "image/png");

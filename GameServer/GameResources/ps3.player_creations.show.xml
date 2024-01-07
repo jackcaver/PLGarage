@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="ps3.player_creations.show" login_required="true">
+  <request method="GET" url="player_creations/:id.xml">
+    <param name="id" type="integer" minvalue="10000" required="true" />
+    <param name="is_counted" type="boolean" default="true" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_creation" type="anchor">
+      <attribute name="ai" type="boolean"/>
+      <attribute name="auto_reset" type="boolean"/>
+      <attribute name="best_lap_time" type="float"/>
+      <attribute name="created_at" type="datetime"/>
+      <attribute name="description" type="string"/>
+      <attribute name="dlc_keys" type="string"/>
+      <attribute name="downloads" type="integer"/>
+      <attribute name="downloads_last_week" type="integer"/>
+      <attribute name="downloads_this_week" type="integer"/>
+      <attribute name="id" type="integer"/>
+      <attribute name="is_remixable" type="boolean"/>
+      <attribute name="longest_drift" type="float"/>
+      <attribute name="longest_hang_time" type="float"/>
+      <attribute name="moderation_status" type="string"/>
+      <attribute name="moderation_status_id" type="integer"/>
+      <attribute name="name" type="string"/>
+      <attribute name="original_player_id" type="integer"/>
+      <attribute name="original_player_username" type="string"/>
+      <attribute name="parent_creation_id" type="integer"/>
+      <attribute name="parent_creation_name" type="string"/>
+      <attribute name="parent_player_id" type="integer"/>
+      <attribute name="parent_player_username" type="string"/>
+      <attribute name="platform" type="string"/>
+      <attribute name="player_creation_type" type="string"/>
+      <attribute name="player_id" type="integer"/>
+      <attribute name="points" type="float"/>
+      <attribute name="points_last_week" type="float"/>
+      <attribute name="points_this_week" type="float"/>
+      <attribute name="points_today" type="float"/>
+      <attribute name="points_yesterday" type="float"/>
+      <attribute name="races_finished" type="integer"/>
+      <attribute name="races_started" type="integer"/>
+      <attribute name="races_won" type="integer"/>
+      <attribute name="rating" type="float"/>
+      <attribute name="star_rating" type="string"/>
+      <attribute name="tags" type="string"/>
+      <attribute name="track_theme" type="integer"/>
+      <attribute name="updated_at" type="datetime"/>
+      <attribute name="username" type="string"/>
+      <attribute name="version" type="integer"/>
+      <attribute name="views" type="integer"/>
+      <attribute name="views_last_week" type="integer"/>
+      <attribute name="views_this_week" type="integer"/>
+      <attribute name="votes" type="integer"/>
+    </element>
+  </response>
+</resource>

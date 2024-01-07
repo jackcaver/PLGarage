@@ -19,7 +19,9 @@ namespace GameServer.Controllers.Common
         [Route("/policies/view.xml")]
         public IActionResult ViewPolicy(PolicyType policy_type, Platform platform, string username)
         {
-            if (Request.Cookies["session_id"] != null && username == null)
+            if (Request.Cookies.ContainsKey("session_id") 
+                && Session.GetSession(Guid.Parse(Request.Cookies["session_id"])).Username != null 
+                && (username == null || (platform == Platform.PSV && username == "X")))
                 username = Session.GetSession(Guid.Parse(Request.Cookies["session_id"])).Username;
 
             return Content(Policy.View(database, policy_type, platform, username), "application/xml;charset=utf-8");

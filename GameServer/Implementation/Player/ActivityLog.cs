@@ -1,19 +1,18 @@
 ﻿using GameServer.Models.Response;
 using GameServer.Models;
 using GameServer.Utils;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Collections.Generic;
 using System;
 using GameServer.Models.PlayerData;
 using System.Linq;
 using GameServer.Models.Request;
-using Serilog;
+using GameServer.Implementation.Common;
 
-namespace GameServer.Implementation.Common
+namespace GameServer.Implementation.Player
 {
     public class ActivityLog
     {
-        public static string GetActivityLog(Database database, Guid SessionID, int page, int per_page, ActivityList list = ActivityList.news_feed, 
+        public static string GetActivityLog(Database database, Guid SessionID, int page, int per_page, ActivityList list = ActivityList.news_feed,
             int? player_id = null, int? player_creation_id = null)
         {
             var session = Session.GetSession(SessionID);
@@ -35,7 +34,7 @@ namespace GameServer.Implementation.Common
             }
 
             if (player_creation_id != null)
-                Activities.AddRange(database.ActivityLog.Where(match => match.PlayerCreationId == player_creation_id && 
+                Activities.AddRange(database.ActivityLog.Where(match => match.PlayerCreationId == player_creation_id &&
                     (match.List == list || match.List == ActivityList.both)).ToList());
 
             if (list == ActivityList.news_feed && user != null)
@@ -47,7 +46,7 @@ namespace GameServer.Implementation.Common
                     foreach (var Creation in database.PlayerCreations.Where(match => match.PlayerId == Heart.HeartedUserId).ToList())
                     {
                         Activities.AddRange(database.ActivityLog.Where(match => match.PlayerCreationId == Creation.PlayerCreationId &&
-                            match.AuthorId != Heart.HeartedUserId && match.PlayerId != Heart.HeartedUserId && 
+                            match.AuthorId != Heart.HeartedUserId && match.PlayerId != Heart.HeartedUserId &&
                             (match.List == list || match.List == ActivityList.both)).ToList());
                     }
                 }
@@ -72,7 +71,7 @@ namespace GameServer.Implementation.Common
                 var Player = database.Users.FirstOrDefault(match => match.UserId == Activity.PlayerId);
                 var PlayerCreation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Activity.PlayerCreationId);
 
-                if (Activity.Type == ActivityType.system_event) 
+                if (Activity.Type == ActivityType.system_event)
                 {
                     activityList.Add(new Activity
                     {
@@ -95,7 +94,7 @@ namespace GameServer.Implementation.Common
                         }
                     });
                 }
-                else if ((Activity.Type == ActivityType.player_event && Activity.PlayerCreationId == 0) || Activity.Type == ActivityType.trophy_event)
+                else if (Activity.Type == ActivityType.player_event && Activity.PlayerCreationId == 0 || Activity.Type == ActivityType.trophy_event)
                 {
                     activityList.Add(new Activity
                     {
@@ -115,15 +114,15 @@ namespace GameServer.Implementation.Common
                                 seconds_ago = (int)new TimeSpan(DateTime.UtcNow.Ticks - Activity.CreatedAt.Ticks).TotalSeconds,
                                 tags = Activity.Tags,
                                 allusion_type = Activity.AllusionType,
-                                allusion_id = Activity.AllusionId, 
+                                allusion_id = Activity.AllusionId,
                                 player_id = Activity.PlayerId
                             }
                         }
                     });
                 }
-                else if (Activity.Type == ActivityType.player_creation_event 
-                    || Activity.Type == ActivityType.race_event 
-                    || (Activity.Type == ActivityType.player_event && Activity.PlayerCreationId != 0))
+                else if (Activity.Type == ActivityType.player_creation_event
+                    || Activity.Type == ActivityType.race_event
+                    || Activity.Type == ActivityType.player_event && Activity.PlayerCreationId != 0)
                 {
                     activityList.Add(new Activity
                     {
@@ -178,7 +177,7 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string NewsFeedTally(Database database, Guid SessionID) 
+        public static string NewsFeedTally(Database database, Guid SessionID)
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
@@ -195,7 +194,7 @@ namespace GameServer.Implementation.Common
                     foreach (var Creation in database.PlayerCreations.Where(match => match.PlayerId == Heart.HeartedUserId).ToList())
                     {
                         Activities.AddRange(database.ActivityLog.Where(match => match.PlayerCreationId == Creation.PlayerCreationId &&
-                            match.AuthorId != Heart.HeartedUserId && match.PlayerId != Heart.HeartedUserId && 
+                            match.AuthorId != Heart.HeartedUserId && match.PlayerId != Heart.HeartedUserId &&
                             (match.List == ActivityList.news_feed || match.List == ActivityList.both)).ToList());
                     }
                 }
@@ -224,10 +223,11 @@ namespace GameServer.Implementation.Common
                 };
                 return errorResp.Serialize();
             }
-            
-            if (topic == ActivityType.trophy_event) 
+
+            if (topic == ActivityType.trophy_event)
             {
-                database.ActivityLog.Add(new ActivityEvent { 
+                database.ActivityLog.Add(new ActivityEvent
+                {
                     AuthorId = creator_id,
                     Type = topic,
                     List = list_name,

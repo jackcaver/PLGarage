@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -24,7 +25,18 @@ namespace GameServer.Models
             MemoryStream stream = new MemoryStream();
             XmlTextWriter writer = new XmlTextWriter(stream, Encoding.UTF8);
             serializer.Serialize(writer, this, new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty }));
-            return Encoding.UTF8.GetString(stream.ToArray());
+            return Encoding.UTF8.GetString(stream.ToArray().Skip(3).ToArray());
+        }
+
+        public void Deserialize(Stream stream)
+        {
+            XmlSerializer serializer = new XmlSerializer(this.GetType());
+            var deserialized = serializer.Deserialize(stream) as Response<T>;
+            if (deserialized != null)
+            {
+                status = deserialized.status;
+                response = deserialized.response;
+            }
         }
     }
 }

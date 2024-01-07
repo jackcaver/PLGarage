@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<resource name="locations.lookup">
+  <request method="GET" url="locations.xml">
+  </request>
+  <response name="response" type="anchor">
+  </response>
+</resource>

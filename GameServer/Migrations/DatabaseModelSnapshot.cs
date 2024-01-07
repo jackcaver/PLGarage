@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
+#nullable disable
+
 namespace GameServer.Migrations
 {
     [DbContext(typeof(Database))]
@@ -14,8 +16,8 @@ namespace GameServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Relational:MaxIdentifierLength", 64)
-                .HasAnnotation("ProductVersion", "5.0.17");
+                .HasAnnotation("ProductVersion", "7.0.11")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("GameServer.Models.PlayerData.ActivityEvent", b =>
                 {
@@ -70,6 +72,32 @@ namespace GameServer.Migrations
                     b.ToTable("ActivityLog");
                 });
 
+            modelBuilder.Entity("GameServer.Models.PlayerData.AnnouncementData", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("LanguageCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Platform")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Text")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Announcements");
+                });
+
             modelBuilder.Entity("GameServer.Models.PlayerData.Games.GameData", b =>
                 {
                     b.Property<int>("Id")
@@ -91,8 +119,23 @@ namespace GameServer.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
 
+                    b.Property<int>("NumberLaps")
+                        .HasColumnType("int");
+
                     b.Property<int>("Platform")
                         .HasColumnType("int");
+
+                    b.Property<string>("Privacy")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SpeedClass")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Track")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TrackGroup")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("TrackIdx")
                         .HasColumnType("int");
@@ -135,6 +178,15 @@ namespace GameServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<int>("Bank")
+                        .HasColumnType("int");
+
+                    b.Property<float>("BestLapTime")
+                        .HasColumnType("float");
+
+                    b.Property<int>("CharacterIdx")
+                        .HasColumnType("int");
+
                     b.Property<float>("Deviation")
                         .HasColumnType("float");
 
@@ -153,7 +205,28 @@ namespace GameServer.Migrations
                     b.Property<int>("IsWinner")
                         .HasColumnType("int");
 
+                    b.Property<int>("KartIdx")
+                        .HasColumnType("int");
+
                     b.Property<int>("LapsCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<float>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<string>("LocationTag")
+                        .HasColumnType("longtext");
+
+                    b.Property<float>("LongestDrift")
+                        .HasColumnType("float");
+
+                    b.Property<float>("LongestHangTime")
+                        .HasColumnType("float");
+
+                    b.Property<float>("Longitude")
+                        .HasColumnType("float");
+
+                    b.Property<int>("MusicIdx")
                         .HasColumnType("int");
 
                     b.Property<int>("NumKills")
@@ -172,6 +245,12 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("Stat2")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TrackIdx")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TrackPlatform")
                         .HasColumnType("int");
 
                     b.Property<float>("Volatility")
@@ -227,6 +306,9 @@ namespace GameServer.Migrations
                     b.Property<int>("HeartedUserId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsMNR")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
@@ -237,6 +319,57 @@ namespace GameServer.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("HeartedProfiles");
+                });
+
+            modelBuilder.Entity("GameServer.Models.PlayerData.MailMessageData", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("AttachmentReference")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Body")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("HasForwarded")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("HasRead")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("HasReplied")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("RecipientId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RecipientList")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipientId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("MailMessages");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCommentData", b =>
@@ -297,6 +430,65 @@ namespace GameServer.Migrations
                     b.HasIndex("PlayerId");
 
                     b.ToTable("PlayerCommentRatings");
+                });
+
+            modelBuilder.Entity("GameServer.Models.PlayerData.PlayerComplaintData", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comments")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Reason")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PlayerComplaints");
+                });
+
+            modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreationComplaintData", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comments")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("PlayerCreationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Reason")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerCreationId");
+
+                    b.HasIndex("PlayerId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PlayerCreationComplaints");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.HeartedPlayerCreation", b =>
@@ -440,6 +632,9 @@ namespace GameServer.Migrations
                     b.Property<int>("BattleTimeLimit")
                         .HasColumnType("int");
 
+                    b.Property<float>("BestLapTime")
+                        .HasColumnType("float");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -454,6 +649,9 @@ namespace GameServer.Migrations
 
                     b.Property<DateTime>("FirstPublished")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsMNR")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsRemixable")
                         .HasColumnType("tinyint(1)");
@@ -476,8 +674,8 @@ namespace GameServer.Migrations
                     b.Property<int>("MaxHumans")
                         .HasColumnType("int");
 
-                    b.Property<string>("ModerationStatus")
-                        .HasColumnType("longtext");
+                    b.Property<int>("ModerationStatus")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
@@ -486,6 +684,15 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("NumRacers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OriginalPlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ParentCreationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ParentPlayerId")
                         .HasColumnType("int");
 
                     b.Property<int>("Platform")
@@ -530,9 +737,6 @@ namespace GameServer.Migrations
                     b.Property<int>("Version")
                         .HasColumnType("int");
 
-                    b.Property<int>("Votes")
-                        .HasColumnType("int");
-
                     b.Property<string>("WeaponSet")
                         .HasColumnType("longtext");
 
@@ -560,6 +764,39 @@ namespace GameServer.Migrations
                     b.HasIndex("PlayerCreationId");
 
                     b.ToTable("PlayerCreationDownloads");
+                });
+
+            modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationPoint", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Platform")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlayerCreationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerCreationId");
+
+                    b.HasIndex("PlayerId");
+
+                    b.ToTable("PlayerCreationPoints");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationRaceStarted", b =>
@@ -598,6 +835,9 @@ namespace GameServer.Migrations
 
                     b.Property<DateTime>("RatedAt")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
@@ -712,16 +952,111 @@ namespace GameServer.Migrations
                     b.ToTable("PlayerCreationViews");
                 });
 
+            modelBuilder.Entity("GameServer.Models.PlayerData.PlayerExperiencePoint", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId");
+
+                    b.ToTable("PlayerExperiencePoints");
+                });
+
+            modelBuilder.Entity("GameServer.Models.PlayerData.PlayerPoint", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId");
+
+                    b.ToTable("PlayerPoints");
+                });
+
+            modelBuilder.Entity("GameServer.Models.PlayerData.PlayerRatingData", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("RatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("PlayerId");
+
+                    b.ToTable("PlayerRatings");
+                });
+
             modelBuilder.Entity("GameServer.Models.PlayerData.Score", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<float>("BestLapTime")
+                        .HasColumnType("float");
+
+                    b.Property<int>("CharacterIdx")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<float>("FinishTime")
+                        .HasColumnType("float");
+
+                    b.Property<string>("GhostCarDataMD5")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("IsMNR")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("KartIdx")
+                        .HasColumnType("int");
+
+                    b.Property<float>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<float>("Longitude")
                         .HasColumnType("float");
 
                     b.Property<int>("Platform")
@@ -760,8 +1095,23 @@ namespace GameServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<int>("CharacterIdx")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("KartIdx")
+                        .HasColumnType("int");
+
+                    b.Property<float>("LongestDrift")
+                        .HasColumnType("float");
+
+                    b.Property<float>("LongestHangTime")
+                        .HasColumnType("float");
 
                     b.Property<int>("LongestWinStreak")
                         .HasColumnType("int");
@@ -779,6 +1129,9 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("OnlineForfeit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OnlineQuits")
                         .HasColumnType("int");
 
                     b.Property<int>("OnlineRaces")
@@ -802,8 +1155,8 @@ namespace GameServer.Migrations
                     b.Property<ulong>("PSNID")
                         .HasColumnType("bigint unsigned");
 
-                    b.Property<int>("Points")
-                        .HasColumnType("int");
+                    b.Property<bool>("PlayedMNR")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("PolicyAccepted")
                         .HasColumnType("tinyint(1)");
@@ -897,6 +1250,25 @@ namespace GameServer.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("GameServer.Models.PlayerData.MailMessageData", b =>
+                {
+                    b.HasOne("GameServer.Models.PlayerData.User", "Recipient")
+                        .WithMany()
+                        .HasForeignKey("RecipientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameServer.Models.PlayerData.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipient");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCommentData", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.User", "Author")
@@ -933,6 +1305,52 @@ namespace GameServer.Migrations
                     b.Navigation("Comment");
 
                     b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("GameServer.Models.PlayerData.PlayerComplaintData", b =>
+                {
+                    b.HasOne("GameServer.Models.PlayerData.User", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameServer.Models.PlayerData.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Player");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreationComplaintData", b =>
+                {
+                    b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "PlayerCreation")
+                        .WithMany()
+                        .HasForeignKey("PlayerCreationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameServer.Models.PlayerData.User", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameServer.Models.PlayerData.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Player");
+
+                    b.Navigation("PlayerCreation");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.HeartedPlayerCreation", b =>
@@ -1033,6 +1451,25 @@ namespace GameServer.Migrations
                     b.Navigation("Creation");
                 });
 
+            modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationPoint", b =>
+                {
+                    b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "Creation")
+                        .WithMany()
+                        .HasForeignKey("PlayerCreationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameServer.Models.PlayerData.User", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Creation");
+
+                    b.Navigation("Player");
+                });
+
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationRaceStarted", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "Creation")
@@ -1121,6 +1558,47 @@ namespace GameServer.Migrations
                         .IsRequired();
 
                     b.Navigation("Creation");
+                });
+
+            modelBuilder.Entity("GameServer.Models.PlayerData.PlayerExperiencePoint", b =>
+                {
+                    b.HasOne("GameServer.Models.PlayerData.User", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("GameServer.Models.PlayerData.PlayerPoint", b =>
+                {
+                    b.HasOne("GameServer.Models.PlayerData.User", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("GameServer.Models.PlayerData.PlayerRatingData", b =>
+                {
+                    b.HasOne("GameServer.Models.PlayerData.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameServer.Models.PlayerData.User", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Player");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.Score", b =>

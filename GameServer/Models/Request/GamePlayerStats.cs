@@ -1,3 +1,6 @@
+using GameServer.Models.PlayerData;
+using Microsoft.AspNetCore.Http;
+
 namespace GameServer.Models.Request
 {
     public class GamePlayerStats 
@@ -15,5 +18,20 @@ namespace GameServer.Models.Request
         public float deviation { get; set; }
         public int playgroup_size { get; set; }
         public int num_kills { get; set; }
+        //MNR
+        public int track_idx { get; set; }
+        public int kart_idx { get; set; }
+        public int character_idx { get; set; }
+        public float best_lap_time { get; set; }
+        public IFormFile ghost_car_data { get; set; }
+        public int music_idx { get; set; }
+        public int bank { get; set; }
+        public float longest_drift { get; set; }
+        public float longest_hang_time { get; set; }
+        //MNR: Road Trip
+        public float latitude { get; set; }
+        public float longitude { get; set; }
+        public string location_tag { get; set; }
+        public Platform track_platform { get; set; }
     }
 }

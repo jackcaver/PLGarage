@@ -145,6 +145,6 @@ namespace GameServer.Models.Response
         [XmlElement("photos")]
         public List<Photos> photos { get; set; }
         [XmlElement("leaderboard")]
-        public List<Leaderboard> leaderboard { get; set; }
+        public List<SubLeaderboard> leaderboard { get; set; }
     }
 }

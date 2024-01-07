@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resource name="mail_message.destroy" login_required="true">
+  <request method="DELETE" url="mail_messages/:id.xml">
+    <param name="id" type="integer" required="true" />
+  </request>
+</resource>

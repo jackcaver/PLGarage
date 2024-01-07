@@ -14,9 +14,14 @@
 
         public static int GetTotalPages(int PerPage, int AmountOfContent)
         {
-            if (AmountOfContent <= 0) 
+            if (AmountOfContent <= 0 || PerPage <= 0) 
                 return 0;
-            int result = AmountOfContent / PerPage;
+            int result = 0;
+            for (int i = 0; i < AmountOfContent;)
+            {
+                result++;
+                i += PerPage;
+            }
             if (result <= 0)
             {
                 return 1;

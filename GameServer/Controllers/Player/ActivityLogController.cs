@@ -17,10 +17,10 @@ namespace GameServer.Controllers.Player
         }
 
         [HttpGet]
-        [Route("announcements/{file}")]
-        public IActionResult GetImage(string file)
+        [Route("announcements/{file}.png")]
+        public IActionResult GetImage(Guid file)
         {
-            var image = UserGeneratedContentUtils.LoadAnnouncementImage(file);
+            var image = UserGeneratedContentUtils.LoadAnnouncementImage($"{file}.png");
             if (image == null)
                 return NotFound();
             return File(image, "image/png");

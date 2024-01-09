@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using GameServer.Implementation.Common;
@@ -42,10 +43,15 @@ namespace GameServer.Controllers.Player
             return Content(resp.Serialize(), "application/xml;charset=utf-8");
         }
 
+        private List<string> AcceptedTypes = new List<string> { 
+            "primary.png", "primary_128x128.png", "secondary.png", "secondary_128x128.png", "frowny.png", "smiley.png"
+        };
+
         [HttpGet]
         [Route("player_avatars/{id}/{file}")]
         public IActionResult GetData(int id, string file)
         {
+            if (!AcceptedTypes.Contains(file)) return NotFound();
             var avatar = UserGeneratedContentUtils.LoadPlayerAvatar(id, file.ToLower());
             Response.Headers.Add("ETag", $"\"{UserGeneratedContentUtils.CalculateAvatarMD5(id, file)}\"");
             Response.Headers.Add("Accept-Ranges", "bytes");
@@ -59,6 +65,7 @@ namespace GameServer.Controllers.Player
         [Route("player_avatars/MNR/{id}/{file}")]
         public IActionResult GetMNRData(int id, string file)
         {
+            if (!AcceptedTypes.Contains(file)) return NotFound();
             var avatar = UserGeneratedContentUtils.LoadPlayerAvatar(id, file.ToLower(), true);
             Response.Headers.Add("ETag", $"\"{UserGeneratedContentUtils.CalculateAvatarMD5(id, file, true)}\"");
             Response.Headers.Add("Accept-Ranges", "bytes");

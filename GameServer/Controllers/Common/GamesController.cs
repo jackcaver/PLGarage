@@ -83,6 +83,7 @@ namespace GameServer.Controllers.Common
                 game.host_player_id = database.Users.FirstOrDefault(match => match.Username == session.Username).UserId;
                 game.track_idx = game_player_stats.track_idx;
             }
+            UserGeneratedContentUtils.AddStoryLevel(database, game.track_idx);
 
             if (Track == null || user == null)
             {

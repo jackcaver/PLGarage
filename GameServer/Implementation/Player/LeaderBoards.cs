@@ -23,7 +23,7 @@ namespace GameServer.Implementation.Player
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
-            UserGeneratedContentUtils.AddStoryLevel(database, sub_group_id, sub_key_id, sort_column);
+            UserGeneratedContentUtils.AddStoryLevel(database, sub_key_id);
 
             if (usernameFilter == null)
                 scores = database.Scores.Where(match => match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR && match.Platform == platform).ToList();

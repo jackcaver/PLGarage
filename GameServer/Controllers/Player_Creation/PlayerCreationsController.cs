@@ -187,10 +187,15 @@ namespace GameServer.Controllers.Player_Creation
             return Content(PlayerCreations.VerifyPlayerCreations(database, id, offline_id), "application/xml;charset=utf-8");
         }
 
+        private List<string> AcceptedTypes = new List<string> {
+            "data.bin", "data.jpg", "preview_image.png", "preview_image_128x128.png"
+        };
+
         [HttpGet]
         [Route("player_creations/{id}/{file}")]
         public IActionResult GetData(int id, string file)
         {
+            if (!AcceptedTypes.Contains(file)) return NotFound();
             var data = UserGeneratedContentUtils.LoadPlayerCreation(id, file);
             if (data == null)
                 return NotFound();

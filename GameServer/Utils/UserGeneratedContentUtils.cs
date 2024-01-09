@@ -1,4 +1,5 @@
-﻿using GameServer.Models.PlayerData;
+﻿using GameServer.Models;
+using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.Games;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
@@ -220,19 +221,89 @@ namespace GameServer.Utils
             Directory.Delete($"UGC/PlayerCreations/{id}/", true);
         }
 
-        public static void AddStoryLevel(Database database, int raceType, int id, SortColumn sortColumn) 
+        private static Dictionary<int, StoryLevelData> StoryLevels = new Dictionary<int, StoryLevelData>
+        {
+            //LBPK
+            { 845, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 576, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 753, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 734, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 510, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 612, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 861, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 755, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 758, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 657, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 930, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 951, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 610, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 501, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 777, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 689, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 814, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 869, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 729, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 596, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 760, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 699, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 705, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 939, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 903, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 609, new StoryLevelData { Name = "story level", RaceType = RaceType.BATTLE, ScoreboardMode = 0 } },
+            { 647, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 529, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 915, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 684, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 849, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 582, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 790, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 857, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 715, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 738, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 625, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 959, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 998, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 520, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 881, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 828, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 712, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 840, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 624, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 811, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 823, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 918, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 614, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 1049, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 821, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 702, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 913, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 766, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 606, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 550, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 708, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 648, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 772, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 688, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 579, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 539, new StoryLevelData { Name = "story level", RaceType = RaceType.BATTLE, ScoreboardMode = 0 } },
+            { 698, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 759, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 763, new StoryLevelData { Name = "story level", RaceType = RaceType.BATTLE, ScoreboardMode = 0 } },
+            { 941, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
+            { 630, new StoryLevelData { Name = "story level", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 697, new StoryLevelData { Name = "story level", RaceType = RaceType.BATTLE, ScoreboardMode = 0 } },
+            { 808, new StoryLevelData { Name = "story level", RaceType = RaceType.BATTLE, ScoreboardMode = 1 } },
+            { 1023, new StoryLevelData { Name = "story level", RaceType = RaceType.BATTLE, ScoreboardMode = 0 } },
+            { 703, new StoryLevelData { Name = "story level", RaceType = RaceType.BATTLE, ScoreboardMode = 0 } },
+
+            //MNR
+            //TODO: add MNR story levels
+        };
+
+        public static void AddStoryLevel(Database database, int id) 
         {
             //genius story level check
-            List<int> storyLevelIds = new List<int> { 
-                //LBPK
-                845, 576, 753, 734, 510, 612, 861, 755, 758, 657, 930, 951, 610, 501, 777, 689, 814, 869, 729, 596, 760, 699,
-                705, 939, 903, 609, 647, 529, 915, 684, 849, 582, 790, 857, 715, 738, 625, 959, 998, 520, 881, 828, 712, 840,
-                624, 811, 823, 918, 614, 1049, 821, 702, 913, 766, 606, 550, 708, 648, 772, 688, 579, 539, 698, 759, 763, 941,
-                630, 697, 808, 1023, 703 
-                //MNR
-                //TODO: add MNR story levels
-            };
-            if (!storyLevelIds.Contains(id)) return;
+            if (!StoryLevels.ContainsKey(id)) return;
 
             var UFGUser = database.Users.FirstOrDefault(match => match.Username == "ufg");
 
@@ -259,8 +330,8 @@ namespace GameServer.Utils
                     PlayerId = UFGUser.UserId,
                     TrackId = id,
                     PlayerCreationId = id,
-                    ScoreboardMode = (sortColumn == SortColumn.finish_time) ? 1 : 0,
-                    Name = "story level",
+                    ScoreboardMode = StoryLevels[id].ScoreboardMode,
+                    Name = StoryLevels[id].Name,
                     Description = "story level",
                     IsRemixable = false,
                     Type = PlayerCreationType.STORY,
@@ -269,7 +340,7 @@ namespace GameServer.Utils
                     CreatedAt = DateTime.Parse("2012-11-06"),
                     UpdatedAt = DateTime.Parse("2012-11-06"),
                     Platform = Platform.PS3,
-                    RaceType = (raceType == 702) ? RaceType.BATTLE : RaceType.RACE
+                    RaceType = StoryLevels[id].RaceType
                 });
                 database.SaveChanges();
             }

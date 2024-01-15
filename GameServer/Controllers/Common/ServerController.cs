@@ -4,9 +4,8 @@ using System.Globalization;
 using System.Linq;
 using GameServer.Implementation.Common;
 using GameServer.Models;
-using GameServer.Models.Config;
-using GameServer.Models.Config.ServerList;
 using GameServer.Models.Response;
+using GameServer.Models.ServerCommunication;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,7 +30,9 @@ namespace GameServer.Controllers.Common
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
-            if (user == null || !ServerConfig.Instance.ServerList.ContainsKey(server_type))
+            ServerInfo server = ServerCommunication.GetServer(server_type);
+
+            if (user == null || server == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -40,8 +41,6 @@ namespace GameServer.Controllers.Common
                 };
                 return Content(errorResp.Serialize(), "application/xml;charset=utf-8");
             }
-
-            Server server = ServerConfig.Instance.ServerList[server_type];
 
             var resp = new Response<List<ServerResponse>>
             {

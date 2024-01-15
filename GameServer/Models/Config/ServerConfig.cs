@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using GameServer.Models.Config.ServerList;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -49,7 +47,7 @@ namespace GameServer.Models.Config
         public bool BlockMNR { get; set; } = false;
         public bool BlockLBPK { get; set; } = false;
         public string InstanceName { get; set; } = "PLGarage";
-        public Dictionary<ServerType, Server> ServerList { get; set; } = new Dictionary<ServerType, Server> { { ServerType.DIRECTORY, new Server() } };
+        public string ServerCommunicationKey { get; set; } = "";
 
         private static ServerConfig GetFromFile()
         {
@@ -57,7 +55,7 @@ namespace GameServer.Models.Config
             {
                 string file = File.ReadAllText("./config.json");
                 ServerConfig config = JsonConvert.DeserializeObject<ServerConfig>(file);
-                File.WriteAllText("./config.json", JsonConvert.SerializeObject(config));
+                File.WriteAllText("./config.json", JsonConvert.SerializeObject(config, Formatting.Indented));
                 return config;
             }
             else
@@ -77,7 +75,7 @@ namespace GameServer.Models.Config
             }
             else
             {
-                File.WriteAllText("./ExampleConfig.json", JsonConvert.SerializeObject(this));
+                File.WriteAllText("./ExampleConfig.json", JsonConvert.SerializeObject(this, Formatting.Indented));
                 Log.Information($"Generated example configuration at {Path.Combine(Environment.CurrentDirectory, "ExampleConfig.json")}");
             }
         }

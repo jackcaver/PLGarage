@@ -3,7 +3,6 @@ using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
-using Serilog;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;

@@ -52,6 +52,7 @@ namespace GameServer
             });
 
             app.UseRouting();
+            app.UseWebSockets();
 
             app.UseStaticFiles(new StaticFileOptions {
                 RequestPath = "/resources"

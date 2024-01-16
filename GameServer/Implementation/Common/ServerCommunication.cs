@@ -111,27 +111,6 @@ namespace GameServer.Implementation.Common
                         }
                         break;
 
-                    case "CheckPlayerSession":
-                        if (Server == null)
-                        {
-                            Response.Content = $"Unknown sender {message.From}";
-                            Send(webSocket, JsonConvert.SerializeObject(Response)).Wait();
-                            break;
-                        }
-                        Response.Content = "Cannot parse session id";
-                        Guid SessionID = Guid.Empty;
-                        if (Guid.TryParse(message.Content, out SessionID))
-                        {
-                            var session = Session.GetSession(SessionID);
-                            var sessionStatus = new PlayerSessionStatus();
-                            sessionStatus.SessionID = SessionID;
-                            sessionStatus.IsAuthorized = session.Authenticated;
-                            Response.Type = "PlayerSessionStatus";
-                            Response.Content = JsonConvert.SerializeObject(sessionStatus);
-                        }
-                        Send(webSocket, JsonConvert.SerializeObject(Response)).Wait();
-                        break;
-
                     default:
                         Response.Content = $"Unknown message type {message.Type}";
                         Send(webSocket, JsonConvert.SerializeObject(Response)).Wait();
@@ -177,6 +156,11 @@ namespace GameServer.Implementation.Common
         public static ServerInfo GetServer(ServerType Type)
         {
             return Servers.Where(match => match.Type == Type).MinBy(s => s.PlayerCount);
+        }
+
+        public static ServerInfo GetServer(Guid ServerID)
+        {
+            return Servers.FirstOrDefault(match => match.ServerId == ServerID);
         }
 
         private static string Encrypt(string message)

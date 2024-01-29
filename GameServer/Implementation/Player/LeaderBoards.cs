@@ -314,7 +314,7 @@ namespace GameServer.Implementation.Player
             if (game_type == GameType.OVERALL && type == LeaderboardType.LAST_WEEK)
                 users.Sort((curr, prev) => prev.TotalXPLastWeek(platform).CompareTo(curr.TotalXPLastWeek(platform)));
 
-            if (game_type == GameType.OVERALL_RACE && sort_column == SortColumn.experience_points)
+            if (game_type == GameType.OVERALL_RACE)
             {
                 switch (sort_column)
                 {

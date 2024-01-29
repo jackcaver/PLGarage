@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="player_experience_point.increment">
+  <request method="POST" url="player_experience_points.xml" login_required="true">
+    <param name="delta" type="integer" required="true"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

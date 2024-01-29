@@ -145,8 +145,10 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            int quota = database.PlayerCreations.Count(match => match.PlayerId == user.UserId && match.Type == PlayerCreationType.TRACK);
-            if (quota >= user.Quota && Creation.player_creation_type == PlayerCreationType.TRACK)
+            int quota = database.PlayerCreations.Count(match => match.PlayerId == user.UserId 
+                && match.Type != PlayerCreationType.PHOTO && match.Type != PlayerCreationType.DELETED 
+                && match.IsMNR == session.IsMNR);
+            if (quota >= user.Quota && Creation.player_creation_type != PlayerCreationType.PHOTO)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -160,6 +162,17 @@ namespace GameServer.Implementation.Player_Creation
             {
                 id = deletedCreation.PlayerCreationId;
                 database.Remove(deletedCreation);
+            }
+            else
+            {
+                //Check if id is not used by something...
+                bool IsAvailable = false;
+                while (!IsAvailable)
+                {
+                    var check = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
+                    IsAvailable = check == null || (check != null && check.Type == PlayerCreationType.DELETED);
+                    if (!IsAvailable) id++;
+                }
             }
 
             database.PlayerCreations.Add(new PlayerCreationData

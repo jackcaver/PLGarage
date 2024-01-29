@@ -200,5 +200,33 @@ namespace GameServer.Implementation.Player
 
             return resp.Serialize();
         }
+
+        public static string IncrementRaceXP(Database database, Guid SessionID, int delta)
+        {
+            int id = -130;
+            string message = "The player doesn't exist";
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+
+            if (user != null)
+            {
+                id = 0;
+                message = "Successful completion";
+                database.PlayerExperiencePoints.Add(new PlayerExperiencePoint
+                {
+                    CreatedAt = DateTime.UtcNow,
+                    PlayerId = user.UserId,
+                    Amount = delta
+                });
+                database.SaveChanges();
+            }
+
+            var resp = new Response<EmptyResponse>
+            {
+                status = new ResponseStatus { id = id, message = message },
+                response = new EmptyResponse()
+            };
+            return resp.Serialize();
+        }
     }
 }

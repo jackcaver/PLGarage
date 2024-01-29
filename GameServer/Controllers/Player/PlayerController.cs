@@ -45,5 +45,15 @@ namespace GameServer.Controllers.Player
         {
             return Content(SkillConfig.Instance.GetSkillLevelList(), "application/xml;charset=utf-8");
         }
+
+        [HttpPost]
+        [Route("player_experience_points.xml")]
+        public IActionResult IncrementRaceXP(int delta)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(PlayerProfiles.IncrementRaceXP(database, SessionID, delta), "application/xml;charset=utf-8");
+        }
     }
 }

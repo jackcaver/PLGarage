@@ -35,27 +35,27 @@ namespace GameServer.Models.PlayerData
         public ulong PSNID { get; set; }
         public ulong RPCNID { get; set; }
         public int TotalTracks => this.database.PlayerCreations.Count(match => match.PlayerId == this.UserId && match.Type == PlayerCreationType.TRACK && !match.IsMNR);
-        public int Rank { get; set; }
+        public int Rank => this.GetRank(GameType.OVERALL, LeaderboardType.LIFETIME, Platform.PS3, SortColumn.points);
         public int Points => this.database.PlayerPoints.Where(match => match.PlayerId == UserId).Sum(p => p.Amount);
-        public int OnlineRaces { get; set; }
-        public int OnlineWins { get; set; }
-        public int OnlineFinished { get; set; }
+        public int OnlineRaces => this.database.OnlineRaces.Count(match => match.PlayerId == UserId);
+        public int OnlineWins => this.database.OnlineRacesFinished.Count(match => match.PlayerId == UserId && match.IsWinner);
+        public int OnlineFinished => this.database.OnlineRacesFinished.Count(match => match.PlayerId == UserId);
         public int OnlineForfeit { get; set; }
         public int OnlineDisconnected { get; set; }
         public int WinStreak { get; set; }
         public int LongestWinStreak { get; set; }
-        public int OnlineRacesThisWeek { get; set; }
-        public int OnlineWinsThisWeek { get; set; }
-        public int OnlineFinishedThisWeek { get; set; }
-        public int OnlineRacesLastWeek { get; set; }
-        public int OnlineWinsLastWeek { get; set; }
-        public int OnlineFinishedLastWeek { get; set; }
+        public int OnlineRacesThisWeek => this.database.OnlineRaces.Count(match => match.PlayerId == UserId && match.StartedAt >= DateTime.UtcNow.AddDays(-7) && match.StartedAt <= DateTime.UtcNow);
+        public int OnlineWinsThisWeek => this.database.OnlineRacesFinished.Count(match => match.PlayerId == UserId && match.IsWinner && match.FinishedAt >= DateTime.UtcNow.AddDays(-7) && match.FinishedAt <= DateTime.UtcNow);
+        public int OnlineFinishedThisWeek => this.database.OnlineRacesFinished.Count(match => match.PlayerId == UserId && match.FinishedAt >= DateTime.UtcNow.AddDays(-7) && match.FinishedAt <= DateTime.UtcNow);
+        public int OnlineRacesLastWeek => this.database.OnlineRaces.Count(match => match.PlayerId == UserId && match.StartedAt >= DateTime.UtcNow.AddDays(-14) && match.StartedAt <= DateTime.UtcNow.AddDays(-7));
+        public int OnlineWinsLastWeek => this.database.OnlineRacesFinished.Count(match => match.PlayerId == UserId && match.IsWinner && match.FinishedAt >= DateTime.UtcNow.AddDays(-14) && match.FinishedAt <= DateTime.UtcNow.AddDays(-7));
+        public int OnlineFinishedLastWeek => this.database.OnlineRacesFinished.Count(match => match.PlayerId == UserId && match.FinishedAt >= DateTime.UtcNow.AddDays(-14) && match.FinishedAt <= DateTime.UtcNow.AddDays(-7));
         public bool PolicyAccepted { get; set; }
         public bool IsBanned { get; set; }
         //MNR
         public float LongestHangTime { get; set; }
         public float LongestDrift { get; set; }
-        public int OnlineQuits { get; set; }
+        public int OnlineQuits => OnlineDisconnected+OnlineForfeit;
         public int CharacterIdx { get; set; }
         public int KartIdx { get; set; }
         public bool PlayedMNR { get; set; }
@@ -130,7 +130,7 @@ namespace GameServer.Models.PlayerData
             if (game_type == GameType.OVERALL && leaderboardType == LeaderboardType.LAST_WEEK)
                 users.Sort((curr, prev) => prev.TotalXPLastWeek(platform).CompareTo(curr.TotalXPLastWeek(platform)));
 
-            if (game_type == GameType.OVERALL_RACE && sort_column == SortColumn.experience_points)
+            if (game_type == GameType.OVERALL_RACE)
             {
                 switch (sort_column)
                 {

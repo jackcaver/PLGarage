@@ -30,6 +30,8 @@ namespace GameServer.Utils
         public DbSet<PlayerCreationBookmark> PlayerCreationBookmarks { get; set; }
         public DbSet<GriefReportData> GriefReports { get; set; }
         public DbSet<ActivityEvent> ActivityLog { get; set; }
+        public DbSet<RaceStarted> OnlineRaces { get; set; }
+        public DbSet<RaceFinished> OnlineRacesFinished { get; set; }
         //MNR
         public DbSet<PlayerRatingData> PlayerRatings { get; set; }
         public DbSet<PlayerCreationPoint> PlayerCreationPoints { get; set; }

@@ -359,7 +359,6 @@ namespace GameServer.Implementation.Player_Creation
 
                 if (IsCounted && download)
                 {
-                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = Creation.PlayerCreationId, StartedAt = DateTime.UtcNow });
                     var uniqueRacer = database.PlayerCreationUniqueRacers.FirstOrDefault(match => match.PlayerId == User.UserId);
                     database.PlayerCreationDownloads.Add(new PlayerCreationDownload { PlayerCreationId = Creation.PlayerCreationId, DownloadedAt = DateTime.UtcNow });
                     database.PlayerCreationPoints.Add(new PlayerCreationPoint { PlayerCreationId = Creation.PlayerCreationId, PlayerId = Creation.PlayerId, Platform = Creation.Platform, Type = Creation.Type, CreatedAt = DateTime.UtcNow, Amount = 100 });

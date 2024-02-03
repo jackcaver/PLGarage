@@ -39,7 +39,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public int Votes => this.database.PlayerCreationRatings.Count(match => match.PlayerCreationId == PlayerCreationId && (!IsMNR || match.Rating != 0));
         public int RacesStartedThisWeek => this.database.PlayerCreationRacesStarted.Count(match => match.PlayerCreationId == PlayerCreationId && match.StartedAt >= DateTime.UtcNow.AddDays(-7) && match.StartedAt <= DateTime.UtcNow);
         public int RacesStartedThisMonth => this.database.PlayerCreationRacesStarted.Count(match => match.PlayerCreationId == PlayerCreationId && match.StartedAt >= DateTime.UtcNow.AddMonths(-1) && match.StartedAt <= DateTime.UtcNow);
-        public int RacesFinished => this.database.GamePlayerStats.Count(match => match.GameId == this.database.Games.FirstOrDefault(game => game.Id == match.GameId && game.TrackIdx == this.TrackId).Id);
+        public int RacesFinished { get; set; }
         public int TrackTheme { get; set; }
         public bool AutoReset { get; set; }
         public bool AI { get; set; }

@@ -7,6 +7,7 @@ using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.Games;
+using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
@@ -205,6 +206,24 @@ namespace GameServer.Controllers.Common
                 LocationTag = game_player_stats.location_tag,
                 TrackPlatform = game_player_stats.track_platform
             });
+
+            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = game.track_idx, StartedAt = DateTime.UtcNow });
+            Track.RacesFinished++;
+            if (session.IsMNR)
+            {
+                var character = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game_player_stats.character_idx && match.Type == PlayerCreationType.CHARACTER);
+                var kart = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game_player_stats.kart_idx && match.Type == PlayerCreationType.KART);
+                if (character != null)
+                {
+                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId });
+                    character.RacesFinished++;
+                }
+                if (kart != null)
+                {
+                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId });
+                    kart.RacesFinished++;
+                }
+            }
 
             var leaderboard = database.Scores.Where(match => match.SubKeyId == game.track_idx && match.SubGroupId == (int)game.game_type &&
                 match.PlaygroupSize == game_player_stats.playgroup_size && match.Platform == game.platform).ToList();

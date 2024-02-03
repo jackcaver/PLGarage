@@ -28,7 +28,7 @@ namespace GameServer.Controllers.Common
             return Content(ServerConfig.Instance.InstanceName);
         }
 
-        [Route("api/ServerCommunication")]
+        [Route("api/Gateway")]
         public async Task StartServerCommunication()
         {
             if (HttpContext.WebSockets.IsWebSocketRequest)
@@ -42,22 +42,8 @@ namespace GameServer.Controllers.Common
         }
 
         [HttpGet]
-        [Route("api/CheckSession/{SessionID}")]
-        public IActionResult CheckSession(Guid SessionID)
-        {
-            Guid ServerID = Guid.Empty;
-            if (Request.Headers.ContainsKey("server_id"))
-                ServerID = Guid.Parse(Request.Headers["server_id"]);
-
-            if (ServerCommunication.GetServer(ServerID) == null)
-                return Forbid();
-
-            return Content(Session.GetSession(SessionID).Authenticated.ToString().ToLower());
-        }
-
-        [HttpGet]
-        [Route("api/TrackVotes")]
-        public IActionResult GetVotingOptions()
+        [Route("api/VotePackage")]
+        public IActionResult GetVotingOptions(int trackId)
         {
             Guid ServerID = Guid.Empty;
             if (Request.Headers.ContainsKey("server_id"))
@@ -69,7 +55,7 @@ namespace GameServer.Controllers.Common
             List<int> TrackIDs = new List<int>();
 
             Random random = new Random();
-            var creations = database.PlayerCreations.Where(match => match.Type == PlayerCreationType.TRACK && !match.IsMNR && match.Platform == Platform.PS3).ToList();
+            var creations = database.PlayerCreations.Where(match => match.Type == PlayerCreationType.TRACK && !match.IsMNR && match.PlayerCreationId != trackId && match.Platform == Platform.PS3).ToList();
 
             if (creations.Count <= 3)
             {

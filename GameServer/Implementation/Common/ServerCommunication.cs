@@ -5,62 +5,91 @@ using Newtonsoft.Json;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using GameServer.Models.PlayerData;
+using GameServer.Models.Response;
+using GameServer.Models.ServerCommunication.Events;
 
 namespace GameServer.Implementation.Common
 {
-    public class ServerCommunication
+    public static class ServerCommunication
     {
-        private static List<ServerInfo> Servers = new List<ServerInfo>();
-
+        private const int MaxMessageSize = 4096;
+        private const string MasterServer = "API";
+        private static readonly List<ServerInfo> Servers = new();
+        
+        public static void NotifySessionCreated(Guid uuid, int playerConnectId, string username, int issuer)
+        {
+            DispatchEvent(GatewayEvents.PlayerSessionCreated, new PlayerSessionCreatedEvent
+            {
+                SessionUuid = uuid.ToString(),
+                PlayerConnectId = playerConnectId,
+                Username = username,
+                Issuer = issuer
+            }).Wait();
+        }
+        
+        public static void NotifySessionDestroyed(Guid uuid)
+        {
+            DispatchEvent(GatewayEvents.PlayerSessionDestroyed, new PlayerSessionDestroyedEvent
+            {
+                SessionUuid = uuid.ToString()
+            }).Wait();
+        }
+        
         public static async Task HandleConnection(Database database, WebSocket webSocket, Guid ServerID)
         {
-            var receiveResult = new WebSocketReceiveResult(0, WebSocketMessageType.Text, false);
-
-            while (!receiveResult.CloseStatus.HasValue && webSocket.State == WebSocketState.Open)
+            byte[] buffer = new byte[MaxMessageSize]; 
+            while (webSocket.State == WebSocketState.Open)
             {
-                var buffer = new byte[4096];
+                WebSocketReceiveResult result;
                 try
                 {
-                    receiveResult = await webSocket.ReceiveAsync(buffer, CancellationToken.None);
+                    result = await webSocket.ReceiveAsync(buffer, CancellationToken.None);
                 }
                 catch (Exception e)
                 {
                     Log.Debug($"There was an error receiving message: {e}");
+                    break;
                 }
 
-                string message = Encoding.UTF8.GetString(buffer).Trim('\0');
-
-                if (!string.IsNullOrEmpty(ServerConfig.Instance.ServerCommunicationKey))
-                    message = Decrypt(message);
-
-                try
+                if (result.MessageType == WebSocketMessageType.Text)
                 {
-                    var clientMessage = JsonConvert.DeserializeObject<Message>(message);
-                    if (clientMessage != null)
+                    string payload = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                    try
                     {
-                        clientMessage.From = ServerID.ToString();
-                        ProcessMessage(database, webSocket, clientMessage);
+                        if (!string.IsNullOrEmpty(ServerConfig.Instance.ServerCommunicationKey))
+                            payload = Decrypt(payload);
+                        
+                        var message = JsonConvert.DeserializeObject<GatewayMessage>(payload);
+                        if (message != null)
+                        {
+                            message.From = ServerID.ToString();
+                            ProcessMessage(database, webSocket, message);
+                        }
                     }
-                }
-                catch (Exception e)
-                {
-                    Log.Debug($"Failed to process message: {e}");
-                }
+                    catch (Exception e)
+                    {
+                        Log.Debug($"Failed to process message: {e}");
+                    }    
+                } else if (result.MessageType == WebSocketMessageType.Close) break;
             }
 
             Servers.RemoveAll(match => match.ServerId == ServerID);
-
+            if (webSocket is { State: WebSocketState.Aborted or WebSocketState.Closed or WebSocketState.CloseSent })
+                return;
+            
             try
             {
-                await webSocket.CloseAsync(receiveResult.CloseStatus != null ? receiveResult.CloseStatus.Value : WebSocketCloseStatus.NormalClosure,
-                    receiveResult.CloseStatusDescription, CancellationToken.None);
+                await webSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
             }
             catch (Exception e)
             {
@@ -68,54 +97,116 @@ namespace GameServer.Implementation.Common
             }
         }
 
-        private static void ProcessMessage(Database database, WebSocket webSocket, Message message)
+        private static void ProcessMessage(Database database, WebSocket socket, GatewayMessage message)
         {
-            var Response = new Message
+            var response = new GatewayMessage
             {
-                From = "API",
+                From = MasterServer,
                 To = message.From,
                 Type = $"{message.Type}Error"
             };
 
-            if (message.To == "API")
+            if (message.To == MasterServer)
             {
-                var Server = Servers.FirstOrDefault(match => match.ServerId.ToString() == message.From);
+                ServerInfo server = Servers.FirstOrDefault(match => match.ServerId.ToString() == message.From);
+                if (server == null && message.Type != GatewayEvents.ServerInfo)
+                {
+                    response.Content = $"Unknown sender {message.From}";
+                    Send(socket, JsonConvert.SerializeObject(response)).Wait();
+                    return;
+                }
+                
                 switch (message.Type) 
                 {
-                    case "ServerInfo":
-                        Response.Content = "Cannot parse server info";
-                        var info = JsonConvert.DeserializeObject<ServerInfo>(message.Content);
-                        if (info != null)
+                    case GatewayEvents.ServerInfo:
+                    {
+                        if (ParseMessage(message, response, out ServerInfo info))
                         {
                             info.ServerId = Guid.Parse(message.From);
-                            info.Socket = webSocket;
+                            info.Socket = socket;
                             Servers.Add(info);
+                            return;
                         }
-                        else Send(webSocket, JsonConvert.SerializeObject(Response)).Wait();
-                        break;
+                        
+                        break;   
+                    }
 
-                    case "PlayerCountUpdate":
-                        if (Server == null)
+                    case GatewayEvents.EventStarted:
+                    {
+                        if (ParseMessage(message, response, out EventStartedEvent info))
                         {
-                            Response.Content = $"Unknown sender {message.From}";
-                            Send(webSocket, JsonConvert.SerializeObject(Response)).Wait();
-                            break;
+                            // TODO: Do something with this information
+                            return;
                         }
-                        int playerCount = 0;
-                        if (int.TryParse(message.Content, out playerCount))
-                            Server.PlayerCount = playerCount;
-                        else
-                        {
-                            Response.Content = "Cannot parse player count";
-                            Send(webSocket, JsonConvert.SerializeObject(Response)).Wait();
-                        }
-                        break;
 
+                        break;
+                    }
+
+                    case GatewayEvents.EventFinished:
+                    {
+                        if (ParseMessage(message, response, out EventFinishedEvent info))
+                        {
+                            // TODO: Do something with this information
+                            return;
+                        }
+
+                        break;
+                    }
+                    
+                    case GatewayEvents.UpdatePlayerCount:
+                    {
+                        if (ParseMessage(message, response, out UpdatePlayerCountEvent info))
+                        {
+                            server.PlayerCount = info.PlayerCount;
+                            return;
+                        }
+                        
+                        break;   
+                    }
+                    case GatewayEvents.PlayerQuit:
+                    {
+                        if (ParseMessage(message, response, out PlayerQuitEvent info))
+                        {
+                            User user = database.Users.FirstOrDefault(match => match.UserId == info.PlayerConnectId);
+                            if (user != null)
+                            {
+                                if (info.Disconnected) user.OnlineDisconnected++;
+                                else user.OnlineForfeit++;
+                                database.SaveChanges();
+                            }
+                            
+                            return;
+                        }
+                        
+                        break;
+                    }
+                    case GatewayEvents.PlayerUpdated:
+                    {
+                        if (ParseMessage(message, response, out PlayerUpdatedEvent info))
+                        {
+                            User user = database.Users.FirstOrDefault(match => match.UserId == info.PlayerConnectId);
+                            
+                            // What should be done if Kart/Character Id is a local creation?
+                            if (user != null)
+                            {
+                                user.CharacterIdx = info.CharacterId;
+                                user.KartIdx = info.KartId;
+                                database.SaveChanges();
+                            }
+                            
+                            return;
+                        }
+                        
+                        break;
+                    }
                     default:
-                        Response.Content = $"Unknown message type {message.Type}";
-                        Send(webSocket, JsonConvert.SerializeObject(Response)).Wait();
+                    {
+                        response.Content = $"Unknown message type {message.Type}";
                         break;
+                    }
                 }
+                
+                Send(socket, JsonConvert.SerializeObject(response)).Wait();
             }
             else if (message.To == "Broadcast")
             {
@@ -126,18 +217,41 @@ namespace GameServer.Implementation.Common
             }
             else if (Servers.FirstOrDefault(match => match.ServerId.ToString() == message.From) != null)
             {
-                Response.Content = $"Cannot find receiver {message.To}";
+                response.Content = $"Cannot find receiver {message.To}";
                 var receiver = Servers.FirstOrDefault(match => match.ServerId == Guid.Parse(message.To));
                 if (receiver != null)
                     Send(receiver.Socket, JsonConvert.SerializeObject(message)).Wait();
                 else
-                    Send(webSocket, JsonConvert.SerializeObject(Response)).Wait();
+                    Send(socket, JsonConvert.SerializeObject(response)).Wait();
             }
             else
             {
-                Response.Content = $"Unknown sender {message.From}";
-                Send(webSocket, JsonConvert.SerializeObject(Response)).Wait();
+                response.Content = $"Unknown sender {message.From}";
+                Send(socket, JsonConvert.SerializeObject(response)).Wait();
             }
+        }
+
+        private static bool ParseMessage<T>(GatewayMessage message, GatewayMessage response, out T evt)
+        {
+            evt = JsonConvert.DeserializeObject<T>(message.Content);
+            if (evt != null) return true;
+            response.Content = $"Cannot parse {message.Type}";
+            return false;
+        }
+
+        private static async Task DispatchEvent(string type, object evt)
+        {
+            var message = new GatewayMessage
+            {
+                Type = type,
+                From = MasterServer,
+                To = "Broadcast",
+                Content = JsonConvert.SerializeObject(evt)
+            };
+            
+            string payload = JsonConvert.SerializeObject(message);
+            foreach (ServerInfo server in Servers)
+                await Send(server.Socket, payload);
         }
 
         private static async Task Send(WebSocket webSocket, string message)

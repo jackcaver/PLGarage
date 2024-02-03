@@ -1,4 +1,4 @@
-﻿using GameServer.Models;
+using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Response;
 using System.Collections.Generic;
@@ -140,6 +140,7 @@ namespace GameServer.Implementation.Common
             foreach (var Session in Sessions.Where(match => match.Value.Username == user.Username && match.Key != SessionID))
             {
                 Sessions.Remove(Session.Key);
+                ServerCommunication.NotifySessionDestroyed(Session.Key);
             }
 
             Sessions[SessionID].Ticket = NPTicket;
@@ -170,6 +171,8 @@ namespace GameServer.Implementation.Common
                 };
                 return errorResp.Serialize();
             }
+            
+            ServerCommunication.NotifySessionCreated(SessionID, user.UserId, user.Username, (int)NPTicket.IssuerId);
 
             var resp = new Response<List<login_data>>
             {
@@ -261,12 +264,14 @@ namespace GameServer.Implementation.Common
                 && (DateTime.UtcNow > match.Value.LastPing.AddMinutes(60) /*|| DateTime.UtcNow > match.Value.ExpiryDate*/)))
             {
                 Sessions.Remove(Session.Key);
+                ServerCommunication.NotifySessionDestroyed(Session.Key);
             }
 
             foreach (var Session in Sessions.Where(match => !match.Value.Authenticated
                 && DateTime.UtcNow > match.Value.LastPing.AddHours(3)))
             {
                 Sessions.Remove(Session.Key);
+                ServerCommunication.NotifySessionDestroyed(Session.Key);
             }
         }
 

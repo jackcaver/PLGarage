@@ -1,6 +1,6 @@
 ﻿namespace GameServer.Models.ServerCommunication
 {
-    public class Message
+    public class GatewayMessage
     {
         public string Type { get; set; }
         public string From { get; set; }

@@ -1088,11 +1088,9 @@ namespace GameServer.Implementation.Player_Creation
             foreach (int item in id)
             {
                 var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item);
-                Log.Information($"verifying {item}");
                 if (creation != null || (creation != null && (creation.ModerationStatus != ModerationStatus.BANNED
                     || creation.ModerationStatus != ModerationStatus.ILLEGAL)))
                 {
-                    Log.Information($"{item} allow");
                     creations.Add(new PlayerCreationToVerify
                     {
                         id = item,
@@ -1102,7 +1100,6 @@ namespace GameServer.Implementation.Player_Creation
                 }
                 else
                 {
-                    Log.Information($"{item} ban");
                     creations.Add(new PlayerCreationToVerify
                     {
                         id = item,

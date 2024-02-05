@@ -69,6 +69,7 @@ namespace GameServer.Implementation.Player
                 var Activity = Activities[i];
                 var Author = database.Users.FirstOrDefault(match => match.UserId == Activity.AuthorId);
                 var Player = database.Users.FirstOrDefault(match => match.UserId == Activity.PlayerId);
+                UserGeneratedContentUtils.CheckStoryLevelName(database, Activity.PlayerCreationId);
                 var PlayerCreation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Activity.PlayerCreationId);
 
                 if (Activity.Type == ActivityType.system_event)

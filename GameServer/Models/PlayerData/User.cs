@@ -78,9 +78,20 @@ namespace GameServer.Models.PlayerData
         public string StarRating => Rating.ToString("0.0", CultureInfo.InvariantCulture);
         public int SkillLevelId(Platform platform) => SkillConfig.Instance.GetSkillLevel((int)Math.Floor(TotalXP(platform))).Id;
         public string SkillLevelName(Platform platform) => SkillConfig.Instance.GetSkillLevel((int)Math.Floor(TotalXP(platform))).Name;
-        public float TotalXP(Platform platform) => ExperiencePoints + CreatorPoints(platform);
-        public float TotalXPLastWeek(Platform platform) => ExperiencePointsLastWeek + CreatorPointsLastWeek(platform);
-        public float TotalXPThisWeek(Platform platform) => ExperiencePointsThisWeek + CreatorPointsThisWeek(platform);
+        public float TotalXP(Platform platform) => (platform == Platform.PSV ? 0 : ExperiencePoints) + CreatorPoints(platform);
+        public float TotalXPLastWeek(Platform platform) => (platform == Platform.PSV ? 0 : ExperiencePoints) + CreatorPointsLastWeek(platform);
+        public float TotalXPThisWeek(Platform platform) => (platform == Platform.PSV ? 0 : ExperiencePoints) + CreatorPointsThisWeek(platform);
+        //MNR: Road Trip
+        public int TravelPoints => this.database.TravelPoints.Where(match => match.PlayerId == UserId).Sum(p => p.Amount);
+        public int TravelPointsThisWeek => this.database.TravelPoints.Where(match => match.PlayerId == UserId && match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount);
+        public int TravelPointsLastWeek => this.database.TravelPoints.Where(match => match.PlayerId == UserId && match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount);
+        public int Visits => this.database.POIVisits.Count(match => match.PlayerId == UserId);
+        public int VisitsThisWeek => this.database.POIVisits.Count(match => match.PlayerId == UserId && match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow);
+        public int VisitsLastWeek => this.database.POIVisits.Count(match => match.PlayerId == UserId && match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7));
+        public bool HasCheckedInBefore { get; set; }
+        public float ModMiles { get; set; }
+        public float LastLatitude { get; set; }
+        public float LastLongitude { get; set; }
 
         public bool IsHeartedByMe(int id, bool IsMNR) 
         {

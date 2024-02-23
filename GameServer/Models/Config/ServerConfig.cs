@@ -22,7 +22,7 @@ namespace GameServer.Models.Config
 			}
 		}
 
-        public string NotWhitelistedText { get; set; } = "User \"%username\" is not whitelisted on this instance";
+        public string NotWhitelistedText = "User \"%username\" is not whitelisted on this instance";
         [JsonIgnore]
         public string EulaText 
         { 
@@ -41,13 +41,13 @@ namespace GameServer.Models.Config
                 File.WriteAllText("./eula.txt", value);
             }
         }
-        public string ExternalURL { get; set; } = "auto:10050";
-        public string MysqlConnectionString { get; set; } = "server=127.0.0.1;uid=root;pwd=password;database=PLGarage";
-        public bool Whitelist { get; set; } = false;
-        public bool BlockMNR { get; set; } = false;
-        public bool BlockLBPK { get; set; } = false;
-        public string InstanceName { get; set; } = "PLGarage";
-        public string ServerCommunicationKey { get; set; } = "";
+        public string ExternalURL = "auto:10050";
+        public string MysqlConnectionString = "server=127.0.0.1;uid=root;pwd=password;database=PLGarage";
+        public bool Whitelist = false;
+        public bool BlockMNR = false;
+        public bool BlockLBPK = false;
+        public string InstanceName = "PLGarage";
+        public string ServerCommunicationKey = "";
 
         private static ServerConfig GetFromFile()
         {
@@ -61,13 +61,13 @@ namespace GameServer.Models.Config
             else
             {
                 Log.Error("No configuration found");
-                new ServerConfig().GenerateExample();
+                GenerateExample();
                 Environment.Exit(1);
                 return null;
             }
         }
 
-        private void GenerateExample() 
+        private static void GenerateExample() 
         {
             if (File.Exists("./ExampleConfig.json"))
             {
@@ -75,7 +75,7 @@ namespace GameServer.Models.Config
             }
             else
             {
-                File.WriteAllText("./ExampleConfig.json", JsonConvert.SerializeObject(this, Formatting.Indented));
+                File.WriteAllText("./ExampleConfig.json", JsonConvert.SerializeObject(new ServerConfig(), Formatting.Indented));
                 Log.Information($"Generated example configuration at {Path.Combine(Environment.CurrentDirectory, "ExampleConfig.json")}");
             }
         }

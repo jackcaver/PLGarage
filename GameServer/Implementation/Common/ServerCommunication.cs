@@ -5,17 +5,14 @@ using Newtonsoft.Json;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GameServer.Models.PlayerData;
-using GameServer.Models.Response;
 using GameServer.Models.ServerCommunication.Events;
 using GameServer.Models.PlayerData.PlayerCreations;
 

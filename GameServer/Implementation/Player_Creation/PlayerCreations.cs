@@ -9,7 +9,6 @@ using System.Linq;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Implementation.Common;
 using System.Globalization;
-using Serilog;
 
 namespace GameServer.Implementation.Player_Creation
 {

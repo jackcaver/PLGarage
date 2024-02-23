@@ -56,6 +56,9 @@
         online_races,
         online_wins,
         longest_win_streak,
-        win_streak
+        win_streak,
+        //MNR: Road Trip
+        visits,
+        travel_points
     }
 }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="mod_mile.checkins.status">
+  <request method="GET" url="mod_mile/checkins/:id.xml" login_required="true">
+    <param name="id" type="integer" required="true" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="poi" type="anchor">
+      <attribute name="id" type="integer" />
+      <attribute name="u" type="float" />
+      <attribute name="v" type="float" />
+      <attribute name="latitude" type="float" />
+      <attribute name="longitude" type="float" />
+      <attribute name="radius" type="float" />
+      <attribute name="name" type="string" />
+    </element>
+  </response>
+</resource>

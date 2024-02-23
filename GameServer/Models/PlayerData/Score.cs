@@ -48,6 +48,7 @@ namespace GameServer.Models.PlayerData
         //MNR: Road Trip
         public float Latitude { get; set; }
         public float Longitude { get; set; }
+        public string LocationTag { get; set; }
 
         public int GetRank(SortColumn sortColumn)
         {

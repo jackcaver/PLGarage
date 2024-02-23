@@ -6,7 +6,6 @@ using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,8 +53,30 @@ namespace GameServer.Implementation.Player
             if (sort_column == SortColumn.best_lap_time)
                 scores.Sort((curr, prev) => curr.BestLapTime.CompareTo(prev.BestLapTime));
 
-            var MyStats = user != null ? database.Scores.FirstOrDefault(match => match.PlayerId == user.UserId
-                && match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR && match.Platform == platform) : null;
+            if (type == LeaderboardType.WEEKLY)
+                scores.RemoveAll(match => match.UpdatedAt < DateTime.UtcNow.AddDays(-7));
+            if (type == LeaderboardType.LAST_WEEK)
+                scores.RemoveAll(match => match.UpdatedAt < DateTime.UtcNow.AddDays(-14) || match.UpdatedAt > DateTime.UtcNow.AddDays(-7));
+
+            Score MyStats = null;
+
+            if (user != null)
+            {
+                var playerScores = database.Scores.Where(match => match.PlayerId == user.UserId
+                    && match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id 
+                    && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR 
+                    && match.Platform == platform).ToList();
+
+                if (sort_column == SortColumn.finish_time)
+                    playerScores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
+                if (sort_column == SortColumn.score)
+                    playerScores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+                if (sort_column == SortColumn.best_lap_time)
+                    playerScores.Sort((curr, prev) => curr.BestLapTime.CompareTo(prev.BestLapTime));
+
+                MyStats = playerScores.FirstOrDefault();
+            }
+
             var mystats = new SubLeaderboardPlayer { };
 
             if (MyStats != null)
@@ -79,6 +100,26 @@ namespace GameServer.Implementation.Player
                 mystats.kart_idx = MyStats.KartIdx;
                 mystats.skill_level_id = user.SkillLevelId(platform);
                 mystats.skill_level_name = user.SkillLevelName(platform);
+            }
+
+            if (platform == Platform.PSV)
+            {
+                List<int> players = new List<int>();
+                foreach (var score in scores)
+                {
+                    if (!players.Contains(score.PlayerId))
+                        players.Add(score.PlayerId);
+                }
+                foreach (var player in players)
+                {
+                    var best = scores.FirstOrDefault(match => match.PlayerId == player);
+                    if (sort_column == SortColumn.finish_time)
+                        scores.RemoveAll(match => match.FinishTime > best.FinishTime);
+                    if (sort_column == SortColumn.score)
+                        scores.RemoveAll(match => match.Points < best.Points);
+                    if (sort_column == SortColumn.best_lap_time)
+                        scores.RemoveAll(match => match.BestLapTime > best.BestLapTime);
+                }
             }
 
             //calculating pages
@@ -244,6 +285,123 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
+        public static string ViewPersonalSubLeaderBoard(Database database, Guid SessionID, int limit, int page, 
+            int per_page, LeaderboardType type, int sub_group_id, int sub_key_id, Platform platform, 
+            Platform track_platform, SortOrder sort_order, SortColumn sort_column, float longitude, float latitude)
+        {
+            var session = Session.GetSession(SessionID);
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+
+            if (user == null)
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+
+            var scores = database.Scores.Where(match => match.PlayerId == user.UserId && match.SubGroupId == sub_group_id 
+                && match.SubKeyId == sub_key_id && match.Platform == platform && match.IsMNR && match.LocationTag != null).ToList();
+
+            if (sort_column == SortColumn.finish_time)
+                scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
+            if (sort_column == SortColumn.score)
+                scores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+            if (sort_column == SortColumn.best_lap_time)
+                scores.Sort((curr, prev) => curr.BestLapTime.CompareTo(prev.BestLapTime));
+
+            //calculating pages
+            int pageEnd = PageCalculator.GetPageEnd(page, per_page);
+            int pageStart = PageCalculator.GetPageStart(page, per_page);
+            int totalPages = PageCalculator.GetTotalPages(per_page, scores.Count);
+
+            if (pageEnd > scores.Count)
+                pageEnd = scores.Count;
+
+            var LeaderboardScores = new List<PersonalSubLeaderboardPlayer>();
+
+            for (int i = pageStart; i < pageEnd; i++)
+            {
+                var score = scores[i];
+                if (score != null)
+                {
+                    LeaderboardScores.Add(new PersonalSubLeaderboardPlayer
+                    {
+                        player_id = score.PlayerId,
+                        username = score.Username,
+                        best_lap_time  = score.BestLapTime,
+                        character_idx = score.CharacterIdx,
+                        kart_idx = score.KartIdx,
+                        rank = score.GetRank(sort_column),
+                        sub_key_id = score.SubKeyId,
+                        track_idx = score.SubKeyId,
+                        skill_level_id = score.User.SkillLevelId(platform),
+                        latitude = score.Latitude,
+                        longitude = score.Longitude,
+                        location_tag = score.LocationTag
+                    });
+                    if (i == pageStart) //for some reason my game skips the first record, so here is my weird way to fix it ._.
+                    {
+                        LeaderboardScores.Add(new PersonalSubLeaderboardPlayer
+                        {
+                            player_id = score.PlayerId,
+                            username = score.Username,
+                            best_lap_time = score.BestLapTime,
+                            character_idx = score.CharacterIdx,
+                            kart_idx = score.KartIdx,
+                            rank = score.GetRank(sort_column),
+                            sub_key_id = score.SubKeyId,
+                            track_idx = score.SubKeyId,
+                            skill_level_id = score.User.SkillLevelId(platform),
+                            latitude = score.Latitude,
+                            longitude = score.Longitude,
+                            location_tag = score.LocationTag
+                        });
+                    }
+                }
+            }
+
+            var MyStats = scores.FirstOrDefault(match => match.PlayerId == user.UserId
+                && match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id 
+                && match.IsMNR == session.IsMNR && match.Platform == platform);
+            var mystats = new PersonalSubLeaderboardPlayer { };
+
+            if (MyStats != null)
+            {
+                mystats.player_id = MyStats.PlayerId;
+                mystats.username = MyStats.Username;
+                mystats.best_lap_time = MyStats.BestLapTime;
+                mystats.character_idx = MyStats.CharacterIdx;
+                mystats.kart_idx = MyStats.KartIdx;
+                mystats.rank = MyStats.GetRank(sort_column);
+                mystats.sub_key_id = MyStats.SubKeyId;
+                mystats.track_idx = MyStats.SubKeyId;
+                mystats.skill_level_id = MyStats.User.SkillLevelId(platform);
+                mystats.latitude = MyStats.Latitude;
+                mystats.longitude = MyStats.Longitude;
+                mystats.location_tag = MyStats.LocationTag;
+            }
+
+            var resp = new Response<SubLeaderboardPersonalViewResponse>
+            {
+                status = new ResponseStatus { id = 0, message = "Successful completion" },
+                response = new SubLeaderboardPersonalViewResponse
+                {
+                    my_stats = mystats,
+                    leaderboard = new PersonalSubLeaderboard
+                    {
+                        page = page,
+                        total_pages = totalPages,
+                        total = scores.Count,
+                        Scores = LeaderboardScores
+                    }
+                }
+            };
+            return resp.Serialize();
+        }
+
         public static string ViewLeaderBoard(Database database, Guid SessionID, LeaderboardType type, GameType game_type, Platform platform, int page, 
             int per_page, int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int limit, 
             string usernameFilter = null, bool FriendsView = false)
@@ -265,11 +423,6 @@ namespace GameServer.Implementation.Player
                         users.Remove(user);
                     }
                 }
-            }
-
-            foreach (var score in scores)
-            {
-                if (FriendsView)Log.Information(score.Username);
             }
 
             int Total = 0;

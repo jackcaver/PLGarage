@@ -36,7 +36,7 @@ namespace GameServer
             app.UseSerilogRequestLogging(options =>
             {
                 // Customize the message template
-                options.MessageTemplate = "{RemoteIpAddress} {RequestScheme} {RequestHost} {RequestMethod} {RequestPath}{RequestQuery} responded {StatusCode} in {Elapsed:0.0000} ms";
+                options.MessageTemplate = "{RemoteIpAddress} {RequestMethod} {RequestScheme}://{RequestHost}{RequestPath}{RequestQuery} responded {StatusCode} in {Elapsed:0.0000} ms";
 
                 // Emit debug-level events instead of the defaults
                 options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Information;

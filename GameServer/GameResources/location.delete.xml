@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="location.delete">
+  <request method="DELETE" url="location/delete.xml" login_required="true">
+    <param name="longitude" type="float" required="true" />
+    <param name="latitude" type="float" required="true" />
+  </request>
+  <response name="response" type="anchor" />
+</resource>

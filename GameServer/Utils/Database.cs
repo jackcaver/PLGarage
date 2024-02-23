@@ -41,6 +41,10 @@ namespace GameServer.Utils
         public DbSet<PlayerComplaintData> PlayerComplaints { get; set; }
         public DbSet<PlayerCreationComplaintData> PlayerCreationComplaints { get; set; }
         public DbSet<AnnouncementData> Announcements { get; set; }
+        //MNR: Road Trip
+        public DbSet<TravelPoint> TravelPoints { get; set; }
+        public DbSet<POIVisit> POIVisits { get; set; }
+        public DbSet<AwardUnlock> AwardUnlocks { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options) =>
             options.UseMySql(ServerConfig.Instance.MysqlConnectionString, ServerVersion.AutoDetect(ServerConfig.Instance.MysqlConnectionString));

@@ -91,6 +91,19 @@ namespace GameServer.Controllers.Player
         }
 
         [HttpGet]
+        [Route("sub_leaderboards/personal.xml")]
+        public IActionResult PersonalView(int limit, int page, int per_page, LeaderboardType type, int sub_group_id, 
+            int sub_key_id, Platform platform, Platform track_platform, SortOrder sort_order, SortColumn sort_column, 
+            float longitude, float latitude)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(LeaderBoards.ViewPersonalSubLeaderBoard(database, SessionID, limit, page, per_page, type,
+                sub_group_id, sub_key_id, platform, track_platform, sort_order, sort_column, longitude, latitude), "application/xml;charset=utf-8");
+        }
+
+        [HttpGet]
         [Route("ghost_car_data/{gameType}/{platform}/{track_id}/{player_id}/data.bin")]
         public IActionResult GetGhostCarDataOnPlatform(GameType gameType, Platform platform, int track_id, int player_id)
         {

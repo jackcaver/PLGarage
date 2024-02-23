@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="mod_mile.pois.show">
+  <request method="GET" url="mod_mile/pois/:id.xml" login_required="true">
+    <param name="id" type="integer" required="true" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="poi" type="anchor">
+      <element name="awards" type="anchor">
+        <vector name="award" type="anchor">
+          <attribute name="award_hash" type="string" />
+          <attribute name="award_type" type="string" />
+          <attribute name="name" type="string" />
+          <attribute name="required_checkins" type="integer" />
+          <attribute name="locked" type="boolean" />
+          <attribute name="new_unlock" type="boolean" />
+        </vector>
+      </element>
+    </element>
+  </response>
+</resource>

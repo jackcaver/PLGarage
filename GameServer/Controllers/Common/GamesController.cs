@@ -25,18 +25,6 @@ namespace GameServer.Controllers.Common
         }
 
         [HttpGet]
-        [Route("locations.xml")]
-        public IActionResult Locations()
-        {
-            var resp = new Response<EmptyResponse>
-            {
-                status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new EmptyResponse { }
-            };
-            return Content(resp.Serialize(), "application/xml;charset=utf-8");
-        }
-
-        [HttpGet]
         [Route("/resources/single_player_game.create_finish_and_post_stats.xml")]
         public IActionResult GetSinglePlayerXML()
         { //Because for whatever reason MNR: Road Trip Refuses to take my xml with LBPK variables in it -_-
@@ -119,6 +107,13 @@ namespace GameServer.Controllers.Common
             if (session.IsMNR)
                 game_player_stats.ghost_car_data = Request.Form.Files.GetFile("game_player_stats[ghost_car_data]");
 
+            if (FormLongitude != null && FormLatitude != null)
+            {
+                //gps isn't 100% accurate so here is my way to get around it
+                game_player_stats.latitude = float.Parse(game_player_stats.latitude.ToString("0.000", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
+                game_player_stats.longitude = float.Parse(game_player_stats.longitude.ToString("0.000", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
+            }
+
             Score score;
 
             if(session.IsMNR && session.Platform == Platform.PS3 && user.CharacterIdx != game_player_stats.character_idx)
@@ -140,6 +135,23 @@ namespace GameServer.Controllers.Common
                     && match.SubGroupId == (int)game.game_type
                     && match.Platform == game.platform
                     && match.PlaygroupSize == game_player_stats.playgroup_size && match.IsMNR == session.IsMNR);
+            }
+            else if (session.Platform == Platform.PSV)
+            {
+                score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id
+                    && match.SubKeyId == game_player_stats.track_idx
+                    && match.SubGroupId == (int)game.game_type - 10
+                    && match.Platform == session.Platform && match.IsMNR == session.IsMNR
+                    && match.Latitude.ToString("0.000", CultureInfo.InvariantCulture) == game_player_stats.latitude.ToString("0.000", CultureInfo.InvariantCulture)
+                    && match.Longitude.ToString("0.000", CultureInfo.InvariantCulture) == game_player_stats.longitude.ToString("0.000", CultureInfo.InvariantCulture));
+                if (score == null)
+                {
+                    score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id
+                        && match.SubKeyId == game_player_stats.track_idx
+                        && match.SubGroupId == (int)game.game_type - 10
+                        && match.Platform == session.Platform && match.IsMNR == session.IsMNR
+                        && match.LocationTag == null);
+                }
             }
             else
             {
@@ -304,10 +316,11 @@ namespace GameServer.Controllers.Common
                 }
                 if (SaveGhost)
                     score.GhostCarDataMD5 = GhostDataMD5;
-                if (session.Platform == Platform.PSV)
+                if (session.Platform == Platform.PSV && SaveGhost)
                 {
                     score.Latitude = game_player_stats.latitude;
                     score.Longitude = game_player_stats.longitude;
+                    score.LocationTag = game_player_stats.location_tag;
                 }
             }
             else
@@ -316,7 +329,7 @@ namespace GameServer.Controllers.Common
                 {
                     CreatedAt = DateTime.UtcNow,
                     FinishTime = game_player_stats.finish_time,
-                    Platform = session.Platform == Platform.PSV ? game_player_stats.track_platform : session.Platform,
+                    Platform = session.Platform,
                     PlayerId = game.host_player_id,
                     PlaygroupSize = game_player_stats.playgroup_size,
                     Points = game_player_stats.score,
@@ -329,7 +342,8 @@ namespace GameServer.Controllers.Common
                     KartIdx = game_player_stats.kart_idx,
                     CharacterIdx = game_player_stats.character_idx,
                     GhostCarDataMD5 = GhostDataMD5,
-                    IsMNR = session.IsMNR
+                    IsMNR = session.IsMNR,
+                    LocationTag = game_player_stats.location_tag
                 });
                 SaveGhost = true;
             }

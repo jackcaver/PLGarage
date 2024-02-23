@@ -1,7 +1,15 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <resource name="locations.lookup">
-  <request method="GET" url="locations.xml">
+  <request method="GET" url="locations.xml" login_required="true">
+    <param name="latitude" type="float" required="false" />
+    <param name="longitude" type="float" required="false" />
   </request>
   <response name="response" type="anchor">
+    <element name="location" type="anchor">
+      <attribute name="longitude" type="float" />
+      <attribute name="latitude" type="float" />
+      <attribute name="tag" type="string" />
+      <attribute name="is_tagged" type="boolean" />
+    </element>
   </response>
 </resource>

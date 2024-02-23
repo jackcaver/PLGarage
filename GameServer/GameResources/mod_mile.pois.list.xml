@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="mod_mile.pois.list">
+  <request method="GET" url="mod_mile/pois.xml" login_required="true">
+    <param name="per_page" type="integer" required="false" default="200" />
+    <param name="page" type="integer" required="false" default="1" />
+    <param name="city_id" type="integer" required="false" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="points_of_interest" type="anchor">
+      <vector name="poi" type="anchor">
+        <attribute name="name" type="string" />
+        <attribute name="id" type="integer" />
+        <attribute name="u" type="float" />
+        <attribute name="v" type="float" />
+        <attribute name="longitude" type="float" />
+        <attribute name="latitude" type="float" />
+        <attribute name="locked" type="boolean" />
+        <attribute name="new_unlock" type="boolean" />
+        <attribute name="global_checkin_count" type="integer" />
+      </vector>
+    </element>
+  </response>
+</resource>

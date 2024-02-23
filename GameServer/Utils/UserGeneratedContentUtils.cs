@@ -340,7 +340,16 @@ namespace GameServer.Utils
             { 637, new StoryLevelData { Name = "T7_HomerunCircuit", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
 
             //MNR: Road Trip
-            //TODO: Add road trip levels
+            { 512, new StoryLevelData { Name = "Tour1Race1", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 513, new StoryLevelData { Name = "Tour1Race2", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 514, new StoryLevelData { Name = "Tour1Race3", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 515, new StoryLevelData { Name = "Tour1Race4", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 516, new StoryLevelData { Name = "Tour1Race5", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 517, new StoryLevelData { Name = "Tour2Race1", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 518, new StoryLevelData { Name = "Tour2Race2", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 519, new StoryLevelData { Name = "Tour2Race3", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            { 521, new StoryLevelData { Name = "Tour2Race5", RaceType = RaceType.RACE, ScoreboardMode = 1 } },
+            //TODO: Check if there is more story/dlc tracks that could be reported by the game
         };
 
         public static void CheckStoryLevelName(Database database, int id)

@@ -369,5 +369,6 @@ whitelist.json
 skill_levels.json
 hotlap.json
 eula.txt
+mod_explorer.json
 # User Generated Content
 /GameServer/UGC/

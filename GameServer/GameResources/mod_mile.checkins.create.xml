@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="mod_mile.checkins.create">
+  <request method="POST" url="mod_mile/checkins.xml" login_required="true">
+    <param name="latitude" type="float" required="true" />
+    <param name="longitude" type="float" required="true" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="checkin" type="anchor">
+      <attribute name="id" type="integer" />
+      <attribute name="last_miles" type="float" />
+      <attribute name="last_points" type="float" />
+      <attribute name="global_miles" type="float" />
+      <attribute name="global_points" type="float" />
+      <attribute name="travel_points" type="float" />
+      <attribute name="total_miles" type="float" />
+      <attribute name="u" type="float" />
+      <attribute name="v" type="float" />
+      <attribute name="new_unlock" type="boolean" />
+    </element>
+  </response>
+</resource>

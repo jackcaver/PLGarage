@@ -111,7 +111,7 @@ namespace GameServer.Implementation.Common
                     File.WriteAllText("./hotlap.json", JsonConvert.SerializeObject(hotLap));
             }
 
-            if (hotLap != null && hotLap.SelectedAt < DateTime.UtcNow.AddDays(-7))
+            if (hotLap != null && hotLap.SelectedAt < DateTime.UtcNow.AddDays(-1))
             {
                 foreach (var score in database.Scores.Where(match => match.SubGroupId == 700 && match.IsMNR).ToList())
                 {

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="sub_leaderboard.personal_view">
+  <request method="GET" url="sub_leaderboards/personal.xml" login_required="true">
+    <param name="limit" type="integer" required="false"/>
+    <param name="page" type="integer" required="false" default="1"/>
+    <param name="per_page" type="integer" required="false" default="10"/>
+    <param name="type" type="string" required="false" options="LIFETIME,DAILY,WEEKLY,MONTHLY,LAST_WEEK,LAST_MONTH" default="LIFETIME"/>
+    <param name="sub_group_id" type="integer" required="true"/>
+    <param name="sub_key_id" type="integer" required="true"/>
+    <param name="platform" type="string" required="false" options="PS2,PSP,PS3,WEB,PSV"/>
+    <param name="track_platform" type="string" required="false" options="PS3,PSV"/>
+    <param name="sort_order" type="string" required="false" options="asc,desc" default="asc"/>
+    <param name="sort_column" type="string" required="false" default="best_lap_time" />
+    <param name="longitude" type="float" required="false" default="100000.0" />
+    <param name="latitude" type="float" required="false" default="100000.0" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="my_stats" type="anchor">
+        <attribute name="username" type="string"/>
+        <attribute name="player_id" type="integer"/>
+        <attribute name="rank" type="integer"/>
+        <attribute name="best_lap_time" type="float"/>
+        <attribute name="kart_idx" type="integer"/>
+        <attribute name="character_idx" type="integer"/>
+        <attribute name="track_idx" type="integer"/>
+        <attribute name="sub_key_id" type="integer"/>
+        <attribute name="skill_level_id" type="integer"/>
+        <attribute name="location_tag" type="string" />
+        <attribute name="latitude" type="float" />
+        <attribute name="longitude" type="float" />
+    </element>
+    <element name="leaderboard" type="anchor">
+        <attribute name="total_pages" type="integer"/>
+        <attribute name="page" type="integer"/>
+        <attribute name="total" type="integer"/>
+        <vector name="player" type="anchor">
+            <attribute name="username" type="string"/>
+            <attribute name="player_id" type="integer"/>
+            <attribute name="rank" type="integer"/>
+            <attribute name="best_lap_time" type="float"/>
+            <attribute name="kart_idx" type="integer"/>
+            <attribute name="character_idx" type="integer"/>
+            <attribute name="track_idx" type="integer"/>
+            <attribute name="sub_key_id" type="integer"/>
+            <attribute name="skill_level_id" type="integer"/>
+            <attribute name="location_tag" type="string" />
+            <attribute name="latitude" type="float" />
+            <attribute name="longitude" type="float" />
+        </vector>
+    </element>
+  </response>
+</resource>

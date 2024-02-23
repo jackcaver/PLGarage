@@ -214,10 +214,8 @@ namespace GameServer.Models.Config
                 config.skillLevels = JsonConvert.DeserializeObject<List<SkillLevel>>(file);
             }
             else
-            {
-                config = new SkillConfig();
-                File.WriteAllText("./skill_levels.json", JsonConvert.SerializeObject(config.skillLevels));
-            }
+                File.WriteAllText("./skill_levels.json", JsonConvert.SerializeObject(config.skillLevels, Formatting.Indented));
+            
             return config;
         }
 

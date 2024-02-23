@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="mod_mile.leaderboards.cities">
+  <request method="GET" url="mod_mile/leaderboards/cities.xml" login_required="true">
+    <param name="page" type="integer" default="1" minvalue="1" />
+    <param name="per_page" type="integer" default="10" minvalue="1" />
+    <param name="timespan" type="string" default="all_time" options="all_time,this_week,last_week" />
+    <param name="sort_column" type="string" default="visits" />
+    <param name="sort_order" type="string" default="desc" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="player_stats" type="anchor">
+        <attribute name="travel_points" type="integer" />
+        <attribute name="visits" type="integer" />
+        <element name="visits" type="anchor">
+            <attribute name="rank" type="integer" />
+        </element>
+        <element name="travel_points" type="anchor">
+            <attribute name="rank" type="integer" />
+        </element>
+    </element>
+    <element name="cities_leaderboard" type="anchor">
+      <attribute name="total_pages" type="integer" />
+      <attribute name="page" type="integer" />
+      <attribute name="total" type="integer" />
+      <vector name="leaderboard_stats" type="anchor">
+        <attribute name="rank" type="integer" />
+        <attribute name="player" type="string" />
+        <attribute name="visits" type="integer" />
+        <attribute name="travel_points" type="integer" />
+        <attribute name="destination" type="string" />
+        <attribute name="city" type="string" />
+        <attribute name="country" type="string" />
+      </vector>
+    </element>
+  </response>
+</resource>

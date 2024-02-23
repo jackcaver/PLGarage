@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="mod_mile.travel_awards.list">
+  <request method="GET" url="mod_mile/travel_awards.xml" login_required="true">
+    <param name="per_page" type="integer" required="false" default="200" />
+    <param name="page" type="integer" required="false" default="1" />
+  </request>
+  <response name="response" type="anchor">
+    <element name="travel_awards" type="anchor">
+      <vector name="travel_award" type="anchor">
+        <attribute name="award_hash" type="string" />
+        <attribute name="award_type" type="string" />
+        <attribute name="name" type="string" />
+        <attribute name="individual_points" type="integer" />
+        <attribute name="global_points" type="integer" />
+        <attribute name="unlocked" type="boolean" />
+        <attribute name="new_unlock" type="boolean" />
+        <attribute name="is_global_type" type="boolean" />
+      </vector>
+    </element>
+  </response>
+</resource>

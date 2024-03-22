@@ -3,6 +3,9 @@ using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.Games;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -141,26 +144,39 @@ namespace GameServer.Utils
             return hash;
         }
 
-        public static FileStream LoadPlayerCreation(int id, string file)
+        public static byte[] Resize(byte[] image, int width, int height)
+        {
+            Image Image = Image.Load(image);
+
+            Image.Mutate(x => x.Resize(width, height));
+
+            var stream = new MemoryStream();
+            Image.Save(stream, new PngEncoder());
+            return stream.ToArray();
+        }
+
+        public static Stream LoadPlayerCreation(int id, string file)
         {
             if (File.Exists($"UGC/PlayerCreations/{id}/{file}"))
                 return File.OpenRead($"UGC/PlayerCreations/{id}/{file}");
             else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}"))
-                return File.OpenRead($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}");
+                return new MemoryStream(Resize(File.ReadAllBytes($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}"), 128, 128));
+            else if (file.Contains("_64x64") && File.Exists($"UGC/PlayerCreations/{id}/{file.Replace("_64x64", "")}"))
+                return new MemoryStream(Resize(File.ReadAllBytes($"UGC/PlayerCreations/{id}/{file.Replace("_64x64", "")}"), 64, 64));
             else
                 return null;
         }
 
-        public static FileStream LoadPlayerAvatar(int id, string file, bool IsMNR = false)
+        public static Stream LoadPlayerAvatar(int id, string file, bool IsMNR = false)
         {
             if (File.Exists($"UGC/PlayerAvatars/{id}/{file}") && !IsMNR)
                 return File.OpenRead($"UGC/PlayerAvatars/{id}/{file}");
             else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}") && !IsMNR)
-                return File.OpenRead($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}");
+                return new MemoryStream(Resize(File.ReadAllBytes($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}"), 128, 128));
             else if (File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file}") && IsMNR)
                 return File.OpenRead($"UGC/PlayerAvatars/{id}/MNR/{file}");
             else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}") && IsMNR)
-                return File.OpenRead($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}");
+                return new MemoryStream(Resize(File.ReadAllBytes($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}"), 128, 128));
             else
                 return null;
         }
@@ -177,8 +193,6 @@ namespace GameServer.Utils
             FileStream fileStream;
             if (File.Exists($"UGC/PlayerCreations/{id}/{file}"))
                 fileStream = File.OpenRead($"UGC/PlayerCreations/{id}/{file}");
-            else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}"))
-                fileStream = File.OpenRead($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}");
             else
                 return "";
 
@@ -187,22 +201,10 @@ namespace GameServer.Utils
             return hash;
         }
 
-        public static string CalculateAvatarMD5(int id, string file, bool IsMNR = false)
+        public static string CalculateMD5(Stream stream)
         {
-            FileStream fileStream;
-            if (File.Exists($"UGC/PlayerAvatars/{id}/{file}") && !IsMNR)
-                fileStream = File.OpenRead($"UGC/PlayerAvatars/{id}/{file}");
-            else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}") && !IsMNR)
-                fileStream = File.OpenRead($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}");
-            else if (File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file}") && IsMNR)
-                fileStream = File.OpenRead($"UGC/PlayerAvatars/{id}/MNR/{file}");
-            else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}") && IsMNR)
-                fileStream = File.OpenRead($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}");
-            else
-                return "";
-
-            string hash = BitConverter.ToString(MD5.Create().ComputeHash(fileStream)).Replace("-", "").ToLower();
-            fileStream.Close();
+            string hash = BitConverter.ToString(MD5.Create().ComputeHash(stream)).Replace("-", "").ToLower();
+            stream.Position = 0;
             return hash;
         }
 

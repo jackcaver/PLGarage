@@ -53,11 +53,11 @@ namespace GameServer.Controllers.Player
         {
             if (!AcceptedTypes.Contains(file)) return NotFound();
             var avatar = UserGeneratedContentUtils.LoadPlayerAvatar(id, file.ToLower());
-            Response.Headers.Add("ETag", $"\"{UserGeneratedContentUtils.CalculateAvatarMD5(id, file)}\"");
-            Response.Headers.Add("Accept-Ranges", "bytes");
-            Response.Headers.Add("Cache-Control", "private, max-age=0, must-revalidate");
             if (avatar == null)
                 return NotFound();
+            Response.Headers.Add("ETag", $"\"{UserGeneratedContentUtils.CalculateMD5(avatar)}\"");
+            Response.Headers.Add("Accept-Ranges", "bytes");
+            Response.Headers.Add("Cache-Control", "private, max-age=0, must-revalidate");
             return File(avatar, "image/png");
         }
 
@@ -67,11 +67,11 @@ namespace GameServer.Controllers.Player
         {
             if (!AcceptedTypes.Contains(file)) return NotFound();
             var avatar = UserGeneratedContentUtils.LoadPlayerAvatar(id, file.ToLower(), true);
-            Response.Headers.Add("ETag", $"\"{UserGeneratedContentUtils.CalculateAvatarMD5(id, file, true)}\"");
-            Response.Headers.Add("Accept-Ranges", "bytes");
-            Response.Headers.Add("Cache-Control", "private, max-age=0, must-revalidate");
             if (avatar == null)
                 return NotFound();
+            Response.Headers.Add("ETag", $"\"{UserGeneratedContentUtils.CalculateMD5(avatar)}\"");
+            Response.Headers.Add("Accept-Ranges", "bytes");
+            Response.Headers.Add("Cache-Control", "private, max-age=0, must-revalidate");
             return File(avatar, "image/png");
         }
     }

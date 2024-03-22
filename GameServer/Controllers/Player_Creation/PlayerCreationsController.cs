@@ -188,7 +188,7 @@ namespace GameServer.Controllers.Player_Creation
         }
 
         private List<string> AcceptedTypes = new List<string> {
-            "data.bin", "data.jpg", "preview_image.png", "preview_image_128x128.png"
+            "data.bin", "data.jpg", "preview_image.png", "preview_image_128x128.png", "preview_image_64x64.png"
         };
 
         [HttpGet]
@@ -199,7 +199,7 @@ namespace GameServer.Controllers.Player_Creation
             var data = UserGeneratedContentUtils.LoadPlayerCreation(id, file);
             if (data == null)
                 return NotFound();
-            Response.Headers.Add("ETag", $"\"{UserGeneratedContentUtils.CalculateMD5(id, file)}\"");
+            Response.Headers.Add("ETag", $"\"{UserGeneratedContentUtils.CalculateMD5(data)}\"");
             Response.Headers.Add("Accept-Ranges", "bytes");
             Response.Headers.Add("Cache-Control", "private, max-age=0, must-revalidate");
             string contentType = "application/octet-stream";

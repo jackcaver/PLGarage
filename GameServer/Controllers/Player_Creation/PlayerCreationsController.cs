@@ -7,6 +7,7 @@ using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using GameServer.Implementation.Common;
+using Microsoft.AspNetCore.Http;
 
 namespace GameServer.Controllers.Player_Creation
 {
@@ -199,9 +200,9 @@ namespace GameServer.Controllers.Player_Creation
             var data = UserGeneratedContentUtils.LoadPlayerCreation(id, file);
             if (data == null)
                 return NotFound();
-            Response.Headers.Add("ETag", $"\"{UserGeneratedContentUtils.CalculateMD5(data)}\"");
-            Response.Headers.Add("Accept-Ranges", "bytes");
-            Response.Headers.Add("Cache-Control", "private, max-age=0, must-revalidate");
+            Response.Headers.Append("ETag", $"\"{UserGeneratedContentUtils.CalculateMD5(data)}\"");
+            Response.Headers.Append("Accept-Ranges", "bytes");
+            Response.Headers.Append("Cache-Control", "private, max-age=0, must-revalidate");
             string contentType = "application/octet-stream";
             if (file.EndsWith(".png"))
                 contentType = "image/png";

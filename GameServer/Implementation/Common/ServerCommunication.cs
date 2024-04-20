@@ -20,7 +20,6 @@ namespace GameServer.Implementation.Common
 {
     public static class ServerCommunication
     {
-        private const int MaxMessageSize = 4096;
         private const string MasterServer = "API";
         private static readonly List<ServerInfo> Servers = new();
         
@@ -45,13 +44,20 @@ namespace GameServer.Implementation.Common
         
         public static async Task HandleConnection(Database database, WebSocket webSocket, Guid ServerID)
         {
-            byte[] buffer = new byte[MaxMessageSize]; 
             while (webSocket.State == WebSocketState.Open)
             {
+                var buffer = new List<byte>();
                 WebSocketReceiveResult result;
                 try
                 {
-                    result = await webSocket.ReceiveAsync(buffer, CancellationToken.None);
+                    byte[] data = new byte[1];
+                    result = await webSocket.ReceiveAsync(data, CancellationToken.None);
+                    buffer.AddRange(data);
+                    while (!result.EndOfMessage)
+                    {
+                        result = await webSocket.ReceiveAsync(data, CancellationToken.None);
+                        buffer.AddRange(data);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -61,7 +67,7 @@ namespace GameServer.Implementation.Common
 
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
-                    string payload = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                    string payload = Encoding.UTF8.GetString(buffer.ToArray());
                     try
                     {
                         if (!string.IsNullOrEmpty(ServerConfig.Instance.ServerCommunicationKey))

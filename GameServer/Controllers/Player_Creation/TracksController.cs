@@ -59,36 +59,48 @@ namespace GameServer.Controllers.Player_Creation
         [Route("tracks/lucky_dip.xml")]
         public IActionResult LuckyDip(int page, int per_page, string keyword, int limit, Platform platform, Filters filters)
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+
             filters.race_type = Request.Query["filters[race_type]"];
             filters.username = Request.Query.Keys.Contains("filters[username]") ? Request.Query["filters[username]"].ToString().Split(',') : null;
             filters.tags = Request.Query.Keys.Contains("filters[tags]") ? Request.Query["filters[tags]"].ToString().Split(',') : null;
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_creation_type = PlayerCreationType.TRACK;
-            return Content(PlayerCreations.SearchPlayerCreations(database, page, per_page, SortColumn.created_at, SortOrder.desc, limit, platform, filters, keyword, false, true), "application/xml;charset=utf-8");
+            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, SortColumn.created_at, SortOrder.desc, limit, platform, filters, keyword, false, true), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
         [Route("tracks/ufg_picks.xml")]
         public IActionResult GetTeamPicks(int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Platform platform, Filters filters)
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+
             filters.race_type = Request.Query["filters[race_type]"];
             filters.username = Request.Query.Keys.Contains("filters[username]") ? Request.Query["filters[username]"].ToString().Split(',') : null;
             filters.tags = Request.Query.Keys.Contains("filters[tags]") ? Request.Query["filters[tags]"].ToString().Split(',') : null;
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_creation_type = PlayerCreationType.TRACK;
-            return Content(PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, filters, keyword, true), "application/xml;charset=utf-8");
+            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, keyword, true), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
         [Route("tracks.xml")]
         public IActionResult Search(int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Platform platform, Filters filters)
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+
             filters.race_type = Request.Query["filters[race_type]"];
             filters.username = Request.Query.Keys.Contains("filters[username]") ? Request.Query["filters[username]"].ToString().Split(',') : null;
             filters.tags = Request.Query.Keys.Contains("filters[tags]") ? Request.Query["filters[tags]"].ToString().Split(',') : null;
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_creation_type = PlayerCreationType.TRACK;
-            return Content(PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, filters, keyword),
+            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, keyword),
                 "application/xml;charset=utf-8");
         }
 

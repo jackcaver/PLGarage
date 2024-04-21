@@ -57,13 +57,17 @@ namespace GameServer.Controllers.Player_Creation
         [Route("player_creations/{platform}/surprise_me.xml")]
         public IActionResult SurpriseMeOnPlatform(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, Filters filters)
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_id = Request.Query.Keys.Contains("filters[player_id]") ? Request.Query["filters[player_id]"].ToString().Split(',') : null;
             PlayerCreationType TypeFilter = PlayerCreationType.TRACK;
             Enum.TryParse(Request.Query["filters[player_creation_type]"], out TypeFilter);
             filters.player_creation_type = TypeFilter;
 
-            return Content(PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, filters, null, false, true, true),
+            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, null, false, true, true),
                 "application/xml;charset=utf-8");
         }
 
@@ -71,15 +75,19 @@ namespace GameServer.Controllers.Player_Creation
         [Route("player_creations/surprise_me.xml")]
         public IActionResult SurpriseMe(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, Filters filters)
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_id = Request.Query.Keys.Contains("filters[player_id]") ? Request.Query["filters[player_id]"].ToString().Split(',') : null;
             PlayerCreationType TypeFilter = PlayerCreationType.TRACK;
             Enum.TryParse(Request.Query["filters[player_creation_type]"], out TypeFilter);
             filters.player_creation_type = TypeFilter;
-            if (Request.Cookies.ContainsKey("session_id") && platform == Platform.PS2)
-                platform = Session.GetSession(Guid.Parse(Request.Cookies["session_id"])).Platform;
+            if (SessionID != Guid.Empty && platform == Platform.PS2)
+                platform = Session.GetSession(SessionID).Platform;
 
-            return Content(PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, filters, null, false, true, true),
+            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, null, false, true, true),
                 "application/xml;charset=utf-8");
         }
 
@@ -87,13 +95,17 @@ namespace GameServer.Controllers.Player_Creation
         [Route("player_creations/team_picks.xml")]
         public IActionResult TeamPicks(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, Filters filters)
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_id = Request.Query.Keys.Contains("filters[player_id]") ? Request.Query["filters[player_id]"].ToString().Split(',') : null;
             PlayerCreationType TypeFilter = PlayerCreationType.TRACK;
             Enum.TryParse(Request.Query["filters[player_creation_type]"], out TypeFilter);
             filters.player_creation_type = TypeFilter;
 
-            return Content(PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, filters, null, true, false, true),
+            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, null, true, false, true),
                 "application/xml;charset=utf-8");
         }
 
@@ -102,6 +114,10 @@ namespace GameServer.Controllers.Player_Creation
         [Route("player_creations/friends_and_favorites_view.xml")]
         public IActionResult FriendsView(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, Filters filters)
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_id = Request.Query.Keys.Contains("filters[player_id]") ? Request.Query["filters[player_id]"].ToString().Split(',') : null;
             PlayerCreationType TypeFilter = PlayerCreationType.TRACK;
@@ -109,7 +125,7 @@ namespace GameServer.Controllers.Player_Creation
             filters.player_creation_type = TypeFilter;
             filters.username = Request.Query.Keys.Contains("filters[username]") ? Request.Query["filters[username]"].ToString().Split(',') : null;
 
-            return Content(PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, filters, null, false, false, true),
+            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, null, false, false, true),
                 "application/xml;charset=utf-8");
         }
 
@@ -120,6 +136,10 @@ namespace GameServer.Controllers.Player_Creation
             string username, PlayerCreationType? player_creation_type, bool? is_remixable, bool? ai, bool? auto_reset, int limit, 
             Platform platform, Filters filters)
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_id = Request.Query.Keys.Contains("filters[player_id]") ? Request.Query["filters[player_id]"].ToString().Split(',') : null;
             PlayerCreationType TypeFilter = PlayerCreationType.TRACK;
@@ -133,7 +153,7 @@ namespace GameServer.Controllers.Player_Creation
             filters.is_remixable = is_remixable;
             filters.auto_reset = auto_reset;
 
-            return Content(PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, filters, search, false, false, true),
+            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, search, false, false, true),
                 "application/xml;charset=utf-8");
         }
 

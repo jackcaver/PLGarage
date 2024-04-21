@@ -174,6 +174,8 @@ namespace GameServer.Implementation.Common
             
             ServerCommunication.NotifySessionCreated(SessionID, user.UserId, user.Username, (int)NPTicket.IssuerId);
 
+            Sessions[SessionID].RandomSeed = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
             var resp = new Response<List<login_data>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },

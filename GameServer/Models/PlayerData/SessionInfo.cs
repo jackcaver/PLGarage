@@ -14,5 +14,6 @@ namespace GameServer.Models.PlayerData
         public DateTime LastPing { get; set; } = DateTime.UtcNow;
         public Platform Platform { get; set; }
         public bool IsMNR { get; set; }
+        public int RandomSeed { get; set; }
     }
 }

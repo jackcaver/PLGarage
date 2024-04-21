@@ -38,7 +38,7 @@ namespace GameServer.Implementation.Player_Creation
 
             filters.id = idFilter.Split(',');
 
-            return PlayerCreations.SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, filters, keyword);
+            return PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, keyword);
         }
 
         public static string CreateBookmark(Database database, Guid SessionID, int id)

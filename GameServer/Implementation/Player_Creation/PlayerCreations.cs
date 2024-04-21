@@ -553,7 +553,7 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string SearchPlayerCreations(Database database, int page, int per_page, SortColumn sort_column, SortOrder sort_order,
+        public static string SearchPlayerCreations(Database database, Guid SessionID, int page, int per_page, SortColumn sort_column, SortOrder sort_order,
             int limit, Platform platform, Filters filters, string keyword = null, bool TeamPicks = false, 
             bool LuckyDip = false, bool IsMNR = false)
         {
@@ -696,6 +696,18 @@ namespace GameServer.Implementation.Player_Creation
             if (sort_column == SortColumn.views_last_week)
                 Creations.Sort((curr, prev) => prev.ViewsLastWeek.CompareTo(curr.ViewsLastWeek));
 
+            if (LuckyDip)
+            {
+                var random = new Random(Session.GetSession(SessionID).RandomSeed);
+                for (int n = Creations.Count-1; n > 1; n--)
+                {
+                    int k = random.Next(n);
+                    var value = Creations[k];
+                    Creations[k] = Creations[n];
+                    Creations[n] = value;
+                }
+            }
+
             //calculating pages
             int pageEnd = PageCalculator.GetPageEnd(page, per_page);
             int pageStart = PageCalculator.GetPageStart(page, per_page);
@@ -816,7 +828,7 @@ namespace GameServer.Implementation.Player_Creation
                 platform = (Platform)platformOverride;
 
             filters.player_id = new string[1] { user.UserId.ToString() };
-            return SearchPlayerCreations(database, page, per_page, sort_column, sort_order, limit, platform, filters, keyword, false, false, true);
+            return SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, keyword, false, false, true);
         }
 
         public static string SearchPhotos(Database database, int? track_id, string username, string associated_usernames, int page, int per_page)

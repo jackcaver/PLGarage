@@ -158,7 +158,7 @@ namespace GameServer.Implementation.Common
                                             database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = DateTime.UtcNow });
                                         if (kart != null)
                                             database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = DateTime.UtcNow });
-                                        database.OnlineRaces.Add(new RaceStarted { PlayerId = user.UserId, StartedAt = DateTime.UtcNow });
+                                        database.OnlineRacesStarted.Add(new RaceStarted { PlayerId = user.UserId, StartedAt = DateTime.UtcNow });
                                     }
                                 }
                                 database.SaveChanges();
@@ -184,16 +184,32 @@ namespace GameServer.Implementation.Common
                                     {
                                         var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
                                         var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
-                                        if (character != null) character.RacesFinished++;
-                                        if (kart != null) kart.RacesFinished++;
+                                        
+                                        if (character != null)
+                                        {
+                                            character.RacesFinished++;
+                                            if (player.Rank == 1)
+                                                character.RacesWon++;
+                                        }
+
+                                        if (kart != null)
+                                        {
+                                            kart.RacesFinished++;
+                                            if (player.Rank == 1)
+                                                kart.RacesWon++;
+                                        }
+
                                         database.OnlineRacesFinished.Add(new RaceFinished { PlayerId = user.UserId, FinishedAt = DateTime.UtcNow, IsWinner = player.Rank == 1 });
+                                        
                                         if (player.Rank == 1)
                                         {
+                                            creation.RacesWon++;
                                             user.WinStreak++;
                                             if (user.WinStreak > user.LongestWinStreak)
                                                 user.LongestWinStreak = user.WinStreak;
                                         }
                                         else user.WinStreak = 0;
+                                        
                                         if (player.BestDrift > user.LongestDrift)
                                             user.LongestDrift = player.BestDrift;
                                         if (player.BestHangTime > user.LongestHangTime)

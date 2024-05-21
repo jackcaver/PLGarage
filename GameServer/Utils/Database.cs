@@ -1,6 +1,5 @@
 ﻿using GameServer.Models.Config;
 using GameServer.Models.PlayerData;
-using GameServer.Models.PlayerData.Games;
 using GameServer.Models.PlayerData.PlayerCreations;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,9 +12,6 @@ namespace GameServer.Utils
         public DbSet<PlayerCommentData> PlayerComments { get; set; }
         public DbSet<PlayerCommentRatingData> PlayerCommentRatings { get; set; }
         public DbSet<Score> Scores { get; set; }
-        public DbSet<GameData> Games { get; set; }
-        public DbSet<GamePlayerData> GamePlayers { get; set; }
-        public DbSet<GamePlayerStatsData> GamePlayerStats { get; set; }
         public DbSet<PlayerCreationData> PlayerCreations { get; set; }
         public DbSet<PlayerCreationDownload> PlayerCreationDownloads { get; set; }
         public DbSet<PlayerCreationRaceStarted> PlayerCreationRacesStarted { get; set; }
@@ -30,7 +26,7 @@ namespace GameServer.Utils
         public DbSet<PlayerCreationBookmark> PlayerCreationBookmarks { get; set; }
         public DbSet<GriefReportData> GriefReports { get; set; }
         public DbSet<ActivityEvent> ActivityLog { get; set; }
-        public DbSet<RaceStarted> OnlineRaces { get; set; }
+        public DbSet<RaceStarted> OnlineRacesStarted { get; set; }
         public DbSet<RaceFinished> OnlineRacesFinished { get; set; }
         //MNR
         public DbSet<PlayerRatingData> PlayerRatings { get; set; }

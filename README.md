@@ -1,5 +1,5 @@
 # PLGarage
-Open-source server software for LittleBigPlanet Karting.
+Open-source server software for LittleBigPlanet Karting and ModNation Racers.
 
 For more information about the project's state or how to set it up please visit the [wiki](https://github.com/jackcaver/PLGarage/wiki)
 

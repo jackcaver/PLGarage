@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<resource name="game.list">
+  <request method="GET" url="multiplayer_games.xml" login_required="true">
+    <param name="page" type="integer" required="false" default="1"/>
+    <param name="per_page" type="integer" required="false" default="10"/>
+    <param name="filters[game_state]" type="integer" required="false" default="20"/>
+    <param name="filters[is_ranked]" type="integer" required="false" default="20"/>
+    <param name="filters[game_type]" type="integer" required="false" default="20"/>
+    <param name="filters[platform]" type="integer" required="false" default="20"/>
+    <param name="filters[track_group]" type="integer" required="false" default="20"/>
+    <param name="filters[privacy]" type="integer" required="false" default="20"/>
+    <param name="filters[speed_class]" type="integer" required="false" default="20"/>
+    <param name="filters[track]" type="integer" required="false" default="20"/>
+    <param name="filters[number_laps]" type="integer" required="false" default="20"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="games" type="anchor">
+      <attribute name="page" type="integer"/>
+      <attribute name="total_pages" type="integer"/>
+      <attribute name="total" type="integer"/>
+      <vector name="game" type="anchor">
+        <attribute name="name" type="string"/>
+        <attribute name="speed_class" type="string"/>
+        <attribute name="game_type" type="string"/>
+        <attribute name="id" type="integer"/>
+        <attribute name="game_state_id" type="integer"/>
+        <attribute name="host_player_id" type="integer"/>
+        <attribute name="is_ranked" type="boolean"/>
+        <attribute name="max_players" type="integer"/>
+        <attribute name="min_players" type="integer"/>
+        <attribute name="cur_players" type="integer"/>
+        <attribute name="number_laps" type="integer"/>
+        <attribute name="lobby_channel_id" type="integer"/>
+        <attribute name="track" type="integer"/>
+        <attribute name="host_player_ip_address" type="string"/>
+      </vector>
+    </element>
+  </response>
+</resource>

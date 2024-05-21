@@ -518,8 +518,8 @@ namespace GameServer.Implementation.Player_Creation
                         parent_player_id = Creation.ParentPlayerId != 0 ? Creation.ParentPlayerId.ToString() : "",
                         parent_player_username = database.Users.FirstOrDefault(match => match.UserId == Creation.ParentPlayerId) != null ? database.Users.FirstOrDefault(match => match.UserId == Creation.ParentPlayerId).Username : "",
                         best_lap_time = Creation.BestLapTime,
-                        moderation_status = "APPROVED",
-                        moderation_status_id = 1202,
+                        moderation_status = Creation.ModerationStatus.ToString(),
+                        moderation_status_id = (int)Creation.ModerationStatus,
                     }
                 }
             };
@@ -785,7 +785,9 @@ namespace GameServer.Implementation.Player_Creation
                         points_today = Creation.PointsToday,
                         points_yesterday = Creation.PointsYesterday,
                         rating = Creation.Rating.ToString("0.0", CultureInfo.InvariantCulture),
-                        star_rating = Creation.StarRating
+                        star_rating = Creation.StarRating,
+                        moderation_status = Creation.ModerationStatus.ToString(),
+                        moderation_status_id = (int)Creation.ModerationStatus,
                     });
                 }
             }

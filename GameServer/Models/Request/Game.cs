@@ -1,5 +1,5 @@
+using GameServer.Models.GameBrowser;
 using GameServer.Models.PlayerData;
-using GameServer.Models.PlayerData.Games;
 
 namespace GameServer.Models.Request
 {
@@ -18,5 +18,10 @@ namespace GameServer.Models.Request
         public string track_group { get; set; }
         public string privacy { get; set; }
         public int number_laps { get; set; }
+        //MNR PSP
+        public int max_players { get; set; }
+        public int min_players { get; set; }
+        public int lobby_channel_id { get; set; }
+        public string password { get; set; }
     }
 }

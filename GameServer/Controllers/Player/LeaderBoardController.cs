@@ -5,8 +5,8 @@ using GameServer.Models.Request;
 using GameServer.Models.PlayerData;
 using GameServer.Implementation.Player;
 using System;
-using GameServer.Models.PlayerData.Games;
 using GameServer.Implementation.Common;
+using GameServer.Models.GameBrowser;
 
 namespace GameServer.Controllers.Player
 {

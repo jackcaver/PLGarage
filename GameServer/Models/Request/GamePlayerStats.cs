@@ -33,5 +33,7 @@ namespace GameServer.Models.Request
         public float longitude { get; set; }
         public string location_tag { get; set; }
         public Platform track_platform { get; set; }
+        //MNR PSP
+        public float percent_complete { get; set; }
     }
 }

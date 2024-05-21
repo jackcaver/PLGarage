@@ -1,4 +1,4 @@
-using GameServer.Models.PlayerData.Games;
+using GameServer.Models.GameBrowser;
 
 namespace GameServer.Models.Request
 {

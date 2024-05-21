@@ -1,4 +1,4 @@
-﻿namespace GameServer.Models.PlayerData.Games
+﻿namespace GameServer.Models.GameBrowser
 {
     public enum GameState
     {

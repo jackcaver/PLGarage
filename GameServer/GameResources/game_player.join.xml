@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<resource name="game_player.join">
+  <request method="PUT" url="multiplayer_games/:game_id/join.xml" login_required="true">
+    <param name="game_id" type="integer" required="true"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

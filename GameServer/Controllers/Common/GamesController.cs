@@ -5,12 +5,13 @@ using System.IO;
 using System.Linq;
 using GameServer.Implementation.Common;
 using GameServer.Models;
+using GameServer.Models.GameBrowser;
 using GameServer.Models.PlayerData;
-using GameServer.Models.PlayerData.Games;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Common
@@ -46,9 +47,6 @@ namespace GameServer.Controllers.Common
         [Route("single_player_games/create_finish_and_post_stats.xml")]
         public IActionResult PostSinglePlayerGameStats(Game game, GamePlayer game_player, GamePlayerStats game_player_stats)
         {
-            int GameID = database.Games.Count() + 1,
-                GamePlayerID = database.GamePlayers.Count() + 1,
-                GamePlayerStatsID = database.GamePlayerStats.Count() + 1;
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
@@ -161,66 +159,11 @@ namespace GameServer.Controllers.Common
                     && match.Platform == session.Platform && match.IsMNR == session.IsMNR);
             }
 
-            database.Games.Add(new GameData
-            {
-                Id = GameID,
-                GameState = game.game_state,
-                GameType = game.game_type,
-                HostPlayerId = game.host_player_id,
-                IsRanked = game.is_ranked,
-                Name = game.name,
-                Platform = game.platform,
-                //MNR
-                TrackIdx = game.track_idx,
-                NumberLaps = game.number_laps,
-                Privacy = game.privacy,
-                SpeedClass = game.speed_class,
-                Track = game.track,
-                TrackGroup = game.track_group
-            });
-            database.GamePlayers.Add(new GamePlayerData
-            {
-                Id = GamePlayerID,
-                GameId = GameID,
-                GameState = game_player.game_state,
-                PlayerId = game_player.player_id,
-                TeamId = game_player.team_id
-            });
-            database.GamePlayerStats.Add(new GamePlayerStatsData
-            {
-                Id = GamePlayerStatsID,
-                GameId = GameID,
-                Deviation = game_player_stats.deviation,
-                FinishPlace = game_player_stats.finish_place,
-                FinishTime = game_player_stats.finish_time,
-                IsComplete = game_player_stats.is_complete,
-                IsWinner = game_player_stats.is_winner,
-                LapsCompleted = game_player_stats.laps_completed,
-                NumKills = game_player_stats.num_kills,
-                PlaygroupSize = game_player_stats.playgroup_size,
-                Points = game_player_stats.points,
-                Score = game_player_stats.score,
-                Stat1 = game_player_stats.stat_1,
-                Stat2 = game_player_stats.stat_2,
-                Volatility = game_player_stats.volatility,
-                //MNR
-                Bank = game_player_stats.bank,
-                BestLapTime = game_player_stats.best_lap_time,
-                CharacterIdx = game_player_stats.character_idx,
-                KartIdx = game_player_stats.kart_idx,
-                LongestDrift = game_player_stats.longest_drift,
-                LongestHangTime = game_player_stats.longest_hang_time,
-                TrackIdx = game_player_stats.track_idx,
-                MusicIdx = game_player_stats.music_idx,
-                //MNR: Road Trip
-                Latitude = game_player_stats.latitude,
-                Longitude = game_player_stats.longitude,
-                LocationTag = game_player_stats.location_tag,
-                TrackPlatform = game_player_stats.track_platform
-            });
-
             database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = game.track_idx, StartedAt = DateTime.UtcNow });
             Track.RacesFinished++;
+            if (game_player_stats.is_winner == 1)
+                Track.RacesWon++;
+
             if (session.IsMNR)
             {
                 var character = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game_player_stats.character_idx && match.Type == PlayerCreationType.CHARACTER);
@@ -229,11 +172,15 @@ namespace GameServer.Controllers.Common
                 {
                     database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId });
                     character.RacesFinished++;
+                    if (game_player_stats.is_winner == 1)
+                        character.RacesWon++;
                 }
                 if (kart != null)
                 {
                     database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId });
                     kart.RacesFinished++;
+                    if (game_player_stats.is_winner == 1)
+                        kart.RacesWon++;
                 }
             }
 
@@ -287,7 +234,9 @@ namespace GameServer.Controllers.Common
             if (session.IsMNR)
             {
                 game_player_stats.ghost_car_data.OpenReadStream().CopyTo(GhostData);
-                GhostDataMD5 = UserGeneratedContentUtils.CalculateGhostCarDataMD5(new MemoryStream(GhostData.ToArray()));
+                GhostData.Position = 0;
+                GhostDataMD5 = UserGeneratedContentUtils.CalculateGhostCarDataMD5(GhostData);
+                GhostData.Position = 0;
             }
             bool SaveGhost = false;
 
@@ -360,13 +309,151 @@ namespace GameServer.Controllers.Common
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = new List<GameResponse> { new GameResponse {
-                    id = database.Games.Count(),
-                    game_player_id = database.GamePlayers.Count(),
-                    game_player_stats_id = database.GamePlayerStats.Count()
+                    id = 0,
+                    game_player_id = 0,
+                    game_player_stats_id = 0
                 } }
             };
 
             return Content(resp.Serialize(), "application/xml;charset=utf-8");
+        }
+
+        [HttpGet]
+        [Route("/multiplayer_games.xml")]
+        public IActionResult GetGameList(int page, int per_page, Filters filters)
+        {
+            if (Request.Query.ContainsKey("filters[game_state]"))
+            {
+                GameState StateFilter = GameState.PENDING;
+                Enum.TryParse(Request.Query["filters[game_state]"], out StateFilter);
+                filters.game_state = StateFilter;
+            }
+            if (Request.Query.ContainsKey("filters[game_type]"))
+            {
+                GameType TypeFilter = GameType.ONLINE_PURE_RACE;
+                Enum.TryParse(Request.Query["filters[game_type]"], out TypeFilter);
+                filters.game_type = TypeFilter;
+            }
+            if (Request.Query.ContainsKey("filters[platform]"))
+            {
+                Platform PlatformFilter = Platform.PSP;
+                Enum.TryParse(Request.Query["filters[platform]"], out PlatformFilter);
+                filters.platform = PlatformFilter;
+            }
+            if (Request.Query.ContainsKey("filters[track_group]"))
+                filters.track_group = Request.Query["filters[track_group]"];
+            if (Request.Query.ContainsKey("filters[is_ranked]"))
+                filters.is_ranked = bool.Parse(Request.Query["filters[is_ranked]"]);
+            if (Request.Query.ContainsKey("filters[speed_class]"))
+                filters.speed_class = Request.Query["filters[speed_class]"];
+            if (Request.Query.ContainsKey("filters[privacy]"))
+                filters.privacy = Request.Query["filters[privacy]"];
+            if (Request.Query.ContainsKey("filters[track]"))
+                filters.track = int.Parse(Request.Query["filters[track]"]);
+            if (Request.Query.ContainsKey("filters[number_laps]"))
+                filters.number_laps = int.Parse(Request.Query["filters[number_laps]"]);
+            return Content(Games.GetList(page, per_page, filters), "application/xml;charset=utf-8");
+        }
+
+        [HttpPut]
+        [Route("/multiplayer_games.xml")]
+        public IActionResult CreateGame(Game game)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var HostIP = HttpContext.Connection.RemoteIpAddress.ToString();
+            return Content(Games.CreateGame(database, SessionID, game, HostIP), "application/xml;charset=utf-8");
+        }
+
+        [HttpPut]
+        [Route("/multiplayer_games/{id}.xml")]
+        public IActionResult LaunchGame(int id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(Games.LaunchGame(database, SessionID, id), "application/xml;charset=utf-8");
+        }
+
+        [HttpDelete]
+        [Route("/multiplayer_games/{id}.xml")]
+        public IActionResult CancelGame(int id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(Games.CancelGame(database, SessionID, id), "application/xml;charset=utf-8");
+        }
+
+        [HttpPut]
+        [Route("/multiplayer_games/{game_id}/join.xml")]
+        public IActionResult JoinGame(int game_id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(Games.JoinGame(database, SessionID, game_id), "application/xml;charset=utf-8");
+        }
+
+        [HttpDelete]
+        [Route("/multiplayer_games/{game_id}/players.xml")]
+        public IActionResult RemovePlayer(int game_id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(Games.RemovePlayer(database, SessionID, game_id), "application/xml;charset=utf-8");
+        }
+
+        [HttpPut]
+        [Route("/multiplayer_games/{game_id}/disconnect.xml")]
+        public IActionResult LeaveGame(int game_id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(Games.LeaveGame(database, SessionID, game_id), "application/xml;charset=utf-8");
+        }
+
+        [HttpPut]
+        [Route("/multiplayer_games/{game_id}/checkin.xml")]
+        public IActionResult PlayerCheckin(int game_id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(Games.PlayerCheckin(database, SessionID, game_id), "application/xml;charset=utf-8");
+        }
+
+        [HttpPut]
+        [Route("/multiplayer_games/{game_id}/forfeit.xml")]
+        public IActionResult PlayerForfeit(int game_id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(Games.PlayerForfeit(database, SessionID, game_id), "application/xml;charset=utf-8");
+        }
+
+        [HttpPut]
+        [Route("/multiplayer_games/{game_id}/finish.xml")]
+        public IActionResult PlayerFinish(int game_id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(Games.PlayerFinish(database, SessionID, game_id), "application/xml;charset=utf-8");
+        }
+
+        [HttpPut]
+        [Route("/multiplayer_games/{game_id}/stats.xml")]
+        public IActionResult PlayerPostStats(int game_id, GamePlayerStats stats)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            return Content(Games.PlayerPostStats(database, SessionID, game_id, stats), "application/xml;charset=utf-8");
         }
     }
 }

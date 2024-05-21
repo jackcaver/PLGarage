@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<resource name="game_player.post_stats">
+  <request method="PUT" url="multiplayer_games/:game_id/stats.xml" login_required="true">
+    <param name="game_id" type="integer" required="true"/>
+    <param name="stats[is_complete]" type="boolean" required="true"/>
+    <param name="stats[track_idx]" type="integer" required="true"/>
+    <param name="stats[kart_idx]" type="integer" required="true"/>
+    <param name="stats[character_idx]" type="integer" required="true"/>
+    <param name="stats[best_lap_time]" type="float" required="true"/>
+    <param name="stats[finish_time]" type="float" required="true"/>
+    <param name="stats[longest_drift]" type="float" required="true"/>
+    <param name="stats[longest_hang_time]" type="float" required="true"/>
+    <param name="stats[percent_complete]" type="float" required="true"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

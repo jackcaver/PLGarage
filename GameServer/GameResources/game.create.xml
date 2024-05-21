@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<resource name="game.create">
+  <request method="PUT" url="multiplayer_games.xml" login_required="true">
+    <param name="game[name]" type="string" required="false" default="1"/>
+    <param name="game[max_players]" type="integer" required="false" default="10"/>
+    <param name="game[min_players]" type="integer" required="false" default="20"/>
+    <param name="game[number_laps]" type="integer" required="false" default="20"/>
+    <param name="game[lobby_channel_id]" type="integer" required="false" default="20"/>
+    <param name="game[track]" type="integer" required="false" default="20"/>
+    <param name="game[track_group]" type="string" required="false" default="20"/>
+    <param name="game[game_type]" type="string" required="false" default="20"/>
+    <param name="game[platform]" type="string" required="false" default="20"/>
+    <param name="game[password]" type="string" required="false" default="20"/>
+    <param name="game[privacy]" type="string" required="false" default="20"/>
+    <param name="game[speed_class]" type="string" required="false" default="20"/>
+    <param name="game[is_ranked]" type="boolean" required="false" default="20"/>
+  </request>
+  <response name="response" type="anchor">
+    <element name="game_create" type="anchor">
+      <attribute name="id" type="integer" />
+    </element>
+  </response>
+</resource>

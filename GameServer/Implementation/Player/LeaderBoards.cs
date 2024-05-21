@@ -1,7 +1,7 @@
 ﻿using GameServer.Implementation.Common;
 using GameServer.Models;
+using GameServer.Models.GameBrowser;
 using GameServer.Models.PlayerData;
-using GameServer.Models.PlayerData.Games;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;

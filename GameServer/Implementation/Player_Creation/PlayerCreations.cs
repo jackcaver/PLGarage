@@ -132,7 +132,9 @@ namespace GameServer.Implementation.Player_Creation
             var session = Session.GetSession(SessionID);
             int id = database.PlayerCreations.Count(match => match.Type != PlayerCreationType.STORY) + 10000;
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var deletedCreation = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.DELETED);
+            var deletedCreation = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.DELETED 
+                && ((match.Name == Creation.player_creation_type.ToString() && match.IsMNR == session.IsMNR
+                && match.Platform == session.Platform) || (match.Name == null && !session.IsMNR)));
 
             if (user == null)
             {
@@ -146,7 +148,7 @@ namespace GameServer.Implementation.Player_Creation
 
             int quota = database.PlayerCreations.Count(match => match.PlayerId == user.UserId 
                 && match.Type != PlayerCreationType.PHOTO && match.Type != PlayerCreationType.DELETED 
-                && match.IsMNR == session.IsMNR);
+                && match.IsMNR == session.IsMNR && match.Platform == session.Platform);
             if (quota >= user.Quota && Creation.player_creation_type != PlayerCreationType.PHOTO)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -285,6 +287,7 @@ namespace GameServer.Implementation.Player_Creation
                 };
                 return errorResp.Serialize();
             }
+
             var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id && match.PlayerId == user.UserId);
 
             if (Creation == null)
@@ -318,9 +321,11 @@ namespace GameServer.Implementation.Player_Creation
             database.PlayerCreations.Add(new PlayerCreationData
             {
                 PlayerCreationId = id,
+                Name = Creation.Type.ToString(),
                 PlayerId = user.UserId,
-                Platform = Platform.PS3,
-                Type = PlayerCreationType.DELETED
+                Platform = Creation.Platform,
+                Type = PlayerCreationType.DELETED,
+                IsMNR = Creation.IsMNR
             });
             database.SaveChanges();
 

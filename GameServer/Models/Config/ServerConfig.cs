@@ -46,7 +46,6 @@ namespace GameServer.Models.Config
         public bool EnableRequestLogging = false;
         public string InstanceName = "PLGarage";
         public string ServerCommunicationKey = "";
-        public string ModerationKey = "";
 
         private static ServerConfig GetFromFile()
         {

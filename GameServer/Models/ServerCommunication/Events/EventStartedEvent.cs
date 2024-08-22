@@ -6,5 +6,5 @@ namespace GameServer.Models.ServerCommunication.Events;
 public class EventStartedEvent
 {
     [JsonProperty("id")] public int TrackId { get; set; }
-    [JsonProperty("players")] public List<int> PlayerIds { get; set; } = new();
+    [JsonProperty("players")] public List<int> PlayerIds { get; set; } = [];
 }

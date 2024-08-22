@@ -73,5 +73,11 @@ namespace GameServer.Controllers.Player
             Enum.TryParse(topic.Split("\0")[0], out activityType);
             return Content(ActivityLog.CreateEvent(database, SessionID, activityType, creator_id, @event, list_name), "application/xml;charset=utf-8");
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

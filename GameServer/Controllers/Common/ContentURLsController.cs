@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.Config;
@@ -28,7 +27,7 @@ namespace GameServer.Controllers.Common
                     {
                         total = 7,
                         server_uuid = "c139bd86-26a7-11e2-910b-02163e142639",
-                        ContentURLList = new List<ContentURL> {
+                        ContentURLList = [
                             new ContentURL { name = "s3_bucket", formats = "", url = $"{serverURL}/" },
                             new ContentURL { name = "player_avatars", formats = ".png", url = session.IsMNR ? $"{serverURL}/player_avatars/MNR/" : $"{serverURL}/player_avatars/" },
                             new ContentURL { name = "announcements", formats = "png", url = $"{serverURL}/announcements/" },
@@ -36,7 +35,7 @@ namespace GameServer.Controllers.Common
                             new ContentURL { name = "ps3_player_creations", formats = "data.bin, preview_image.png", url = $"{serverURL}/player_creations/" },
                             new ContentURL { name = "content_updates", formats = "data.bin", url = $"{serverURL}/content_updates/" },
                             new ContentURL { name = "ghost_car_data", formats = "data.bin", url = $"{serverURL}/ghost_car_data/" }
-                        }
+                        ]
                     },
                     magic_moment = new MagicMoment { scea = true, scee = true, sceasia = true, scej = true }
                 }

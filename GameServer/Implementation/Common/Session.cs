@@ -17,13 +17,13 @@ namespace GameServer.Implementation.Common
 {
     public class Session
     {
-        private static Dictionary<Guid, SessionInfo> Sessions = new();
+        private static readonly Dictionary<Guid, SessionInfo> Sessions = [];
 
         public static string Login(Database database, string ip, Platform platform, string ticket, string hmac, string console_id, Guid SessionID)
         {
             ClearSessions();
-            byte[] ticketData = Convert.FromBase64String(ticket.Split("\n\0")[0]);
-            List<string> whitelist = new();
+            byte[] ticketData = Convert.FromBase64String(ticket.Trim('\n').Trim('\0'));
+            List<string> whitelist = [];
             if (ServerConfig.Instance.Whitelist)
                 whitelist = LoadWhitelist();
 
@@ -126,7 +126,7 @@ namespace GameServer.Implementation.Common
                 user = database.Users.FirstOrDefault(match => match.Username == NPTicket.Username);
             }
 
-            if (user == null || !Sessions.ContainsKey(SessionID) || user.IsBanned
+            if (user == null || !Sessions.TryGetValue(SessionID, out SessionInfo session) || user.IsBanned
                 || (ServerConfig.Instance.Whitelist && !whitelist.Contains(user.Username)))
             {
                 var errorResp = new Response<EmptyResponse>
@@ -143,26 +143,26 @@ namespace GameServer.Implementation.Common
                 ServerCommunication.NotifySessionDestroyed(Session.Key);
             }
 
-            Sessions[SessionID].Ticket = NPTicket;
-            Sessions[SessionID].LastPing = DateTime.UtcNow;
-            Sessions[SessionID].Platform = platform;
+            session.Ticket = NPTicket;
+            session.LastPing = DateTime.UtcNow;
+            session.Platform = platform;
 
-            List<string> MNR_IDs = new List<string> { "BCUS98167", "BCES00701", "BCES00764", "BCJS30041", "BCAS20105", 
-                "BCKS10122", "NPEA00291", "NPUA80535", "BCET70020", "NPUA70074", "NPEA90062", "NPUA70096", "NPJA90132" };
+            List<string> MNR_IDs = [ "BCUS98167", "BCES00701", "BCES00764", "BCJS30041", "BCAS20105", 
+                "BCKS10122", "NPEA00291", "NPUA80535", "BCET70020", "NPUA70074", "NPEA90062", "NPUA70096", "NPJA90132" ];
 
             if (platform != Platform.PS3)
-                Sessions[SessionID].IsMNR = true;
+                session.IsMNR = true;
             if (MNR_IDs.Contains(NPTicket.TitleId))
-                Sessions[SessionID].IsMNR = true;
+                session.IsMNR = true;
 
-            if (Sessions[SessionID].IsMNR && !user.PlayedMNR)
+            if (session.IsMNR && !user.PlayedMNR)
             {
                 user.PlayedMNR = true;
                 database.SaveChanges();
             }
 
-            if ((ServerConfig.Instance.BlockMNR && Sessions[SessionID].IsMNR) 
-                || (ServerConfig.Instance.BlockLBPK && !Sessions[SessionID].IsMNR))
+            if ((ServerConfig.Instance.BlockMNR && session.IsMNR) 
+                || (ServerConfig.Instance.BlockLBPK && !session.IsMNR))
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -173,13 +173,12 @@ namespace GameServer.Implementation.Common
             }
             
             ServerCommunication.NotifySessionCreated(SessionID, user.UserId, user.Username, (int)NPTicket.IssuerId);
-
-            Sessions[SessionID].RandomSeed = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            session.RandomSeed = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             var resp = new Response<List<login_data>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<login_data> {
+                response = [
                     new login_data {
                         ip_address = ip,
                         login_time = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
@@ -188,7 +187,7 @@ namespace GameServer.Implementation.Common
                         player_name = user.Username,
                         presence = user.Presence.ToString()
                     }
-                }
+                ]
             };
             return resp.Serialize();
         }
@@ -199,13 +198,13 @@ namespace GameServer.Implementation.Common
             int id = -130;
             string message = "The player doesn't exist";
 
-            if (Sessions.ContainsKey(SessionID))
+            if (Sessions.TryGetValue(SessionID, out SessionInfo session))
             {
                 id = 0;
                 message = "Successful completion";
-                Presence userPresence = Presence.OFFLINE;
+                Presence userPresence;
                 Enum.TryParse(presence, out userPresence);
-                Sessions[SessionID].Presence = userPresence;
+                session.Presence = userPresence;
             }
 
             var resp = new Response<EmptyResponse>
@@ -231,7 +230,7 @@ namespace GameServer.Implementation.Common
         {
             ClearSessions();
 
-            if (!Sessions.ContainsKey(SessionID))
+            if (!Sessions.TryGetValue(SessionID, out SessionInfo session))
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -241,7 +240,7 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
 
-            Sessions[SessionID].LastPing = DateTime.UtcNow;
+            session.LastPing = DateTime.UtcNow;
 
             var resp = new Response<EmptyResponse>
             {
@@ -281,20 +280,20 @@ namespace GameServer.Implementation.Common
         {
             Ping(SessionID);
 
-            if (!Sessions.ContainsKey(SessionID))
+            if (!Sessions.TryGetValue(SessionID, out SessionInfo session))
             {
                 return new SessionInfo {};
             }
 
-            return Sessions[SessionID];
+            return session;
         }
 
         public static void AcceptPolicy(Guid SessionID) 
         {
             ClearSessions();
-            if (!Sessions.ContainsKey(SessionID))
+            if (!Sessions.TryGetValue(SessionID, out SessionInfo session))
                 return;
-            Sessions[SessionID].PolicyAccepted = true;
+            session.PolicyAccepted = true;
         }
 
         public static List<string> LoadWhitelist()
@@ -302,7 +301,7 @@ namespace GameServer.Implementation.Common
             if (!File.Exists("./whitelist.json"))
             {
                 File.WriteAllText("./whitelist.json", JsonConvert.SerializeObject(new List<string>()));
-                return new List<string>();
+                return [];
             }
             return JsonConvert.DeserializeObject<List<string>>(File.ReadAllText("./whitelist.json"));
         }
@@ -312,7 +311,7 @@ namespace GameServer.Implementation.Common
             if (!File.Exists("./whitelist.json"))
             {
                 Log.Error("Cannot update whitelist if it doesn't exist");
-                return new List<string>();
+                return [];
             }
             List<string> whitelist = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText("./whitelist.json"));
             if (!whitelist.Contains(OldUsername))

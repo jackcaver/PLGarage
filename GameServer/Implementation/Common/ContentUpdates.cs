@@ -23,7 +23,7 @@ namespace GameServer.Implementation.Common
             var resp = new Response<List<content_update>>
             {
                 status = new ResponseStatus { id = -404, message = "Not Found" },
-                response = new List<content_update> { }
+                response = []
             };
 
             if (content_update_type == ContentUpdateType.ROM_STATUES)
@@ -97,7 +97,7 @@ namespace GameServer.Implementation.Common
 
         private static string GetHotlapData(Database database)
         {
-            Random random = new Random();
+            Random random = new();
             var creations = database.PlayerCreations.Where(match => match.Type == PlayerCreationType.TRACK && match.IsMNR && match.Platform == Platform.PS3).ToList();
             PlayerCreationData creation = null;
 

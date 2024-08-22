@@ -55,5 +55,11 @@ namespace GameServer.Controllers.Player
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             return Content(PlayerProfiles.IncrementRaceXP(database, SessionID, delta), "application/xml;charset=utf-8");
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

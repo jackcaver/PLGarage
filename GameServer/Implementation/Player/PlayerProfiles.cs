@@ -29,7 +29,7 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<player_profile>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<player_profile> { new player_profile { player_id = user.UserId, quote = user.Quote, username = user.Username } }
+                response = [new player_profile { player_id = user.UserId, quote = user.Quote, username = user.Username }]
             };
             return resp.Serialize();
         }
@@ -97,7 +97,7 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<PlayerProfileResponse>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<PlayerProfileResponse> {
+                response = [
                     new PlayerProfileResponse {
                         id = user.UserId,
                         player_id = user.UserId,
@@ -147,7 +147,7 @@ namespace GameServer.Implementation.Player
                         longest_drift = user.LongestDrift,
                         longest_hang_time = user.LongestHangTime.ToString()
                     }
-                }
+                ]
             };
             return resp.Serialize();
         }
@@ -155,7 +155,7 @@ namespace GameServer.Implementation.Player
         public static string GetSkillLevel(Database database, Guid SessionID, int[] id)
         {
             var session = Session.GetSession(SessionID);
-            List<User> users = new List<User>();
+            List<User> users = [];
 
             foreach (var player_id in id)
             {
@@ -189,13 +189,13 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<SkillLevelResponse>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<SkillLevelResponse>
-                {
+                response =
+                [
                     new SkillLevelResponse {
                         total = users.Count,
                         playersList = skillLevelPlayers
                     }
-                }
+                ]
             };
 
             return resp.Serialize();

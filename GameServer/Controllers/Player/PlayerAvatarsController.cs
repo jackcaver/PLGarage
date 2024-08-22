@@ -44,9 +44,9 @@ namespace GameServer.Controllers.Player
             return Content(resp.Serialize(), "application/xml;charset=utf-8");
         }
 
-        private List<string> AcceptedTypes = new List<string> { 
+        private List<string> AcceptedTypes = [ 
             "primary.png", "primary_128x128.png", "secondary.png", "secondary_128x128.png", "frowny.png", "smiley.png"
-        };
+        ];
 
         [HttpGet]
         [Route("player_avatars/{id}/{file}")]
@@ -74,6 +74,12 @@ namespace GameServer.Controllers.Player
             Response.Headers.Append("Accept-Ranges", "bytes");
             Response.Headers.Append("Cache-Control", "private, max-age=0, must-revalidate");
             return File(avatar, "image/png");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

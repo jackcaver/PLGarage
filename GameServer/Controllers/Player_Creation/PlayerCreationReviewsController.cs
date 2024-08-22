@@ -64,5 +64,11 @@ namespace GameServer.Controllers.Player_Creation
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             return Content(PlayerCreationReviews.RateReview(database, SessionID, player_creation_review_id, rating), "application/xml;charset=utf-8");
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

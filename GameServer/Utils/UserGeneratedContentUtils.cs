@@ -42,7 +42,7 @@ namespace GameServer.Utils
             {
                 Directory.CreateDirectory($"UGC/GriefReports/{id}/");
             }
-            FileStream previewFile = File.Create($"UGC/GriefReports/{id}/Preview.png");
+            FileStream previewFile = File.Create($"UGC/GriefReports/{id}/preview.png");
             preview.CopyTo(previewFile);
             previewFile.Close();
             FileStream dataFile = File.Create($"UGC/GriefReports/{id}/data.xml");
@@ -58,7 +58,7 @@ namespace GameServer.Utils
             {
                 Directory.CreateDirectory($"UGC/PlayerCreationComplaints/{id}/");
             }
-            FileStream previewFile = File.Create($"UGC/PlayerCreationComplaints/{id}/Preview.png");
+            FileStream previewFile = File.Create($"UGC/PlayerCreationComplaints/{id}/preview.png");
             preview.CopyTo(previewFile);
             previewFile.Close();
             preview.Close();
@@ -223,7 +223,7 @@ namespace GameServer.Utils
             Directory.Delete($"UGC/PlayerCreations/{id}/", true);
         }
 
-        private static Dictionary<int, StoryLevelData> StoryLevels = new Dictionary<int, StoryLevelData>
+        private static readonly Dictionary<int, StoryLevelData> StoryLevels = new()
         {
             //LBPK
             { 845, new StoryLevelData { Name = "TUTORIALLOOP", RaceType = RaceType.RACE, ScoreboardMode = 0 } },
@@ -356,11 +356,11 @@ namespace GameServer.Utils
 
         public static void CheckStoryLevelName(Database database, int id)
         {
-            if (!StoryLevels.ContainsKey(id)) return;
+            if (!StoryLevels.TryGetValue(id, out StoryLevelData storyLevel)) return;
             var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
-            if (creation != null && creation.Name != StoryLevels[id].Name)
+            if (creation != null && creation.Name != storyLevel.Name)
             {
-                creation.Name = StoryLevels[id].Name;
+                creation.Name = storyLevel.Name;
                 database.SaveChanges();
             }
         }
@@ -368,7 +368,7 @@ namespace GameServer.Utils
         public static void AddStoryLevel(Database database, int id) 
         {
             //genius story level check
-            if (!StoryLevels.ContainsKey(id)) return;
+            if (!StoryLevels.TryGetValue(id, out StoryLevelData storyLevel)) return;
 
             var UFGUser = database.Users.FirstOrDefault(match => match.Username == "ufg");
 
@@ -395,8 +395,8 @@ namespace GameServer.Utils
                     PlayerId = UFGUser.UserId,
                     TrackId = id,
                     PlayerCreationId = id,
-                    ScoreboardMode = StoryLevels[id].ScoreboardMode,
-                    Name = StoryLevels[id].Name,
+                    ScoreboardMode = storyLevel.ScoreboardMode,
+                    Name = storyLevel.Name,
                     Description = "story level",
                     IsRemixable = false,
                     Type = PlayerCreationType.STORY,
@@ -405,7 +405,7 @@ namespace GameServer.Utils
                     CreatedAt = DateTime.Parse("2012-11-06"),
                     UpdatedAt = DateTime.Parse("2012-11-06"),
                     Platform = Platform.PS3,
-                    RaceType = StoryLevels[id].RaceType
+                    RaceType = storyLevel.RaceType
                 });
                 database.SaveChanges();
             }

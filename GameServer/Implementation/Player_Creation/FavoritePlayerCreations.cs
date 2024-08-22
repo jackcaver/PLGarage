@@ -127,7 +127,7 @@ namespace GameServer.Implementation.Player_Creation
             }
 
             var favoriteCrations = database.HeartedPlayerCreations.Where(match => match.UserId == user.UserId).ToList();
-            List<favorite_player_creation> favoriteCreationsList = new List<favorite_player_creation> { };
+            List<favorite_player_creation> favoriteCreationsList = [];
 
             foreach (var Creation in favoriteCrations)
             {
@@ -145,10 +145,10 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<favorite_player_creations>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<favorite_player_creations> { new favorite_player_creations {
+                response = [ new favorite_player_creations {
                     total = favoriteCreationsList.Count,
                     PlayerCreations = favoriteCreationsList
-                } }
+                } ]
             };
             return resp.Serialize();
         }

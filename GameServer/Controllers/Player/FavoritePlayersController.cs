@@ -47,5 +47,11 @@ namespace GameServer.Controllers.Player
                 player_id_or_username = player_id.ToString();
             return Content(FavoritePlayers.ListFavorites(database, SessionID, player_id_or_username), "application/xml;charset=utf-8");
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

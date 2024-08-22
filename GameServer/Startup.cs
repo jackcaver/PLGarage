@@ -1,3 +1,4 @@
+using GameServer.Models.Config;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -29,27 +30,28 @@ namespace GameServer
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-            }
 
-            app.UseSerilogRequestLogging(options =>
+            if (env.IsDevelopment() || ServerConfig.Instance.EnableRequestLogging)
             {
-                // Customize the message template
-                options.MessageTemplate = "{RemoteIpAddress} {RequestMethod} {RequestScheme}://{RequestHost}{RequestPath}{RequestQuery} responded {StatusCode} in {Elapsed:0.0000} ms";
-
-                // Emit debug-level events instead of the defaults
-                options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Information;
-
-                // Attach additional properties to the request completion event
-                options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+                app.UseSerilogRequestLogging(options =>
                 {
-                    diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-                    diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
-                    diagnosticContext.Set("RemoteIpAddress", httpContext.Connection.RemoteIpAddress);
-                    diagnosticContext.Set("RequestQuery", httpContext.Request.QueryString);
-                };
-            });
+                    // Customize the message template
+                    options.MessageTemplate = "{RemoteIpAddress} {RequestMethod} {RequestScheme}://{RequestHost}{RequestPath}{RequestQuery} responded {StatusCode} in {Elapsed:0.0000} ms";
+
+                    // Emit debug-level events instead of the defaults
+                    options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Information;
+
+                    // Attach additional properties to the request completion event
+                    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+                    {
+                        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+                        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+                        diagnosticContext.Set("RemoteIpAddress", httpContext.Connection.RemoteIpAddress);
+                        diagnosticContext.Set("RequestQuery", httpContext.Request.QueryString);
+                    };
+                });
+            }
 
             app.UseRouting();
             app.UseWebSockets();

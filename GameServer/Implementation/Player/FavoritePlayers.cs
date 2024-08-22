@@ -150,7 +150,7 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<favorite_players>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<favorite_players> { new favorite_players { total = Players.Count, Players = Players } }
+                response = [new favorite_players { total = Players.Count, Players = Players }]
             };
             return resp.Serialize();
         }

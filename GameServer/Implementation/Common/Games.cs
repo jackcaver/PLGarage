@@ -6,16 +6,14 @@ using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 
 namespace GameServer.Implementation.Common
 {
     public class Games
     {
-        private static List<GameData> GameList = new List<GameData>();
+        private static readonly List<GameData> GameList = [];
         private static int NextId = 0;
 
         public static string GetList(int page, int per_page, Filters filters)
@@ -81,12 +79,12 @@ namespace GameServer.Implementation.Common
             var resp = new Response<List<GameList>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<GameList> { new GameList {
+                response = [ new GameList {
                     page = page,
                     total = GameList.Count,
                     total_pages = totalPages,
                     Games = gameList
-                } }
+                } ]
             };
             return resp.Serialize();
         }
@@ -125,15 +123,15 @@ namespace GameServer.Implementation.Common
                 Privacy = game.privacy,
                 Password = game.password,
                 TrackGroup = game.track_group,
-                Players = new List<GamePlayerData>()
+                Players = []
             });
 
             var resp = new Response<List<GameCreate>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<GameCreate> { new GameCreate {
+                response = [ new GameCreate {
                     id = NextId
-                } }
+                } ]
             };
             NextId++;
             return resp.Serialize();
@@ -238,13 +236,10 @@ namespace GameServer.Implementation.Common
             }
 
             var game = GameList.FirstOrDefault(match => match.Id == game_id);
-            if (game != null)
+            game?.Players.Add(new GamePlayerData
             {
-                game.Players.Add(new GamePlayerData
-                {
-                    PlayerId = user.UserId
-                });
-            }
+                PlayerId = user.UserId
+            });
 
             var resp = new Response<EmptyResponse>
             {
@@ -380,7 +375,7 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
 
-            bool IsWinner = game.Players.Count(match => match.HasFinished) == 0;
+            bool IsWinner = !game.Players.Any(match => match.HasFinished);
 
             player.State = GameState.FINISHED;
 

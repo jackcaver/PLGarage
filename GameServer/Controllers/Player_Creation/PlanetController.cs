@@ -41,5 +41,11 @@ namespace GameServer.Controllers.Player_Creation
         {
             return Content(PlayerCreations.GetPlanetProfile(database, player_id), "application/xml;charset=utf-8");
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

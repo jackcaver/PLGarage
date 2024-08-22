@@ -21,16 +21,16 @@ namespace GameServer.Models
 
         public string Serialize()
         {
-            XmlSerializer serializer = new XmlSerializer(this.GetType());
-            MemoryStream stream = new MemoryStream();
-            XmlTextWriter writer = new XmlTextWriter(stream, Encoding.UTF8);
+            XmlSerializer serializer = new(this.GetType());
+            MemoryStream stream = new();
+            XmlTextWriter writer = new(stream, Encoding.UTF8);
             serializer.Serialize(writer, this, new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty }));
             return Encoding.UTF8.GetString(stream.ToArray().Skip(3).ToArray());
         }
 
         public void Deserialize(Stream stream)
         {
-            XmlSerializer serializer = new XmlSerializer(this.GetType());
+            XmlSerializer serializer = new(this.GetType());
             var deserialized = serializer.Deserialize(stream) as Response<T>;
             if (deserialized != null)
             {

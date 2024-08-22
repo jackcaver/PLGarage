@@ -33,10 +33,10 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<player_creation_rating>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<player_creation_rating> { new player_creation_rating {
+                response = [ new player_creation_rating {
                     comments = rating != null ? rating.Comment : "",
                     rating = session.IsMNR ? (rating != null ? rating.Rating.ToString() : "0") : (rating != null ? "true" : "false"),
-                } }
+                } ]
             };
             return resp.Serialize();
         }
@@ -70,7 +70,7 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<player_creation_ratings>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<player_creation_ratings> {
+                response = [
                     new player_creation_ratings
                     {
                         page = page,
@@ -80,7 +80,7 @@ namespace GameServer.Implementation.Player_Creation
                         total_pages = totalPages,
                         PlayerCreationRatingList = ratingsList,
                     }
-                }
+                ]
             };
             return resp.Serialize();
         }

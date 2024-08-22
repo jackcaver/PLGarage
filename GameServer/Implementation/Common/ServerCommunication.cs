@@ -21,7 +21,22 @@ namespace GameServer.Implementation.Common
     public static class ServerCommunication
     {
         private const string MasterServer = "API";
-        private static readonly List<ServerInfo> Servers = new();
+        private static readonly List<ServerInfo> Servers = [];
+        private static Aes aes;
+        private static Aes Aes
+        {
+            get
+            {
+                if (aes == null)
+                {
+                    aes = Aes.Create();
+                    aes.Key = Encoding.UTF8.GetBytes(ServerConfig.Instance.ServerCommunicationKey);
+                    aes.Mode = CipherMode.ECB;
+                    aes.Padding = PaddingMode.Zeros;
+                }
+                return aes;
+            }
+        }
         
         public static void NotifySessionCreated(Guid uuid, int playerConnectId, string username, int issuer)
         {
@@ -42,7 +57,7 @@ namespace GameServer.Implementation.Common
             }).Wait();
         }
         
-        public static async Task HandleConnection(Database database, WebSocket webSocket, Guid ServerID)
+        public static async Task HandleConnection(WebSocket webSocket, Guid ServerID)
         {
             while (webSocket.State == WebSocketState.Open)
             {
@@ -62,7 +77,7 @@ namespace GameServer.Implementation.Common
                 catch (Exception e)
                 {
                     Log.Debug($"There was an error receiving message: {e}");
-                    break;
+                    continue;
                 }
 
                 if (result.MessageType == WebSocketMessageType.Text)
@@ -77,7 +92,9 @@ namespace GameServer.Implementation.Common
                         if (message != null)
                         {
                             message.From = ServerID.ToString();
+                            Database database = new();
                             ProcessMessage(database, webSocket, message);
+                            database.Dispose();
                         }
                     }
                     catch (Exception e)
@@ -350,14 +367,9 @@ namespace GameServer.Implementation.Common
 
         private static string Encrypt(string message)
         {
-            var aes = Aes.Create();
-            aes.Key = Encoding.UTF8.GetBytes(ServerConfig.Instance.ServerCommunicationKey);
-            aes.Mode = CipherMode.ECB;
-            aes.Padding = PaddingMode.None;
-
-            var stream = new MemoryStream();
-            var cryptoTransform = aes.CreateEncryptor(aes.Key, null);
-            var cryptoStream = new CryptoStream(stream, cryptoTransform, CryptoStreamMode.Write);
+            using var stream = new MemoryStream();
+            using var cryptoTransform = Aes.CreateEncryptor(Aes.Key, null);
+            using var cryptoStream = new CryptoStream(stream, cryptoTransform, CryptoStreamMode.Write);
 
             cryptoStream.Write(Encoding.UTF8.GetBytes(message));
 
@@ -366,15 +378,10 @@ namespace GameServer.Implementation.Common
 
         private static string Decrypt(string message)
         {
-            var aes = Aes.Create();
-            aes.Key = Encoding.UTF8.GetBytes(ServerConfig.Instance.ServerCommunicationKey);
-            aes.Mode = CipherMode.ECB;
-            aes.Padding = PaddingMode.None;
-
-            var stream = new MemoryStream(Convert.FromBase64String(message));
-            var cryptoTransform = aes.CreateDecryptor(aes.Key, null);
-            var cryptoStream = new CryptoStream(stream, cryptoTransform, CryptoStreamMode.Read);
-            var streamReader = new StreamReader(cryptoStream, Encoding.UTF8);
+            using var stream = new MemoryStream(Convert.FromBase64String(message));
+            using var cryptoTransform = Aes.CreateDecryptor(Aes.Key, null);
+            using var cryptoStream = new CryptoStream(stream, cryptoTransform, CryptoStreamMode.Read);
+            using var streamReader = new StreamReader(cryptoStream, Encoding.UTF8);
 
             return streamReader.ReadToEnd();
         }

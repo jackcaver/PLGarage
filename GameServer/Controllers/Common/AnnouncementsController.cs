@@ -37,15 +37,21 @@ namespace GameServer.Controllers.Common
             var resp = new Response<List<Announcements>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<Announcements> {
+                response = [
                     new Announcements
                     {
                         total = AnnouncementList.Count,
                         AnnouncementList = AnnouncementList
                     }
-                }
+                ]
             };
             return Content(resp.Serialize(), "application/xml;charset=utf-8");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

@@ -28,8 +28,6 @@ namespace GameServer.Controllers.Player_Creation
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             var resp = PlayerCreations.GetPlayerCreation(database, SessionID, id, is_counted);
-            //Response.Headers.Add("ETag", $"\"{UserGeneratedContentUtils.CalculateMD5(resp)}\"");
-            //Response.Headers.Add("Cache-Control", "private, max-age=0, must-revalidate");
             return Content(resp, "application/xml;charset=utf-8");
         }
 
@@ -208,9 +206,9 @@ namespace GameServer.Controllers.Player_Creation
             return Content(PlayerCreations.VerifyPlayerCreations(database, id, offline_id), "application/xml;charset=utf-8");
         }
 
-        private List<string> AcceptedTypes = new List<string> {
+        private List<string> AcceptedTypes = [
             "data.bin", "data.jpg", "preview_image.png", "preview_image_128x128.png", "preview_image_64x64.png"
-        };
+        ];
 
         [HttpGet]
         [Route("player_creations/{id}/{file}")]
@@ -229,6 +227,12 @@ namespace GameServer.Controllers.Player_Creation
             if (file.EndsWith(".jpg"))
                 contentType = "image/jpeg";
             return File(data, contentType);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

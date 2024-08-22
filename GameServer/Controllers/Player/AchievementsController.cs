@@ -13,7 +13,7 @@ namespace GameServer.Controllers.Player
             var resp = new Response<List<Achievements>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<Achievements> { new Achievements { total = 0, AchievementList = new List<Achievement> { } } }
+                response = [new Achievements { total = 0, AchievementList = [] }]
             };
             return Content(resp.Serialize(), "application/xml;charset=utf-8");
         }

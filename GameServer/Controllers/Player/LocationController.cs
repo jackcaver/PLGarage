@@ -49,8 +49,8 @@ namespace GameServer.Controllers.Player
             var resp = new Response<List<Location>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<Location> 
-                { 
+                response =
+                [
                     new Location 
                     {
                         latitude = latitude,
@@ -58,7 +58,7 @@ namespace GameServer.Controllers.Player
                         tag = score != null ? score.LocationTag : "",
                         is_tagged = score != null
                     }
-                }
+                ]
             };
             return Content(resp.Serialize(), "application/xml;charset=utf-8");
         }
@@ -119,6 +119,12 @@ namespace GameServer.Controllers.Player
                 response = new EmptyResponse { }
             };
             return Content(resp.Serialize(), "application/xml;charset=utf-8");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

@@ -19,8 +19,9 @@ namespace GameServer
 
             Log.Logger = log;
 
-            Database database = new Database();
+            Database database = new();
             database.Database.Migrate();
+            database.Dispose();
 
             CreateHostBuilder(args).Build().Run();
         }

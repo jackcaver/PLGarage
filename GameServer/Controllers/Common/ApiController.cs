@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Primitives;
 
 namespace GameServer.Controllers.Common
 {
@@ -35,9 +36,9 @@ namespace GameServer.Controllers.Common
             {
                 var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
                 Guid ServerID = Guid.Empty;
-                if (Request.Headers.ContainsKey("server_id"))
-                    ServerID = Guid.Parse(Request.Headers["server_id"]);
-                await ServerCommunication.HandleConnection(database, webSocket, ServerID);
+                if (Request.Headers.TryGetValue("server_id", out StringValues server_id))
+                    ServerID = Guid.Parse(server_id);
+                await ServerCommunication.HandleConnection(webSocket, ServerID);
             }
         }
 
@@ -46,15 +47,15 @@ namespace GameServer.Controllers.Common
         public IActionResult GetVotingOptions(int trackId)
         {
             Guid ServerID = Guid.Empty;
-            if (Request.Headers.ContainsKey("server_id"))
-                ServerID = Guid.Parse(Request.Headers["server_id"]);
+            if (Request.Headers.TryGetValue("server_id", out StringValues server_id))
+                ServerID = Guid.Parse(server_id);
 
             if (ServerCommunication.GetServer(ServerID) == null)
                 return Forbid();
 
-            List<int> TrackIDs = new List<int>();
+            List<int> TrackIDs = [];
 
-            Random random = new Random();
+            Random random = new();
             var creations = database.PlayerCreations.Where(match => match.Type == PlayerCreationType.TRACK && !match.IsMNR && match.PlayerCreationId != trackId && match.Platform == Platform.PS3).ToList();
 
             if (creations.Count <= 3)
@@ -75,6 +76,12 @@ namespace GameServer.Controllers.Common
             }
 
             return Content(JsonConvert.SerializeObject(TrackIDs));
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

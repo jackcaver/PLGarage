@@ -46,5 +46,11 @@ namespace GameServer.Controllers.Common
             
             return Content(Session.Ping(SessionID), "application/xml;charset=utf-8");
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

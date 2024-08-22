@@ -77,7 +77,7 @@ namespace GameServer.Implementation.Player
                     activityList.Add(new Activity
                     {
                         type = "system_activity",
-                        events = new List<Event> {
+                        events = [
                             new Event
                             {
                                 topic = Activity.Type.ToString(),
@@ -92,7 +92,7 @@ namespace GameServer.Implementation.Player
                                 image_url = Activity.ImageURL,
                                 image_md5 = Activity.ImageMD5
                             }
-                        }
+                        ]
                     });
                 }
                 else if (Activity.Type == ActivityType.player_event && Activity.PlayerCreationId == 0 || Activity.Type == ActivityType.trophy_event)
@@ -103,7 +103,7 @@ namespace GameServer.Implementation.Player
                         player_id = Activity.PlayerId,
                         player_username = Player != null ? Player.Username : "",
                         type = "player_activity",
-                        events = new List<Event> {
+                        events = [
                             new Event
                             {
                                 topic = Activity.Type.ToString(),
@@ -118,7 +118,7 @@ namespace GameServer.Implementation.Player
                                 allusion_id = Activity.AllusionId,
                                 player_id = Activity.PlayerId
                             }
-                        }
+                        ]
                     });
                 }
                 else if (Activity.Type == ActivityType.player_creation_event
@@ -140,7 +140,7 @@ namespace GameServer.Implementation.Player
                         player_creation_level_mode = PlayerCreation != null ? PlayerCreation.LevelMode : 0,
                         player_creation_is_team_pick = PlayerCreation != null ? PlayerCreation.IsTeamPick : false,
                         type = "player_creation_activity",
-                        events = new List<Event> {
+                        events = [
                             new Event
                             {
                                 topic = Activity.Type.ToString(),
@@ -155,7 +155,7 @@ namespace GameServer.Implementation.Player
                                 allusion_id = Activity.AllusionId,
                                 player_id = Activity.PlayerId
                             }
-                        }
+                        ]
                     });
                 }
             }
@@ -163,7 +163,7 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<Activities>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<Activities> {
+                response = [
                     new Activities
                     {
                         total = Activities.Count,
@@ -173,7 +173,7 @@ namespace GameServer.Implementation.Player
                         total_pages = totalPages,
                         ActivityList = activityList
                     }
-                }
+                ]
             };
             return resp.Serialize();
         }
@@ -204,7 +204,7 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<Activities>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<Activities> { new Activities { total = Activities.Count } }
+                response = [new Activities { total = Activities.Count }]
             };
 
             return resp.Serialize();

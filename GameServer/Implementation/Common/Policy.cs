@@ -20,7 +20,7 @@ PLGarage and it's developers are not reliable for any possible data leaks or bla
 
         public static string View(Database database, PolicyType policy_type, Platform platform, string username)
         {
-            List<string> whitelist = new();
+            List<string> whitelist = [];
             if (ServerConfig.Instance.Whitelist)
                 whitelist = Session.LoadWhitelist();
             bool is_accepted = false;
@@ -39,14 +39,14 @@ PLGarage and it's developers are not reliable for any possible data leaks or bla
             var resp = new Response<List<PolicyResponse>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<PolicyResponse> { 
+                response = [ 
                     new PolicyResponse { 
                         id = (int)policy_type, 
                         is_accepted = is_accepted, 
                         name = "Online User Agreement", 
                         text = text 
                     } 
-                }
+                ]
             };
             return resp.Serialize();
         }

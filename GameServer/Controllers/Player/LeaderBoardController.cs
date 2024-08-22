@@ -127,5 +127,11 @@ namespace GameServer.Controllers.Player
                 return NotFound();
             return File(data, "application/octet-stream");
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

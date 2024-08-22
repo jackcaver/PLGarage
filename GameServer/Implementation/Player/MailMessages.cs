@@ -75,8 +75,8 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<mail_messages>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<mail_messages>
-                {
+                response =
+                [
                     new mail_messages
                     {
                         page = page,
@@ -88,7 +88,7 @@ namespace GameServer.Implementation.Player
                         unread_count = messages.Count(match => !match.HasRead),
                         mailMessagesList = mailMessagesList
                     }
-                }
+                ]
             };
             return resp.Serialize();
         }
@@ -112,8 +112,8 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<mail_message>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<mail_message>
-                {
+                response =
+                [
                     new mail_message
                     {
                         attachment_reference = message.AttachmentReference,
@@ -129,7 +129,7 @@ namespace GameServer.Implementation.Player
                         subject = message.Subject,
                         updated_at = message.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
                     }
-                }
+                ]
             };
 
             message.HasRead = true;

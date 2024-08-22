@@ -36,5 +36,11 @@ namespace GameServer.Controllers.Common
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             return Content(Policy.Accept(database, SessionID, id, username.Split("\0")[0]), "application/xml;charset=utf-8");
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

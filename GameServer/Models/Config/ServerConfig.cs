@@ -13,10 +13,7 @@ namespace GameServer.Models.Config
         {
 			get
 			{
-				if (instance == null)
-				{
-					instance = GetFromFile();
-				}
+				instance ??= GetFromFile();
 
 				return instance;
 			}
@@ -46,8 +43,10 @@ namespace GameServer.Models.Config
         public bool Whitelist = false;
         public bool BlockMNR = false;
         public bool BlockLBPK = false;
+        public bool EnableRequestLogging = false;
         public string InstanceName = "PLGarage";
         public string ServerCommunicationKey = "";
+        public string ModerationKey = "";
 
         private static ServerConfig GetFromFile()
         {

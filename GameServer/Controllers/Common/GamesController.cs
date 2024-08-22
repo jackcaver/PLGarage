@@ -230,7 +230,7 @@ namespace GameServer.Controllers.Common
                 }
             }
             string GhostDataMD5 = "";
-            MemoryStream GhostData = new MemoryStream();
+            MemoryStream GhostData = new();
             if (session.IsMNR)
             {
                 game_player_stats.ghost_car_data.OpenReadStream().CopyTo(GhostData);
@@ -308,11 +308,11 @@ namespace GameServer.Controllers.Common
             var resp = new Response<List<GameResponse>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<GameResponse> { new GameResponse {
+                response = [ new GameResponse {
                     id = 0,
                     game_player_id = 0,
                     game_player_stats_id = 0
-                } }
+                } ]
             };
 
             return Content(resp.Serialize(), "application/xml;charset=utf-8");
@@ -454,6 +454,12 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             return Content(Games.PlayerPostStats(database, SessionID, game_id, stats), "application/xml;charset=utf-8");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

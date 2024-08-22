@@ -69,14 +69,14 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<Reviews>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<Reviews> { new Reviews {
+                response = [ new Reviews {
                     page = page,
                     row_start = pageStart,
                     row_end = pageEnd,
                     total_pages = totalPages,
                     total = Reviews.Count,
                     ReviewList = ReviewList
-                } }
+                } ]
             };
             return resp.Serialize();
         }

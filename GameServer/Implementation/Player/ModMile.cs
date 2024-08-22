@@ -187,7 +187,7 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<POIResponse>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<POIResponse> { new POIResponse { awards = POIAwards } }
+                response = [new POIResponse { awards = POIAwards }]
             };
             return resp.Serialize();
         }
@@ -227,7 +227,7 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<CheckinStatus>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<CheckinStatus> { new CheckinStatus
+                response = [ new CheckinStatus
                 {
                     id = id,
                     latitude = poi.Latitude,
@@ -236,7 +236,7 @@ namespace GameServer.Implementation.Player
                     radius = poi.Radius,
                     u = poi.U,
                     v = poi.V
-                } }
+                } ]
             };
             return resp.Serialize();
         }
@@ -299,7 +299,7 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<CheckinCreate>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<CheckinCreate> { new CheckinCreate
+                response = [ new CheckinCreate
                 {
                     id = GetPOI(latitude, longitude),
                     global_miles = database.Users.Where(match => match.PlayedMNR).Sum(p => p.ModMiles),//Global Mod Miles Distance
@@ -311,7 +311,7 @@ namespace GameServer.Implementation.Player
                     u = GetU(longitude),
                     v = GetV(latitude),
                     new_unlock = new_unlock
-                } }
+                } ]
             };
             return resp.Serialize();
         }

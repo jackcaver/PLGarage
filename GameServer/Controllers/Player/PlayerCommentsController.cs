@@ -7,11 +7,11 @@ using System;
 
 namespace GameServer.Controllers.Player
 {
-    public class PlayerCommmentsController : Controller
+    public class PlayerCommentsController : Controller
     {
         private readonly Database database;
 
-        public PlayerCommmentsController(Database database)
+        public PlayerCommentsController(Database database)
         {
             this.database = database;
         }
@@ -55,6 +55,12 @@ namespace GameServer.Controllers.Player
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             return Content(PlayerComments.RateComment(database, SessionID, player_comment_rating), "application/xml;charset=utf-8");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

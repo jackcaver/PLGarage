@@ -22,7 +22,7 @@ namespace GameServer.Models.Config
             }
         }
 
-        private List<SkillLevel> skillLevels = new List<SkillLevel> {
+        private List<SkillLevel> skillLevels = [
             new SkillLevel
             {
                 Id = 1,
@@ -203,11 +203,11 @@ namespace GameServer.Models.Config
                 Name = "Elite III",
                 Points = 500000
             },
-        };
+        ];
 
         private static SkillConfig GetFromFile()
         {
-            SkillConfig config = new SkillConfig();
+            SkillConfig config = new();
             if (File.Exists("./skill_levels.json"))
             {
                 string file = File.ReadAllText("./skill_levels.json");
@@ -258,14 +258,14 @@ namespace GameServer.Models.Config
             var resp = new Response<List<skill_levels>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<skill_levels>
-                {
+                response =
+                [
                     new skill_levels
                     {
                         total = skillLevels.Count,
                         skillLevelList = skillLevelList
                     }
-                }
+                ]
             };
             return resp.Serialize();
         }

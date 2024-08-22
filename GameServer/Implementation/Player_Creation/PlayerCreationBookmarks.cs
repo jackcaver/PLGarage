@@ -144,7 +144,7 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<PlayerCreationBookmarksCount>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<PlayerCreationBookmarksCount> { new PlayerCreationBookmarksCount { total = BookmarkedCreations.Count } }
+                response = [new PlayerCreationBookmarksCount { total = BookmarkedCreations.Count }]
             };
             return resp.Serialize();
         }

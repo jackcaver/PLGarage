@@ -42,5 +42,11 @@ namespace GameServer.Controllers.Player_Creation
             photo.data = Request.Form.Files.GetFile("photo[data]");
             return Content(PlayerCreations.CreatePlayerCreation(database, SessionID, photo));
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

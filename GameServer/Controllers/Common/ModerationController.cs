@@ -47,5 +47,11 @@ namespace GameServer.Controllers.Common
             player_creation_complaint.preview = Request.Form.Files.GetFile("player_creation_complaint[preview]");
             return Content(Moderation.PlayerCreationComplaints(database, SessionID, player_creation_complaint), "application/xml;charset=utf-8");
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

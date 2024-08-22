@@ -22,7 +22,7 @@ namespace GameServer.Models.Config
         }
 
         public bool RequireUniquePlayersToCheckIn = true;
-        public Dictionary<int, ModExplorerCity> Cities = new Dictionary<int, ModExplorerCity>
+        public Dictionary<int, ModExplorerCity> Cities = new()
         {
             { 1, new ModExplorerCity {
                 Name = "Paris",
@@ -295,7 +295,7 @@ namespace GameServer.Models.Config
                 Longitude = -96.803889f
             } },
         };
-        public Dictionary<int, PointOfInterest> PointsOfInterest = new Dictionary<int, PointOfInterest>
+        public Dictionary<int, PointOfInterest> PointsOfInterest = new()
         {
             { 1, new PointOfInterest {
                 Name = "Eiffel Tower",
@@ -303,8 +303,8 @@ namespace GameServer.Models.Config
                 Latitude = 48.8583f,
                 Longitude = 2.2945f,
                 Radius = 0.35f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Body_Swan",
@@ -341,7 +341,7 @@ namespace GameServer.Models.Config
                         Type = "Kart",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 2, new PointOfInterest {
                 Name = "Arc de Triomphe",
@@ -349,8 +349,8 @@ namespace GameServer.Models.Config
                 Latitude = 48.8738f,
                 Longitude = 2.295f,
                 Radius = 0.3f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Mask_Wasp",
@@ -375,7 +375,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 3, new PointOfInterest {
                 Name = "Musee du Louvre",
@@ -383,8 +383,8 @@ namespace GameServer.Models.Config
                 Latitude = 48.860395f,
                 Longitude = 2.337599f,
                 Radius = 0.3f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Medieval_ARC_FarmhouseWSty",
@@ -409,7 +409,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 4, new PointOfInterest {
                 Name = "Tower of London",
@@ -417,8 +417,8 @@ namespace GameServer.Models.Config
                 Latitude = 51.508056f,
                 Longitude = -0.076111f,
                 Radius = 0.3f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004C9_DLCCHAR14",
@@ -443,7 +443,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 5, new PointOfInterest {
                 Name = "London Eye",
@@ -451,8 +451,8 @@ namespace GameServer.Models.Config
                 Latitude = 51.5033f,
                 Longitude = -0.1197f,
                 Radius = 0.3f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Ornament_Kart_Ornament4",
@@ -477,7 +477,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 6, new PointOfInterest {
                 Name = "Buckingham Palace",
@@ -485,8 +485,8 @@ namespace GameServer.Models.Config
                 Latitude = 51.501f,
                 Longitude = -0.142f,
                 Radius = 0.3f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Medieval_PROP_JoustingFence",
@@ -511,7 +511,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 7, new PointOfInterest {
                 Name = "Orchard Road",
@@ -519,8 +519,8 @@ namespace GameServer.Models.Config
                 Latitude = 1.305083f,
                 Longitude = 103.831908f,
                 Radius = 0.45f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Body_Frontloader",
@@ -545,7 +545,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 300
                     },
-                }
+                ]
             } },
             { 8, new PointOfInterest {
                 Name = "Tiger Sky Tower",
@@ -553,8 +553,8 @@ namespace GameServer.Models.Config
                 Latitude = 1.255f,
                 Longitude = 103.817778f,
                 Radius = 0.14f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_Shirt_Dress01",
@@ -579,7 +579,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 300
                     },
-                }
+                ]
             } },
             { 9, new PointOfInterest {
                 Name = "Singapore Zoo",
@@ -587,8 +587,8 @@ namespace GameServer.Models.Config
                 Latitude = 1.404417f,
                 Longitude = 103.791139f,
                 Radius = 0.4f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Construction_PROP_DumpsterRamp",
@@ -613,7 +613,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 300
                     },
-                }
+                ]
             } },
             { 10, new PointOfInterest {
                 Name = "Hong Kong Museum of Art",
@@ -621,8 +621,8 @@ namespace GameServer.Models.Config
                 Latitude = 22.293547f,
                 Longitude = 114.172025f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_Accessories_Helmet_Takeout",
@@ -647,7 +647,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 11, new PointOfInterest {
                 Name = "Clock Tower",
@@ -655,8 +655,8 @@ namespace GameServer.Models.Config
                 Latitude = 22.293678f,
                 Longitude = 114.169364f,
                 Radius = 0.15f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004CA_DLCCHAR15",
@@ -687,7 +687,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 12, new PointOfInterest {
                 Name = "International Commerce Centre",
@@ -695,8 +695,8 @@ namespace GameServer.Models.Config
                 Latitude = 22.303392f,
                 Longitude = 114.160169f,
                 Radius = 0.15f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Stunt_PROP_FireRing",
@@ -721,7 +721,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 13, new PointOfInterest {
                 Name = "Statue of Liberty",
@@ -729,8 +729,8 @@ namespace GameServer.Models.Config
                 Latitude = 40.689167f,
                 Longitude = -74.044444f,
                 Radius = 1.95f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "00000096_SANTAKART",
@@ -761,7 +761,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 500
                     },
-                }
+                ]
             } },
             { 14, new PointOfInterest {
                 Name = "Empire State Building",
@@ -769,8 +769,8 @@ namespace GameServer.Models.Config
                 Latitude = 40.748433f,
                 Longitude = -73.985656f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Mask_Santa",
@@ -807,7 +807,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 500
                     },
-                }
+                ]
             } },
             { 15, new PointOfInterest {
                 Name = "Times Square",
@@ -815,8 +815,8 @@ namespace GameServer.Models.Config
                 Latitude = 40.75773f,
                 Longitude = -73.985708f,
                 Radius = 0.16f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_Shirt_Messy",
@@ -841,7 +841,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 500
                     },
-                }
+                ]
             } },
             { 16, new PointOfInterest {
                 Name = "Dubai Museum",
@@ -849,8 +849,8 @@ namespace GameServer.Models.Config
                 Latitude = 25.263056f,
                 Longitude = 55.297222f,
                 Radius = 0.2f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Construction_SMK_CableSpool",
@@ -875,7 +875,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 17, new PointOfInterest {
                 Name = "Burj Al Arab",
@@ -883,8 +883,8 @@ namespace GameServer.Models.Config
                 Latitude = 25.141975f,
                 Longitude = 55.186147f,
                 Radius = 0.5f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_hand_bracelets",
@@ -909,7 +909,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 18, new PointOfInterest {
                 Name = "Burj Khalifa",
@@ -917,8 +917,8 @@ namespace GameServer.Models.Config
                 Latitude = 25.197139f,
                 Longitude = 55.274111f,
                 Radius = 0.5f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_voice_Babu",
@@ -943,7 +943,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 19, new PointOfInterest {
                 Name = "Colosseum",
@@ -951,8 +951,8 @@ namespace GameServer.Models.Config
                 Latitude = 41.890169f,
                 Longitude = 12.492269f,
                 Radius = 0.35f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Gladiator_PROP_StatueFinger",
@@ -977,7 +977,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 20, new PointOfInterest {
                 Name = "St. Peter's Basilica",
@@ -985,8 +985,8 @@ namespace GameServer.Models.Config
                 Latitude = 41.902222f,
                 Longitude = 12.453333f,
                 Radius = 0.15f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Progressive_PROP_Balloon01",
@@ -1011,7 +1011,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 21, new PointOfInterest {
                 Name = "The Pantheon",
@@ -1019,8 +1019,8 @@ namespace GameServer.Models.Config
                 Latitude = 41.8986f,
                 Longitude = 12.4768f,
                 Radius = 0.15f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Gladiator_PROP_Columns01",
@@ -1045,7 +1045,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 22, new PointOfInterest {
                 Name = "Sydney Opera House",
@@ -1053,8 +1053,8 @@ namespace GameServer.Models.Config
                 Latitude = -33.856944f,
                 Longitude = 151.215278f,
                 Radius = 0.13f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004C6_DLCCHAR11",
@@ -1085,7 +1085,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 200
                     },
-                }
+                ]
             } },
             { 23, new PointOfInterest {
                 Name = "Sydney Tower",
@@ -1093,8 +1093,8 @@ namespace GameServer.Models.Config
                 Latitude = -33.870456f,
                 Longitude = 151.208889f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "WaterWorld_PROP_InflatableWave",
@@ -1119,7 +1119,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 200
                     },
-                }
+                ]
             } },
             { 24, new PointOfInterest {
                 Name = "Australian Museum",
@@ -1127,8 +1127,8 @@ namespace GameServer.Models.Config
                 Latitude = -33.874321f,
                 Longitude = 151.212732f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Stunt_AI_TiltingPlatform_01",
@@ -1153,7 +1153,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 200
                     },
-                }
+                ]
             } },
             { 25, new PointOfInterest {
                 Name = "Royal Palace of Madrid",
@@ -1161,8 +1161,8 @@ namespace GameServer.Models.Config
                 Latitude = 40.418056f,
                 Longitude = -3.713889f,
                 Radius = 0.2f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Pirate_ARC_Dwelling01",
@@ -1187,7 +1187,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 300
                     },
-                }
+                ]
             } },
             { 26, new PointOfInterest {
                 Name = "Prado Museum",
@@ -1195,8 +1195,8 @@ namespace GameServer.Models.Config
                 Latitude = 40.413889f,
                 Longitude = -3.6925f,
                 Radius = 0.15f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Pirate_PROP_WoodenCrane",
@@ -1221,7 +1221,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 300
                     },
-                }
+                ]
             } },
             { 27, new PointOfInterest {
                 Name = "Temple of Debod",
@@ -1229,8 +1229,8 @@ namespace GameServer.Models.Config
                 Latitude = 40.424053f,
                 Longitude = -3.717778f,
                 Radius = 0.2f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Pirate_ARC_Blacksmith_Pirate",
@@ -1255,7 +1255,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 300
                     },
-                }
+                ]
             } },
             { 28, new PointOfInterest {
                 Name = "Acropolis of Athens",
@@ -1263,8 +1263,8 @@ namespace GameServer.Models.Config
                 Latitude = 37.971421f,
                 Longitude = 23.726166f,
                 Radius = 0.2f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Gladiator_PROP_StatueHead",
@@ -1289,7 +1289,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 29, new PointOfInterest {
                 Name = "Temple of Olympian Zeus",
@@ -1297,8 +1297,8 @@ namespace GameServer.Models.Config
                 Latitude = 37.969372f,
                 Longitude = 23.733078f,
                 Radius = 0.16f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Gladiator_PROP_Statue01",
@@ -1323,7 +1323,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 30, new PointOfInterest {
                 Name = "National Archaeological Museum",
@@ -1331,8 +1331,8 @@ namespace GameServer.Models.Config
                 Latitude = 37.989167f,
                 Longitude = 23.7325f,
                 Radius = 0.14f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "MoonColony_PROP_TPP5_MiningVehicle",
@@ -1357,7 +1357,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 31, new PointOfInterest {
                 Name = "Forbidden City",
@@ -1365,8 +1365,8 @@ namespace GameServer.Models.Config
                 Latitude = 39.914722f,
                 Longitude = 116.390556f,
                 Radius = 1.0f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "JunkYard_AI_OilDrum",
@@ -1391,7 +1391,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 32, new PointOfInterest {
                 Name = "National Museum of China",
@@ -1399,8 +1399,8 @@ namespace GameServer.Models.Config
                 Latitude = 39.903333f,
                 Longitude = 116.39f,
                 Radius = 0.7f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Stunt_PROP_InteractiveTrailer",
@@ -1425,7 +1425,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 33, new PointOfInterest {
                 Name = "Beihai Park",
@@ -1433,8 +1433,8 @@ namespace GameServer.Models.Config
                 Latitude = 39.924444f,
                 Longitude = 116.383056f,
                 Radius = 0.7f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Glasses_Jazzy",
@@ -1459,7 +1459,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 34, new PointOfInterest {
                 Name = "St. Stephen's Cathedral",
@@ -1467,8 +1467,8 @@ namespace GameServer.Models.Config
                 Latitude = 48.20833f,
                 Longitude = 16.37278f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Medieval_ARC_Millhouse",
@@ -1493,7 +1493,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 35, new PointOfInterest {
                 Name = "Hofburg Palace",
@@ -1501,8 +1501,8 @@ namespace GameServer.Models.Config
                 Latitude = 48.206507f,
                 Longitude = 16.365262f,
                 Radius = 0.16f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_Vampire_Cape",
@@ -1533,7 +1533,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 36, new PointOfInterest {
                 Name = "Albertina",
@@ -1541,8 +1541,8 @@ namespace GameServer.Models.Config
                 Latitude = 48.204444f,
                 Longitude = 16.367778f,
                 Radius = 0.14f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "00000072_DLCKART12",
@@ -1567,7 +1567,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 37, new PointOfInterest {
                 Name = "National Museum of Anthropology and History",
@@ -1575,8 +1575,8 @@ namespace GameServer.Models.Config
                 Latitude = 19.426f,
                 Longitude = -99.186f,
                 Radius = 0.2f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Stunt_AI_StuntRamp_01",
@@ -1601,7 +1601,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 38, new PointOfInterest {
                 Name = "Mexican National Palace",
@@ -1609,8 +1609,8 @@ namespace GameServer.Models.Config
                 Latitude = 19.4325f,
                 Longitude = -99.131111f,
                 Radius = 0.23f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004BF_DLCCHAR4",
@@ -1641,7 +1641,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 39, new PointOfInterest {
                 Name = "Angel of Independence",
@@ -1649,8 +1649,8 @@ namespace GameServer.Models.Config
                 Latitude = 19.427f,
                 Longitude = -99.16771f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_Accessories_22",
@@ -1675,7 +1675,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 40, new PointOfInterest {
                 Name = "Berlin Zoological Garden",
@@ -1683,8 +1683,8 @@ namespace GameServer.Models.Config
                 Latitude = 52.508333f,
                 Longitude = 13.3375f,
                 Radius = 0.7f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "00000099_DRAGONKART",
@@ -1709,7 +1709,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 41, new PointOfInterest {
                 Name = "Reichstag Building",
@@ -1717,8 +1717,8 @@ namespace GameServer.Models.Config
                 Latitude = 52.5186f,
                 Longitude = 13.376f,
                 Radius = 0.07f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Medieval_SMK_SuitOfArmour",
@@ -1743,7 +1743,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 42, new PointOfInterest {
                 Name = "Brandenburg Gate",
@@ -1751,8 +1751,8 @@ namespace GameServer.Models.Config
                 Latitude = 52.516272f,
                 Longitude = 13.377722f,
                 Radius = 0.04f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_Shirt_Knight",
@@ -1789,7 +1789,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 43, new PointOfInterest {
                 Name = "CN Tower",
@@ -1797,8 +1797,8 @@ namespace GameServer.Models.Config
                 Latitude = 43.6426f,
                 Longitude = -79.3871f,
                 Radius = 0.27f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004C2_DLCCHAR7",
@@ -1823,7 +1823,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 44, new PointOfInterest {
                 Name = "Royal Ontario Museum",
@@ -1831,8 +1831,8 @@ namespace GameServer.Models.Config
                 Latitude = 43.667476f,
                 Longitude = -79.39417f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_Hat_Flaps",
@@ -1857,7 +1857,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 45, new PointOfInterest {
                 Name = "Ontario Science Centre",
@@ -1865,8 +1865,8 @@ namespace GameServer.Models.Config
                 Latitude = 43.716667f,
                 Longitude = -79.338333f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Ornament_Kart_Ornament58",
@@ -1897,7 +1897,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 46, new PointOfInterest {
                 Name = "Kremlin",
@@ -1905,8 +1905,8 @@ namespace GameServer.Models.Config
                 Latitude = 55.751667f,
                 Longitude = 37.617778f,
                 Radius = 0.4f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "0000009A_SUBMARINEKART",
@@ -1931,7 +1931,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 47, new PointOfInterest {
                 Name = "Gorky Park",
@@ -1939,8 +1939,8 @@ namespace GameServer.Models.Config
                 Latitude = 55.731389f,
                 Longitude = 37.603889f,
                 Radius = 0.6f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Wheel_Subway",
@@ -1965,7 +1965,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 48, new PointOfInterest {
                 Name = "Monument to the Conquerors of Space",
@@ -1973,8 +1973,8 @@ namespace GameServer.Models.Config
                 Latitude = 55.822778f,
                 Longitude = 37.64f,
                 Radius = 0.25f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Helmet_Cosmo",
@@ -1999,7 +1999,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 49, new PointOfInterest {
                 Name = "Tokyo Tower",
@@ -2007,8 +2007,8 @@ namespace GameServer.Models.Config
                 Latitude = 35.658611f,
                 Longitude = 139.745556f,
                 Radius = 0.07f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004F6_CHELSEACHAR",
@@ -2033,7 +2033,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 50
                     },
-                }
+                ]
             } },
             { 50, new PointOfInterest {
                 Name = "Imperial Palace",
@@ -2041,8 +2041,8 @@ namespace GameServer.Models.Config
                 Latitude = 35.684753f,
                 Longitude = 139.752458f,
                 Radius = 0.4f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Ornament_Kart_Ornament66",
@@ -2067,7 +2067,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 50
                     },
-                }
+                ]
             } },
             { 51, new PointOfInterest {
                 Name = "Meiji Shrine",
@@ -2075,8 +2075,8 @@ namespace GameServer.Models.Config
                 Latitude = 35.676111f,
                 Longitude = 139.699167f,
                 Radius = 0.4f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004F2_DLCCHAR18",
@@ -2101,7 +2101,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 50
                     },
-                }
+                ]
             } },
             { 52, new PointOfInterest {
                 Name = "Washington Monument",
@@ -2109,8 +2109,8 @@ namespace GameServer.Models.Config
                 Latitude = 38.889468f,
                 Longitude = -77.03524f,
                 Radius = 0.24f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004F1_DLCCHAR_HOLIDAYEASTER",
@@ -2135,7 +2135,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 53, new PointOfInterest {
                 Name = "National Air and Space Museum",
@@ -2143,8 +2143,8 @@ namespace GameServer.Models.Config
                 Latitude = 38.888333f,
                 Longitude = -77.02f,
                 Radius = 0.15f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Alien_ARCTSP03_AircraftHangar",
@@ -2169,7 +2169,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 54, new PointOfInterest {
                 Name = "White House",
@@ -2177,8 +2177,8 @@ namespace GameServer.Models.Config
                 Latitude = 38.89767f,
                 Longitude = -77.03655f,
                 Radius = 0.2f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Engine_Easter",
@@ -2209,7 +2209,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 55, new PointOfInterest {
                 Name = "Grauman's Chinese Theatre",
@@ -2217,8 +2217,8 @@ namespace GameServer.Models.Config
                 Latitude = 34.101944f,
                 Longitude = -118.340972f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Western_PROP_MovieTrailer",
@@ -2243,7 +2243,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 500
                     },
-                }
+                ]
             } },
             { 56, new PointOfInterest {
                 Name = "Sunset Strip",
@@ -2251,8 +2251,8 @@ namespace GameServer.Models.Config
                 Latitude = 34.0907f,
                 Longitude = -118.386f,
                 Radius = 0.5f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Western_PROP_Bank",
@@ -2277,7 +2277,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 500
                     },
-                }
+                ]
             } },
             { 57, new PointOfInterest {
                 Name = "Santa Monica Pier",
@@ -2285,8 +2285,8 @@ namespace GameServer.Models.Config
                 Latitude = 34.008611f,
                 Longitude = -118.498611f,
                 Radius = 0.3f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Western_PROP_BackDrop01B",
@@ -2311,7 +2311,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 500
                     },
-                }
+                ]
             } },
             { 58, new PointOfInterest {
                 Name = "Atomic Testing Museum",
@@ -2319,8 +2319,8 @@ namespace GameServer.Models.Config
                 Latitude = 36.11416f,
                 Longitude = -115.1486f,
                 Radius = 0.12f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Steering_Suicide_Knob",
@@ -2345,7 +2345,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 59, new PointOfInterest {
                 Name = "Welcome to Las Vegas Sign",
@@ -2353,8 +2353,8 @@ namespace GameServer.Models.Config
                 Latitude = 36.082056f,
                 Longitude = -115.172778f,
                 Radius = 0.17f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Alien_SMK_AlienSign_01",
@@ -2379,7 +2379,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 60, new PointOfInterest {
                 Name = "Fremont Street Experience",
@@ -2387,8 +2387,8 @@ namespace GameServer.Models.Config
                 Latitude = 36.170833f,
                 Longitude = -115.144167f,
                 Radius = 0.3f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "00000047_DLCKART2",
@@ -2413,7 +2413,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 61, new PointOfInterest {
                 Name = "'Iolani Palace",
@@ -2421,8 +2421,8 @@ namespace GameServer.Models.Config
                 Latitude = 21.306622f,
                 Longitude = -157.858958f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Pirate_PROP_TreasureCave",
@@ -2447,7 +2447,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 75
                     },
-                }
+                ]
             } },
             { 62, new PointOfInterest {
                 Name = "Aloha Tower",
@@ -2455,8 +2455,8 @@ namespace GameServer.Models.Config
                 Latitude = 21.306944f,
                 Longitude = -157.865833f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Progressive_PROP_Balloon02",
@@ -2481,7 +2481,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 75
                     },
-                }
+                ]
             } },
             { 63, new PointOfInterest {
                 Name = "Waikiki Aquarium",
@@ -2489,8 +2489,8 @@ namespace GameServer.Models.Config
                 Latitude = 21.2659f,
                 Longitude = -157.822f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Pirate_PROP_Dodo",
@@ -2515,7 +2515,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 75
                     },
-                }
+                ]
             } },
             { 64, new PointOfInterest {
                 Name = "Seoul Museum of Art",
@@ -2523,8 +2523,8 @@ namespace GameServer.Models.Config
                 Latitude = 37.564122f,
                 Longitude = 126.973808f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Steering_Futuristic",
@@ -2549,7 +2549,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 65, new PointOfInterest {
                 Name = "Wongudan",
@@ -2557,8 +2557,8 @@ namespace GameServer.Models.Config
                 Latitude = 37.565053f,
                 Longitude = 126.97985f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_Belt_Superhero",
@@ -2583,7 +2583,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 66, new PointOfInterest {
                 Name = "N Seoul Tower",
@@ -2591,8 +2591,8 @@ namespace GameServer.Models.Config
                 Latitude = 37.551425f,
                 Longitude = 126.988f,
                 Radius = 0.3f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004C5_DLCCHAR10",
@@ -2617,7 +2617,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 67, new PointOfInterest {
                 Name = "Iwatayama Monkey Park",
@@ -2625,8 +2625,8 @@ namespace GameServer.Models.Config
                 Latitude = 35.008938f,
                 Longitude = 135.674681f,
                 Radius = 0.45f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Alien_SMK_AlienPod",
@@ -2651,7 +2651,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 50
                     },
-                }
+                ]
             } },
             { 68, new PointOfInterest {
                 Name = "Kamigamo Shrine",
@@ -2659,8 +2659,8 @@ namespace GameServer.Models.Config
                 Latitude = 35.060278f,
                 Longitude = 135.752778f,
                 Radius = 0.2f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Hair_Katsura",
@@ -2685,7 +2685,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 50
                     },
-                }
+                ]
             } },
             { 69, new PointOfInterest {
                 Name = "To-ji",
@@ -2693,8 +2693,8 @@ namespace GameServer.Models.Config
                 Latitude = 34.980556f,
                 Longitude = 135.747778f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Helmet_Samurai",
@@ -2719,7 +2719,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 50
                     },
-                }
+                ]
             } },
             { 70, new PointOfInterest {
                 Name = "Vancouver Aquarium",
@@ -2727,8 +2727,8 @@ namespace GameServer.Models.Config
                 Latitude = 49.300586f,
                 Longitude = -123.131053f,
                 Radius = 0.13f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Pant_Thermal",
@@ -2753,7 +2753,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 71, new PointOfInterest {
                 Name = "H. R. MacMillan Space Centre",
@@ -2761,8 +2761,8 @@ namespace GameServer.Models.Config
                 Latitude = 49.276205f,
                 Longitude = -123.1444f,
                 Radius = 0.15f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Glasses_Slopes",
@@ -2787,7 +2787,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 72, new PointOfInterest {
                 Name = "Science World",
@@ -2795,8 +2795,8 @@ namespace GameServer.Models.Config
                 Latitude = 49.273251f,
                 Longitude = -123.103767f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Spoiler_24",
@@ -2821,7 +2821,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 73, new PointOfInterest {
                 Name = "Golden Gate Bridge",
@@ -2829,8 +2829,8 @@ namespace GameServer.Models.Config
                 Latitude = 37.819722f,
                 Longitude = -122.478611f,
                 Radius = 1.0f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "00000049_DLCKART3",
@@ -2855,7 +2855,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 200
                     },
-                }
+                ]
             } },
             { 74, new PointOfInterest {
                 Name = "Chinatown",
@@ -2863,8 +2863,8 @@ namespace GameServer.Models.Config
                 Latitude = 37.794722f,
                 Longitude = -122.407222f,
                 Radius = 0.8f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Alien_SMK_AlienRobot01",
@@ -2889,7 +2889,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 200
                     },
-                }
+                ]
             } },
             { 75, new PointOfInterest {
                 Name = "Fisherman's Wharf",
@@ -2897,8 +2897,8 @@ namespace GameServer.Models.Config
                 Latitude = 37.808333f,
                 Longitude = -122.415556f,
                 Radius = 0.4f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_Shirt_Leisuresuit",
@@ -2929,7 +2929,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 200
                     },
-                }
+                ]
             } },
             { 76, new PointOfInterest {
                 Name = "Apartheid Museum",
@@ -2937,8 +2937,8 @@ namespace GameServer.Models.Config
                 Latitude = -26.2376f,
                 Longitude = 28.009f,
                 Radius = 0.2f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Prehistoric_PROP_StandingStone_1",
@@ -2963,7 +2963,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 77, new PointOfInterest {
                 Name = "Nelson Mandela National Museum",
@@ -2971,8 +2971,8 @@ namespace GameServer.Models.Config
                 Latitude = -26.238536f,
                 Longitude = 27.908772f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Progressive_PROP_TPP11_AnimatedBillboard",
@@ -2997,7 +2997,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 78, new PointOfInterest {
                 Name = "Johannesburg Zoo",
@@ -3005,8 +3005,8 @@ namespace GameServer.Models.Config
                 Latitude = -26.166375f,
                 Longitude = 28.038186f,
                 Radius = 0.5f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Prehistoric_PROP_Pterodactyl",
@@ -3031,7 +3031,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 79, new PointOfInterest {
                 Name = "Sao Paulo Museum of Art",
@@ -3039,8 +3039,8 @@ namespace GameServer.Models.Config
                 Latitude = -23.561111f,
                 Longitude = -46.655833f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Pants_Baggytrack",
@@ -3065,7 +3065,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 500
                     },
-                }
+                ]
             } },
             { 80, new PointOfInterest {
                 Name = "Banespa Building",
@@ -3073,8 +3073,8 @@ namespace GameServer.Models.Config
                 Latitude = -23.545833f,
                 Longitude = -46.633889f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Wheel_BlingBling",
@@ -3099,7 +3099,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 500
                     },
-                }
+                ]
             } },
             { 81, new PointOfInterest {
                 Name = "Museu Paulista",
@@ -3107,8 +3107,8 @@ namespace GameServer.Models.Config
                 Latitude = -23.561389f,
                 Longitude = -46.656111f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004CB_DLCCHAR16",
@@ -3133,7 +3133,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 500
                     },
-                }
+                ]
             } },
             { 82, new PointOfInterest {
                 Name = "Recoleta Cemetary",
@@ -3141,8 +3141,8 @@ namespace GameServer.Models.Config
                 Latitude = -34.588056f,
                 Longitude = -58.393056f,
                 Radius = 0.15f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Haunted_SMK_Tombstone01",
@@ -3167,7 +3167,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 83, new PointOfInterest {
                 Name = "Buenos Aires Metropolitan Cathedral",
@@ -3175,8 +3175,8 @@ namespace GameServer.Models.Config
                 Latitude = -34.607408f,
                 Longitude = -58.373277f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Haunted_PROP_FlamingTorches",
@@ -3201,7 +3201,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 84, new PointOfInterest {
                 Name = "Obelisk of Buenos Aires",
@@ -3209,8 +3209,8 @@ namespace GameServer.Models.Config
                 Latitude = -34.603611f,
                 Longitude = -58.381667f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Haunted_PROP_SpookyTree",
@@ -3235,7 +3235,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 85, new PointOfInterest {
                 Name = "Christ the Redeemer",
@@ -3243,8 +3243,8 @@ namespace GameServer.Models.Config
                 Latitude = -22.951667f,
                 Longitude = -43.210833f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Carnival_AI_Roller",
@@ -3269,7 +3269,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 86, new PointOfInterest {
                 Name = "Fort Copacabana",
@@ -3277,8 +3277,8 @@ namespace GameServer.Models.Config
                 Latitude = -22.986763f,
                 Longitude = -43.187674f,
                 Radius = 0.13f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Carnival_SMK_MilkBottle",
@@ -3303,7 +3303,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 87, new PointOfInterest {
                 Name = "National Library of Brazil",
@@ -3311,8 +3311,8 @@ namespace GameServer.Models.Config
                 Latitude = -22.912f,
                 Longitude = -43.175f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Carnival_PROP_GenericTent_04",
@@ -3337,7 +3337,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 400
                     },
-                }
+                ]
             } },
             { 88, new PointOfInterest {
                 Name = "Two Oceans Aquarium",
@@ -3345,8 +3345,8 @@ namespace GameServer.Models.Config
                 Latitude = -33.908056f,
                 Longitude = 18.4175f,
                 Radius = 0.13f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Prehistoric_PROP_PlantPrehistoric01",
@@ -3371,7 +3371,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 89, new PointOfInterest {
                 Name = "Table Mountain National Park",
@@ -3379,8 +3379,8 @@ namespace GameServer.Models.Config
                 Latitude = -33.966667f,
                 Longitude = 18.425f,
                 Radius = 2.3f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Prehistoric_PROP_FenceBone01",
@@ -3405,7 +3405,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 90, new PointOfInterest {
                 Name = "Victoria and Alfred Waterfront",
@@ -3413,8 +3413,8 @@ namespace GameServer.Models.Config
                 Latitude = -33.903056f,
                 Longitude = 18.422778f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Prehistoric_SMK_StoneTires_01",
@@ -3439,7 +3439,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 91, new PointOfInterest {
                 Name = "Grand Place",
@@ -3447,8 +3447,8 @@ namespace GameServer.Models.Config
                 Latitude = 50.8467f,
                 Longitude = 4.3525f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004F5_STREETRATCHAR",
@@ -3473,7 +3473,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 92, new PointOfInterest {
                 Name = "The Atomium",
@@ -3481,8 +3481,8 @@ namespace GameServer.Models.Config
                 Latitude = 50.894722f,
                 Longitude = 4.341111f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Medieval_ARC_Tavern",
@@ -3507,7 +3507,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 93, new PointOfInterest {
                 Name = "Royal Museums of Fine Arts of Belgium",
@@ -3515,8 +3515,8 @@ namespace GameServer.Models.Config
                 Latitude = 50.841944f,
                 Longitude = 4.357778f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Medieval_PROP_Haymain",
@@ -3541,7 +3541,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 94, new PointOfInterest {
                 Name = "Frederick's Church",
@@ -3549,8 +3549,8 @@ namespace GameServer.Models.Config
                 Latitude = 55.685f,
                 Longitude = 12.589444f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Christmas_PROP_XmasWreath",
@@ -3575,7 +3575,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 95, new PointOfInterest {
                 Name = "Rosenborg Castle",
@@ -3583,8 +3583,8 @@ namespace GameServer.Models.Config
                 Latitude = 55.685556f,
                 Longitude = 12.577778f,
                 Radius = 0.14f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Christmas_Prop_ToySoldier",
@@ -3609,7 +3609,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 96, new PointOfInterest {
                 Name = "Gefion Fountain",
@@ -3617,8 +3617,8 @@ namespace GameServer.Models.Config
                 Latitude = 55.689444f,
                 Longitude = 12.5975f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Christmas_SMK_Sleigh",
@@ -3643,7 +3643,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 97, new PointOfInterest {
                 Name = "Helsinki Cathedral",
@@ -3651,8 +3651,8 @@ namespace GameServer.Models.Config
                 Latitude = 60.170278f,
                 Longitude = 24.952222f,
                 Radius = 0.12f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004CC_ARCTICCHICKENCHAR",
@@ -3677,7 +3677,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 98, new PointOfInterest {
                 Name = "National Museum of Finland",
@@ -3685,8 +3685,8 @@ namespace GameServer.Models.Config
                 Latitude = 60.175f,
                 Longitude = 24.931944f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Christmas_PROP_SnowFort",
@@ -3711,7 +3711,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 99, new PointOfInterest {
                 Name = "Suomenlinna",
@@ -3719,8 +3719,8 @@ namespace GameServer.Models.Config
                 Latitude = 60.143611f,
                 Longitude = 24.984444f,
                 Radius = 1.5f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Hat_Snowbank",
@@ -3745,7 +3745,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 100, new PointOfInterest {
                 Name = "Spire of Dublin",
@@ -3753,8 +3753,8 @@ namespace GameServer.Models.Config
                 Latitude = 53.349722f,
                 Longitude = -6.260278f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_Accessories_68",
@@ -3779,7 +3779,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 101, new PointOfInterest {
                 Name = "Dublin Castle",
@@ -3787,8 +3787,8 @@ namespace GameServer.Models.Config
                 Latitude = 53.343109f,
                 Longitude = -6.267394f,
                 Radius = 0.15f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "JunkYard_AI_GiantMagnet",
@@ -3813,7 +3813,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 102, new PointOfInterest {
                 Name = "St. Patrick's Cathedral",
@@ -3821,8 +3821,8 @@ namespace GameServer.Models.Config
                 Latitude = 53.339444f,
                 Longitude = -6.271389f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "JunkYard_AI_Incinerator",
@@ -3847,7 +3847,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 103, new PointOfInterest {
                 Name = "Oceanographic Museum",
@@ -3855,8 +3855,8 @@ namespace GameServer.Models.Config
                 Latitude = 43.730833f,
                 Longitude = 7.425278f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004C3_DLCCHAR8",
@@ -3881,7 +3881,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 50
                     },
-                }
+                ]
             } },
             { 104, new PointOfInterest {
                 Name = "Prince's Palace of Monaco",
@@ -3889,8 +3889,8 @@ namespace GameServer.Models.Config
                 Latitude = 43.731417f,
                 Longitude = 7.420275f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Ornament_Kart_Ornament10",
@@ -3915,7 +3915,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 50
                     },
-                }
+                ]
             } },
             { 105, new PointOfInterest {
                 Name = "Saint Nicholas Cathedral",
@@ -3923,8 +3923,8 @@ namespace GameServer.Models.Config
                 Latitude = 43.73f,
                 Longitude = 7.422222f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Hat_Fastfood",
@@ -3949,7 +3949,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 50
                     },
-                }
+                ]
             } },
             { 106, new PointOfInterest {
                 Name = "Nobel Peace Center",
@@ -3957,8 +3957,8 @@ namespace GameServer.Models.Config
                 Latitude = 59.911483f,
                 Longitude = 10.730481f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Wheel_Chain",
@@ -3983,7 +3983,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 107, new PointOfInterest {
                 Name = "Norwegian Museum of Cultural History",
@@ -3991,8 +3991,8 @@ namespace GameServer.Models.Config
                 Latitude = 59.906911f,
                 Longitude = 10.685958f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000005E5_SKIBUNNYCHAR",
@@ -4023,7 +4023,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 108, new PointOfInterest {
                 Name = "Oslo Opera House",
@@ -4031,8 +4031,8 @@ namespace GameServer.Models.Config
                 Latitude = 59.906944f,
                 Longitude = 10.753611f,
                 Radius = 0.14f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Hair_Frozen",
@@ -4057,7 +4057,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 109, new PointOfInterest {
                 Name = "Royal Castle in Warsaw",
@@ -4065,8 +4065,8 @@ namespace GameServer.Models.Config
                 Latitude = 52.247778f,
                 Longitude = 21.014167f,
                 Radius = 0.06f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_Accessories_78",
@@ -4091,7 +4091,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 110, new PointOfInterest {
                 Name = "St. John's Cathedral",
@@ -4099,8 +4099,8 @@ namespace GameServer.Models.Config
                 Latitude = 52.248889f,
                 Longitude = 21.013611f,
                 Radius = 0.05f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "00000073_DLCKART13",
@@ -4125,7 +4125,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 111, new PointOfInterest {
                 Name = "Palace of Culture and Science",
@@ -4133,8 +4133,8 @@ namespace GameServer.Models.Config
                 Latitude = 52.231667f,
                 Longitude = 21.006389f,
                 Radius = 0.13f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Ornament_Kart_Ornament63",
@@ -4171,7 +4171,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 112, new PointOfInterest {
                 Name = "Belem Tower",
@@ -4179,8 +4179,8 @@ namespace GameServer.Models.Config
                 Latitude = 38.691389f,
                 Longitude = -9.215833f,
                 Radius = 0.14f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Pirate_ARC_GuardTower",
@@ -4205,7 +4205,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 113, new PointOfInterest {
                 Name = "Rua Augusta Arch",
@@ -4213,8 +4213,8 @@ namespace GameServer.Models.Config
                 Latitude = 38.7084f,
                 Longitude = -9.1368f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Pirate_PROP_Galleon",
@@ -4239,7 +4239,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 114, new PointOfInterest {
                 Name = "Castle of Sao Jorge",
@@ -4247,8 +4247,8 @@ namespace GameServer.Models.Config
                 Latitude = 38.713889f,
                 Longitude = -9.133611f,
                 Radius = 0.15f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Pirate_SMK_Crate01",
@@ -4273,7 +4273,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 115, new PointOfInterest {
                 Name = "Ericsson Globe",
@@ -4281,8 +4281,8 @@ namespace GameServer.Models.Config
                 Latitude = 59.293556f,
                 Longitude = 18.083236f,
                 Radius = 0.2f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Alien_PROP_CrashedComet",
@@ -4307,7 +4307,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 116, new PointOfInterest {
                 Name = "Earth",
@@ -4315,8 +4315,8 @@ namespace GameServer.Models.Config
                 Latitude = 59.369022f,
                 Longitude = 18.053428f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "MoonColony_PROP_MoonRock",
@@ -4341,7 +4341,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 117, new PointOfInterest {
                 Name = "Mercury",
@@ -4349,8 +4349,8 @@ namespace GameServer.Models.Config
                 Latitude = 59.319722f,
                 Longitude = 18.070556f,
                 Radius = 0.05f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Alien_Prop_CrashedComet03",
@@ -4375,7 +4375,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 100
                     },
-                }
+                ]
             } },
             { 118, new PointOfInterest {
                 Name = "Galata Tower",
@@ -4383,8 +4383,8 @@ namespace GameServer.Models.Config
                 Latitude = 41.025556f,
                 Longitude = 28.974167f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Stunt_PROP_DoubleDecker",
@@ -4409,7 +4409,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 300
                     },
-                }
+                ]
             } },
             { 119, new PointOfInterest {
                 Name = "Topkapi Palace",
@@ -4417,8 +4417,8 @@ namespace GameServer.Models.Config
                 Latitude = 41.013f,
                 Longitude = 28.984f,
                 Radius = 0.7f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Stunt_SMK_StuntTrailer_01",
@@ -4443,7 +4443,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 300
                     },
-                }
+                ]
             } },
             { 120, new PointOfInterest {
                 Name = "Hagia Sophia",
@@ -4451,8 +4451,8 @@ namespace GameServer.Models.Config
                 Latitude = 41.008611f,
                 Longitude = 28.98f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "JunkYard_AI_Compactor",
@@ -4477,7 +4477,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 300
                     },
-                }
+                ]
             } },
             { 121, new PointOfInterest {
                 Name = "Alexander Column",
@@ -4485,8 +4485,8 @@ namespace GameServer.Models.Config
                 Latitude = 59.939167f,
                 Longitude = 30.315833f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Medieval_PROP_AssaultTower",
@@ -4511,7 +4511,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 200
                     },
-                }
+                ]
             } },
             { 122, new PointOfInterest {
                 Name = "Bronze Horseman",
@@ -4519,8 +4519,8 @@ namespace GameServer.Models.Config
                 Latitude = 59.9364f,
                 Longitude = 30.3022f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Medieval_PROP_BatteringRam",
@@ -4545,7 +4545,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 200
                     },
-                }
+                ]
             } },
             { 123, new PointOfInterest {
                 Name = "Winter Palace",
@@ -4553,8 +4553,8 @@ namespace GameServer.Models.Config
                 Latitude = 59.9404f,
                 Longitude = 30.3139f,
                 Radius = 0.14f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Steering_Plastic_Wrapped",
@@ -4579,7 +4579,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 200
                     },
-                }
+                ]
             } },
             { 124, new PointOfInterest {
                 Name = "Shrine of Remembrance",
@@ -4587,8 +4587,8 @@ namespace GameServer.Models.Config
                 Latitude = -37.830434f,
                 Longitude = 144.973258f,
                 Radius = 0.38f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Western_PROP_FenceCoral01",
@@ -4613,7 +4613,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 125, new PointOfInterest {
                 Name = "Melbourne Museum",
@@ -4621,8 +4621,8 @@ namespace GameServer.Models.Config
                 Latitude = -37.803337f,
                 Longitude = 144.971445f,
                 Radius = 0.15f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Western_SMK_TNTCrate",
@@ -4647,7 +4647,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 126, new PointOfInterest {
                 Name = "Eureka Tower",
@@ -4655,8 +4655,8 @@ namespace GameServer.Models.Config
                 Latitude = -37.821667f,
                 Longitude = 144.964444f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "WaterWorld_PROP_Trampoline",
@@ -4681,7 +4681,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 150
                     },
-                }
+                ]
             } },
             { 127, new PointOfInterest {
                 Name = "Museum Campus Chicago",
@@ -4689,8 +4689,8 @@ namespace GameServer.Models.Config
                 Latitude = 41.8665f,
                 Longitude = -87.6141f,
                 Radius = 0.43f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Kart_Antenna_GiantHand",
@@ -4715,7 +4715,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 350
                     },
-                }
+                ]
             } },
             { 128, new PointOfInterest {
                 Name = "Buckingham Fountain",
@@ -4723,8 +4723,8 @@ namespace GameServer.Models.Config
                 Latitude = 41.875792f,
                 Longitude = -87.618944f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "MoonColony_PROP_SolarRamp",
@@ -4749,7 +4749,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 350
                     },
-                }
+                ]
             } },
             { 129, new PointOfInterest {
                 Name = "Navy Pier",
@@ -4757,8 +4757,8 @@ namespace GameServer.Models.Config
                 Latitude = 41.891389f,
                 Longitude = -87.599722f,
                 Radius = 0.5f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "000004C1_DLCCHAR6",
@@ -4783,7 +4783,7 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 350
                     },
-                }
+                ]
             } },
             { 130, new PointOfInterest {
                 Name = "Space Center Houston",
@@ -4791,8 +4791,8 @@ namespace GameServer.Models.Config
                 Latitude = 29.551881f,
                 Longitude = -95.098343f,
                 Radius = 0.2f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "MoonColony_PROP_TPP5_MoonRover",
@@ -4817,7 +4817,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 131, new PointOfInterest {
                 Name = "Hermann Park",
@@ -4825,8 +4825,8 @@ namespace GameServer.Models.Config
                 Latitude = 29.721111f,
                 Longitude = -95.391389f,
                 Radius = 1.15f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Western_AI_CartRamp01",
@@ -4851,7 +4851,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 132, new PointOfInterest {
                 Name = "Houston Arboretum and Nature Center",
@@ -4859,8 +4859,8 @@ namespace GameServer.Models.Config
                 Latitude = 29.7652f,
                 Longitude = -95.452f,
                 Radius = 0.2f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Western_PROP_CactusWest",
@@ -4885,7 +4885,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 250
                     },
-                }
+                ]
             } },
             { 133, new PointOfInterest {
                 Name = "The Sixth Floor Museum",
@@ -4893,8 +4893,8 @@ namespace GameServer.Models.Config
                 Latitude = 32.779722f,
                 Longitude = -96.808333f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Western_PROP_FortGate",
@@ -4919,7 +4919,7 @@ namespace GameServer.Models.Config
                         Type = "Track_Asset",
                         CheckIns = 300
                     },
-                }
+                ]
             } },
             { 134, new PointOfInterest {
                 Name = "Reunion Tower",
@@ -4927,8 +4927,8 @@ namespace GameServer.Models.Config
                 Latitude = 32.7753f,
                 Longitude = -96.8089f,
                 Radius = 0.14f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "00000004_DLCKART1",
@@ -4953,7 +4953,7 @@ namespace GameServer.Models.Config
                         Type = "Kart_Asset",
                         CheckIns = 300
                     },
-                }
+                ]
             } },
             { 135, new PointOfInterest {
                 Name = "Bank of America Plaza",
@@ -4961,8 +4961,8 @@ namespace GameServer.Models.Config
                 Latitude = 32.7799f,
                 Longitude = -96.8038f,
                 Radius = 0.1f,
-                Awards = new List<PointOfInterestAward>
-                {
+                Awards =
+                [
                     new PointOfInterestAward
                     {
                         Name = "Part_Char_Pants_chaps",
@@ -4993,11 +4993,11 @@ namespace GameServer.Models.Config
                         Type = "Character_Asset",
                         CheckIns = 300
                     },
-                }
+                ]
             } },
         };
-        public List<ModExplorerTravelAward> TravelAwards = new List<ModExplorerTravelAward>
-        {
+        public List<ModExplorerTravelAward> TravelAwards =
+        [
             new ModExplorerTravelAward
             {
                 Name = "Explorer_PROP_EasterIslandMoai",
@@ -5103,11 +5103,11 @@ namespace GameServer.Models.Config
                 Points = 500000000,
                 IsGlobalPoints = true
             }
-        };
+        ];
 
         public static ModMileConfig GetFromFile()
         {
-            ModMileConfig config = new ModMileConfig();
+            ModMileConfig config = new();
             if (File.Exists("./mod_explorer.json"))
             {
                 string file = File.ReadAllText("./mod_explorer.json");

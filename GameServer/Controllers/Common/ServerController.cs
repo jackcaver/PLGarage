@@ -45,7 +45,7 @@ namespace GameServer.Controllers.Common
             var resp = new Response<List<ServerResponse>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<ServerResponse> { new ServerResponse {
+                response = [ new ServerResponse {
                     server_type = server_type.ToString(),
                     address = server.Address,
                     port = server.Port,
@@ -55,12 +55,18 @@ namespace GameServer.Controllers.Common
                         session_uuid = SessionID.ToString(),
                         player_id = user.UserId,
                         username = user.Username,
-                        expiration_date = session.ExpiryDate.ToString("ddd MMM dd hh:mm:ss zzz yyyy", CultureInfo.InvariantCulture.DateTimeFormat),//"Tue Oct 09 23:25:57 +0000 2023", 
+                        expiration_date = session.ExpiryDate.ToString("ddd MMM dd hh:mm:ss zzz yyyy", CultureInfo.InvariantCulture.DateTimeFormat),
                         signature = "98b93493e8beb1318533fb87897f1e80"
                     }
-                } }
+                } ]
             };
             return Content(resp.Serialize(), "application/xml;charset=utf-8");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

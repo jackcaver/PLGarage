@@ -54,5 +54,11 @@ namespace GameServer.Controllers.Player
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             return Content(MailMessages.RemoveMessage(database, SessionID, id), "application/xml;charset=utf-8");
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

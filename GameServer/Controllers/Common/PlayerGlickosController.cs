@@ -14,7 +14,7 @@ namespace GameServer.Controllers.Common
             var resp = new Response<List<player_metrics>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<player_metrics> { new player_metrics { total = 0 } }
+                response = [new player_metrics { total = 0 }]
             };
             return Content(resp.Serialize(), "application/xml;charset=utf-8");
         }

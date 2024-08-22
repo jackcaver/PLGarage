@@ -62,5 +62,11 @@ namespace GameServer.Controllers.Player_Creation
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             return Content(PlayerCreationBookmarks.Tally(database, SessionID), "application/xml;charset=utf-8");
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            database.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

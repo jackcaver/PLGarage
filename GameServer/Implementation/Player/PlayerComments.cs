@@ -64,14 +64,14 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<player_comments>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<player_comments> { new player_comments {
+                response = [ new player_comments {
                     page = page,
                     row_start = pageStart,
                     row_end = pageEnd,
                     total = Comments.Count,
                     total_pages = totalPages,
                     PlayerCommentList = commentsList
-                } }
+                } ]
             };
 
             return resp.Serialize();

@@ -104,7 +104,7 @@ namespace GameServer.Implementation.Player
 
             if (platform == Platform.PSV)
             {
-                List<int> players = new List<int>();
+                List<int> players = [];
                 foreach (var score in scores)
                 {
                     if (!players.Contains(score.PlayerId))
@@ -273,14 +273,14 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<SubLeaderboard>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<SubLeaderboard> { new SubLeaderboard {
+                response = [ new SubLeaderboard {
                     playgroup_size = playgroup_size,
                     sub_group_id = sub_group_id,
                     sub_key_id = sub_key_id,
                     total = leaderboardPlayers.Count,
                     type = type.ToString(),
                     LeaderboardPlayersList = leaderboardPlayers
-                }}
+                }]
             };
             return resp.Serialize();
         }
@@ -773,7 +773,7 @@ namespace GameServer.Implementation.Player
 
             if (game_type == GameType.OVERALL_RACE)
             {
-                leaderboardColumns.Columns = new List<LeaderboardColumn> {
+                leaderboardColumns.Columns = [
                     new LeaderboardColumn
                     {
                         name = "online_races",
@@ -819,12 +819,12 @@ namespace GameServer.Implementation.Player
                         name = "longest_drift",
                         display_name = "Longest Drift"
                     }
-                };
+                ];
             }
 
             if (game_type == GameType.ONLINE_HOT_SEAT_RACE)
             {
-                leaderboardColumns.Columns = new List<LeaderboardColumn> {
+                leaderboardColumns.Columns = [
                     new LeaderboardColumn
                     {
                         name = "best_lap_time",
@@ -850,7 +850,7 @@ namespace GameServer.Implementation.Player
                         name = "ghost_car_data_md5",
                         display_name = "Ghost Car MD5"
                     }
-                };
+                ];
             }
 
             if (FriendsView)

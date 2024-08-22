@@ -114,7 +114,7 @@ namespace GameServer.Implementation.Player_Creation
                 var planetUpdateResp = new Response<List<Planet>>
                 {
                     status = new ResponseStatus { id = 0, message = "Successful completion" },
-                    response = new List<Planet> { new Planet { id = id } }
+                    response = [new Planet { id = id }]
                 };
                 return planetUpdateResp.Serialize();
             }
@@ -122,7 +122,7 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<player_creation>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<player_creation> { new player_creation { id = id } }
+                response = [new player_creation { id = id }]
             };
             return resp.Serialize();
         }
@@ -260,7 +260,7 @@ namespace GameServer.Implementation.Player_Creation
                 var planetUpdateResp = new Response<List<Planet>>
                 {
                     status = new ResponseStatus { id = 0, message = "Successful completion" },
-                    response = new List<Planet> { new Planet { id = id } }
+                    response = [new Planet { id = id }]
                 };
                 return planetUpdateResp.Serialize();
             }
@@ -268,7 +268,7 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<player_creation>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<player_creation> { new player_creation { id = id } }
+                response = [new player_creation { id = id }]
             };
             return resp.Serialize();
         }
@@ -448,7 +448,7 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<player_creation>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<player_creation> {
+                response = [
                     new player_creation
                     {
                         id = Creation.PlayerCreationId,
@@ -526,7 +526,7 @@ namespace GameServer.Implementation.Player_Creation
                         moderation_status = Creation.ModerationStatus.ToString(),
                         moderation_status_id = (int)Creation.ModerationStatus,
                     }
-                }
+                ]
             };
             return resp.Serialize();
         }
@@ -553,7 +553,7 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<player_creations>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<player_creations> { new player_creations { friends_published = Creations.Count != 0 } }
+                response = [new player_creations { friends_published = Creations.Count != 0 }]
             };
             return resp.Serialize();
         }
@@ -800,7 +800,7 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<player_creations>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<player_creations> {
+                response = [
                     new player_creations
                     {
                         page = page,
@@ -810,7 +810,7 @@ namespace GameServer.Implementation.Player_Creation
                         total_pages = totalPages,
                         PlayerCreationsList = playerCreationsList
                     }
-                }
+                ]
             };
             return resp.Serialize();
         }
@@ -840,7 +840,7 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string SearchPhotos(Database database, int? track_id, string username, string associated_usernames, int page, int per_page)
         {
-            List<PlayerCreationData> Photos = new List<PlayerCreationData> { };
+            List<PlayerCreationData> Photos = [];
             int player_id = 0;
             var user = database.Users.FirstOrDefault(match => match.Username == username);
             if (user != null)
@@ -880,7 +880,7 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<Photos>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<Photos> {
+                response = [
                     new Photos {
                         total = Photos.Count,
                         current_page = page,
@@ -889,7 +889,7 @@ namespace GameServer.Implementation.Player_Creation
                         total_pages = totalPages,
                         PhotoList = PhotoList
                     }
-                }
+                ]
             };
             return resp.Serialize();
         }
@@ -904,11 +904,11 @@ namespace GameServer.Implementation.Player_Creation
             var TrackComments = database.PlayerCreationComments.Where(match => match.PlayerCreationId == id).ToList();
             var TrackReviews = database.PlayerCreationReviews.Where(match => match.PlayerCreationId == id).ToList();
             var TrackActivity = database.ActivityLog.Where(match => match.PlayerCreationId == id).ToList();
-            List<Photo> PhotoList = new List<Photo> { };
-            List<SubLeaderboardPlayer> ScoresList = new List<SubLeaderboardPlayer> { };
-            List<Comment> CommentsList = new List<Comment> { };
-            List<Review> ReviewsList = new List<Review> { };
-            List<Activity> ActivityList = new List<Activity> { };
+            List<Photo> PhotoList = [];
+            List<SubLeaderboardPlayer> ScoresList = [];
+            List<Comment> CommentsList = [];
+            List<Review> ReviewsList = [];
+            List<Activity> ActivityList = [];
 
             TrackPhotos.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
             TrackComments.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
@@ -1008,7 +1008,7 @@ namespace GameServer.Implementation.Player_Creation
                     player_creation_level_mode = Track.LevelMode,
                     player_creation_is_team_pick = Track.IsTeamPick,
                     type = "player_creation_activity",
-                    events = new List<Event> {
+                    events = [
                             new Event
                             {
                                 topic = Activity.Type.ToString(),
@@ -1023,14 +1023,14 @@ namespace GameServer.Implementation.Player_Creation
                                 allusion_id = Activity.AllusionId,
                                 player_id = Activity.PlayerId
                             }
-                        }
+                        ]
                 });
             }
 
             var resp = new Response<List<Track>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<Track> {
+                response = [
                     new Track
                     {
                         id = Track.PlayerCreationId,
@@ -1089,20 +1089,20 @@ namespace GameServer.Implementation.Player_Creation
                         hearted_by_me = (requestedBy == null) ? "false" : Track.IsHeartedByMe(requestedBy.UserId).ToString().ToLower(),
                         queued_by_me = (requestedBy == null) ? "false" : Track.IsBookmarkedByMe(requestedBy.UserId).ToString().ToLower(),
                         reviewed_by_me = (requestedBy == null) ? "false" : Track.IsReviewedByMe(requestedBy.UserId).ToString().ToLower(),
-                        activities = new List<Activities> { new Activities { total = TrackActivity.Count, ActivityList = ActivityList } },
+                        activities = [new Activities { total = TrackActivity.Count, ActivityList = ActivityList }],
                         comments = CommentsList,
-                        leaderboard = new List<SubLeaderboard> { new SubLeaderboard { total = TrackScores.Count, LeaderboardPlayersList = ScoresList } },
-                        photos = new List<Photos> { new Photos { total = PhotoList.Count, PhotoList = PhotoList } },
-                        reviews = new List<Reviews> { new Reviews { total = TrackReviews.Count, ReviewList = ReviewsList } }
+                        leaderboard = [new SubLeaderboard { total = TrackScores.Count, LeaderboardPlayersList = ScoresList }],
+                        photos = [new Photos { total = PhotoList.Count, PhotoList = PhotoList }],
+                        reviews = [new Reviews { total = TrackReviews.Count, ReviewList = ReviewsList }]
                     }
-                }
+                ]
             };
             return resp.Serialize();
         }
 
         public static string VerifyPlayerCreations(Database database, List<int> id, List<int> offline_id)
         {
-            List<PlayerCreationToVerify> creations = new List<PlayerCreationToVerify> { };
+            List<PlayerCreationToVerify> creations = [];
             foreach (int item in id)
             {
                 var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item);
@@ -1129,9 +1129,9 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<PlayerCreationVerify>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<PlayerCreationVerify> {
+                response = [
                     new PlayerCreationVerify { total = creations.Count, PlayerCreationsList = creations }
-                }
+                ]
             };
             return resp.Serialize();
         }
@@ -1153,7 +1153,7 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<Planet>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<Planet> { new Planet { id = Planet.PlayerCreationId } }
+                response = [new Planet { id = Planet.PlayerCreationId }]
             };
             return resp.Serialize();
         }
@@ -1236,7 +1236,7 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<Planet>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new List<Planet> { new Planet {
+                response = [ new Planet {
                     id = Planet.PlayerCreationId,
                     name = Planet.Name,
                     player_id = Planet.PlayerId,
@@ -1245,7 +1245,7 @@ namespace GameServer.Implementation.Player_Creation
                         total = Planet.Author.TotalTracks,
                         TrackList = trackList
                     }
-                } }
+                } ]
             };
             return resp.Serialize();
         }

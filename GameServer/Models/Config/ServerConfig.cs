@@ -44,6 +44,7 @@ namespace GameServer.Models.Config
         public bool BlockMNR = false;
         public bool BlockLBPK = false;
         public bool EnableRequestLogging = false;
+        public bool EnablePlaceholderImage = true;
         public string InstanceName = "PLGarage";
         public string ServerCommunicationKey = "";
 

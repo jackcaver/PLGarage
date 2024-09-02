@@ -144,15 +144,28 @@ namespace GameServer.Utils
             return hash;
         }
 
-        public static byte[] Resize(byte[] image, int width, int height)
+        public static Stream Resize(byte[] image, int width, int height)
         {
             Image Image = Image.Load(image);
+
+            if (Image.Width == width && Image.Height == height)
+                return new MemoryStream(image);
 
             Image.Mutate(x => x.Resize(width, height));
 
             var stream = new MemoryStream();
             Image.Save(stream, new PngEncoder());
-            return stream.ToArray();
+            stream.Position = 0;
+            return stream;
+        }
+
+        public static Stream Resize(Stream image, int width, int height)
+        {
+            var reader = new BinaryReader(image);
+            var bytes = reader.ReadBytes((int)image.Length);
+            reader.Close();
+            reader.Dispose();
+            return Resize(bytes, width, height);
         }
 
         public static Stream LoadPlayerCreation(int id, string file)
@@ -160,9 +173,9 @@ namespace GameServer.Utils
             if (File.Exists($"UGC/PlayerCreations/{id}/{file}"))
                 return File.OpenRead($"UGC/PlayerCreations/{id}/{file}");
             else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}"))
-                return new MemoryStream(Resize(File.ReadAllBytes($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}"), 128, 128));
+                return Resize(File.ReadAllBytes($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}"), 128, 128);
             else if (file.Contains("_64x64") && File.Exists($"UGC/PlayerCreations/{id}/{file.Replace("_64x64", "")}"))
-                return new MemoryStream(Resize(File.ReadAllBytes($"UGC/PlayerCreations/{id}/{file.Replace("_64x64", "")}"), 64, 64));
+                return Resize(File.ReadAllBytes($"UGC/PlayerCreations/{id}/{file.Replace("_64x64", "")}"), 64, 64);
             else
                 return null;
         }
@@ -172,11 +185,11 @@ namespace GameServer.Utils
             if (File.Exists($"UGC/PlayerAvatars/{id}/{file}") && !IsMNR)
                 return File.OpenRead($"UGC/PlayerAvatars/{id}/{file}");
             else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}") && !IsMNR)
-                return new MemoryStream(Resize(File.ReadAllBytes($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}"), 128, 128));
+                return Resize(File.ReadAllBytes($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}"), 128, 128);
             else if (File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file}") && IsMNR)
                 return File.OpenRead($"UGC/PlayerAvatars/{id}/MNR/{file}");
             else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}") && IsMNR)
-                return new MemoryStream(Resize(File.ReadAllBytes($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}"), 128, 128));
+                return Resize(File.ReadAllBytes($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}"), 128, 128);
             else
                 return null;
         }

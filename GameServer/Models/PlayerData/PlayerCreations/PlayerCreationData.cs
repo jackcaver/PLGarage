@@ -3,6 +3,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 namespace GameServer.Models.PlayerData.PlayerCreations
@@ -101,6 +102,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public int ParentPlayerId { get; set; }
         public int OriginalPlayerId { get; set; }
         public float BestLapTime { get; set; }
+        public bool HasPreview => File.Exists($"UGC/PlayerCreations/{PlayerCreationId}/preview_image.png");
 
         public bool IsHeartedByMe(int id)
         {

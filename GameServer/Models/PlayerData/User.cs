@@ -92,6 +92,7 @@ namespace GameServer.Models.PlayerData
         public float ModMiles { get; set; }
         public float LastLatitude { get; set; }
         public float LastLongitude { get; set; }
+        public bool HideCreationsWithoutPreviews { get; set; }
 
         public bool IsHeartedByMe(int id, bool IsMNR) 
         {

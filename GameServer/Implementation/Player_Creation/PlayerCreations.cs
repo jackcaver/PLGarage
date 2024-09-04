@@ -563,6 +563,8 @@ namespace GameServer.Implementation.Player_Creation
             bool LuckyDip = false, bool IsMNR = false)
         {
             var Creations = new List<PlayerCreationData> { };
+            var session = Session.GetSession(SessionID);
+            var User = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (filters.username == null && filters.id == null && filters.player_id == null)
                 Creations = database.PlayerCreations.Where(match => match.Type == filters.player_creation_type && match.Platform == platform 
@@ -640,6 +642,9 @@ namespace GameServer.Implementation.Player_Creation
             if (TeamPicks)
                 Creations.RemoveAll(match => !match.IsTeamPick);
 
+            if (User != null && User.HideCreationsWithoutPreviews)
+                Creations.RemoveAll(match => !match.HasPreview);
+
             //cool levels
             if (sort_column == SortColumn.coolness)
                 Creations.Sort((curr, prev) => prev.Coolness.CompareTo(curr.Coolness));
@@ -675,6 +680,7 @@ namespace GameServer.Implementation.Player_Creation
             //MNR
             if (sort_column == SortColumn.rating)
                 Creations.Sort((curr, prev) => prev.Rating.CompareTo(curr.Rating));
+
             //points
             if (sort_column == SortColumn.points)
                 Creations.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
@@ -686,6 +692,7 @@ namespace GameServer.Implementation.Player_Creation
                 Creations.Sort((curr, prev) => prev.PointsThisWeek.CompareTo(curr.PointsThisWeek));
             if (sort_column == SortColumn.points_last_week)
                 Creations.Sort((curr, prev) => prev.PointsLastWeek.CompareTo(curr.PointsLastWeek));
+
             //download
             if (sort_column == SortColumn.downloads)
                 Creations.Sort((curr, prev) => prev.Downloads.CompareTo(curr.Downloads));
@@ -693,6 +700,7 @@ namespace GameServer.Implementation.Player_Creation
                 Creations.Sort((curr, prev) => prev.DownloadsThisWeek.CompareTo(curr.DownloadsThisWeek));
             if (sort_column == SortColumn.downloads_last_week)
                 Creations.Sort((curr, prev) => prev.DownloadsLastWeek.CompareTo(curr.DownloadsLastWeek));
+
             //views
             if (sort_column == SortColumn.views)
                 Creations.Sort((curr, prev) => prev.Views.CompareTo(curr.Views));
@@ -703,7 +711,7 @@ namespace GameServer.Implementation.Player_Creation
 
             if (LuckyDip)
             {
-                var random = new Random(Session.GetSession(SessionID).RandomSeed);
+                var random = new Random(session.RandomSeed);
                 for (int n = Creations.Count-1; n > 1; n--)
                 {
                     int k = random.Next(n);

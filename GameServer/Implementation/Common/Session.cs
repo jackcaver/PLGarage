@@ -1,4 +1,4 @@
-using GameServer.Models;
+﻿using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Response;
 using System.Collections.Generic;
@@ -44,13 +44,13 @@ namespace GameServer.Implementation.Common
             }
 
             TicketVerifier verifier;
-            switch (NPTicket.IssuerId)
+            switch (NPTicket.SignatureIdentifier)
             {
-                case 0x100:
+                case "q�\u001dJ":
                     verifier = new(ticketData, NPTicket, new LbpkSigningKey());
                     break;
 
-                case 0x33333333:
+                case "RPCN":
                     verifier = new(ticketData, NPTicket, RpcnSigningKey.Instance);
                     break;
 
@@ -72,9 +72,9 @@ namespace GameServer.Implementation.Common
 
             User user;
 
-            if (NPTicket.IssuerId == 0x100)
+            if (NPTicket.SignatureIdentifier == "q�\u001dJ")
                 user = database.Users.FirstOrDefault(match => match.PSNID == NPTicket.UserId);
-            else if (NPTicket.IssuerId == 0x33333333)
+            else if (NPTicket.SignatureIdentifier == "RPCN")
                 user = database.Users.FirstOrDefault(match => match.RPCNID == NPTicket.UserId);
             else
                 user = null;
@@ -90,13 +90,13 @@ namespace GameServer.Implementation.Common
             if (database.Users.FirstOrDefault(match => match.Username == NPTicket.Username) != null && user == null)
             {
                 var userByUsername = database.Users.FirstOrDefault(match => match.Username == NPTicket.Username);
-                if (NPTicket.IssuerId == 0x100 && userByUsername.PSNID == 0 && userByUsername.RPCNID == 0)
+                if (NPTicket.SignatureIdentifier == "q�\u001dJ" && userByUsername.PSNID == 0 && userByUsername.RPCNID == 0)
                 {
                     userByUsername.PSNID = NPTicket.UserId;
                     user = userByUsername;
                     database.SaveChanges();
                 }
-                else if (NPTicket.IssuerId == 0x33333333 && userByUsername.PSNID == 0 && userByUsername.RPCNID == 0)
+                else if (NPTicket.SignatureIdentifier == "RPCN" && userByUsername.PSNID == 0 && userByUsername.RPCNID == 0)
                 {
                     userByUsername.RPCNID = NPTicket.UserId;
                     user = userByUsername;
@@ -116,9 +116,9 @@ namespace GameServer.Implementation.Common
                     UpdatedAt = DateTime.UtcNow,
                     PolicyAccepted = Sessions[SessionID].PolicyAccepted,
                 };
-                if (NPTicket.IssuerId == 0x100)
+                if (NPTicket.SignatureIdentifier == "q�\u001dJ")
                     newUser.PSNID = NPTicket.UserId;
-                else if (NPTicket.IssuerId == 0x33333333)
+                else if (NPTicket.SignatureIdentifier == "RPCN")
                     newUser.RPCNID = NPTicket.UserId;
                 
                 database.Users.Add(newUser);

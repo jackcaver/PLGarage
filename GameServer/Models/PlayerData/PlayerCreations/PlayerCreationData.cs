@@ -76,7 +76,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         [ForeignKey(nameof(PlayerId))]
         public User Author { get; set; }
 
-        public int Rank { get; set; }
+        public int Rank => GetRank();
         public int RatingDown => this.database.PlayerCreationRatings.Count(match => match.PlayerCreationId == PlayerCreationId && match.Type == RatingType.BOO);
         public int RatingUp => this.database.PlayerCreationRatings.Count(match => match.PlayerCreationId == PlayerCreationId && match.Type == RatingType.YAY);
         public int RatingUpThisWeek => this.database.PlayerCreationRatings.Count(match => match.PlayerCreationId == PlayerCreationId && match.Type == RatingType.YAY && match.RatedAt >= DateTime.UtcNow.AddDays(-7) && match.RatedAt <= DateTime.UtcNow);
@@ -120,6 +120,13 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         {
             var entry = this.database.PlayerCreationReviews.FirstOrDefault(match => match.PlayerCreationId == this.PlayerCreationId && match.PlayerId == id);
             return entry != null;
+        }
+
+        public int GetRank()
+        {
+            var creations = this.database.PlayerCreations.Where(match => match.Type == this.Type).ToList();
+            creations.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+            return creations.FindIndex(match => match == this) + 1;
         }
     }
 }

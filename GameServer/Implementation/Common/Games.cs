@@ -506,6 +506,41 @@ namespace GameServer.Implementation.Common
             if (stats.longest_hang_time > user.LongestHangTime)
                 user.LongestHangTime = stats.longest_hang_time;
 
+            var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
+            var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
+
+            if (character != null)
+            {
+                if (stats.longest_drift > character.LongestDrift)
+                    character.LongestDrift = stats.longest_drift;
+                if (stats.longest_hang_time > character.LongestHangTime)
+                    character.LongestHangTime = stats.longest_hang_time;
+                if (stats.best_lap_time > character.BestLapTime)
+                    character.BestLapTime = stats.longest_hang_time;
+            }
+
+            if (kart != null)
+            {
+                if (stats.longest_drift > kart.LongestDrift)
+                    kart.LongestDrift = stats.longest_drift;
+                if (stats.longest_hang_time > kart.LongestHangTime)
+                    kart.LongestHangTime = stats.longest_hang_time;
+                if (stats.best_lap_time > kart.BestLapTime)
+                    kart.BestLapTime = stats.longest_hang_time;
+            }
+
+            var Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.Track);
+
+            if (Track != null)
+            {
+                if (stats.longest_drift > Track.LongestDrift)
+                    Track.LongestDrift = stats.longest_drift;
+                if (stats.longest_hang_time > Track.LongestHangTime)
+                    Track.LongestHangTime = stats.longest_hang_time;
+                if (stats.best_lap_time > Track.BestLapTime)
+                    Track.BestLapTime = stats.longest_hang_time;
+            }
+
             database.SaveChanges();
 
             var resp = new Response<EmptyResponse>

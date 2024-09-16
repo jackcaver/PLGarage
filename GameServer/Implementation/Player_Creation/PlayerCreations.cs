@@ -642,7 +642,7 @@ namespace GameServer.Implementation.Player_Creation
             if (TeamPicks)
                 Creations.RemoveAll(match => !match.IsTeamPick);
 
-            if (User != null && User.HideCreationsWithoutPreviews)
+            if (User != null && !User.ShowCreationsWithoutPreviews)
                 Creations.RemoveAll(match => !match.HasPreview);
 
             //cool levels

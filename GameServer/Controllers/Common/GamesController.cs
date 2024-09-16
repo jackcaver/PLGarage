@@ -168,20 +168,43 @@ namespace GameServer.Controllers.Common
             {
                 var character = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game_player_stats.character_idx && match.Type == PlayerCreationType.CHARACTER);
                 var kart = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game_player_stats.kart_idx && match.Type == PlayerCreationType.KART);
+                
                 if (character != null)
                 {
                     database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId });
                     character.RacesFinished++;
                     if (game_player_stats.is_winner == 1)
                         character.RacesWon++;
+
+                    if (game_player_stats.longest_drift > character.LongestDrift)
+                        character.LongestDrift = game_player_stats.longest_drift;
+                    if (game_player_stats.longest_hang_time > character.LongestHangTime)
+                        character.LongestHangTime = game_player_stats.longest_hang_time;
+                    if (game_player_stats.best_lap_time > character.BestLapTime)
+                        character.BestLapTime = game_player_stats.longest_hang_time;
                 }
+
                 if (kart != null)
                 {
                     database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId });
                     kart.RacesFinished++;
                     if (game_player_stats.is_winner == 1)
                         kart.RacesWon++;
+
+                    if (game_player_stats.longest_drift > kart.LongestDrift)
+                        kart.LongestDrift = game_player_stats.longest_drift;
+                    if (game_player_stats.longest_hang_time > kart.LongestHangTime)
+                        kart.LongestHangTime = game_player_stats.longest_hang_time;
+                    if (game_player_stats.best_lap_time > kart.BestLapTime)
+                        kart.BestLapTime = game_player_stats.longest_hang_time;
                 }
+
+                if (game_player_stats.longest_drift > Track.LongestDrift)
+                    Track.LongestDrift = game_player_stats.longest_drift;
+                if (game_player_stats.longest_hang_time > Track.LongestHangTime)
+                    Track.LongestHangTime = game_player_stats.longest_hang_time;
+                if (game_player_stats.best_lap_time > Track.BestLapTime)
+                    Track.BestLapTime = game_player_stats.longest_hang_time;
             }
 
             var leaderboard = database.Scores.Where(match => match.SubKeyId == game.track_idx && match.SubGroupId == (int)game.game_type &&

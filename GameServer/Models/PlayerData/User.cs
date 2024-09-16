@@ -52,6 +52,7 @@ namespace GameServer.Models.PlayerData
         public int OnlineFinishedLastWeek => this.database.OnlineRacesFinished.Count(match => match.PlayerId == UserId && match.FinishedAt >= DateTime.UtcNow.AddDays(-14) && match.FinishedAt <= DateTime.UtcNow.AddDays(-7));
         public bool PolicyAccepted { get; set; }
         public bool IsBanned { get; set; }
+        public bool ShowCreationsWithoutPreviews { get; set; }
         //MNR
         public float LongestHangTime { get; set; }
         public float LongestDrift { get; set; }
@@ -92,7 +93,6 @@ namespace GameServer.Models.PlayerData
         public float ModMiles { get; set; }
         public float LastLatitude { get; set; }
         public float LastLongitude { get; set; }
-        public bool HideCreationsWithoutPreviews { get; set; }
 
         public bool IsHeartedByMe(int id, bool IsMNR) 
         {

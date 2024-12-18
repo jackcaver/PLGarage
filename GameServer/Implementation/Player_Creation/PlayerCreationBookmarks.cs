@@ -9,6 +9,7 @@ using System.Linq;
 using System.Collections.Generic;
 using GameServer.Implementation.Common;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -46,7 +47,9 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
+            var Creation = database.PlayerCreations
+                .Include(x => x.Bookmarks)
+                .FirstOrDefault(match => match.PlayerCreationId == id);
 
             if (user == null)
             {

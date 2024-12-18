@@ -532,6 +532,7 @@ namespace GameServer.Implementation.Player_Creation
                         preview_md5 = download ? UserGeneratedContentUtils.CalculateMD5(id, "preview_image.png") : null,
                         preview_size = download ? UserGeneratedContentUtils.CalculateSize(id, "preview_image.png").ToString() : null,
                         //MNR
+                        // TODO: Remove some DB queries here and use one to many links in EF model
                         points = Creation.Points.Sum(p => p.Amount),
                         points_last_week = Creation.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount),
                         points_this_week = Creation.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount),
@@ -639,7 +640,7 @@ namespace GameServer.Implementation.Player_Creation
             if (TeamPicks)
                 creationQuery = creationQuery.Where(match => match.IsTeamPick);
 
-            if (!User.ShowCreationsWithoutPreviews)
+            if (User != null && !User.ShowCreationsWithoutPreviews)
                 creationQuery = creationQuery.Where(match => match.HasPreview);
 
             switch (sort_column)
@@ -947,6 +948,7 @@ namespace GameServer.Implementation.Player_Creation
                 .Include(x => x.Views)
                 .Include(x => x.Scores)
                 .Include(x => x.Comments)
+                .Include(x => x.Bookmarks)
                 .Include(x => x.Reviews)
                 .Include(x => x.ActivityLog)
                 .FirstOrDefault(match => match.PlayerCreationId == id);

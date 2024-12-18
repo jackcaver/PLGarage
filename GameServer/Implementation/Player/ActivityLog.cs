@@ -7,6 +7,7 @@ using GameServer.Models.PlayerData;
 using System.Linq;
 using GameServer.Models.Request;
 using GameServer.Implementation.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player
 {
@@ -71,7 +72,12 @@ namespace GameServer.Implementation.Player
                 var Author = database.Users.FirstOrDefault(match => match.UserId == Activity.AuthorId);
                 var Player = database.Users.FirstOrDefault(match => match.UserId == Activity.PlayerId);
                 UserGeneratedContentUtils.CheckStoryLevelName(database, Activity.PlayerCreationId);
-                var PlayerCreation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Activity.PlayerCreationId);
+                var PlayerCreation = database.PlayerCreations
+                    .Include(x => x.Hearts)
+                    .Include(x => x.Ratings)
+                    .Include(x => x.RacesStarted)
+                    .Include(x => x.Author)
+                    .FirstOrDefault(match => match.PlayerCreationId == Activity.PlayerCreationId);
 
                 if (Activity.Type == ActivityType.system_event)
                 {

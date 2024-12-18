@@ -1225,6 +1225,7 @@ namespace GameServer.Implementation.Player_Creation
         public static string GetPlanetProfile(Database database, int player_id)
         {
             var Planet = database.PlayerCreations
+                .Include(x => x.Author)
                 .FirstOrDefault(match => match.PlayerId == player_id && match.Type == PlayerCreationType.PLANET);
 
             if (Planet == null)

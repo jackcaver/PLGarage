@@ -621,11 +621,7 @@ namespace GameServer.Implementation.Player_Creation
                 creationQuery = creationQuery.Where(match => filters.race_type.Equals(match.RaceType.ToString()));
 
             if (filters.tags != null && filters.tags.Length != 0)
-            {
-                creationQuery = creationQuery.Where(match => match.Tags != null);
-                foreach (var tag in filters.tags)
-                    creationQuery = creationQuery.Where(match => match.Tags.Contains(tag));   // TODO: Optimise?
-            }
+                creationQuery = creationQuery.Where(match => match.Tags != null && filters.tags.Any(x => match.Tags.Contains(x)));    // Should this be an All?
 
             if (filters.auto_reset != null)
                 creationQuery = creationQuery.Where(match => match.AutoReset == filters.auto_reset);

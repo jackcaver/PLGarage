@@ -593,34 +593,34 @@ namespace GameServer.Implementation.Player_Creation
                 .Include(x => x.Points)
                 .Include(x => x.Ratings)
                 .Include(x => x.Views)
-                .Include(x => x.Author);
+                .Include(x => x.Author)
+                .Where(match => match.Platform == platform && match.IsMNR == IsMNR);
             var session = Session.GetSession(SessionID);
             var User = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (filters.username == null && filters.id == null && filters.player_id == null)
-                creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && match.Platform == platform 
-                    && match.IsMNR == IsMNR);
+                creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type);
 
             //filters
             if (filters.username != null)
             {
                 foreach (string username in filters.username)
-                    creationQuery = creationQuery.Where(match => match.Author.Username == username);   // TODO: Optimise
+                    creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && match.Author.Username == username);   // TODO: Optimise?
             }
 
             if (filters.id != null)
             {
                 foreach (string id in filters.id)
-                    creationQuery = creationQuery.Where(match => match.PlayerCreationId.ToString() == id);   // TODO: Optimise and figure out PlayerCreationType.STORY
+                    creationQuery = creationQuery.Where(match => (match.Type == filters.player_creation_type || match.Type == PlayerCreationType.STORY) && match.PlayerCreationId.ToString() == id);   // TODO: Optimise?
             }
 
             if (filters.player_id != null)
             {
                 foreach (string player_id in filters.player_id)
-                    creationQuery = creationQuery.Where(match => match.PlayerId.ToString() == player_id);   // TODO: Optimise
+                    creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && match.PlayerId.ToString() == player_id);   // TODO: Optimise?
             }
 
-            creationQuery = creationQuery.Where(match => match.ModerationStatus != ModerationStatus.BANNED  // Change to == APPROVED?
+            creationQuery = creationQuery.Where(match => match.ModerationStatus != ModerationStatus.BANNED
                 && match.ModerationStatus != ModerationStatus.ILLEGAL);
 
             if (keyword != null)
@@ -629,8 +629,12 @@ namespace GameServer.Implementation.Player_Creation
             if (filters.race_type != null)
                 creationQuery = creationQuery.Where(match => filters.race_type.Equals(match.RaceType.ToString()));
 
-            if (filters.tags != null && filters.tags.Length != 0)   // !!! THE BELOW WONT COMPILE !!!! TODO: Investigate
-                creationQuery = creationQuery.Where(match => match.Tags != null && filters.tags.All(x => match.Tags.Contains(x)));  // We have removed a split here but should do the same job without
+            if (filters.tags != null && filters.tags.Length != 0)
+            {
+                creationQuery = creationQuery.Where(match => match.Tags != null);
+                foreach (var tag in filters.tags)
+                    creationQuery = creationQuery.Where(match => match.Tags.Contains(tag));   // TODO: Optimise?
+            }
 
             if (filters.auto_reset != null)
                 creationQuery = creationQuery.Where(match => match.AutoReset == filters.auto_reset);
@@ -644,9 +648,8 @@ namespace GameServer.Implementation.Player_Creation
             if (TeamPicks)
                 creationQuery = creationQuery.Where(match => match.IsTeamPick);
 
-            // Only filter I havent figured out a way to translate into SQL yet, this might also cause performance issues?
-            //if (User != null && !User.ShowCreationsWithoutPreviews)
-            //    creations.RemoveAll(match => !match.HasPreview);
+            if (!User.ShowCreationsWithoutPreviews)
+                creationQuery = creationQuery.Where(match => match.HasPreview);
 
             switch (sort_column)
             {

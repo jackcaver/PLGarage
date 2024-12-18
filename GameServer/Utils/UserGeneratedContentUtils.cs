@@ -37,7 +37,8 @@ namespace GameServer.Utils
                 file = File.Create($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type.ToString().ToLower()}_128x128.png");
             else
                 file = File.Create($"UGC/PlayerAvatars/{UserId}/MNR/{avatar.player_avatar_type.ToString().ToLower()}_128x128.png");
-            Resize(stream, 128, 128).CopyTo(file);
+            using (var rs = Resize(stream, 128, 128))
+                rs.CopyTo(file);
             file.Close();
 
             stream.Close();
@@ -83,9 +84,15 @@ namespace GameServer.Utils
             using (var previewFile = File.Create($"UGC/PlayerCreations/{id}/preview_image.png"))
                 preview.CopyTo(previewFile);
             using (var previewFile128 = File.Create($"UGC/PlayerCreations/{id}/preview_image_128x128.png"))
-                Resize(preview, 128, 128).CopyTo(previewFile128);
+            {
+                using (var rs = Resize(preview, 128, 128))
+                    rs.CopyTo(previewFile128);
+            }
             using (var previewFile64 = File.Create($"UGC/PlayerCreations/{id}/preview_image_64x64.png"))
-                Resize(preview, 64, 64).CopyTo(previewFile64);
+            {
+                using (var rs = Resize(preview, 64, 64))
+                    rs.CopyTo(previewFile64);
+            }
             preview.Close();
         }
 

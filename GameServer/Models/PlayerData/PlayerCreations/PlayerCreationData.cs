@@ -86,7 +86,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public int ParentPlayerId { get; set; }
         public int OriginalPlayerId { get; set; }
         public float BestLapTime { get; set; }
-        public bool HasPreview => File.Exists($"UGC/PlayerCreations/{PlayerCreationId}/preview_image.png");
+        public bool HasPreview { get; set; } = true;    // Set as true by default as all creations uploaded via server will
 
         public bool IsBookmarkedByMe(int id)
         {

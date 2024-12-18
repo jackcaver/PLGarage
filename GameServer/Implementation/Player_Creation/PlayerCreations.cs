@@ -603,22 +603,13 @@ namespace GameServer.Implementation.Player_Creation
 
             //filters
             if (filters.username != null)
-            {
-                foreach (string username in filters.username)
-                    creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && match.Author.Username == username);   // TODO: Optimise?
-            }
+                creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && filters.username.Any(x => match.Author.Username == x));
 
             if (filters.id != null)
-            {
-                foreach (string id in filters.id)
-                    creationQuery = creationQuery.Where(match => (match.Type == filters.player_creation_type || match.Type == PlayerCreationType.STORY) && match.PlayerCreationId.ToString() == id);   // TODO: Optimise?
-            }
+                creationQuery = creationQuery.Where(match => (match.Type == filters.player_creation_type || match.Type == PlayerCreationType.STORY) && filters.id.Any(x => match.PlayerCreationId.ToString() == x));
 
             if (filters.player_id != null)
-            {
-                foreach (string player_id in filters.player_id)
-                    creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && match.PlayerId.ToString() == player_id);   // TODO: Optimise?
-            }
+                creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && filters.player_id.Any(x => match.PlayerId.ToString() == x));
 
             creationQuery = creationQuery.Where(match => match.ModerationStatus != ModerationStatus.BANNED
                 && match.ModerationStatus != ModerationStatus.ILLEGAL);

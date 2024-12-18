@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog.Events;
 using System;
 using System.IO;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace GameServer
 {
@@ -29,11 +30,14 @@ namespace GameServer
                 using (var fs = File.OpenWrite("./placeholder.png"))
                 using (var fs128 = File.OpenWrite("./placeholder_128x128.png"))
                 using (var fs64 = File.OpenWrite("./placeholder_64x64.png"))
-                using (var rs = new MemoryStream())
                 {
-                    rs.Write((byte[])Properties.Resources.ResourceManager.GetObject("placeholder"));
+                    var data = (byte[])Properties.Resources.ResourceManager.GetObject("placeholder");
+                    using (var rs = new MemoryStream(data))
+                        rs.CopyTo(fs);
+                    using (var rs = new MemoryStream(data))
                     using (var rs128 = UserGeneratedContentUtils.Resize(rs, 128, 128))
                         rs128.CopyTo(fs128);
+                    using (var rs = new MemoryStream(data))
                     using (var rs64 = UserGeneratedContentUtils.Resize(rs, 64, 64))
                         rs64.CopyTo(fs64);
                 }
@@ -45,11 +49,14 @@ namespace GameServer
                 using (var fs = File.OpenWrite("./placeholderALT.png"))
                 using (var fs128 = File.OpenWrite("./placeholderALT_128x128.png"))
                 using (var fs64 = File.OpenWrite("./placeholderALT_64x64.png"))
-                using (var rs = new MemoryStream())
                 {
-                    rs.Write((byte[])Properties.Resources.ResourceManager.GetObject("placeholderALT"));
+                    var data = (byte[])Properties.Resources.ResourceManager.GetObject("placeholderALT");
+                    using (var rs = new MemoryStream(data))
+                        rs.CopyTo(fs);
+                    using (var rs = new MemoryStream(data))
                     using (var rs128 = UserGeneratedContentUtils.Resize(rs, 128, 128))
                         rs128.CopyTo(fs128);
+                    using (var rs = new MemoryStream(data))
                     using (var rs64 = UserGeneratedContentUtils.Resize(rs, 64, 64))
                         rs64.CopyTo(fs64);
                 }

@@ -15,7 +15,7 @@ namespace GameServer.Migrations
                 table: "PlayerCreations",
                 type: "tinyint(1)",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: true);
         }
 
         /// <inheritdoc />

@@ -16,7 +16,7 @@ namespace GameServer.Implementation.Player
         public static string GetActivityLog(Database database, Guid SessionID, int page, int per_page, ActivityList list = ActivityList.news_feed,
             int? player_id = null, int? player_creation_id = null)
         {
-            // TODO: Includes
+            // TODO: Optimise
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Activities = new List<ActivityEvent> { };

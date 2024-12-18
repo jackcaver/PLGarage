@@ -459,7 +459,7 @@ namespace GameServer.Implementation.Player_Creation
             var allPlayerCreations = database.PlayerCreations           // I dont really know how to optimise this any more without breaking the rank system?
                             .Include(x => x.Points)
                             .Where(match => match.Type == Creation.Type)
-                            .OrderBy(match => match.Points.Count())     // TODO: Should this be OrderByDescending?
+                            .OrderByDescending(match => match.Points.Count())
                             .Select(match => match.PlayerCreationId)    // To optimise the amount of data we get back, this is a particularly tricky situation
                             .AsEnumerable();                            // Evaluate our query, find row index after
 
@@ -647,90 +647,90 @@ namespace GameServer.Implementation.Player_Creation
             {
                 //cool levels
                 case SortColumn.coolness:
-                    creationQuery = creationQuery.OrderBy(match => (match.Ratings.Count(match => match.Type == RatingType.YAY) - match.Ratings.Count(match => match.Type == RatingType.BOO)) +
+                    creationQuery = creationQuery.OrderByDescending(match => (match.Ratings.Count(match => match.Type == RatingType.YAY) - match.Ratings.Count(match => match.Type == RatingType.BOO)) +
                             ((match.RacesStarted.Count() + match.RacesFinished) / 2) + match.Hearts.Count());
                     break;
 
                 //newest levels
                 case SortColumn.created_at:
-                    creationQuery = creationQuery.OrderBy(match => match.CreatedAt);
+                    creationQuery = creationQuery.OrderByDescending(match => match.CreatedAt);
                     break;
 
                 //most played
                 case SortColumn.races_started:
-                    creationQuery = creationQuery.OrderBy(match => match.RacesStarted.Count());
+                    creationQuery = creationQuery.OrderByDescending(match => match.RacesStarted.Count());
                     break;
                 case SortColumn.races_started_this_week:
-                    creationQuery = creationQuery.OrderBy(match => match.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddDays(-7) && match.StartedAt <= DateTime.UtcNow));
+                    creationQuery = creationQuery.OrderByDescending(match => match.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddDays(-7) && match.StartedAt <= DateTime.UtcNow));
                     break;
                 case SortColumn.races_started_this_month:
-                    creationQuery = creationQuery.OrderBy(match => match.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddMonths(-1) && match.StartedAt <= DateTime.UtcNow));
+                    creationQuery = creationQuery.OrderByDescending(match => match.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddMonths(-1) && match.StartedAt <= DateTime.UtcNow));
                     break;
 
                 //highest rated
                 case SortColumn.rating_up:
-                    creationQuery = creationQuery.OrderBy(match => match.Ratings.Count(match => match.Type == RatingType.YAY));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Ratings.Count(match => match.Type == RatingType.YAY));
                     break;
                 case SortColumn.rating_up_this_week:
-                    creationQuery = creationQuery.OrderBy(match => match.Ratings.Count(match => match.Type == RatingType.YAY && match.RatedAt >= DateTime.UtcNow.AddDays(-7) && match.RatedAt <= DateTime.UtcNow));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Ratings.Count(match => match.Type == RatingType.YAY && match.RatedAt >= DateTime.UtcNow.AddDays(-7) && match.RatedAt <= DateTime.UtcNow));
                     break;
                 case SortColumn.rating_up_this_month:
-                    creationQuery = creationQuery.OrderBy(match => match.Ratings.Count(match => match.Type == RatingType.YAY && match.RatedAt >= DateTime.UtcNow.AddMonths(-1) && match.RatedAt <= DateTime.UtcNow));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Ratings.Count(match => match.Type == RatingType.YAY && match.RatedAt >= DateTime.UtcNow.AddMonths(-1) && match.RatedAt <= DateTime.UtcNow));
                     break;
 
                 //most hearted
                 case SortColumn.hearts:
-                    creationQuery = creationQuery.OrderBy(match => match.Hearts.Count());
+                    creationQuery = creationQuery.OrderByDescending(match => match.Hearts.Count());
                     break;
                 case SortColumn.hearts_this_week:
-                    creationQuery = creationQuery.OrderBy(match => match.Hearts.Count(match => match.HeartedAt >= DateTime.UtcNow.AddDays(-7) && match.HeartedAt <= DateTime.UtcNow));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Hearts.Count(match => match.HeartedAt >= DateTime.UtcNow.AddDays(-7) && match.HeartedAt <= DateTime.UtcNow));
                     break;
                 case SortColumn.hearts_this_month:
-                    creationQuery = creationQuery.OrderBy(match => match.Hearts.Count(match => match.HeartedAt >= DateTime.UtcNow.AddMonths(-1) && match.HeartedAt <= DateTime.UtcNow));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Hearts.Count(match => match.HeartedAt >= DateTime.UtcNow.AddMonths(-1) && match.HeartedAt <= DateTime.UtcNow));
                     break;
 
                 //MNR
                 case SortColumn.rating:
-                    creationQuery = creationQuery.OrderBy(match => match.Ratings.Count() != 0 ? (float)match.Ratings.Average(r => r.Rating) : 0);   // Can we simplify this and remove the count check?
+                    creationQuery = creationQuery.OrderByDescending(match => match.Ratings.Count() != 0 ? (float)match.Ratings.Average(r => r.Rating) : 0);   // Can we simplify this and remove the count check?
                     break;
 
                 //points
                 case SortColumn.points:
-                    creationQuery = creationQuery.OrderBy(match => match.Points.Sum(p => p.Amount));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Points.Sum(p => p.Amount));
                     break;
                 case SortColumn.points_today:
-                    creationQuery = creationQuery.OrderBy(match => match.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.Date && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.Date && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount));
                     break;
                 case SortColumn.points_yesterday:
-                    creationQuery = creationQuery.OrderBy(match => match.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-1).Date && match.CreatedAt <= DateTime.UtcNow.Date).Sum(p => p.Amount));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-1).Date && match.CreatedAt <= DateTime.UtcNow.Date).Sum(p => p.Amount));
                     break;
                 case SortColumn.points_this_week:
-                    creationQuery = creationQuery.OrderBy(match => match.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount));
                     break;
                 case SortColumn.points_last_week:
-                    creationQuery = creationQuery.OrderBy(match => match.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount));
                     break;
 
                 //download
                 case SortColumn.downloads:
-                    creationQuery = creationQuery.OrderBy(match => match.Downloads.Count());
+                    creationQuery = creationQuery.OrderByDescending(match => match.Downloads.Count());
                     break;
                 case SortColumn.downloads_this_week:
-                    creationQuery = creationQuery.OrderBy(match => match.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-7) && match.DownloadedAt <= DateTime.UtcNow));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-7) && match.DownloadedAt <= DateTime.UtcNow));
                     break;
                 case SortColumn.downloads_last_week:
-                    creationQuery = creationQuery.OrderBy(match => match.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-14) && match.DownloadedAt <= DateTime.UtcNow.AddDays(-7)));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-14) && match.DownloadedAt <= DateTime.UtcNow.AddDays(-7)));
                     break;
 
                 //views
                 case SortColumn.views:
-                    creationQuery = creationQuery.OrderBy(match => match.Views.Count());
+                    creationQuery = creationQuery.OrderByDescending(match => match.Views.Count());
                     break;
                 case SortColumn.views_this_week:
-                    creationQuery = creationQuery.OrderBy(match => match.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-7) && match.ViewedAt <= DateTime.UtcNow));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-7) && match.ViewedAt <= DateTime.UtcNow));
                     break;
                 case SortColumn.views_last_week:
-                    creationQuery = creationQuery.OrderBy(match => match.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-14) && match.ViewedAt <= DateTime.UtcNow.AddDays(-7)));
+                    creationQuery = creationQuery.OrderByDescending(match => match.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-14) && match.ViewedAt <= DateTime.UtcNow.AddDays(-7)));
                     break;
             }
 
@@ -755,7 +755,7 @@ namespace GameServer.Implementation.Player_Creation
             var allPlayerCreations = database.PlayerCreations           // I dont really know how to optimise this any more without breaking the rank system?
                             .Include(x => x.Points)
                             .Where(match => match.Type == filters.player_creation_type)
-                            .OrderBy(match => match.Points.Count())     // TODO: Should this be OrderByDescending?
+                            .OrderByDescending(match => match.Points.Count())
                             .Select(match => match.PlayerCreationId)    // To optimise the amount of data we get back, this is a particularly tricky situation
                             .AsEnumerable();                            // Evaluate our query, find row index after
 
@@ -890,7 +890,7 @@ namespace GameServer.Implementation.Player_Creation
             if (track_id != null)
                 photosQuery = photosQuery.Where(match => match.TrackId == track_id);
 
-            photosQuery = photosQuery.OrderBy(match => match.CreatedAt);
+            photosQuery = photosQuery.OrderByDescending(match => match.CreatedAt);
 
             var total = photosQuery.Count();
 
@@ -954,7 +954,7 @@ namespace GameServer.Implementation.Player_Creation
                 .FirstOrDefault(match => match.PlayerCreationId == id);
             var TrackPhotos = database.PlayerCreations
                 .Where(match => match.TrackId == id && match.Type == PlayerCreationType.PHOTO)
-                .OrderBy(match => match.CreatedAt)
+                .OrderByDescending(match => match.CreatedAt)
                 .ToList();
 
             List<Photo> PhotoList = [];
@@ -1082,7 +1082,7 @@ namespace GameServer.Implementation.Player_Creation
             var allPlayerCreations = database.PlayerCreations           // I dont really know how to optimise this any more without breaking the rank system?
                             .Include(x => x.Points)
                             .Where(match => match.Type == Track.Type)
-                            .OrderBy(match => match.Points.Count())     // TODO: Should this be OrderByDescending?
+                            .OrderByDescending(match => match.Points.Count())
                             .Select(match => match.PlayerCreationId)    // To optimise the amount of data we get back, this is a particularly tricky situation
                             .AsEnumerable();                            // Evaluate our query, find row index after
 
@@ -1252,7 +1252,7 @@ namespace GameServer.Implementation.Player_Creation
             var allPlayerCreations = database.PlayerCreations           // I dont really know how to optimise this any more without breaking the rank system?
                             .Include(x => x.Points)
                             .Where(match => match.Type == PlayerCreationType.TRACK)
-                            .OrderBy(match => match.Points.Count())     // TODO: Should this be OrderByDescending?
+                            .OrderByDescending(match => match.Points.Count())
                             .Select(match => match.PlayerCreationId)    // To optimise the amount of data we get back, this is a particularly tricky situation
                             .AsEnumerable();                            // Evaluate our query, find row index after
 

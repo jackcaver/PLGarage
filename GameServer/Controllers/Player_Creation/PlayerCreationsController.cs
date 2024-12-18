@@ -216,6 +216,7 @@ namespace GameServer.Controllers.Player_Creation
         [Route("player_creations/{id}/{file}")]
         public IActionResult GetData(int id, string file)
         {
+            Console.WriteLine($"PCIMG: {id}/{file}");
             if (!AcceptedTypes.Contains(file)) return NotFound();
             var data = UserGeneratedContentUtils.LoadPlayerCreation(id, file);
             

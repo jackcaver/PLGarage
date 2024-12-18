@@ -341,7 +341,16 @@ namespace GameServer.Implementation.Player_Creation
         public static string GetPlayerCreation(Database database, Guid SessionID, int id, bool IsCounted, bool download = false)
         {
             var session = Session.GetSession(SessionID);
-            var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
+            var Creation = database.PlayerCreations
+                .Include(x => x.DbPlayerCreationDownloads)
+                .Include(x => x.DbplayerCreationRacesStarted)
+                .Include(x => x.DbPlayerCreationUniqueRacers)
+                .Include(x => x.DbHeartedPlayerCreations)
+                .Include(x => x.DbPoints)
+                .Include(x => x.DbRatings)
+                .Include(x => x.DbViews)
+                .Include(x => x.Author) // TODO: Clean up
+                .FirstOrDefault(match => match.PlayerCreationId == id);
             var User = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (Creation == null)
@@ -563,7 +572,15 @@ namespace GameServer.Implementation.Player_Creation
             int limit, Platform platform, Filters filters, string keyword = null, bool TeamPicks = false, 
             bool LuckyDip = false, bool IsMNR = false)
         {
-            IQueryable<PlayerCreationData> creationQuery = database.PlayerCreations;    // TODO: Is it an issue someone might be able to fudge the entire database out like this?
+            IQueryable<PlayerCreationData> creationQuery = database.PlayerCreations     // TODO: Is it an issue someone might be able to fudge the entire database out like this?
+                .Include(x => x.DbPlayerCreationDownloads)
+                .Include(x => x.DbplayerCreationRacesStarted)
+                .Include(x => x.DbPlayerCreationUniqueRacers)
+                .Include(x => x.DbHeartedPlayerCreations)
+                .Include(x => x.DbPoints)
+                .Include(x => x.DbRatings)
+                .Include(x => x.DbViews)
+                .Include(x => x.Author);
             var session = Session.GetSession(SessionID);
             var User = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
@@ -613,8 +630,8 @@ namespace GameServer.Implementation.Player_Creation
             //    }
             //}
 
-            creationQuery = creationQuery.Where(match => match.ModerationStatus == ModerationStatus.BANNED 
-                || match.ModerationStatus == ModerationStatus.ILLEGAL);
+            //creationQuery = creationQuery.Where(match => match.ModerationStatus == ModerationStatus.BANNED 
+            //    || match.ModerationStatus == ModerationStatus.ILLEGAL);
 
             if (keyword != null)
                 creationQuery = creationQuery.Where(match => match.Name.Contains(keyword));
@@ -641,98 +658,98 @@ namespace GameServer.Implementation.Player_Creation
             //if (User != null && !User.ShowCreationsWithoutPreviews)
             //    creations.RemoveAll(match => !match.HasPreview);
 
-            switch (sort_column)
-            {
-                //cool levels
-                case SortColumn.coolness:
-                    creationQuery = creationQuery.OrderBy(match => match.Coolness);
-                    break;
+            //switch (sort_column)
+            //{
+            //    //cool levels
+            //    case SortColumn.coolness:
+            //        creationQuery = creationQuery.OrderBy(match => match.Coolness);
+            //        break;
 
-                //newest levels
-                case SortColumn.created_at:
-                    creationQuery = creationQuery.OrderBy(match => match.CreatedAt);
-                    break;
+            //    //newest levels
+            //    case SortColumn.created_at:
+            //        creationQuery = creationQuery.OrderBy(match => match.CreatedAt);
+            //        break;
 
-                //most played
-                case SortColumn.races_started:
-                    creationQuery = creationQuery.OrderBy(match => match.RacesStarted);
-                    break;
-                case SortColumn.races_started_this_week:
-                    creationQuery = creationQuery.OrderBy(match => match.RacesStartedThisWeek);
-                    break;
-                case SortColumn.races_started_this_month:
-                    creationQuery = creationQuery.OrderBy(match => match.RacesStartedThisMonth);
-                    break;
+            //    //most played
+            //    case SortColumn.races_started:
+            //        creationQuery = creationQuery.OrderBy(match => match.RacesStarted);
+            //        break;
+            //    case SortColumn.races_started_this_week:
+            //        creationQuery = creationQuery.OrderBy(match => match.RacesStartedThisWeek);
+            //        break;
+            //    case SortColumn.races_started_this_month:
+            //        creationQuery = creationQuery.OrderBy(match => match.RacesStartedThisMonth);
+            //        break;
 
-                //highest rated
-                case SortColumn.rating_up:
-                    creationQuery = creationQuery.OrderBy(match => match.RatingUp);
-                    break;
-                case SortColumn.rating_up_this_week:
-                    creationQuery = creationQuery.OrderBy(match => match.RatingUpThisWeek);
-                    break;
-                case SortColumn.rating_up_this_month:
-                    creationQuery = creationQuery.OrderBy(match => match.RatingUpThisMonth);
-                    break;
+            //    //highest rated
+            //    case SortColumn.rating_up:
+            //        creationQuery = creationQuery.OrderBy(match => match.RatingUp);
+            //        break;
+            //    case SortColumn.rating_up_this_week:
+            //        creationQuery = creationQuery.OrderBy(match => match.RatingUpThisWeek);
+            //        break;
+            //    case SortColumn.rating_up_this_month:
+            //        creationQuery = creationQuery.OrderBy(match => match.RatingUpThisMonth);
+            //        break;
 
-                //most hearted
-                case SortColumn.hearts:
-                    creationQuery = creationQuery.OrderBy(match => match.Hearts);
-                    break;
-                case SortColumn.hearts_this_week:
-                    creationQuery = creationQuery.OrderBy(match => match.HeartsThisWeek);
-                    break;
-                case SortColumn.hearts_this_month:
-                    creationQuery = creationQuery.OrderBy(match => match.HeartsThisMonth);
-                    break;
+            //    //most hearted
+            //    case SortColumn.hearts:
+            //        creationQuery = creationQuery.OrderBy(match => match.Hearts);
+            //        break;
+            //    case SortColumn.hearts_this_week:
+            //        creationQuery = creationQuery.OrderBy(match => match.HeartsThisWeek);
+            //        break;
+            //    case SortColumn.hearts_this_month:
+            //        creationQuery = creationQuery.OrderBy(match => match.HeartsThisMonth);
+            //        break;
 
-                //MNR
-                case SortColumn.rating:
-                    creationQuery = creationQuery.OrderBy(match => match.Rating);
-                    break;
+            //    //MNR
+            //    case SortColumn.rating:
+            //        creationQuery = creationQuery.OrderBy(match => match.Rating);
+            //        break;
 
-                //points
-                case SortColumn.points:
-                    creationQuery = creationQuery.OrderBy(match => match.Points);
-                    break;
-                case SortColumn.points_today:
-                    creationQuery = creationQuery.OrderBy(match => match.PointsToday);
-                    break;
-                case SortColumn.points_yesterday:
-                    creationQuery = creationQuery.OrderBy(match => match.PointsYesterday);
-                    break;
-                case SortColumn.points_this_week:
-                    creationQuery = creationQuery.OrderBy(match => match.PointsThisWeek);
-                    break;
-                case SortColumn.points_last_week:
-                    creationQuery = creationQuery.OrderBy(match => match.PointsLastWeek);
-                    break;
+            //    //points
+            //    case SortColumn.points:
+            //        creationQuery = creationQuery.OrderBy(match => match.Points);
+            //        break;
+            //    case SortColumn.points_today:
+            //        creationQuery = creationQuery.OrderBy(match => match.PointsToday);
+            //        break;
+            //    case SortColumn.points_yesterday:
+            //        creationQuery = creationQuery.OrderBy(match => match.PointsYesterday);
+            //        break;
+            //    case SortColumn.points_this_week:
+            //        creationQuery = creationQuery.OrderBy(match => match.PointsThisWeek);
+            //        break;
+            //    case SortColumn.points_last_week:
+            //        creationQuery = creationQuery.OrderBy(match => match.PointsLastWeek);
+            //        break;
 
-                //download
-                case SortColumn.downloads:
-                    creationQuery = creationQuery.OrderBy(match => match.Downloads);
-                    break;
-                case SortColumn.downloads_this_week:
-                    creationQuery = creationQuery.OrderBy(match => match.DownloadsThisWeek);
-                    break;
-                case SortColumn.downloads_last_week:
-                    creationQuery = creationQuery.OrderBy(match => match.DownloadsLastWeek);
-                    break;
+            //    //download
+            //    case SortColumn.downloads:
+            //        creationQuery = creationQuery.OrderBy(match => match.Downloads);
+            //        break;
+            //    case SortColumn.downloads_this_week:
+            //        creationQuery = creationQuery.OrderBy(match => match.DownloadsThisWeek);
+            //        break;
+            //    case SortColumn.downloads_last_week:
+            //        creationQuery = creationQuery.OrderBy(match => match.DownloadsLastWeek);
+            //        break;
 
-                //views
-                case SortColumn.views:
-                    creationQuery = creationQuery.OrderBy(match => match.Views);
-                    break;
-                case SortColumn.views_this_week:
-                    creationQuery = creationQuery.OrderBy(match => match.ViewsThisWeek);
-                    break;
-                case SortColumn.views_last_week:
-                    creationQuery = creationQuery.OrderBy(match => match.ViewsLastWeek);
-                    break;
-            }
+            //    //views
+            //    case SortColumn.views:
+            //        creationQuery = creationQuery.OrderBy(match => match.Views);
+            //        break;
+            //    case SortColumn.views_this_week:
+            //        creationQuery = creationQuery.OrderBy(match => match.ViewsThisWeek);
+            //        break;
+            //    case SortColumn.views_last_week:
+            //        creationQuery = creationQuery.OrderBy(match => match.ViewsLastWeek);
+            //        break;
+            //}
 
             if (LuckyDip)
-                creationQuery = creationQuery.OrderBy(match => EF.Functions.Random());  // TODO: is session.RandomSeed required?
+                creationQuery = creationQuery.OrderBy(match => EF.Functions.Random());  // TODO: is session.RandomSeed required? Will this even add onto the above?
 
             var total = creationQuery.Count();
 
@@ -788,7 +805,7 @@ namespace GameServer.Implementation.Player_Creation
                     races_started_this_week = creation.RacesStartedThisWeek,
                     races_won = creation.RacesWon,
                     race_type = creation.RaceType.ToString(),
-                    rank = creation.Rank,
+                    rank = creation.Rank,   // This is EXTREMELY slow
                     rating_down = creation.RatingDown,
                     rating_up = creation.RatingUp,
                     scoreboard_mode = creation.ScoreboardMode,

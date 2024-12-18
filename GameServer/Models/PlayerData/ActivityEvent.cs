@@ -1,5 +1,7 @@
-﻿using System;
+﻿using GameServer.Models.PlayerData.PlayerCreations;
+using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameServer.Models.PlayerData
 {
@@ -10,6 +12,10 @@ namespace GameServer.Models.PlayerData
         public int AuthorId { get; set; }
         public int PlayerId { get; set; }
         public int PlayerCreationId { get; set; }
+
+        [ForeignKey(nameof(PlayerCreationId))]
+        public PlayerCreationData Creation { get; set; }
+
         public DateTime CreatedAt { get; set; }
         public ActivityList List { get; set; }
         public ActivityType Type { get; set; }

@@ -88,16 +88,10 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public float BestLapTime { get; set; }
         public bool HasPreview { get; set; } = true;    // Set as true by default as all creations uploaded via server will
 
-        public bool IsBookmarkedByMe(int id)
-        {
-            var entry = this.database.PlayerCreationBookmarks.FirstOrDefault(match => match.BookmarkedPlayerCreationId == this.PlayerCreationId && match.UserId == id);
-            return entry != null;
-        }
-
-        public bool IsReviewedByMe(int id)
-        {
-            var entry = this.database.PlayerCreationReviews.FirstOrDefault(match => match.PlayerCreationId == this.PlayerCreationId && match.PlayerId == id);
-            return entry != null;
-        }
+        public List<PlayerCreationCommentData> Comments { get; set; }
+        public List<PlayerCreationBookmark> Bookmarks { get; set; }
+        public List<PlayerCreationReview> Reviews { get; set; }
+        public List<Score> Scores { get; set; }
+        public List<ActivityEvent> ActivityLog { get; set; }
     }
 }

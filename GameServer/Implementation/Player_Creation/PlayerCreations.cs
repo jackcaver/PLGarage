@@ -941,25 +941,38 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string GetTrackProfile(Database database, Guid SessionID, int id)
         {
-            // TODO: Includes
             var session = Session.GetSession(SessionID);
-            var Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
-            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var TrackPhotos = database.PlayerCreations.Where(match => match.TrackId == id && match.Type == PlayerCreationType.PHOTO).ToList();
-            var TrackScores = database.Scores.Where(match => match.SubKeyId == id).ToList();
-            var TrackComments = database.PlayerCreationComments.Where(match => match.PlayerCreationId == id).ToList();
-            var TrackReviews = database.PlayerCreationReviews.Where(match => match.PlayerCreationId == id).ToList();
-            var TrackActivity = database.ActivityLog.Where(match => match.PlayerCreationId == id).ToList();
+            var requestedBy = database.Users
+                .FirstOrDefault(match => match.Username == session.Username);
+
+            var Track = database.PlayerCreations
+                .Include(x => x.Hearts)
+                .Include(x => x.Ratings)
+                .Include(x => x.RacesStarted)
+                .Include(x => x.Author)
+                .Include(x => x.Points)
+                .Include(x => x.Downloads)
+                .Include(x => x.UniqueRacers)
+                .Include(x => x.Views)
+                .Include(x => x.Scores)
+                .Include(x => x.Comments)
+                .Include(x => x.Reviews)
+                .Include(x => x.ActivityLog)
+                .FirstOrDefault(match => match.PlayerCreationId == id);
+            var TrackPhotos = database.PlayerCreations
+                .Where(match => match.TrackId == id && match.Type == PlayerCreationType.PHOTO)
+                .OrderBy(match => match.CreatedAt)
+                .ToList();
+
             List<Photo> PhotoList = [];
             List<SubLeaderboardPlayer> ScoresList = [];
             List<Comment> CommentsList = [];
             List<Review> ReviewsList = [];
             List<Activity> ActivityList = [];
 
-            TrackPhotos.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
-            TrackComments.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
-            TrackReviews.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
-            TrackActivity.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
+            Track.Comments.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
+            Track.Reviews.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
+            Track.ActivityLog.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
 
             if (Track == null || id < 9000)
             {
@@ -972,9 +985,9 @@ namespace GameServer.Implementation.Player_Creation
             }
 
             if (Track.ScoreboardMode == 1)
-                TrackScores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
+                Track.Scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
             else
-                TrackScores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+                Track.Scores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
 
             foreach (PlayerCreationData Photo in TrackPhotos.Take(3))
             {
@@ -984,7 +997,7 @@ namespace GameServer.Implementation.Player_Creation
                 });
             }
 
-            foreach (Score Score in TrackScores.Take(3))
+            foreach (Score Score in Track.Scores.Take(3))
             {
                 ScoresList.Add(new SubLeaderboardPlayer
                 {
@@ -996,7 +1009,7 @@ namespace GameServer.Implementation.Player_Creation
                 });
             }
 
-            foreach (PlayerCreationCommentData Comment in TrackComments.Take(3))
+            foreach (PlayerCreationCommentData Comment in Track.Comments.Take(3))
             {
                 if (Comment != null)
                 {
@@ -1013,7 +1026,7 @@ namespace GameServer.Implementation.Player_Creation
                 }
             }
 
-            foreach (PlayerCreationReview Review in TrackReviews.Take(3))
+            foreach (PlayerCreationReview Review in Track.Reviews.Take(3))
             {
                 if (Review != null)
                 {
@@ -1036,7 +1049,7 @@ namespace GameServer.Implementation.Player_Creation
                 }
             }
 
-            foreach (var Activity in TrackActivity.Take(3))
+            foreach (var Activity in Track.ActivityLog.Take(3))
             {
                 var Author = database.Users.FirstOrDefault(match => match.UserId == Activity.AuthorId);
                 ActivityList.Add(new Activity
@@ -1144,14 +1157,14 @@ namespace GameServer.Implementation.Player_Creation
                         views_this_week = Track.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-7) && match.ViewedAt <= DateTime.UtcNow),
                         votes = Track.Ratings.Count(match => !Track.IsMNR || match.Rating != 0),
                         weapon_set = Track.WeaponSet,
-                        hearted_by_me = (requestedBy == null) ? "false" : Track.Hearts.Any(x => x.UserId == requestedBy.UserId).ToString().ToLower(),
-                        queued_by_me = (requestedBy == null) ? "false" : Track.IsBookmarkedByMe(requestedBy.UserId).ToString().ToLower(),   // TODO
-                        reviewed_by_me = (requestedBy == null) ? "false" : Track.IsReviewedByMe(requestedBy.UserId).ToString().ToLower(),   // TODO
-                        activities = [new Activities { total = TrackActivity.Count, ActivityList = ActivityList }],
+                        hearted_by_me = (requestedBy == null) ? "false" : Track.Hearts.Any(match => match.UserId == requestedBy.UserId).ToString().ToLower(),
+                        queued_by_me = (requestedBy == null) ? "false" : Track.Bookmarks.Any(match => match.UserId == requestedBy.UserId).ToString().ToLower(),
+                        reviewed_by_me = (requestedBy == null) ? "false" : Track.Reviews.Any(match => match.PlayerId == requestedBy.UserId).ToString().ToLower(),
+                        activities = [new Activities { total = Track.ActivityLog.Count, ActivityList = ActivityList }],
                         comments = CommentsList,
-                        leaderboard = [new SubLeaderboard { total = TrackScores.Count, LeaderboardPlayersList = ScoresList }],
+                        leaderboard = [new SubLeaderboard { total = Track.Scores.Count, LeaderboardPlayersList = ScoresList }],
                         photos = [new Photos { total = PhotoList.Count, PhotoList = PhotoList }],
-                        reviews = [new Reviews { total = TrackReviews.Count, ReviewList = ReviewsList }]
+                        reviews = [new Reviews { total = Track.Reviews.Count, ReviewList = ReviewsList }]
                     }
                 ]
             };

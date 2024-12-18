@@ -216,7 +216,6 @@ namespace GameServer.Controllers.Player_Creation
         [Route("player_creations/{id}/{file}")]
         public IActionResult GetData(int id, string file)
         {
-            // TODO: Optimise?
             if (!AcceptedTypes.Contains(file)) return NotFound();
             var data = UserGeneratedContentUtils.LoadPlayerCreation(id, file);
             

@@ -8,6 +8,7 @@ using GameServer.Utils;
 using System.Linq;
 using System.Collections.Generic;
 using GameServer.Implementation.Common;
+using System.Text.RegularExpressions;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -67,7 +68,7 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            if (!Creation.IsBookmarkedByMe(user.UserId))
+            if (!Creation.Bookmarks.Any(match => match.UserId == user.UserId))
             {
                 database.PlayerCreationBookmarks.Add(new PlayerCreationBookmark
                 {

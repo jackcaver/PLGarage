@@ -10,6 +10,7 @@ using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Implementation.Common;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -342,14 +343,14 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = Session.GetSession(SessionID);
             var Creation = database.PlayerCreations
-                .Include(x => x.DbPlayerCreationDownloads)
-                .Include(x => x.DbplayerCreationRacesStarted)
-                .Include(x => x.DbPlayerCreationUniqueRacers)
-                .Include(x => x.DbHeartedPlayerCreations)
-                .Include(x => x.DbPoints)
-                .Include(x => x.DbRatings)
-                .Include(x => x.DbViews)
-                .Include(x => x.Author) // TODO: Clean up
+                .Include(x => x.Downloads)
+                .Include(x => x.RacesStarted)
+                .Include(x => x.UniqueRacers)
+                .Include(x => x.Hearts)
+                .Include(x => x.Points)
+                .Include(x => x.Ratings)
+                .Include(x => x.Views)
+                .Include(x => x.Author)
                 .FirstOrDefault(match => match.PlayerCreationId == id);
             var User = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
@@ -455,6 +456,13 @@ namespace GameServer.Implementation.Player_Creation
                 }
             }
 
+            var allPlayerCreations = database.PlayerCreations           // I dont really know how to optimise this any more without breaking the rank system?
+                            .Include(x => x.Points)
+                            .Where(match => match.Type == Creation.Type)
+                            .OrderBy(match => match.Points.Count())     // TODO: Should this be OrderByDescending?
+                            .Select(match => match.PlayerCreationId)    // To optimise the amount of data we get back, this is a particularly tricky situation
+                            .AsEnumerable();                            // Evaluate our query, find row index after
+
             var resp = new Response<List<player_creation>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
@@ -468,17 +476,18 @@ namespace GameServer.Implementation.Player_Creation
                         battle_friendly_fire = Creation.BattleFriendlyFire,
                         battle_kill_count = Creation.BattleKillCount,
                         battle_time_limit = Creation.BattleTimeLimit,
-                        coolness = Creation.Coolness,
+                        coolness = (Creation.Ratings.Count(match => match.Type == RatingType.YAY) - Creation.Ratings.Count(match => match.Type == RatingType.BOO)) + 
+                            ((Creation.RacesStarted.Count() + Creation.RacesFinished) / 2) + Creation.Hearts.Count(),
                         created_at = Creation.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                         description = Creation.Description,
                         difficulty = Creation.Difficulty.ToString(),
                         dlc_keys = Creation.DLCKeys != null ? Creation.DLCKeys : "",
-                        downloads = Creation.Downloads,
-                        downloads_last_week = Creation.DownloadsLastWeek,
-                        downloads_this_week = Creation.DownloadsThisWeek,
+                        downloads = Creation.Downloads.Count(),
+                        downloads_last_week = Creation.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-14) && match.DownloadedAt <= DateTime.UtcNow.AddDays(-7)),
+                        downloads_this_week = Creation.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-7) && match.DownloadedAt <= DateTime.UtcNow),
                         first_published = Creation.FirstPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
                         last_published = Creation.LastPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        hearts = Creation.Hearts,
+                        hearts = Creation.Hearts.Count(),
                         is_remixable = Creation.IsRemixable,
                         is_team_pick = Creation.IsTeamPick,
                         level_mode = Creation.LevelMode,
@@ -492,40 +501,44 @@ namespace GameServer.Implementation.Player_Creation
                         player_creation_type = Creation.Type.ToString(),
                         player_id = Creation.PlayerId,
                         races_finished = Creation.RacesFinished,
-                        races_started = Creation.RacesStarted,
-                        races_started_this_month = Creation.RacesStartedThisMonth,
-                        races_started_this_week = Creation.RacesStartedThisWeek,
+                        races_started = Creation.RacesStarted.Count(),
+                        races_started_this_month = Creation.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddMonths(-1) && match.StartedAt <= DateTime.UtcNow),
+                        races_started_this_week = Creation.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddDays(-7) && match.StartedAt <= DateTime.UtcNow),
                         races_won = Creation.RacesWon,
                         race_type = Creation.RaceType.ToString(),
-                        rank = Creation.Rank,
-                        rating_down = Creation.RatingDown,
-                        rating_up = Creation.RatingUp,
+                        rank = allPlayerCreations
+                            .Select((id, idx) => new { id, idx })
+                            .Where(row => row.id == Creation.PlayerCreationId)
+                            .Select(row => row.idx)
+                            .FirstOrDefault(),
+                        rating_down = Creation.Ratings.Count(match => match.Type == RatingType.BOO),
+                        rating_up = Creation.Ratings.Count(match => match.Type == RatingType.YAY),
                         scoreboard_mode = Creation.ScoreboardMode,
                         speed = Creation.Speed.ToString(),
                         tags = Creation.Tags,
                         track_theme = Creation.TrackTheme,
-                        unique_racer_count = Creation.UniqueRacerCount,
+                        unique_racer_count = Creation.UniqueRacers.Count(),
                         updated_at = Creation.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        username = Creation.Username,
+                        username = Creation.Author.Username,
                         user_tags = Creation.UserTags,
                         version = Creation.Version,
-                        views = Creation.Views,
-                        views_last_week = Creation.ViewsLastWeek,
-                        views_this_week = Creation.ViewsThisWeek,
-                        votes = Creation.Votes,
+                        views = Creation.Views.Count(),
+                        views_last_week = Creation.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-14) && match.ViewedAt <= DateTime.UtcNow.AddDays(-7)),
+                        views_this_week = Creation.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-7) && match.ViewedAt <= DateTime.UtcNow),
+                        votes = Creation.Ratings.Count(match => !Creation.IsMNR || match.Rating != 0),
                         weapon_set = Creation.WeaponSet,
                         data_md5 = download ? UserGeneratedContentUtils.CalculateMD5(id, "data.bin") : null,
                         data_size = download ? UserGeneratedContentUtils.CalculateSize(id, "data.bin").ToString() : null,
                         preview_md5 = download ? UserGeneratedContentUtils.CalculateMD5(id, "preview_image.png") : null,
                         preview_size = download ? UserGeneratedContentUtils.CalculateSize(id, "preview_image.png").ToString() : null,
                         //MNR
-                        points = Creation.Points,
-                        points_last_week = Creation.PointsLastWeek,
-                        points_this_week = Creation.PointsThisWeek,
-                        points_today = Creation.PointsToday,
-                        points_yesterday = Creation.PointsYesterday,
-                        rating = Creation.Rating.ToString("0.00", CultureInfo.InvariantCulture),
-                        star_rating = Creation.StarRating,
+                        points = Creation.Points.Sum(p => p.Amount),
+                        points_last_week = Creation.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount),
+                        points_this_week = Creation.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount),
+                        points_today = Creation.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.Date && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount),
+                        points_yesterday = Creation.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-1).Date && match.CreatedAt <= DateTime.UtcNow.Date).Sum(p => p.Amount),
+                        rating = (Creation.Ratings.Count() != 0 ? (float)Creation.Ratings.Average(r => r.Rating) : 0).ToString("0.0", CultureInfo.InvariantCulture),
+                        star_rating = (Creation.Ratings.Count() != 0 ? (float)Creation.Ratings.Average(r => r.Rating) : 0).ToString("0.0", CultureInfo.InvariantCulture),
                         original_player_id = Creation.OriginalPlayerId,
                         original_player_username = database.Users.FirstOrDefault(match => match.UserId == Creation.OriginalPlayerId) != null ? database.Users.FirstOrDefault(match => match.UserId == Creation.OriginalPlayerId).Username : "",
                         parent_creation_id = Creation.ParentCreationId != 0 ? Creation.ParentCreationId.ToString() : "",
@@ -573,13 +586,13 @@ namespace GameServer.Implementation.Player_Creation
             bool LuckyDip = false, bool IsMNR = false)
         {
             IQueryable<PlayerCreationData> creationQuery = database.PlayerCreations     // TODO: Is it an issue someone might be able to fudge the entire database out like this?
-                .Include(x => x.DbPlayerCreationDownloads)
-                .Include(x => x.DbplayerCreationRacesStarted)
-                .Include(x => x.DbPlayerCreationUniqueRacers)
-                .Include(x => x.DbHeartedPlayerCreations)
-                .Include(x => x.DbPoints)
-                .Include(x => x.DbRatings)
-                .Include(x => x.DbViews)
+                .Include(x => x.Downloads)
+                .Include(x => x.RacesStarted)
+                .Include(x => x.UniqueRacers)
+                .Include(x => x.Hearts)
+                .Include(x => x.Points)
+                .Include(x => x.Ratings)
+                .Include(x => x.Views)
                 .Include(x => x.Author);
             var session = Session.GetSession(SessionID);
             var User = database.Users.FirstOrDefault(match => match.Username == session.Username);
@@ -588,50 +601,27 @@ namespace GameServer.Implementation.Player_Creation
                 creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && match.Platform == platform 
                     && match.IsMNR == IsMNR);
 
-            //filters (TODO)
-            //if (filters.username != null)
-            //{
-            //    foreach (string username in filters.username)
-            //    {
-            //        var user = database.Users.FirstOrDefault(match => match.Username == username);
-            //        if (user != null)
-            //        {
-            //            var userTracks = database.PlayerCreations.Where(match => match.PlayerId == user.UserId
-            //                && match.Type == filters.player_creation_type && match.Platform == platform && match.IsMNR == IsMNR).ToList();
-            //            if (userTracks != null)
-            //                Creations.AddRange(userTracks);
-            //        }
-            //    }
-            //}
+            //filters
+            if (filters.username != null)
+            {
+                foreach (string username in filters.username)
+                    creationQuery = creationQuery.Where(match => match.Author.Username == username);   // TODO: Optimise
+            }
 
-            //if (filters.id != null)
-            //{
-            //    foreach (string id in filters.id)
-            //    {
-            //        var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId.ToString() == id &&
-            //            (match.Type == filters.player_creation_type || match.Type == PlayerCreationType.STORY) && match.IsMNR == IsMNR);
-            //        if (Creation != null)
-            //            Creations.Add(Creation);
-            //    }
-            //}
+            if (filters.id != null)
+            {
+                foreach (string id in filters.id)
+                    creationQuery = creationQuery.Where(match => match.PlayerCreationId.ToString() == id);   // TODO: Optimise and figure out PlayerCreationType.STORY
+            }
 
-            //if (filters.player_id != null)
-            //{
-            //    foreach (string player_id in filters.player_id)
-            //    {
-            //        var user = database.Users.FirstOrDefault(match => match.UserId.ToString() == player_id);
-            //        if (user != null)
-            //        {
-            //            var userTracks = database.PlayerCreations.Where(match => match.PlayerId == user.UserId
-            //                && match.Type == filters.player_creation_type && match.Platform == platform && match.IsMNR == IsMNR).ToList();
-            //            if (userTracks != null)
-            //                Creations.AddRange(userTracks);
-            //        }
-            //    }
-            //}
+            if (filters.player_id != null)
+            {
+                foreach (string player_id in filters.player_id)
+                    creationQuery = creationQuery.Where(match => match.PlayerId.ToString() == player_id);   // TODO: Optimise
+            }
 
-            //creationQuery = creationQuery.Where(match => match.ModerationStatus == ModerationStatus.BANNED 
-            //    || match.ModerationStatus == ModerationStatus.ILLEGAL);
+            creationQuery = creationQuery.Where(match => match.ModerationStatus != ModerationStatus.BANNED  // Change to == APPROVED?
+                && match.ModerationStatus != ModerationStatus.ILLEGAL);
 
             if (keyword != null)
                 creationQuery = creationQuery.Where(match => match.Name.Contains(keyword));
@@ -639,7 +629,7 @@ namespace GameServer.Implementation.Player_Creation
             if (filters.race_type != null)
                 creationQuery = creationQuery.Where(match => filters.race_type.Equals(match.RaceType.ToString()));
 
-            if (filters.tags != null && filters.tags.Length != 0)
+            if (filters.tags != null && filters.tags.Length != 0)   // !!! THE BELOW WONT COMPILE !!!! TODO: Investigate
                 creationQuery = creationQuery.Where(match => match.Tags != null && filters.tags.All(x => match.Tags.Contains(x)));  // We have removed a split here but should do the same job without
 
             if (filters.auto_reset != null)
@@ -658,98 +648,99 @@ namespace GameServer.Implementation.Player_Creation
             //if (User != null && !User.ShowCreationsWithoutPreviews)
             //    creations.RemoveAll(match => !match.HasPreview);
 
-            //switch (sort_column)
-            //{
-            //    //cool levels
-            //    case SortColumn.coolness:
-            //        creationQuery = creationQuery.OrderBy(match => match.Coolness);
-            //        break;
+            switch (sort_column)
+            {
+                //cool levels
+                case SortColumn.coolness:
+                    creationQuery = creationQuery.OrderBy(match => (match.Ratings.Count(match => match.Type == RatingType.YAY) - match.Ratings.Count(match => match.Type == RatingType.BOO)) +
+                            ((match.RacesStarted.Count() + match.RacesFinished) / 2) + match.Hearts.Count());
+                    break;
 
-            //    //newest levels
-            //    case SortColumn.created_at:
-            //        creationQuery = creationQuery.OrderBy(match => match.CreatedAt);
-            //        break;
+                //newest levels
+                case SortColumn.created_at:
+                    creationQuery = creationQuery.OrderBy(match => match.CreatedAt);
+                    break;
 
-            //    //most played
-            //    case SortColumn.races_started:
-            //        creationQuery = creationQuery.OrderBy(match => match.RacesStarted);
-            //        break;
-            //    case SortColumn.races_started_this_week:
-            //        creationQuery = creationQuery.OrderBy(match => match.RacesStartedThisWeek);
-            //        break;
-            //    case SortColumn.races_started_this_month:
-            //        creationQuery = creationQuery.OrderBy(match => match.RacesStartedThisMonth);
-            //        break;
+                //most played
+                case SortColumn.races_started:
+                    creationQuery = creationQuery.OrderBy(match => match.RacesStarted.Count());
+                    break;
+                case SortColumn.races_started_this_week:
+                    creationQuery = creationQuery.OrderBy(match => match.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddDays(-7) && match.StartedAt <= DateTime.UtcNow));
+                    break;
+                case SortColumn.races_started_this_month:
+                    creationQuery = creationQuery.OrderBy(match => match.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddMonths(-1) && match.StartedAt <= DateTime.UtcNow));
+                    break;
 
-            //    //highest rated
-            //    case SortColumn.rating_up:
-            //        creationQuery = creationQuery.OrderBy(match => match.RatingUp);
-            //        break;
-            //    case SortColumn.rating_up_this_week:
-            //        creationQuery = creationQuery.OrderBy(match => match.RatingUpThisWeek);
-            //        break;
-            //    case SortColumn.rating_up_this_month:
-            //        creationQuery = creationQuery.OrderBy(match => match.RatingUpThisMonth);
-            //        break;
+                //highest rated
+                case SortColumn.rating_up:
+                    creationQuery = creationQuery.OrderBy(match => match.Ratings.Count(match => match.Type == RatingType.YAY));
+                    break;
+                case SortColumn.rating_up_this_week:
+                    creationQuery = creationQuery.OrderBy(match => match.Ratings.Count(match => match.Type == RatingType.YAY && match.RatedAt >= DateTime.UtcNow.AddDays(-7) && match.RatedAt <= DateTime.UtcNow));
+                    break;
+                case SortColumn.rating_up_this_month:
+                    creationQuery = creationQuery.OrderBy(match => match.Ratings.Count(match => match.Type == RatingType.YAY && match.RatedAt >= DateTime.UtcNow.AddMonths(-1) && match.RatedAt <= DateTime.UtcNow));
+                    break;
 
-            //    //most hearted
-            //    case SortColumn.hearts:
-            //        creationQuery = creationQuery.OrderBy(match => match.Hearts);
-            //        break;
-            //    case SortColumn.hearts_this_week:
-            //        creationQuery = creationQuery.OrderBy(match => match.HeartsThisWeek);
-            //        break;
-            //    case SortColumn.hearts_this_month:
-            //        creationQuery = creationQuery.OrderBy(match => match.HeartsThisMonth);
-            //        break;
+                //most hearted
+                case SortColumn.hearts:
+                    creationQuery = creationQuery.OrderBy(match => match.Hearts.Count());
+                    break;
+                case SortColumn.hearts_this_week:
+                    creationQuery = creationQuery.OrderBy(match => match.Hearts.Count(match => match.HeartedAt >= DateTime.UtcNow.AddDays(-7) && match.HeartedAt <= DateTime.UtcNow));
+                    break;
+                case SortColumn.hearts_this_month:
+                    creationQuery = creationQuery.OrderBy(match => match.Hearts.Count(match => match.HeartedAt >= DateTime.UtcNow.AddMonths(-1) && match.HeartedAt <= DateTime.UtcNow));
+                    break;
 
-            //    //MNR
-            //    case SortColumn.rating:
-            //        creationQuery = creationQuery.OrderBy(match => match.Rating);
-            //        break;
+                //MNR
+                case SortColumn.rating:
+                    creationQuery = creationQuery.OrderBy(match => match.Ratings.Count() != 0 ? (float)match.Ratings.Average(r => r.Rating) : 0);   // Can we simplify this and remove the count check?
+                    break;
 
-            //    //points
-            //    case SortColumn.points:
-            //        creationQuery = creationQuery.OrderBy(match => match.Points);
-            //        break;
-            //    case SortColumn.points_today:
-            //        creationQuery = creationQuery.OrderBy(match => match.PointsToday);
-            //        break;
-            //    case SortColumn.points_yesterday:
-            //        creationQuery = creationQuery.OrderBy(match => match.PointsYesterday);
-            //        break;
-            //    case SortColumn.points_this_week:
-            //        creationQuery = creationQuery.OrderBy(match => match.PointsThisWeek);
-            //        break;
-            //    case SortColumn.points_last_week:
-            //        creationQuery = creationQuery.OrderBy(match => match.PointsLastWeek);
-            //        break;
+                //points
+                case SortColumn.points:
+                    creationQuery = creationQuery.OrderBy(match => match.Points.Sum(p => p.Amount));
+                    break;
+                case SortColumn.points_today:
+                    creationQuery = creationQuery.OrderBy(match => match.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.Date && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount));
+                    break;
+                case SortColumn.points_yesterday:
+                    creationQuery = creationQuery.OrderBy(match => match.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-1).Date && match.CreatedAt <= DateTime.UtcNow.Date).Sum(p => p.Amount));
+                    break;
+                case SortColumn.points_this_week:
+                    creationQuery = creationQuery.OrderBy(match => match.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount));
+                    break;
+                case SortColumn.points_last_week:
+                    creationQuery = creationQuery.OrderBy(match => match.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount));
+                    break;
 
-            //    //download
-            //    case SortColumn.downloads:
-            //        creationQuery = creationQuery.OrderBy(match => match.Downloads);
-            //        break;
-            //    case SortColumn.downloads_this_week:
-            //        creationQuery = creationQuery.OrderBy(match => match.DownloadsThisWeek);
-            //        break;
-            //    case SortColumn.downloads_last_week:
-            //        creationQuery = creationQuery.OrderBy(match => match.DownloadsLastWeek);
-            //        break;
+                //download
+                case SortColumn.downloads:
+                    creationQuery = creationQuery.OrderBy(match => match.Downloads.Count());
+                    break;
+                case SortColumn.downloads_this_week:
+                    creationQuery = creationQuery.OrderBy(match => match.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-7) && match.DownloadedAt <= DateTime.UtcNow));
+                    break;
+                case SortColumn.downloads_last_week:
+                    creationQuery = creationQuery.OrderBy(match => match.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-14) && match.DownloadedAt <= DateTime.UtcNow.AddDays(-7)));
+                    break;
 
-            //    //views
-            //    case SortColumn.views:
-            //        creationQuery = creationQuery.OrderBy(match => match.Views);
-            //        break;
-            //    case SortColumn.views_this_week:
-            //        creationQuery = creationQuery.OrderBy(match => match.ViewsThisWeek);
-            //        break;
-            //    case SortColumn.views_last_week:
-            //        creationQuery = creationQuery.OrderBy(match => match.ViewsLastWeek);
-            //        break;
-            //}
+                //views
+                case SortColumn.views:
+                    creationQuery = creationQuery.OrderBy(match => match.Views.Count());
+                    break;
+                case SortColumn.views_this_week:
+                    creationQuery = creationQuery.OrderBy(match => match.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-7) && match.ViewedAt <= DateTime.UtcNow));
+                    break;
+                case SortColumn.views_last_week:
+                    creationQuery = creationQuery.OrderBy(match => match.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-14) && match.ViewedAt <= DateTime.UtcNow.AddDays(-7)));
+                    break;
+            }
 
             if (LuckyDip)
-                creationQuery = creationQuery.OrderBy(match => EF.Functions.Random());  // TODO: is session.RandomSeed required? Will this even add onto the above?
+                creationQuery = creationQuery.OrderBy(match => EF.Functions.Random());  // TODO: is session.RandomSeed required? Will this even add onto the above, needs ThenBy?
 
             var total = creationQuery.Count();
 
@@ -766,6 +757,13 @@ namespace GameServer.Implementation.Player_Creation
                 .Take(pageEnd - pageStart)
                 .ToList();
 
+            var allPlayerCreations = database.PlayerCreations           // I dont really know how to optimise this any more without breaking the rank system?
+                            .Include(x => x.Points)
+                            .Where(match => match.Type == filters.player_creation_type)
+                            .OrderBy(match => match.Points.Count())     // TODO: Should this be OrderByDescending?
+                            .Select(match => match.PlayerCreationId)    // To optimise the amount of data we get back, this is a particularly tricky situation
+                            .AsEnumerable();                            // Evaluate our query, find row index after
+
             var playerCreationsList = new List<player_creation>(
                 creations.Select(creation => new player_creation
                 {
@@ -776,17 +774,18 @@ namespace GameServer.Implementation.Player_Creation
                     battle_friendly_fire = creation.BattleFriendlyFire,
                     battle_kill_count = creation.BattleKillCount,
                     battle_time_limit = creation.BattleTimeLimit,
-                    coolness = creation.Coolness,
+                    coolness = (creation.Ratings.Count(match => match.Type == RatingType.YAY) - creation.Ratings.Count(match => match.Type == RatingType.BOO)) +
+                            ((creation.RacesStarted.Count() + creation.RacesFinished) / 2) + creation.Hearts.Count(),
                     created_at = creation.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     description = creation.Description,
                     difficulty = creation.Difficulty.ToString(),
                     dlc_keys = creation.DLCKeys,
-                    downloads = creation.Downloads,
-                    downloads_last_week = creation.DownloadsLastWeek,
-                    downloads_this_week = creation.DownloadsThisWeek,
+                    downloads = creation.Downloads.Count(),
+                    downloads_last_week = creation.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-14) && match.DownloadedAt <= DateTime.UtcNow.AddDays(-7)),
+                    downloads_this_week = creation.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-7) && match.DownloadedAt <= DateTime.UtcNow),
                     first_published = creation.FirstPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     last_published = creation.LastPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    hearts = creation.Hearts,
+                    hearts = creation.Hearts.Count(),
                     is_remixable = creation.IsRemixable,
                     is_team_pick = creation.IsTeamPick,
                     level_mode = creation.LevelMode,
@@ -800,36 +799,40 @@ namespace GameServer.Implementation.Player_Creation
                     player_creation_type = (creation.Type == PlayerCreationType.STORY) ? PlayerCreationType.TRACK.ToString() : creation.Type.ToString(),
                     player_id = creation.PlayerId,
                     races_finished = creation.RacesFinished,
-                    races_started = creation.RacesStarted,
-                    races_started_this_month = creation.RacesStartedThisMonth,
-                    races_started_this_week = creation.RacesStartedThisWeek,
+                    races_started = creation.RacesStarted.Count(),
+                    races_started_this_month = creation.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddMonths(-1) && match.StartedAt <= DateTime.UtcNow),
+                    races_started_this_week = creation.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddDays(-7) && match.StartedAt <= DateTime.UtcNow),
                     races_won = creation.RacesWon,
                     race_type = creation.RaceType.ToString(),
-                    rank = creation.Rank,   // This is EXTREMELY slow
-                    rating_down = creation.RatingDown,
-                    rating_up = creation.RatingUp,
+                    rank = allPlayerCreations
+                            .Select((id, idx) => new { id, idx })
+                            .Where(row => row.id == creation.PlayerCreationId)
+                            .Select(row => row.idx)
+                            .FirstOrDefault(),
+                    rating_down = creation.Ratings.Count(match => match.Type == RatingType.BOO),
+                    rating_up = creation.Ratings.Count(match => match.Type == RatingType.YAY),
                     scoreboard_mode = creation.ScoreboardMode,
                     speed = creation.Speed.ToString(),
                     tags = creation.Tags,
                     track_theme = creation.TrackTheme,
-                    unique_racer_count = creation.UniqueRacerCount,
+                    unique_racer_count = creation.UniqueRacers.Count(),
                     updated_at = creation.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    username = creation.Username,
+                    username = creation.Author.Username,
                     user_tags = creation.UserTags,
                     version = creation.Version,
-                    views = creation.Views,
-                    views_last_week = creation.ViewsLastWeek,
-                    views_this_week = creation.ViewsThisWeek,
-                    votes = creation.Votes,
+                    views = creation.Views.Count(),
+                    views_last_week = creation.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-14) && match.ViewedAt <= DateTime.UtcNow.AddDays(-7)),
+                    views_this_week = creation.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-7) && match.ViewedAt <= DateTime.UtcNow),
+                    votes = creation.Ratings.Count(match => !IsMNR || match.Rating != 0),
                     weapon_set = creation.WeaponSet,
                     //MNR
-                    points = creation.Points,
-                    points_last_week = creation.PointsLastWeek,
-                    points_this_week = creation.PointsThisWeek,
-                    points_today = creation.PointsToday,
-                    points_yesterday = creation.PointsYesterday,
-                    rating = creation.Rating.ToString("0.0", CultureInfo.InvariantCulture),
-                    star_rating = creation.StarRating,
+                    points = creation.Points.Count(),
+                    points_last_week = creation.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount),
+                    points_this_week = creation.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount),
+                    points_today = creation.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.Date && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount),
+                    points_yesterday = creation.Points.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-1).Date && match.CreatedAt <= DateTime.UtcNow.Date).Sum(p => p.Amount),
+                    rating = (creation.Ratings.Count() != 0 ? (float)creation.Ratings.Average(r => r.Rating) : 0).ToString("0.0", CultureInfo.InvariantCulture),
+                    star_rating = (creation.Ratings.Count() != 0 ? (float)creation.Ratings.Average(r => r.Rating) : 0).ToString("0.0", CultureInfo.InvariantCulture),
                     moderation_status = creation.ModerationStatus.ToString(),
                     moderation_status_id = (int)creation.ModerationStatus
                 }));
@@ -877,49 +880,51 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string SearchPhotos(Database database, int? track_id, string username, string associated_usernames, int page, int per_page)
         {
-            List<PlayerCreationData> Photos = [];
+            IQueryable<PlayerCreationData> photosQuery = database.PlayerCreations
+                                                            .Include(x => x.Author)
+                                                            .Where(match => match.Type == PlayerCreationType.PHOTO);
             int player_id = 0;
             var user = database.Users.FirstOrDefault(match => match.Username == username);
             if (user != null)
                 player_id = user.UserId;
 
             if (associated_usernames != null)
-                Photos = database.PlayerCreations.Where(match => match.Type == PlayerCreationType.PHOTO && match.AssociatedUsernames.Contains(associated_usernames)).ToList();
+                photosQuery = photosQuery.Where(match => match.AssociatedUsernames.Contains(associated_usernames));
             if (username != null)
-                Photos = database.PlayerCreations.Where(match => match.Type == PlayerCreationType.PHOTO && match.PlayerId == player_id).ToList();
+                photosQuery = photosQuery.Where(match => match.PlayerId == player_id);
             if (track_id != null)
-                Photos = database.PlayerCreations.Where(match => match.Type == PlayerCreationType.PHOTO && match.TrackId == track_id).ToList();
-            if (track_id != null && username != null)
-                Photos = database.PlayerCreations.Where(match => match.Type == PlayerCreationType.PHOTO && match.TrackId == track_id && match.PlayerId == player_id).ToList();
+                photosQuery = photosQuery.Where(match => match.TrackId == track_id);
 
-            Photos.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
+            photosQuery = photosQuery.OrderBy(match => match.CreatedAt);
+
+            var total = photosQuery.Count();
 
             int pageEnd = PageCalculator.GetPageEnd(page, per_page);
             int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, Photos.Count);
+            int totalPages = PageCalculator.GetTotalPages(per_page, total);
 
-            if (pageEnd > Photos.Count)
-                pageEnd = Photos.Count;
+            if (pageEnd > total)
+                pageEnd = total;
 
-            var PhotoList = new List<Photo> { };
-            for (int i = pageStart; i < pageEnd; i++)
+            var photos = photosQuery
+                .Skip(pageStart)
+                .Take(pageEnd - pageStart)
+                .ToList();
+
+            var PhotoList = new List<Photo>(photos.Select(photo => new Photo
             {
-                var Photo = Photos[i];
-                PhotoList.Add(new Photo
-                {
-                    associated_usernames = Photo.AssociatedUsernames,
-                    id = Photo.PlayerCreationId,
-                    track_id = Photo.TrackId,
-                    username = Photo.Username
-                });
-            }
+                associated_usernames = photo.AssociatedUsernames,
+                id = photo.PlayerCreationId,
+                track_id = photo.TrackId,
+                username = photo.Author.Username
+            }));
 
             var resp = new Response<List<Photos>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [
                     new Photos {
-                        total = Photos.Count,
+                        total = total,
                         current_page = page,
                         row_start = pageStart,
                         row_end = pageEnd,
@@ -933,6 +938,7 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string GetTrackProfile(Database database, Guid SessionID, int id)
         {
+            // TODO: Includes
             var session = Session.GetSession(SessionID);
             var Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
@@ -1033,11 +1039,11 @@ namespace GameServer.Implementation.Player_Creation
                 ActivityList.Add(new Activity
                 {
                     player_creation_id = id,
-                    player_creation_hearts = Track.Hearts,
-                    player_creation_rating_up = Track.RatingUp,
-                    player_creation_rating_down = Track.RatingDown,
-                    player_creation_races_started = Track.RacesStarted,
-                    player_creation_username = Track.Username,
+                    player_creation_hearts = Track.Hearts.Count(),
+                    player_creation_rating_up = Track.Ratings.Count(match => match.Type == RatingType.YAY),
+                    player_creation_rating_down = Track.Ratings.Count(match => match.Type == RatingType.BOO),
+                    player_creation_races_started = Track.RacesStarted.Count(),
+                    player_creation_username = Track.Author.Username,
                     player_creation_description = Track.Description,
                     player_creation_name = Track.Name,
                     player_creation_player_id = Track.PlayerId,
@@ -1064,6 +1070,13 @@ namespace GameServer.Implementation.Player_Creation
                 });
             }
 
+            var allPlayerCreations = database.PlayerCreations           // I dont really know how to optimise this any more without breaking the rank system?
+                            .Include(x => x.Points)
+                            .Where(match => match.Type == Track.Type)
+                            .OrderBy(match => match.Points.Count())     // TODO: Should this be OrderByDescending?
+                            .Select(match => match.PlayerCreationId)    // To optimise the amount of data we get back, this is a particularly tricky situation
+                            .AsEnumerable();                            // Evaluate our query, find row index after
+
             var resp = new Response<List<Track>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
@@ -1077,17 +1090,18 @@ namespace GameServer.Implementation.Player_Creation
                         battle_friendly_fire = Track.BattleFriendlyFire,
                         battle_kill_count = Track.BattleKillCount,
                         battle_time_limit = Track.BattleTimeLimit,
-                        coolness = Track.Coolness,
+                        coolness = (Track.Ratings.Count(match => match.Type == RatingType.YAY) - Track.Ratings.Count(match => match.Type == RatingType.BOO)) +
+                            ((Track.RacesStarted.Count() + Track.RacesFinished) / 2) + Track.Hearts.Count(),
                         created_at = Track.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                         description = Track.Description,
                         difficulty = Track.Difficulty.ToString(),
                         dlc_keys = Track.DLCKeys,
-                        downloads = Track.Downloads,
-                        downloads_last_week = Track.DownloadsLastWeek,
-                        downloads_this_week = Track.DownloadsThisWeek,
+                        downloads = Track.Downloads.Count(),
+                        downloads_last_week = Track.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-14) && match.DownloadedAt <= DateTime.UtcNow.AddDays(-7)),
+                        downloads_this_week = Track.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-7) && match.DownloadedAt <= DateTime.UtcNow),
                         first_published = Track.FirstPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
                         last_published = Track.LastPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        hearts = Track.Hearts,
+                        hearts = Track.Hearts.Count(),
                         is_remixable = Track.IsRemixable,
                         is_team_pick = Track.IsTeamPick,
                         level_mode = Track.LevelMode,
@@ -1101,31 +1115,35 @@ namespace GameServer.Implementation.Player_Creation
                         player_creation_type = Track.Type == PlayerCreationType.STORY ? PlayerCreationType.TRACK.ToString() : Track.Type.ToString(),
                         player_id = Track.PlayerId,
                         races_finished = Track.RacesFinished,
-                        races_started = Track.RacesStarted,
-                        races_started_this_month = Track.RacesStartedThisMonth,
-                        races_started_this_week = Track.RacesStartedThisWeek,
+                        races_started = Track.RacesStarted.Count(),
+                        races_started_this_month = Track.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddMonths(-1) && match.StartedAt <= DateTime.UtcNow),
+                        races_started_this_week = Track.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddDays(-7) && match.StartedAt <= DateTime.UtcNow),
                         races_won = Track.RacesWon,
                         race_type = Track.RaceType.ToString(),
-                        rank = Track.Rank,
-                        rating_down = Track.RatingDown,
-                        rating_up = Track.RatingUp,
+                        rank = allPlayerCreations
+                            .Select((id, idx) => new { id, idx })
+                            .Where(row => row.id == Track.PlayerCreationId)
+                            .Select(row => row.idx)
+                            .FirstOrDefault(),
+                        rating_down = Track.Ratings.Count(match => match.Type == RatingType.BOO),
+                        rating_up = Track.Ratings.Count(match => match.Type == RatingType.YAY),
                         scoreboard_mode = Track.ScoreboardMode,
                         speed = Track.Speed.ToString(),
                         tags = Track.Tags,
                         track_theme = Track.TrackTheme,
-                        unique_racer_count = Track.UniqueRacerCount,
+                        unique_racer_count = Track.UniqueRacers.Count(),
                         updated_at = Track.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        username = Track.Username,
+                        username = Track.Author.Username,
                         user_tags = Track.UserTags,
                         version = Track.Version,
-                        views = Track.Views,
-                        views_last_week = Track.ViewsLastWeek,
-                        views_this_week = Track.ViewsThisWeek,
-                        votes = Track.Votes,
+                        views = Track.Views.Count(),
+                        views_last_week = Track.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-14) && match.ViewedAt <= DateTime.UtcNow.AddDays(-7)),
+                        views_this_week = Track.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-7) && match.ViewedAt <= DateTime.UtcNow),
+                        votes = Track.Ratings.Count(match => !Track.IsMNR || match.Rating != 0),
                         weapon_set = Track.WeaponSet,
-                        hearted_by_me = (requestedBy == null) ? "false" : Track.IsHeartedByMe(requestedBy.UserId).ToString().ToLower(),
-                        queued_by_me = (requestedBy == null) ? "false" : Track.IsBookmarkedByMe(requestedBy.UserId).ToString().ToLower(),
-                        reviewed_by_me = (requestedBy == null) ? "false" : Track.IsReviewedByMe(requestedBy.UserId).ToString().ToLower(),
+                        hearted_by_me = (requestedBy == null) ? "false" : Track.Hearts.Any(x => x.UserId == requestedBy.UserId).ToString().ToLower(),
+                        queued_by_me = (requestedBy == null) ? "false" : Track.IsBookmarkedByMe(requestedBy.UserId).ToString().ToLower(),   // TODO
+                        reviewed_by_me = (requestedBy == null) ? "false" : Track.IsReviewedByMe(requestedBy.UserId).ToString().ToLower(),   // TODO
                         activities = [new Activities { total = TrackActivity.Count, ActivityList = ActivityList }],
                         comments = CommentsList,
                         leaderboard = [new SubLeaderboard { total = TrackScores.Count, LeaderboardPlayersList = ScoresList }],
@@ -1197,7 +1215,8 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string GetPlanetProfile(Database database, int player_id)
         {
-            var Planet = database.PlayerCreations.FirstOrDefault(match => match.PlayerId == player_id && match.Type == PlayerCreationType.PLANET);
+            var Planet = database.PlayerCreations
+                .FirstOrDefault(match => match.PlayerId == player_id && match.Type == PlayerCreationType.PLANET);
 
             if (Planet == null)
             {
@@ -1209,7 +1228,24 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
             var trackList = new List<Track> { };
-            var creations = database.PlayerCreations.Where(match => match.PlayerId == player_id && match.Type == PlayerCreationType.TRACK && !match.IsMNR).ToList();
+            var creations = database.PlayerCreations
+                .Include(x => x.Downloads)
+                .Include(x => x.Hearts)
+                .Include(x => x.RacesStarted)
+                .Include(x => x.Ratings)
+                .Include(x => x.UniqueRacers)
+                .Include(x => x.Author)
+                .Include(x => x.Views)
+                .Where(match => match.PlayerId == player_id && match.Type == PlayerCreationType.TRACK && !match.IsMNR)
+                .ToList();
+
+            var allPlayerCreations = database.PlayerCreations           // I dont really know how to optimise this any more without breaking the rank system?
+                            .Include(x => x.Points)
+                            .Where(match => match.Type == PlayerCreationType.TRACK)
+                            .OrderBy(match => match.Points.Count())     // TODO: Should this be OrderByDescending?
+                            .Select(match => match.PlayerCreationId)    // To optimise the amount of data we get back, this is a particularly tricky situation
+                            .AsEnumerable();                            // Evaluate our query, find row index after
+
             foreach (PlayerCreationData Track in creations)
             {
                 trackList.Add(new Track
@@ -1221,17 +1257,18 @@ namespace GameServer.Implementation.Player_Creation
                     battle_friendly_fire = Track.BattleFriendlyFire,
                     battle_kill_count = Track.BattleKillCount,
                     battle_time_limit = Track.BattleTimeLimit,
-                    coolness = Track.Coolness,
+                    coolness = (Track.Ratings.Count(match => match.Type == RatingType.YAY) - Track.Ratings.Count(match => match.Type == RatingType.BOO)) +
+                            ((Track.RacesStarted.Count() + Track.RacesFinished) / 2) + Track.Hearts.Count(),
                     created_at = Track.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     description = Track.Description,
                     difficulty = Track.Difficulty.ToString(),
                     dlc_keys = Track.DLCKeys,
-                    downloads = Track.Downloads,
-                    downloads_last_week = Track.DownloadsLastWeek,
-                    downloads_this_week = Track.DownloadsThisWeek,
+                    downloads = Track.Downloads.Count(),
+                    downloads_last_week = Track.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-14) && match.DownloadedAt <= DateTime.UtcNow.AddDays(-7)),
+                    downloads_this_week = Track.Downloads.Count(match => match.DownloadedAt >= DateTime.UtcNow.AddDays(-7) && match.DownloadedAt <= DateTime.UtcNow),
                     first_published = Track.FirstPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     last_published = Track.LastPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    hearts = Track.Hearts,
+                    hearts = Track.Hearts.Count(),
                     is_remixable = Track.IsRemixable,
                     is_team_pick = Track.IsTeamPick,
                     level_mode = Track.LevelMode,
@@ -1245,27 +1282,31 @@ namespace GameServer.Implementation.Player_Creation
                     player_creation_type = Track.Type.ToString(),
                     player_id = Track.PlayerId,
                     races_finished = Track.RacesFinished,
-                    races_started = Track.RacesStarted,
-                    races_started_this_month = Track.RacesStartedThisMonth,
-                    races_started_this_week = Track.RacesStartedThisWeek,
+                    races_started = Track.RacesStarted.Count(),
+                    races_started_this_month = Track.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddMonths(-1) && match.StartedAt <= DateTime.UtcNow),
+                    races_started_this_week = Track.RacesStarted.Count(match => match.StartedAt >= DateTime.UtcNow.AddDays(-7) && match.StartedAt <= DateTime.UtcNow),
                     races_won = Track.RacesWon,
                     race_type = Track.RaceType.ToString(),
-                    rank = Track.Rank,
-                    rating_down = Track.RatingDown,
-                    rating_up = Track.RatingUp,
+                    rank = allPlayerCreations
+                            .Select((id, idx) => new { id, idx })
+                            .Where(row => row.id == Track.PlayerCreationId)
+                            .Select(row => row.idx)
+                            .FirstOrDefault(),
+                    rating_down = Track.Ratings.Count(match => match.Type == RatingType.BOO),
+                    rating_up = Track.Ratings.Count(match => match.Type == RatingType.YAY),
                     scoreboard_mode = Track.ScoreboardMode,
                     speed = Track.Speed.ToString(),
                     tags = Track.Tags,
                     track_theme = Track.TrackTheme,
-                    unique_racer_count = Track.UniqueRacerCount,
+                    unique_racer_count = Track.UniqueRacers.Count(),
                     updated_at = Track.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    username = Track.Username,
+                    username = Track.Author.Username,
                     user_tags = Track.UserTags,
                     version = Track.Version,
-                    views = Track.Views,
-                    views_last_week = Track.ViewsLastWeek,
-                    views_this_week = Track.ViewsThisWeek,
-                    votes = Track.Votes,
+                    views = Track.Views.Count(),
+                    views_last_week = Track.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-14) && match.ViewedAt <= DateTime.UtcNow.AddDays(-7)),
+                    views_this_week = Track.Views.Count(match => match.ViewedAt >= DateTime.UtcNow.AddDays(-7) && match.ViewedAt <= DateTime.UtcNow),
+                    votes = Track.Ratings.Count(match => !Track.IsMNR || match.Rating != 0),
                     weapon_set = Track.WeaponSet
                 });
             }
@@ -1277,7 +1318,7 @@ namespace GameServer.Implementation.Player_Creation
                     id = Planet.PlayerCreationId,
                     name = Planet.Name,
                     player_id = Planet.PlayerId,
-                    username = Planet.Username,
+                    username = Planet.Author.Username,
                     tracks = new Tracks {
                         total = Planet.Author.TotalTracks,
                         TrackList = trackList

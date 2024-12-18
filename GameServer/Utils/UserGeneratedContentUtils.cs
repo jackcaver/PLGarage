@@ -19,20 +19,27 @@ namespace GameServer.Utils
         public static void SaveAvatar(int UserId, PlayerAvatar avatar, Stream stream, bool IsMNR) 
         {
             if (!Directory.Exists($"UGC/PlayerAvatars/{UserId}/"))
-            {
                 Directory.CreateDirectory($"UGC/PlayerAvatars/{UserId}/");
-            }
+
             if (!Directory.Exists($"UGC/PlayerAvatars/{UserId}/MNR/") && IsMNR)
-            {
                 Directory.CreateDirectory($"UGC/PlayerAvatars/{UserId}/MNR/");
-            }
+
             FileStream file;
+
             if (!IsMNR)
                 file = File.Create($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type.ToString().ToLower()}.png");
             else
                 file = File.Create($"UGC/PlayerAvatars/{UserId}/MNR/{avatar.player_avatar_type.ToString().ToLower()}.png");
             stream.CopyTo(file);
             file.Close();
+
+            if (!IsMNR)
+                file = File.Create($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type.ToString().ToLower()}_128x128.png");
+            else
+                file = File.Create($"UGC/PlayerAvatars/{UserId}/MNR/{avatar.player_avatar_type.ToString().ToLower()}_128x128.png");
+            Resize(stream, 128, 128).CopyTo(file);
+            file.Close();
+
             stream.Close();
         }
 
@@ -67,17 +74,18 @@ namespace GameServer.Utils
         public static void SavePlayerCreation(int id, Stream data, Stream preview)
         {
             if (!Directory.Exists($"UGC/PlayerCreations/{id}/"))
-            {
                 Directory.CreateDirectory($"UGC/PlayerCreations/{id}/");
-            }
-            FileStream dataFile = File.Create($"UGC/PlayerCreations/{id}/data.bin");
-            data.CopyTo(dataFile);
-            dataFile.Close();
+
+            using (var dataFile = File.Create($"UGC/PlayerCreations/{id}/data.bin"))
+                data.CopyTo(dataFile);
             data.Close();
 
-            FileStream previewFile = File.Create($"UGC/PlayerCreations/{id}/preview_image.png");
-            preview.CopyTo(previewFile);
-            previewFile.Close();
+            using (var previewFile = File.Create($"UGC/PlayerCreations/{id}/preview_image.png"))
+                preview.CopyTo(previewFile);
+            using (var previewFile128 = File.Create($"UGC/PlayerCreations/{id}/preview_image_128x128.png"))
+                Resize(preview, 128, 128).CopyTo(previewFile128);
+            using (var previewFile64 = File.Create($"UGC/PlayerCreations/{id}/preview_image_64x64.png"))
+                Resize(preview, 64, 64).CopyTo(previewFile64);
             preview.Close();
         }
 
@@ -172,10 +180,6 @@ namespace GameServer.Utils
         {
             if (File.Exists($"UGC/PlayerCreations/{id}/{file}"))
                 return File.OpenRead($"UGC/PlayerCreations/{id}/{file}");
-            else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}"))
-                return Resize(File.ReadAllBytes($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}"), 128, 128);
-            else if (file.Contains("_64x64") && File.Exists($"UGC/PlayerCreations/{id}/{file.Replace("_64x64", "")}"))
-                return Resize(File.ReadAllBytes($"UGC/PlayerCreations/{id}/{file.Replace("_64x64", "")}"), 64, 64);
             else
                 return null;
         }
@@ -184,12 +188,8 @@ namespace GameServer.Utils
         {
             if (File.Exists($"UGC/PlayerAvatars/{id}/{file}") && !IsMNR)
                 return File.OpenRead($"UGC/PlayerAvatars/{id}/{file}");
-            else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}") && !IsMNR)
-                return Resize(File.ReadAllBytes($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}"), 128, 128);
             else if (File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file}") && IsMNR)
                 return File.OpenRead($"UGC/PlayerAvatars/{id}/MNR/{file}");
-            else if (file.Contains("_128x128") && File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}") && IsMNR)
-                return Resize(File.ReadAllBytes($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}"), 128, 128);
             else
                 return null;
         }

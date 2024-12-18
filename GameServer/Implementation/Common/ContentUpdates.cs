@@ -139,9 +139,10 @@ namespace GameServer.Implementation.Common
 
         private static string GetTopTracksData(Database database)
         {
-            var creations = database.PlayerCreations.Where(match => match.Type == PlayerCreationType.TRACK && match.IsMNR && match.Platform == Platform.PS3).ToList();
-
-            creations.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+            var creations = database.PlayerCreations
+                .Where(match => match.Type == PlayerCreationType.TRACK && match.IsMNR && match.Platform == Platform.PS3)
+                .OrderBy(match => match.Points.Count())
+                .ToList();
 
             var result = "";
 

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Collections.Generic;
 using GameServer.Implementation.Common;
 using GameServer.Models.PlayerData;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -16,7 +17,9 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
+            var Creation = database.PlayerCreations
+                .Include(x => x.Hearts)
+                .FirstOrDefault(match => match.PlayerCreationId == id);
 
             if (user == null)
             {
@@ -38,7 +41,7 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            if (!Creation.IsHeartedByMe(user.UserId))
+            if (!Creation.Hearts.Any(x => x.UserId == user.UserId))
             {
                 database.HeartedPlayerCreations.Add(new HeartedPlayerCreation
                 {

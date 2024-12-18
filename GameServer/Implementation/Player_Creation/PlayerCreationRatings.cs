@@ -8,6 +8,7 @@ using GameServer.Models.PlayerData;
 using System;
 using GameServer.Models.Request;
 using GameServer.Implementation.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -89,7 +90,9 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == player_creation_rating.player_creation_id);
+            var Creation = database.PlayerCreations
+                .Include(x => x.Author)
+                .FirstOrDefault(match => match.PlayerCreationId == player_creation_rating.player_creation_id);
 
             if (user == null || Creation == null)
             {
@@ -137,7 +140,7 @@ namespace GameServer.Implementation.Player_Creation
                 {
                     Body = player_creation_rating.comments,
                     Subject = Creation.Name,
-                    RecipientList = Creation.Username,
+                    RecipientList = Creation.Author.Username,
                     Type = MailMessageType.ALERT,
                     RecipientId = Creation.PlayerId,
                     SenderId = user.UserId,

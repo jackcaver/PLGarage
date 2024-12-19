@@ -1,4 +1,5 @@
 using GameServer.Implementation.Common;
+using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -46,6 +47,180 @@ namespace GameServer.Controllers.Common
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             player_creation_complaint.preview = Request.Form.Files.GetFile("player_creation_complaint[preview]");
             return Content(Moderation.PlayerCreationComplaints(database, SessionID, player_creation_complaint), "application/xml;charset=utf-8");
+        }
+
+        [HttpPost]
+        [Route("/moderation/login")]
+        public IActionResult Login(string login, string password)
+        {
+            Guid sessionID = Guid.NewGuid();
+            Response.Cookies.Append("moderation_session_id", sessionID.ToString());
+            return Content(Moderation.Login(database, sessionID, login, password));
+        }
+
+        [HttpGet]
+        [Route("/moderation/grief_reports")]
+        public IActionResult GetGriefReports(string context, int? from)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("moderation_session_id"))
+                SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
+
+            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+
+            return Content(Moderation.GetGriefReports(database, context, from));
+        }
+
+        [HttpGet]
+        [Route("/moderation/grief_reports/{id}")]
+        public IActionResult GetGriefReport(int id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("moderation_session_id"))
+                SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
+
+            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+
+            var report = Moderation.GetGriefReport(database, id);
+
+            if (report == null)
+                return NotFound();
+            else
+                return Content(report);
+        }
+
+        [HttpGet]
+        [Route("/moderation/grief_reports/{id}/data.xml")]
+        public IActionResult GetGriefReportDataFile(int id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("moderation_session_id"))
+                SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
+
+            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+
+            var file = UserGeneratedContentUtils.LoadGriefReportData(id, "data.xml");
+
+            if (file != null)
+                return File(file, "application/xml;charset=utf-8");
+            else
+                return NotFound();
+        }
+
+        [HttpGet]
+        [Route("/moderation/grief_reports/{id}/preview.png")]
+        public IActionResult GetGriefReportPreview(int id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("moderation_session_id"))
+                SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
+
+            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+
+            var file = UserGeneratedContentUtils.LoadGriefReportData(id, "preview.png");
+
+            if (file != null)
+                return File(file, "image/png");
+            else
+                return NotFound();
+        }
+
+        [HttpPost]
+        [Route("/moderation/setStatus")]
+        public IActionResult SetModerationStatus(int id, ModerationStatus status)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("moderation_session_id"))
+                SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
+
+            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+
+            var result = Moderation.SetModerationStatus(database, id, status);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpPost]
+        [Route("/moderation/setBan")]
+        public IActionResult SetBan(int id, bool isBanned)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("moderation_session_id"))
+                SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
+
+            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+
+            var result = Moderation.SetBan(database, id, isBanned);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpGet]
+        [Route("/moderation/player_complaints")]
+        public IActionResult GetPlayerComplaints(int? from, int? playerID)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("moderation_session_id"))
+                SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
+
+            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+
+            return Content(Moderation.GetPlayerComplaints(database, from, playerID));
+        }
+
+        [HttpGet]
+        [Route("/moderation/player_complaints/{id}")]
+        public IActionResult GetPlayerComplaint(int id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("moderation_session_id"))
+                SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
+
+            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+
+            var report = Moderation.GetPlayerComplaint(database, id);
+
+            if (report == null)
+                return NotFound();
+            else
+                return Content(report);
+        }
+
+        [HttpGet]
+        [Route("/moderation/player_creation_complaints")]
+        public IActionResult GetPlayerCreationComplaints(int? from, int? playerID, int? playerCreationID)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("moderation_session_id"))
+                SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
+
+            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+
+            return Content(Moderation.GetPlayerCreationComplaints(database, from, playerID, playerCreationID));
+        }
+
+        [HttpGet]
+        [Route("/moderation/player_creation_complaints/{id}")]
+        public IActionResult GetPlayerCreationComplaint(int id)
+        {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("moderation_session_id"))
+                SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
+
+            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+
+            var report = Moderation.GetPlayerCreationComplaint(database, id);
+
+            if (report == null)
+                return NotFound();
+            else
+                return Content(report);
         }
 
         protected override void Dispose(bool disposing)

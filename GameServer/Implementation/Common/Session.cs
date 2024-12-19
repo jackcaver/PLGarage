@@ -137,7 +137,8 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
 
-            foreach (var Session in Sessions.Where(match => match.Value.Username == user.Username && match.Key != SessionID))
+            foreach (var Session in Sessions.Where(match => match.Value.Username == user.Username 
+                && match.Key != SessionID && match.Value.Platform == platform))
             {
                 Sessions.Remove(Session.Key);
                 ServerCommunication.NotifySessionDestroyed(Session.Key);
@@ -161,7 +162,9 @@ namespace GameServer.Implementation.Common
                 database.SaveChanges();
             }
 
-            if ((ServerConfig.Instance.BlockMNR && session.IsMNR) 
+            if ((ServerConfig.Instance.BlockMNRPS3 && session.IsMNR && session.Platform == Platform.PS3)
+                || (ServerConfig.Instance.BlockMNRPSP && session.Platform == Platform.PSP)
+                || (ServerConfig.Instance.BlockMNRRT && session.Platform == Platform.PSV)
                 || (ServerConfig.Instance.BlockLBPK && !session.IsMNR))
             {
                 var errorResp = new Response<EmptyResponse>
@@ -182,7 +185,7 @@ namespace GameServer.Implementation.Common
                     new login_data {
                         ip_address = ip,
                         login_time = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        platform = Platform.PS3.ToString(),
+                        platform = platform.ToString(),
                         player_id = user.UserId,
                         player_name = user.Username,
                         presence = user.Presence.ToString()
@@ -202,8 +205,7 @@ namespace GameServer.Implementation.Common
             {
                 id = 0;
                 message = "Successful completion";
-                Presence userPresence;
-                Enum.TryParse(presence, out userPresence);
+                Enum.TryParse(presence, out Presence userPresence);
                 session.Presence = userPresence;
             }
 

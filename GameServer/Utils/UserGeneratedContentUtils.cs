@@ -16,7 +16,7 @@ namespace GameServer.Utils
 {
     public class UserGeneratedContentUtils
     {
-        public static void SaveAvatar(int UserId, PlayerAvatar avatar, Stream stream, bool IsMNR) 
+        public static void SaveAvatar(int UserId, PlayerAvatar avatar, bool IsMNR) 
         {
             if (!Directory.Exists($"UGC/PlayerAvatars/{UserId}/"))
                 Directory.CreateDirectory($"UGC/PlayerAvatars/{UserId}/");
@@ -30,6 +30,7 @@ namespace GameServer.Utils
                 file = File.Create($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type.ToString().ToLower()}.png");
             else
                 file = File.Create($"UGC/PlayerAvatars/{UserId}/MNR/{avatar.player_avatar_type.ToString().ToLower()}.png");
+            var stream = avatar.avatar.OpenReadStream();
             stream.CopyTo(file);
             file.Close();
 
@@ -187,6 +188,30 @@ namespace GameServer.Utils
         {
             if (File.Exists($"UGC/PlayerCreations/{id}/{file}"))
                 return File.OpenRead($"UGC/PlayerCreations/{id}/{file}");
+            else if (file.Contains("_128x128") && !File.Exists($"UGC/PlayerCreations/{id}/{file}")
+                && File.Exists($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}"))
+            {
+                var newFile = File.Create($"UGC/PlayerCreations/{id}/{file}");
+                var original = File.OpenRead($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}");
+                var rs = Resize(original, 128, 128);
+                rs.CopyTo(newFile);
+                rs.Position = 0;
+                newFile.Close();
+                original.Close();
+                return rs;
+            }
+            else if (file.Contains("_64x64") && !File.Exists($"UGC/PlayerCreations/{id}/{file}")
+                && File.Exists($"UGC/PlayerCreations/{id}/{file.Replace("_64x64", "")}"))
+            {
+                var newFile = File.Create($"UGC/PlayerCreations/{id}/{file}");
+                var original = File.OpenRead($"UGC/PlayerCreations/{id}/{file.Replace("_64x64", "")}");
+                var rs = Resize(original, 64, 64);
+                rs.CopyTo(newFile);
+                rs.Position = 0;
+                newFile.Close();
+                original.Close();
+                return rs;
+            }
             else
                 return null;
         }
@@ -195,8 +220,32 @@ namespace GameServer.Utils
         {
             if (File.Exists($"UGC/PlayerAvatars/{id}/{file}") && !IsMNR)
                 return File.OpenRead($"UGC/PlayerAvatars/{id}/{file}");
+            else if (file.Contains("_128x128") && !File.Exists($"UGC/PlayerAvatars/{id}/{file}")
+                && File.Exists($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}") && !IsMNR)
+            {
+                var newFile = File.Create($"UGC/PlayerAvatars/{id}/{file}");
+                var original = File.OpenRead($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}");
+                var rs = Resize(original, 128, 128);
+                rs.CopyTo(newFile);
+                rs.Position = 0;
+                newFile.Close();
+                original.Close();
+                return rs;
+            }
             else if (File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file}") && IsMNR)
                 return File.OpenRead($"UGC/PlayerAvatars/{id}/MNR/{file}");
+            else if (file.Contains("_128x128") && !File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file}")
+                && File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}") && IsMNR)
+            {
+                var newFile = File.Create($"UGC/PlayerAvatars/{id}/MNR/{file}");
+                var original = File.OpenRead($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}");
+                var rs = Resize(original, 128, 128);
+                rs.CopyTo(newFile);
+                rs.Position = 0;
+                newFile.Close();
+                original.Close();
+                return rs;
+            }
             else
                 return null;
         }
@@ -205,7 +254,16 @@ namespace GameServer.Utils
         {
             if (File.Exists($"UGC/Announcements/{file}"))
                 return File.OpenRead($"UGC/Announcements/{file}");
-            return null;
+            else
+                return null;
+        }
+
+        public static FileStream LoadGriefReportData(int id, string file)
+        {
+            if (File.Exists($"UGC/GriefReports/{id}/{file}"))
+                return File.OpenRead($"UGC/GriefReports/{id}/{file}");
+            else
+                return null;
         }
 
         public static string CalculateMD5(int id, string file)

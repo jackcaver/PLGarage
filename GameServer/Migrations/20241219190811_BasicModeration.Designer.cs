@@ -4,6 +4,7 @@ using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GameServer.Migrations
 {
     [DbContext(typeof(Database))]
-    partial class DatabaseModelSnapshot : ModelSnapshot
+    [Migration("20241219190811_BasicModeration")]
+    partial class BasicModeration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -73,6 +76,8 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PlayerCreationId");
 
                     b.ToTable("ActivityLog");
                 });
@@ -581,7 +586,9 @@ namespace GameServer.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<bool>("HasPreview")
-                        .HasColumnType("tinyint(1)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
 
                     b.Property<bool>("IsMNR")
                         .HasColumnType("tinyint(1)");
@@ -1203,6 +1210,17 @@ namespace GameServer.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("GameServer.Models.PlayerData.ActivityEvent", b =>
+                {
+                    b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "Creation")
+                        .WithMany("ActivityLog")
+                        .HasForeignKey("PlayerCreationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Creation");
+                });
+
             modelBuilder.Entity("GameServer.Models.PlayerData.AwardUnlock", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.User", "Player")
@@ -1380,7 +1398,7 @@ namespace GameServer.Migrations
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationBookmark", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "BookmarkedCreation")
-                        .WithMany()
+                        .WithMany("Bookmarks")
                         .HasForeignKey("BookmarkedPlayerCreationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1399,7 +1417,7 @@ namespace GameServer.Migrations
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationCommentData", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "Creation")
-                        .WithMany()
+                        .WithMany("Comments")
                         .HasForeignKey("PlayerCreationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1508,7 +1526,7 @@ namespace GameServer.Migrations
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationReview", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "Creation")
-                        .WithMany()
+                        .WithMany("Reviews")
                         .HasForeignKey("PlayerCreationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1637,7 +1655,7 @@ namespace GameServer.Migrations
                         .IsRequired();
 
                     b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "Creation")
-                        .WithMany()
+                        .WithMany("Scores")
                         .HasForeignKey("SubKeyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1660,6 +1678,12 @@ namespace GameServer.Migrations
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", b =>
                 {
+                    b.Navigation("ActivityLog");
+
+                    b.Navigation("Bookmarks");
+
+                    b.Navigation("Comments");
+
                     b.Navigation("Downloads");
 
                     b.Navigation("Hearts");
@@ -1669,6 +1693,10 @@ namespace GameServer.Migrations
                     b.Navigation("RacesStarted");
 
                     b.Navigation("Ratings");
+
+                    b.Navigation("Reviews");
+
+                    b.Navigation("Scores");
 
                     b.Navigation("UniqueRacers");
 

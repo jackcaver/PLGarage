@@ -42,6 +42,8 @@ namespace GameServer.Utils
         public DbSet<TravelPoint> TravelPoints { get; set; }
         public DbSet<POIVisit> POIVisits { get; set; }
         public DbSet<AwardUnlock> AwardUnlocks { get; set; }
+        //Moderation
+        public DbSet<Moderator> Moderators { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options) =>
             options.UseMySql(ServerConfig.Instance.MysqlConnectionString, ServerVersion.AutoDetect(ServerConfig.Instance.MysqlConnectionString));

@@ -51,7 +51,7 @@ namespace GameServer.Controllers.Common
                 ServerID = Guid.Parse(server_id);
 
             if (ServerCommunication.GetServer(ServerID) == null)
-                return Forbid();
+                return StatusCode(403);
 
             List<int> TrackIDs = [];
 

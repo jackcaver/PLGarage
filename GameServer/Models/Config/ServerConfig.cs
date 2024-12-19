@@ -41,7 +41,9 @@ namespace GameServer.Models.Config
         public string ExternalURL = "auto:10050";
         public string MysqlConnectionString = "server=127.0.0.1;uid=root;pwd=password;database=PLGarage";
         public bool Whitelist = false;
-        public bool BlockMNR = false;
+        public bool BlockMNRPS3 = false;
+        public bool BlockMNRPSP = false;
+        public bool BlockMNRRT = false;
         public bool BlockLBPK = false;
         public bool EnableRequestLogging = false;
         public bool EnablePlaceholderImage = true;
@@ -77,6 +79,9 @@ namespace GameServer.Models.Config
                 File.WriteAllText("./ExampleConfig.json", JsonConvert.SerializeObject(new ServerConfig(), Formatting.Indented));
                 Log.Information($"Generated example configuration at {Path.Combine(Environment.CurrentDirectory, "ExampleConfig.json")}");
             }
+            Log.Warning("If this is your first time using PLGarage please go to https://github.com/jackcaver/PLGarage/wiki for setup refences");
+            Console.WriteLine("Press any key to exit.");
+            Console.ReadKey();
         }
     }
 }

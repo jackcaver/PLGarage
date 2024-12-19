@@ -62,7 +62,7 @@ namespace GameServer.Models.PlayerData
         public bool PlayedMNR { get; set; }
         public int TotalCharacters(Platform platform) => this.database.PlayerCreations.Count(match => match.PlayerId == this.UserId && match.Type == PlayerCreationType.CHARACTER && match.Platform == platform);
         public int TotalKarts(Platform platform) => this.database.PlayerCreations.Count(match => match.PlayerId == this.UserId && match.Type == PlayerCreationType.KART && match.Platform == platform);
-        public int TotalPlayerCreations(Platform platform) => this.database.PlayerCreations.Count(match => match.PlayerId == this.UserId && match.Type != PlayerCreationType.PHOTO && match.IsMNR && match.Platform == platform);
+        public int TotalPlayerCreations(Platform platform) => this.database.PlayerCreations.Count(match => match.PlayerId == this.UserId && match.Type != PlayerCreationType.PHOTO && match.Type != PlayerCreationType.DELETED && match.IsMNR && match.Platform == platform);
         public int TotalMNRTracks(Platform platform) => this.database.PlayerCreations.Count(match => match.PlayerId == this.UserId && match.Type == PlayerCreationType.TRACK && match.IsMNR && match.Platform == platform);
         public float CreatorPoints(Platform platform) => this.database.PlayerCreationPoints.Where(match => match.PlayerId == this.UserId && match.Platform == platform).Sum(p => p.Amount);
         public float CreatorPointsLastWeek(Platform platform) => this.database.PlayerCreationPoints.Where(match => match.PlayerId == this.UserId && match.Platform == platform && match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount);

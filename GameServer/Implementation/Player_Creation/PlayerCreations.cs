@@ -737,6 +737,8 @@ namespace GameServer.Implementation.Player_Creation
             if (LuckyDip)
                 creationQuery = creationQuery.OrderBy(match => EF.Functions.Random());  // TODO: is session.RandomSeed required? Will this even add onto the above, needs ThenBy?
 
+            // TODO: sort_order
+
             var total = creationQuery.Count();
 
             //calculating pages
@@ -746,6 +748,8 @@ namespace GameServer.Implementation.Player_Creation
 
             if (pageEnd > total)
                 pageEnd = total;
+            if (pageStart > pageEnd)
+                pageStart = pageEnd;
 
             var creations = creationQuery
                 .Skip(pageStart)
@@ -900,6 +904,8 @@ namespace GameServer.Implementation.Player_Creation
 
             if (pageEnd > total)
                 pageEnd = total;
+            if (pageStart > pageEnd)
+                pageStart = pageEnd;
 
             var photos = photosQuery
                 .Skip(pageStart)

@@ -2,6 +2,7 @@
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace GameServer.Utils
 {
@@ -43,7 +44,7 @@ namespace GameServer.Utils
         public DbSet<AwardUnlock> AwardUnlocks { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options) =>
-            options.UseMySql(ServerConfig.Instance.MysqlConnectionString, ServerVersion.AutoDetect(ServerConfig.Instance.MysqlConnectionString));
+            options.UseMySql(ServerConfig.Instance.MysqlConnectionString, ServerVersion.AutoDetect(ServerConfig.Instance.MysqlConnectionString)).LogTo((msg) => Console.WriteLine(msg));
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

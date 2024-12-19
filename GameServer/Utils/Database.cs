@@ -2,6 +2,7 @@
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace GameServer.Utils
 {
@@ -44,5 +45,14 @@ namespace GameServer.Utils
 
         protected override void OnConfiguring(DbContextOptionsBuilder options) =>
             options.UseMySql(ServerConfig.Instance.MysqlConnectionString, ServerVersion.AutoDetect(ServerConfig.Instance.MysqlConnectionString));
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<PlayerCreationData>()
+                .Property(b => b.HasPreview)
+                .HasDefaultValue(true);
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

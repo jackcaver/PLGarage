@@ -1,4 +1,5 @@
 ﻿using GameServer.Utils;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -26,7 +27,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public PlayerCreationData Creation { get; set; }
 
         public string PlayerCreationName => this.database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == this.PlayerCreationId).Name;
-        public string PlayerCreationUsername => this.database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == this.PlayerCreationId).Username;
+        public string PlayerCreationUsername => this.database.PlayerCreations.Include(x => x.Author).FirstOrDefault(match => match.PlayerCreationId == this.PlayerCreationId).Author.Username;
         public string PlayerCreationAssociatedItemIds => this.database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == this.PlayerCreationId).AssociatedItemIds;
         public int PlayerCreationLevelMode => this.database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == this.PlayerCreationId).LevelMode;
         public bool PlayerCreationIsTeamPick => this.database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == this.PlayerCreationId).IsTeamPick;

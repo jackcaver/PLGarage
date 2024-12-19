@@ -7,6 +7,7 @@ using GameServer.Models.PlayerData;
 using System.Linq;
 using GameServer.Models.Request;
 using GameServer.Implementation.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player
 {
@@ -15,6 +16,7 @@ namespace GameServer.Implementation.Player
         public static string GetActivityLog(Database database, Guid SessionID, int page, int per_page, ActivityList list = ActivityList.news_feed,
             int? player_id = null, int? player_creation_id = null)
         {
+            // TODO: Optimise
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Activities = new List<ActivityEvent> { };
@@ -70,7 +72,12 @@ namespace GameServer.Implementation.Player
                 var Author = database.Users.FirstOrDefault(match => match.UserId == Activity.AuthorId);
                 var Player = database.Users.FirstOrDefault(match => match.UserId == Activity.PlayerId);
                 UserGeneratedContentUtils.CheckStoryLevelName(database, Activity.PlayerCreationId);
-                var PlayerCreation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Activity.PlayerCreationId);
+                var PlayerCreation = database.PlayerCreations
+                    .Include(x => x.Hearts)
+                    .Include(x => x.Ratings)
+                    .Include(x => x.RacesStarted)
+                    .Include(x => x.Author)
+                    .FirstOrDefault(match => match.PlayerCreationId == Activity.PlayerCreationId);
 
                 if (Activity.Type == ActivityType.system_event)
                 {
@@ -128,11 +135,11 @@ namespace GameServer.Implementation.Player
                     activityList.Add(new Activity
                     {
                         player_creation_id = Activity.PlayerCreationId,
-                        player_creation_hearts = PlayerCreation != null ? PlayerCreation.Hearts : 0,
-                        player_creation_rating_up = PlayerCreation != null ? PlayerCreation.RatingUp : 0,
-                        player_creation_rating_down = PlayerCreation != null ? PlayerCreation.RatingDown : 0,
-                        player_creation_races_started = PlayerCreation != null ? PlayerCreation.RacesStarted : 0,
-                        player_creation_username = PlayerCreation != null ? PlayerCreation.Username : "",
+                        player_creation_hearts = PlayerCreation != null ? PlayerCreation.Hearts.Count() : 0,
+                        player_creation_rating_up = PlayerCreation != null ? PlayerCreation.Ratings.Count(match => match.Type == RatingType.YAY) : 0,
+                        player_creation_rating_down = PlayerCreation != null ? PlayerCreation.Ratings.Count(match => match.Type == RatingType.BOO) : 0,
+                        player_creation_races_started = PlayerCreation != null ? PlayerCreation.RacesStarted.Count() : 0,
+                        player_creation_username = PlayerCreation != null ? PlayerCreation.Author.Username : "",
                         player_creation_description = PlayerCreation != null ? PlayerCreation.Description : "",
                         player_creation_name = PlayerCreation != null ? PlayerCreation.Name : "",
                         player_creation_player_id = PlayerCreation != null ? PlayerCreation.PlayerId : 0,

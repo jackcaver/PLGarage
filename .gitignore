@@ -372,3 +372,9 @@ eula.txt
 mod_explorer.json
 # User Generated Content
 /GameServer/UGC/
+/GameServer/placeholder.png
+/GameServer/placeholderALT.png
+/GameServer/placeholderALT_128x128.png
+/GameServer/placeholderALT_64x64.png
+/GameServer/placeholder_128x128.png
+/GameServer/placeholder_64x64.png

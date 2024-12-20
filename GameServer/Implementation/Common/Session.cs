@@ -175,7 +175,7 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
             
-            ServerCommunication.NotifySessionCreated(SessionID, user.UserId, user.Username, (int)NPTicket.IssuerId);
+            ServerCommunication.NotifySessionCreated(SessionID, user.UserId, user.Username, (int)NPTicket.IssuerId, platform);
             session.RandomSeed = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             var resp = new Response<List<login_data>>
@@ -324,6 +324,15 @@ namespace GameServer.Implementation.Common
             File.WriteAllText("./whitelist.json", JsonConvert.SerializeObject(whitelist));
 
             return whitelist;
+        }
+
+        public static void DestroyAllSessions()
+        {
+            foreach (var sessionID in Sessions.Keys.ToList())
+            {
+                Sessions.Remove(sessionID);
+                ServerCommunication.NotifySessionDestroyed(sessionID);
+            }
         }
     }
 }

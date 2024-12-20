@@ -38,14 +38,15 @@ namespace GameServer.Implementation.Common
             }
         }
         
-        public static void NotifySessionCreated(Guid uuid, int playerConnectId, string username, int issuer)
+        public static void NotifySessionCreated(Guid uuid, int playerConnectId, string username, int issuer, Platform platform)
         {
             DispatchEvent(GatewayEvents.PlayerSessionCreated, new PlayerSessionCreatedEvent
             {
                 SessionUuid = uuid.ToString(),
                 PlayerConnectId = playerConnectId,
                 Username = username,
-                Issuer = issuer
+                Issuer = issuer,
+                SessionPlatform = platform
             }).Wait();
         }
         
@@ -520,6 +521,12 @@ namespace GameServer.Implementation.Common
             using var streamReader = new StreamReader(cryptoStream, Encoding.UTF8);
 
             return streamReader.ReadToEnd();
+        }
+
+        public static async Task DisconnectAllServers(string statusDescription)
+        {
+            foreach (var server in Servers.ToList())
+                await server.Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, statusDescription, CancellationToken.None);
         }
     }
 }

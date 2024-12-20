@@ -1,3 +1,4 @@
+using GameServer.Implementation.Common;
 using GameServer.Models.Config;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Builder;
@@ -28,7 +29,7 @@ namespace GameServer
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime appLifetime)
         {
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
@@ -62,6 +63,12 @@ namespace GameServer
             });
 
             app.UseEndpoints(endpoints => endpoints.MapControllers());
+
+            appLifetime.ApplicationStopping.Register(() =>
+            {
+                Session.DestroyAllSessions();
+                ServerCommunication.DisconnectAllServers("ServerStopping").Wait();
+            });
         }
     }
 }

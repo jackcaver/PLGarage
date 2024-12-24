@@ -7,8 +7,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using Serilog;
 using Serilog.Events;
+using System;
+using Microsoft.AspNetCore.Http;
 
 namespace GameServer
 {
@@ -26,6 +30,21 @@ namespace GameServer
         {
             services.AddControllers();
             services.AddDbContext<Database>();
+            if (ServerConfig.Instance.EnableRateLimiting)
+                services.AddRateLimiter(options => {  // TODO: Tweak
+                    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+                    {
+                        var partitionKey = ctx.Connection.RemoteIpAddress.ToString();
+
+                        return RateLimitPartition.GetConcurrencyLimiter(partitionKey: partitionKey, _ => new ConcurrencyLimiterOptions
+                        {
+                            PermitLimit = ServerConfig.Instance.MaxConcurrentRequests,
+                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                            QueueLimit = 2
+                        });
+                    });
+                    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -57,6 +76,9 @@ namespace GameServer
 
             app.UseRouting();
             app.UseWebSockets();
+
+            if (ServerConfig.Instance.EnableRateLimiting)
+                app.UseRateLimiter();
 
             app.UseStaticFiles(new StaticFileOptions {
                 RequestPath = "/resources"

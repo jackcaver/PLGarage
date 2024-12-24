@@ -1,5 +1,4 @@
 ﻿using GameServer.Models.PlayerData.PlayerCreations;
-using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Models;
@@ -10,6 +9,7 @@ using System.Collections.Generic;
 using GameServer.Implementation.Common;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
+using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Player_Creation
 {

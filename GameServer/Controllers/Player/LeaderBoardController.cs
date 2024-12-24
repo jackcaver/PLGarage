@@ -2,11 +2,11 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using GameServer.Models.Request;
-using GameServer.Models.PlayerData;
 using GameServer.Implementation.Player;
 using System;
 using GameServer.Implementation.Common;
 using GameServer.Models.GameBrowser;
+using GameServer.Models.Common;
 
 namespace GameServer.Controllers.Player
 {

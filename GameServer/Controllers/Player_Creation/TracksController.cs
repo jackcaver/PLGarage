@@ -1,5 +1,5 @@
 using GameServer.Implementation.Player_Creation;
-using GameServer.Models.PlayerData;
+using GameServer.Models.Common;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Utils;

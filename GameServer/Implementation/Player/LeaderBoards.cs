@@ -1,5 +1,6 @@
 ﻿using GameServer.Implementation.Common;
 using GameServer.Models;
+using GameServer.Models.Common;
 using GameServer.Models.GameBrowser;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;

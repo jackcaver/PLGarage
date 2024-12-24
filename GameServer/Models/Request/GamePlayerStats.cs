@@ -1,4 +1,4 @@
-using GameServer.Models.PlayerData;
+using GameServer.Models.Common;
 using Microsoft.AspNetCore.Http;
 
 namespace GameServer.Models.Request

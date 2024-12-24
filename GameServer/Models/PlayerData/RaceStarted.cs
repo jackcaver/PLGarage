@@ -8,11 +8,8 @@ namespace GameServer.Models.PlayerData
     {
         [Key]
         public int Id { get; set; }
-        public int PlayerId { get; set; }
-
-        [ForeignKey(nameof(PlayerId))]
-        public User Player { get; set; }
-
         public DateTime StartedAt { get; set; }
+
+        public User Player { get; set; }
     }
 }

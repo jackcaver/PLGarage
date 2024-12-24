@@ -8,12 +8,9 @@ namespace GameServer.Models.PlayerData
     {
         [Key]
         public int Id { get; set; }
-        public int PlayerId { get; set; }
-
-        [ForeignKey(nameof(PlayerId))]
-        public User Player { get; set; }
-
-        public int PointOfInterestId { get; set; }
+        public int PointOfInterestId { get; set; }  // TODO: Store in DB or keep hardcoded?
         public DateTime CreatedAt { get; set; }
+
+        public User Player { get; set; }
     }
 }

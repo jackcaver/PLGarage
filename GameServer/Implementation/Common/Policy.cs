@@ -1,12 +1,12 @@
 ﻿using GameServer.Models.Config;
 using GameServer.Models;
-using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Common
 {

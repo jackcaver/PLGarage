@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using GameServer.Models.PlayerData;
 using GameServer.Models.ServerCommunication.Events;
 using GameServer.Models.PlayerData.PlayerCreations;
+using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Common
 {

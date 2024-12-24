@@ -8,16 +8,9 @@ namespace GameServer.Models.PlayerData.PlayerCreations
     {
         [Key]
         public int Id { get; set; }
-        public int UserId { get; set; }
-
-        [ForeignKey(nameof(UserId))]
-        public User User { get; set; }
-
-        public int HeartedPlayerCreationId { get; set; }
-
-        [ForeignKey(nameof(HeartedPlayerCreationId))]
-        public PlayerCreationData HeartedCreation { get; set; }
-
         public DateTime HeartedAt { get; set; }
+
+        public User User { get; set; }
+        public PlayerCreationData HeartedCreation { get; set; }
     }
 }

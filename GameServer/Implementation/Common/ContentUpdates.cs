@@ -1,6 +1,5 @@
 ﻿using GameServer.Models.Config;
 using GameServer.Models.PlayerData.PlayerCreations;
-using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using System.Collections.Generic;
@@ -13,6 +12,7 @@ using GameServer.Utils;
 using System.Linq;
 using System.IO;
 using Newtonsoft.Json;
+using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Common
 {

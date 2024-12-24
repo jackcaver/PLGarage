@@ -11,6 +11,7 @@ using GameServer.Implementation.Common;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
+using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Player_Creation
 {

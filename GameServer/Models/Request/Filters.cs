@@ -1,5 +1,5 @@
-﻿using GameServer.Models.GameBrowser;
-using GameServer.Models.PlayerData;
+﻿using GameServer.Models.Common;
+using GameServer.Models.GameBrowser;
 using GameServer.Models.PlayerData.PlayerCreations;
 
 namespace GameServer.Models.Request

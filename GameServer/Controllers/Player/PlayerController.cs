@@ -1,6 +1,6 @@
 using GameServer.Implementation.Player;
+using GameServer.Models.Common;
 using GameServer.Models.Config;
-using GameServer.Models.PlayerData;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
 using System;

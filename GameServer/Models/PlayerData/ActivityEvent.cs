@@ -9,14 +9,6 @@ namespace GameServer.Models.PlayerData
     {
         [Key]
         public int Id { get; set; }
-        public int AuthorId { get; set; }
-        public int PlayerId { get; set; }
-        public int PlayerCreationId { get; set; }
-
-        [ForeignKey(nameof(PlayerCreationId))]
-        public PlayerCreationData Creation { get; set; }
-
-        public DateTime CreatedAt { get; set; }
         public ActivityList List { get; set; }
         public ActivityType Type { get; set; }
         public string Topic { get; set; }
@@ -27,5 +19,10 @@ namespace GameServer.Models.PlayerData
         public string Subject { get; set; }
         public string AllusionType { get; set; }
         public int AllusionId { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        public User Author { get; set; }
+        public User Player { get; set; }
+        public PlayerCreationData Creation { get; set; }
     }
 }

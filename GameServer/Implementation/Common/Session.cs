@@ -12,6 +12,7 @@ using System.IO;
 using Newtonsoft.Json;
 using NPTicket.Verification;
 using NPTicket.Verification.Keys;
+using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Common
 {

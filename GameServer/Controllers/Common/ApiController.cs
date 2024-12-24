@@ -1,7 +1,6 @@
 ﻿using GameServer.Implementation.Common;
 using GameServer.Models.Config;
 using GameServer.Models.PlayerData.PlayerCreations;
-using GameServer.Models.PlayerData;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -10,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Primitives;
+using GameServer.Models.Common;
 
 namespace GameServer.Controllers.Common
 {
@@ -76,6 +76,14 @@ namespace GameServer.Controllers.Common
             }
 
             return Content(JsonConvert.SerializeObject(TrackIDs));
+        }
+
+        [HttpGet]
+        [Route("api/GetPSID")]
+        public IActionResult GetPSID()
+        {
+            // TODO
+            return Content(null);
         }
 
         protected override void Dispose(bool disposing)

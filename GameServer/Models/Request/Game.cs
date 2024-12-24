@@ -1,5 +1,5 @@
+using GameServer.Models.Common;
 using GameServer.Models.GameBrowser;
-using GameServer.Models.PlayerData;
 
 namespace GameServer.Models.Request
 {

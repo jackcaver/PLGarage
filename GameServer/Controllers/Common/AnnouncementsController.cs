@@ -1,5 +1,5 @@
 ﻿using GameServer.Models;
-using GameServer.Models.PlayerData;
+using GameServer.Models.Common;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;

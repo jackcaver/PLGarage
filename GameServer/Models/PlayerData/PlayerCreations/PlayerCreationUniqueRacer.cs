@@ -7,12 +7,9 @@ namespace GameServer.Models.PlayerData.PlayerCreations
     {
         [Key]
         public int Id { get; set; }
-        public int PlayerId { get; set; }
-        public int PlayerCreationId { get; set; }
-
-        [ForeignKey(nameof(PlayerCreationId))]
-        public PlayerCreationData Creation { get; set; }
-
         public int Version { get; set; }
+
+        public User User { get; set; }
+        public PlayerCreationData Creation { get; set; }
     }
 }

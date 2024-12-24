@@ -1,4 +1,4 @@
-﻿using GameServer.Models.PlayerData;
+﻿using GameServer.Models.Common;
 using System.Collections.Generic;
 
 namespace GameServer.Models.GameBrowser

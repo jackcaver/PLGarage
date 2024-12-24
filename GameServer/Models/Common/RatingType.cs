@@ -1,4 +1,4 @@
-﻿namespace GameServer.Models.PlayerData
+﻿namespace GameServer.Models.Common
 {
     public enum RatingType
     {

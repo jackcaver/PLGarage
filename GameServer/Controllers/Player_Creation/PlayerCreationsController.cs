@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using GameServer.Implementation.Player_Creation;
 using GameServer.Models.PlayerData.PlayerCreations;
-using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +9,7 @@ using GameServer.Implementation.Common;
 using Microsoft.AspNetCore.Http;
 using GameServer.Models.Config;
 using System.IO;
+using GameServer.Models.Common;
 
 namespace GameServer.Controllers.Player_Creation
 {

@@ -7,6 +7,7 @@ using GameServer.Models.PlayerData.PlayerCreations;
 using System;
 using GameServer.Models.PlayerData;
 using GameServer.Implementation.Common;
+using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Player_Creation
 {

@@ -1,4 +1,4 @@
-using GameServer.Models.PlayerData;
+using GameServer.Models.Common;
 using Newtonsoft.Json;
 
 namespace GameServer.Models.ServerCommunication.Events;

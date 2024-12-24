@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using GameServer.Implementation.Common;
 using GameServer.Models;
+using GameServer.Models.Common;
 using GameServer.Models.GameBrowser;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
@@ -166,12 +167,12 @@ namespace GameServer.Controllers.Common
 
             if (session.IsMNR)
             {
-                var character = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game_player_stats.character_idx && match.Type == PlayerCreationType.CHARACTER);
-                var kart = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game_player_stats.kart_idx && match.Type == PlayerCreationType.KART);
+                var character = database.PlayerCreations.FirstOrDefault(match => match.Id == game_player_stats.character_idx && match.Type == PlayerCreationType.CHARACTER);
+                var kart = database.PlayerCreations.FirstOrDefault(match => match.Id == game_player_stats.kart_idx && match.Type == PlayerCreationType.KART);
                 
                 if (character != null)
                 {
-                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId });
+                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { Creation = character });
                     character.RacesFinished++;
                     if (game_player_stats.is_winner == 1)
                         character.RacesWon++;
@@ -186,7 +187,7 @@ namespace GameServer.Controllers.Common
 
                 if (kart != null)
                 {
-                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId });
+                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { Creation = kart });
                     kart.RacesFinished++;
                     if (game_player_stats.is_winner == 1)
                         kart.RacesWon++;
@@ -223,13 +224,12 @@ namespace GameServer.Controllers.Common
                 {
                     database.ActivityLog.Add(new ActivityEvent
                     {
-                        AuthorId = user.UserId,
+                        Author = user,
                         Type = ActivityType.player_event,
                         List = ActivityList.both,
                         Topic = "player_beat_finish_time",
                         Description = $"{game_player_stats.finish_time}",
-                        PlayerId = 0,
-                        PlayerCreationId = Track.PlayerCreationId,
+                        Creation = Track,
                         CreatedAt = DateTime.UtcNow,
                         AllusionId = Track.PlayerCreationId,
                         AllusionType = "PlayerCreation::Track"
@@ -239,13 +239,12 @@ namespace GameServer.Controllers.Common
                 {
                     database.ActivityLog.Add(new ActivityEvent
                     {
-                        AuthorId = user.UserId,
+                        Author = user,
                         Type = ActivityType.player_event,
                         List = ActivityList.both,
                         Topic = "player_beat_score",
                         Description = $"{game_player_stats.score}",
-                        PlayerId = 0,
-                        PlayerCreationId = Track.PlayerCreationId,
+                        Creation = Track,
                         CreatedAt = DateTime.UtcNow,
                         AllusionId = Track.PlayerCreationId,
                         AllusionType = "PlayerCreation::Track"

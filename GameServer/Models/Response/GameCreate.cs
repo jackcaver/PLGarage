@@ -2,10 +2,10 @@
 
 namespace GameServer.Models.Response
 {
-    [XmlType(TypeName = "game_create")]
+    [XmlType(TypeName = "game_create")]    // TODO: Can we change this to XmlRoot?
     public class GameCreate
     {
-        [XmlAttribute]
-        public int id { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
     }
 }

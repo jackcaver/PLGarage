@@ -2,19 +2,20 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class login_data
+    [XmlRoot("login_data")]
+    public class LoginData
     {
-        [XmlAttribute]
-        public int player_id { get; set; }
-        [XmlAttribute]
-        public string player_name { get; set; }
-        [XmlAttribute]
-        public string presence { get; set; }
-        [XmlAttribute]
-        public string platform { get; set; }
-        [XmlAttribute]
-        public string login_time { get; set; }
-        [XmlAttribute]
-        public string ip_address { get; set; }
+        [XmlAttribute("player_id")]
+        public int PlayerId { get; set; }
+        [XmlAttribute("player_name")]
+        public string PlayerName { get; set; }
+        [XmlAttribute("presence")]
+        public string Presence { get; set; }
+        [XmlAttribute("platform")]
+        public string Platform { get; set; }
+        [XmlAttribute("login_time")]
+        public string LoginTime { get; set; }
+        [XmlAttribute("ip_address")]
+        public string IpAddress { get; set; }
     }
 }

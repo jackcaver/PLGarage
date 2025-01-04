@@ -2,22 +2,22 @@
 
 namespace GameServer.Models.Response
 {
-    [XmlType(TypeName = "poi")]
+    [XmlType(TypeName = "poi")]    // TODO: Can we change this to XmlRoot?
     public class CheckinStatus
     {
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public float u { get; set; }
-        [XmlAttribute]
-        public float v { get; set; }
-        [XmlAttribute]
-        public float latitude { get; set; }
-        [XmlAttribute]
-        public float longitude { get; set; }
-        [XmlAttribute]
-        public float radius { get; set; }
-        [XmlAttribute]
-        public string name { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("u")]
+        public float U { get; set; }
+        [XmlAttribute("v")]
+        public float V { get; set; }
+        [XmlAttribute("latitude")]
+        public float Latitude { get; set; }
+        [XmlAttribute("longitude")]
+        public float Longitude { get; set; }
+        [XmlAttribute("radius")]
+        public float Radius { get; set; }
+        [XmlAttribute("name")]
+        public string Name { get; set; }
     }
 }

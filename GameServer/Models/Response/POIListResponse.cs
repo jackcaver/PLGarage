@@ -3,31 +3,32 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    [XmlType(TypeName = "poi")]
+    [XmlType(TypeName = "poi")]    // TODO: Can we change this to XmlRoot?
     public class POI
     {
-        [XmlAttribute]
-        public string name { get; set; }
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public float u { get; set; }
-        [XmlAttribute]
-        public float v { get; set; }
-        [XmlAttribute]
-        public float longitude { get; set; }
-        [XmlAttribute]
-        public float latitude { get; set; }
-        [XmlAttribute]
-        public bool locked { get; set; }
-        [XmlAttribute]
-        public bool new_unlock { get; set; }
-        [XmlAttribute]
-        public int global_checkin_count { get; set; }
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("u")]
+        public float U { get; set; }
+        [XmlAttribute("v")]
+        public float V { get; set; }
+        [XmlAttribute("longitude")]
+        public float Longitude { get; set; }
+        [XmlAttribute("latitude")]
+        public float Latitude { get; set; }
+        [XmlAttribute("locked")]
+        public bool Locked { get; set; }
+        [XmlAttribute("new_unlock")]
+        public bool NewUnlock { get; set; }
+        [XmlAttribute("global_checkin_count")]
+        public int GlobalCheckinCount { get; set; }
     }
 
     public class POIListResponse
     {
-        public List<POI> points_of_interest { get; set; }
+        [XmlElement("points_of_interest")]
+        public List<POI> PointsOfInterest { get; set; }
     }
 }

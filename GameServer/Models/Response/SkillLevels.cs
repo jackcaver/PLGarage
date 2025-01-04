@@ -3,21 +3,23 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class skill_level
+    [XmlRoot("skill_level")]
+    public class SkillLevel
     {
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public string name { get; set; }
-        [XmlAttribute]
-        public int points { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+        [XmlAttribute("points")]
+        public int Points { get; set; }
     }
 
-    public class skill_levels
+    [XmlRoot("skill_levels")]
+    public class SkillLevels
     {
-        [XmlAttribute]
-        public int total { get; set; }
+        [XmlAttribute("total")]
+        public int Total { get; set; }
         [XmlElement("skill_level")]
-        public List<skill_level> skillLevelList { get; set; }
+        public List<SkillLevel> SkillLevelList { get; set; }
     }
 }

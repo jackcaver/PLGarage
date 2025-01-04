@@ -2,14 +2,14 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    [XmlType(TypeName = "game")]
+    [XmlType(TypeName = "game")]    // TODO: Can we change this to XmlRoot?
     public class GameResponse
     {
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public int game_player_id { get; set; }
-        [XmlAttribute]
-        public int game_player_stats_id { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("game_player_id")]
+        public int GamePlayerId { get; set; }
+        [XmlAttribute("game_player_stats_id")]
+        public int GamePlayerStatsId { get; set; }
     }
 }

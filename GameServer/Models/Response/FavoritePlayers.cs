@@ -3,29 +3,31 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class favorite_player 
+    [XmlRoot("favorite_player")]
+    public class FavoritePlayer 
     {
-        [XmlAttribute]
-        public int favorite_player_id { get; set; }
-        [XmlAttribute]
-        public int hearted_by_me { get; set; }
-        [XmlAttribute]
-        public int hearts { get; set; }
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public string quote { get; set; }
-        [XmlAttribute]
-        public int total_tracks { get; set; }
-        [XmlAttribute]
-        public string username { get; set; }
+        [XmlAttribute("favorite_player_id")]
+        public int FavoritePlayerId { get; set; }
+        [XmlAttribute("hearted_by_me")]
+        public int HeartedByMe { get; set; }
+        [XmlAttribute("hearts")]
+        public int Hearts { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("quote")]
+        public string Quote { get; set; }
+        [XmlAttribute("total_tracks")]
+        public int TotalTracks { get; set; }
+        [XmlAttribute("username")]
+        public string Username { get; set; }
     }
 
-    public class favorite_players
+    [XmlRoot("favorite_players")]
+    public class FavoritePlayers
     {
-        [XmlAttribute]
-        public int total { get; set; }
+        [XmlAttribute("total")]
+        public int Total { get; set; }
         [XmlElement("favorite_player")]
-        public List<favorite_player> Players { get; set; }
+        public List<FavoritePlayer> Players { get; set; }
     }
 }

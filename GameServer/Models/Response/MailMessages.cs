@@ -3,30 +3,33 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class mail_message
+    [XmlRoot("mail_message")]
+    public class MailMessage
     {
-        [XmlAttribute]
-        public string attachment_reference { get; set; }
-        [XmlAttribute]
-        public string created_at { get; set; }
-        [XmlAttribute]
-        public bool has_deleted { get; set; }
-        [XmlAttribute]
-        public bool has_forwarded { get; set; }
-        [XmlAttribute]
-        public bool has_read { get; set; }
-        [XmlAttribute]
-        public bool has_replied { get; set; }
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public int sender_id { get; set; }
-        [XmlAttribute]
-        public string sender_name { get; set; }
-        [XmlAttribute]
-        public string updated_at { get; set; }
-        public string subject { get; set; }
-        public string body { get; set; }
+        [XmlAttribute("attachment_reference")]
+        public string AttachmentReference { get; set; }
+        [XmlAttribute("created_at")]
+        public string CreatedAt { get; set; }
+        [XmlAttribute("has_deleted")]
+        public bool HasDeleted { get; set; }
+        [XmlAttribute("has_forwarded")]
+        public bool HasForwarded { get; set; }
+        [XmlAttribute("has_read")]
+        public bool HasRead { get; set; }
+        [XmlAttribute("has_replied")]
+        public bool HasReplied { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("sender_id")]
+        public int SenderId { get; set; }
+        [XmlAttribute("sender_name")]
+        public string SenderName { get; set; }
+        [XmlAttribute("updated_at")]
+        public string UpdatedAt { get; set; }
+        [XmlElement("subject")]
+        public string Subject { get; set; }
+        [XmlElement("body")]
+        public string Body { get; set; }
     }
 
     public class mailMessage

@@ -2,35 +2,36 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    [XmlType(TypeName = "ticket")]
+    [XmlType(TypeName = "ticket")]    // TODO: Can we change this to XmlRoot?
     public class TicketResponse
     {
-        [XmlAttribute]
-        public string expiration_date { get; set; }
-        [XmlAttribute]
-        public int player_id { get; set; }
-        [XmlAttribute]
-        public string session_uuid { get; set; }
-        [XmlAttribute]
-        public string signature { get; set; }
-        [XmlAttribute]
-        public string username { get; set; }
+        [XmlAttribute("expiration_date")]
+        public string ExpirationDate { get; set; }
+        [XmlAttribute("player_id")]
+        public int PlayerId { get; set; }
+        [XmlAttribute("session_uuid")]
+        public string SessionUuid { get; set; }
+        [XmlAttribute("signature")]
+        public string Signature { get; set; }
+        [XmlAttribute("username")]
+        public string Username { get; set; }
     }
 
-    [XmlType(TypeName = "server")]
+    [XmlType(TypeName = "server")]    // TODO: Can we change this to XmlRoot?
     public class ServerResponse
     {
-        [XmlAttribute]
-        public string address { get; set; }
-        [XmlAttribute]
-        public int port { get; set; }
-        [XmlAttribute]
-        public string server_private_key { get; set; }
-        [XmlAttribute]
-        public string server_type { get; set; }
-        [XmlAttribute]
-        public string session_uuid { get; set; }
+        [XmlAttribute("address")]
+        public string Address { get; set; }
+        [XmlAttribute("port")]
+        public int Port { get; set; }
+        [XmlAttribute("server_private_key")]
+        public string ServerPrivateKey { get; set; }
+        [XmlAttribute("server_type")]
+        public string ServerType { get; set; }
+        [XmlAttribute("session_uuid")]
+        public string SessionUuid { get; set; }
 
-        public TicketResponse ticket { get; set; }
+        [XmlElement("ticket")]
+        public TicketResponse Ticket { get; set; }
     }
 }

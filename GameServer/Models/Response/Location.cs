@@ -2,16 +2,16 @@
 
 namespace GameServer.Models.Response
 {
-    [XmlType(TypeName = "location")]
+    [XmlType(TypeName = "location")]    // TODO: Can we change this to XmlRoot?
     public class Location
     {
-        [XmlAttribute]
-        public float longitude { get; set; }
-        [XmlAttribute]
-        public float latitude { get; set; }
-        [XmlAttribute]
-        public string tag { get; set; }
-        [XmlAttribute]
-        public bool is_tagged { get; set; }
+        [XmlAttribute("longitude")]
+        public float Longitude { get; set; }
+        [XmlAttribute("latitude")]
+        public float Latitude { get; set; }
+        [XmlAttribute("tag")]
+        public string Tag { get; set; }
+        [XmlAttribute("is_tagged")]
+        public bool IsTagged { get; set; }
     }
 }

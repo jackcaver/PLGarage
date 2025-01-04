@@ -2,13 +2,14 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class player_profile 
+    [XmlRoot("player_profile")]
+    public class PlayerProfile 
     {
-        [XmlAttribute]
-        public int player_id { get; set; }
-        [XmlAttribute]
-        public string quote { get; set; }
-        [XmlAttribute]
-        public string username { get; set; }
+        [XmlAttribute("player_id")]
+        public int PlayerId { get; set; }
+        [XmlAttribute("quote")]
+        public string Quote { get; set; }
+        [XmlAttribute("username")]
+        public string Username { get; set; }
     }
 }

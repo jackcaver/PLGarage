@@ -5,47 +5,49 @@ namespace GameServer.Models.Response
 {
     public class PersonalSubLeaderboardPlayer
     {
-        [XmlAttribute]
-        public string username { get; set; }
-        [XmlAttribute]
-        public int player_id { get; set; }
-        [XmlAttribute]
-        public int rank { get; set; }
-        [XmlAttribute]
-        public float best_lap_time { get; set; }
-        [XmlAttribute]
-        public int kart_idx { get; set; }
-        [XmlAttribute]
-        public int character_idx { get; set; }
-        [XmlAttribute]
-        public int track_idx { get; set; }
-        [XmlAttribute]
-        public int sub_key_id { get; set; }
-        [XmlAttribute]
-        public int skill_level_id { get; set; }
-        [XmlAttribute]
-        public string location_tag { get; set; }
-        [XmlAttribute]
-        public float latitude { get; set; }
-        [XmlAttribute]
-        public float longitude { get; set; }
+        [XmlAttribute("username")]
+        public string Username { get; set; }
+        [XmlAttribute("player_id")]
+        public int PlayerId { get; set; }
+        [XmlAttribute("rank")]
+        public int Rank { get; set; }
+        [XmlAttribute("best_lap_time")]
+        public float BestLapTime { get; set; }
+        [XmlAttribute("kart_idx")]
+        public int KartIdx { get; set; }
+        [XmlAttribute("character_idx")]
+        public int CharacterIdx { get; set; }
+        [XmlAttribute("track_idx")]
+        public int TrackIdx { get; set; }
+        [XmlAttribute("sub_key_id")]
+        public int SubKeyId { get; set; }
+        [XmlAttribute("skill_level_id")]
+        public int SkillLevelId { get; set; }
+        [XmlAttribute("location_tag")]
+        public string LocationTag { get; set; }
+        [XmlAttribute("latitude")]
+        public float Latitude { get; set; }
+        [XmlAttribute("longitude")]
+        public float Longitude { get; set; }
     }
 
     public class PersonalSubLeaderboard
     {
-        [XmlAttribute]
-        public int total_pages { get; set; }
-        [XmlAttribute]
-        public int page { get; set; }
-        [XmlAttribute]
-        public int total { get; set; }
+        [XmlAttribute("total_pages")]
+        public int TotalPages { get; set; }
+        [XmlAttribute("page")]
+        public int Page { get; set; }
+        [XmlAttribute("total")]
+        public int Total { get; set; }
         [XmlElement("player")]
         public List<PersonalSubLeaderboardPlayer> Scores { get; set; } 
     }
 
     public class SubLeaderboardPersonalViewResponse
     {
-        public PersonalSubLeaderboardPlayer my_stats { get; set; }
-        public PersonalSubLeaderboard leaderboard { get; set; }
+        [XmlElement("my_stats")]
+        public PersonalSubLeaderboardPlayer MyStats { get; set; }
+        [XmlElement("leaderboard")]
+        public PersonalSubLeaderboard Leaderboard { get; set; }
     }
 }

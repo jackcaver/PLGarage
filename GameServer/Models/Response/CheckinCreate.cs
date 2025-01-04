@@ -2,28 +2,28 @@
 
 namespace GameServer.Models.Response
 {
-    [XmlType(TypeName = "checkin")]
+    [XmlType(TypeName = "checkin")]    // TODO: Can we change this to XmlRoot?
     public class CheckinCreate
     {
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public float last_miles { get; set; }
-        [XmlAttribute]
-        public float last_points { get; set; }
-        [XmlAttribute]
-        public float global_miles { get; set; }
-        [XmlAttribute]
-        public float global_points { get; set; }
-        [XmlAttribute]
-        public float travel_points { get; set; }
-        [XmlAttribute]
-        public float total_miles { get; set; }
-        [XmlAttribute]
-        public float u { get; set; }
-        [XmlAttribute]
-        public float v { get; set; }
-        [XmlAttribute]
-        public bool new_unlock { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("last_miles")]
+        public float LastMiles { get; set; }
+        [XmlAttribute("last_points")]
+        public float LastPoints { get; set; }
+        [XmlAttribute("global_miles")]
+        public float GlobalMiles { get; set; }
+        [XmlAttribute("global_points")]
+        public float GlobalPoints { get; set; }
+        [XmlAttribute("travel_points")]
+        public float TravelPoints { get; set; }
+        [XmlAttribute("total_miles")]
+        public float TotalMiles { get; set; }
+        [XmlAttribute("u")]
+        public float U { get; set; }
+        [XmlAttribute("v")]
+        public float V { get; set; }
+        [XmlAttribute("new_unlock")]
+        public bool NewUnlock { get; set; }
     }
 }

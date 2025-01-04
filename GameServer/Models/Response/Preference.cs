@@ -2,18 +2,18 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    [XmlType(TypeName = "preference")]
+    [XmlType(TypeName = "preference")]    // TODO: Can we change this to XmlRoot?
     public class Preference
     {
-        [XmlAttribute]
-        public string domain { get; set; }
-        [XmlAttribute]
-        public string ip_address { get; set; }
-        [XmlAttribute]
-        public string language_code { get; set; }
-        [XmlAttribute]
-        public string region_code { get; set; }
-        [XmlAttribute]
-        public string timezone { get; set; }
+        [XmlAttribute("domain")]
+        public string Domain { get; set; }
+        [XmlAttribute("ip_address")]
+        public string IpAddress { get; set; }
+        [XmlAttribute("language_code")]
+        public string LanguageCode { get; set; }
+        [XmlAttribute("region_code")]
+        public string RegionCode { get; set; }
+        [XmlAttribute("timezone")]
+        public string Timezone { get; set; }
     }
 }

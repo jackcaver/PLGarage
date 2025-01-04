@@ -3,25 +3,27 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class player_metric 
+    [XmlRoot("player_metric")]
+    public class PlayerMetric 
     {
-        [XmlAttribute]
-        public string deviation { get; set; }
-        [XmlAttribute]
-        public string num_games { get; set; }
-        [XmlAttribute]
-        public int player_id { get; set; }
-        [XmlAttribute]
-        public int points { get; set; }
-        [XmlAttribute]
-        public string volatility { get; set; }
+        [XmlAttribute("deviation")]
+        public string Deviation { get; set; }
+        [XmlAttribute("num_games")]
+        public string NumGames { get; set; }
+        [XmlAttribute("player_id")]
+        public int PlayerId { get; set; }
+        [XmlAttribute("points")]
+        public int Points { get; set; }
+        [XmlAttribute("volatility")]
+        public string Volatility { get; set; }
     }
 
-    public class player_metrics
+    [XmlRoot("player_metrics")]
+    public class PlayerMetrics
     {
-        [XmlAttribute]
-        public int total { get; set; }
+        [XmlAttribute("total")]
+        public int Total { get; set; }
         [XmlElement("player_metric")]
-        public List<player_metric> Metrics { get; set; }
+        public List<PlayerMetric> Metrics { get; set; }
     }
 }

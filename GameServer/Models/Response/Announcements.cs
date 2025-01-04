@@ -5,23 +5,23 @@ namespace GameServer.Models.Response
 {
     public class Announcement
     {
-        [XmlAttribute]
-        public string created_at { get; set; }
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public string language_code { get; set; }
-        [XmlAttribute]
-        public string subject { get; set; }
+        [XmlAttribute("created_at")]
+        public string CreatedAt { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("language_code")]
+        public string LanguageCode { get; set; }
+        [XmlAttribute("subject")]
+        public string Subject { get; set; }
         [XmlText]
-        public string text { get; set; }
+        public string Text { get; set; }
     }
 
-    [XmlType(TypeName = "announcements")]
+    [XmlType(TypeName = "announcements")]    // TODO: Can we change this to XmlRoot?
     public class Announcements
     {
-        [XmlAttribute]
-        public int total { get; set; }
+        [XmlAttribute("total")]
+        public int Total { get; set; }
         [XmlElement("announcement")]
         public List<Announcement> AnnouncementList { get; set; }
     }

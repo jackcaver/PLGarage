@@ -5,22 +5,22 @@ namespace GameServer.Models.Response
 {
     public class SkillLevelPlayer
     {
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public int skill_level_id { get; set; }
-        [XmlAttribute]
-        public string skill_level_name { get; set; }
-        [XmlAttribute]
-        public string username { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("skill_level_id")]
+        public int SkillLevelId { get; set; }
+        [XmlAttribute("skill_level_name")]
+        public string SkillLevelName { get; set; }
+        [XmlAttribute("username")]
+        public string Username { get; set; }
     }
 
-    [XmlType(TypeName = "players")]
+    [XmlType(TypeName = "players")]    // TODO: Can we change this to XmlRoot?
     public class SkillLevelResponse
     {
-        [XmlAttribute]
-        public int total { get; set; }
+        [XmlAttribute("total")]
+        public int Total { get; set; }
         [XmlElement("player")]
-        public List<SkillLevelPlayer> playersList { get; set; }
+        public List<SkillLevelPlayer> PlayersList { get; set; }
     }
 }

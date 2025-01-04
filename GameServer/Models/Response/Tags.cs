@@ -3,27 +3,27 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    [XmlType(TypeName = "tag")]
+    [XmlType(TypeName = "tag")]    // TODO: Can we change this to XmlRoot?
     public class Tag 
     {
         
-        [XmlAttribute]
-        public string category { get; set; }
-        [XmlAttribute]
-        public string key { get; set; }
-        [XmlAttribute]
-        public string name { get; set; }
-        [XmlAttribute]
-        public string type { get; set; }
+        [XmlAttribute("category")]
+        public string Category { get; set; }
+        [XmlAttribute("key")]
+        public string Key { get; set; }
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+        [XmlAttribute("type")]
+        public string Type { get; set; }
     }
 
-    [XmlType(TypeName = "tags")]
+    [XmlType(TypeName = "tags")]    // TODO: Can we change this to XmlRoot?
     public class Tags
     {
-        [XmlAttribute]
-        public string language { get; set; }
-        [XmlAttribute]
-        public string language_code { get; set; }
+        [XmlAttribute("language")]
+        public string Language { get; set; }
+        [XmlAttribute("language_code")]
+        public string LanguageCode { get; set; }
         [XmlElement("tag")]
         public List<Tag> TagList { get; set; }
     }

@@ -3,148 +3,149 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    [XmlType(TypeName = "comment")]
+    [XmlType(TypeName = "comment")]    // TODO: Can we change this to XmlRoot?
     public class Comment 
     {
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public int player_id { get; set; }
-        [XmlAttribute]
-        public string username { get; set; }
-        [XmlAttribute]
-        public string body { get; set; }
-        [XmlAttribute]
-        public int rating_up { get; set; }
-        [XmlAttribute]
-        public bool rated_by_me { get; set; }
-        [XmlAttribute]
-        public string updated_at { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("player_id")]
+        public int PlayerId { get; set; }
+        [XmlAttribute("username")]
+        public string Username { get; set; }
+        [XmlAttribute("body")]
+        public string Body { get; set; }
+        [XmlAttribute("rating_up")]
+        public int RatingUp { get; set; }
+        [XmlAttribute("rated_by_me")]
+        public bool RatedByMe { get; set; }
+        [XmlAttribute("updated_at")]
+        public string UpdatedAt { get; set; }
     }
 
-    [XmlType(TypeName = "track")]
+    [XmlType(TypeName = "track")]    // TODO: Can we change this to XmlRoot?
     public class Track
     {
-        [XmlAttribute]
-        public bool ai { get; set; }
-        [XmlAttribute]
-        public string associated_item_ids { get; set; }
-        [XmlAttribute]
-        public bool auto_reset { get; set; }
-        [XmlAttribute]
-        public bool battle_friendly_fire { get; set; }
-        [XmlAttribute]
-        public int battle_kill_count { get; set; }
-        [XmlAttribute]
-        public int battle_time_limit { get; set; }
-        [XmlAttribute]
-        public float coolness { get; set; }
-        [XmlAttribute]
-        public string created_at { get; set; }
-        [XmlAttribute]
-        public string description { get; set; }
-        [XmlAttribute]
-        public string difficulty { get; set; }
-        [XmlAttribute]
-        public string dlc_keys { get; set; }
-        [XmlAttribute]
-        public int downloads { get; set; }
-        [XmlAttribute]
-        public int downloads_last_week { get; set; }
-        [XmlAttribute]
-        public int downloads_this_week { get; set; }
-        [XmlAttribute]
-        public string first_published { get; set; }
-        [XmlAttribute]
-        public string hearted_by_me { get; set; }
-        [XmlAttribute]
-        public int hearts { get; set; }
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public bool is_remixable { get; set; }
-        [XmlAttribute]
-        public bool is_team_pick { get; set; }
-        [XmlAttribute]
-        public string last_published { get; set; }
-        [XmlAttribute]
-        public int level_mode { get; set; }
-        [XmlAttribute]
-        public float longest_drift { get; set; }
-        [XmlAttribute]
-        public float longest_hang_time { get; set; }
-        [XmlAttribute]
-        public string name { get; set; }
-        [XmlAttribute]
-        public int num_laps { get; set; }
-        [XmlAttribute]
-        public int num_racers { get; set; }
-        [XmlAttribute]
-        public int max_humans { get; set; }
-        [XmlAttribute]
-        public string platform { get; set; }
-        [XmlAttribute]
-        public string player_creation_type { get; set; }
-        [XmlAttribute]
-        public int player_id { get; set; }
-        [XmlAttribute]
-        public string queued_by_me { get; set; }
-        [XmlAttribute]
-        public string race_type { get; set; }
-        [XmlAttribute]
-        public int races_finished { get; set; }
-        [XmlAttribute]
-        public int races_started { get; set; }
-        [XmlAttribute]
-        public int races_started_this_month { get; set; }
-        [XmlAttribute]
-        public int races_started_this_week { get; set; }
-        [XmlAttribute]
-        public int races_won { get; set; }
-        [XmlAttribute]
-        public int rank { get; set; }
-        [XmlAttribute]
-        public int rating_down { get; set; }
-        [XmlAttribute]
-        public int rating_up { get; set; }
-        [XmlAttribute]
-        public string reviewed_by_me { get; set; }
-        [XmlAttribute]
-        public int scoreboard_mode { get; set; }
-        [XmlAttribute]
-        public string speed { get; set; }
-        [XmlAttribute]
-        public string tags { get; set; }
-        [XmlAttribute]
-        public int track_theme { get; set; }
-        [XmlAttribute]
-        public int unique_racer_count { get; set; }
-        [XmlAttribute]
-        public string updated_at { get; set; }
-        [XmlAttribute]
-        public string user_tags { get; set; }
-        [XmlAttribute]
-        public string username { get; set; }
-        [XmlAttribute]
-        public int version { get; set; }
-        [XmlAttribute]
-        public int views { get; set; }
-        [XmlAttribute]
-        public int views_last_week { get; set; }
-        [XmlAttribute]
-        public int views_this_week { get; set; }
-        [XmlAttribute]
-        public int votes { get; set; }
-        [XmlAttribute]
-        public string weapon_set { get; set; }
-        public List<Comment> comments { get; set; }
+        [XmlAttribute("ai")]
+        public bool Ai { get; set; }
+        [XmlAttribute("associated_item_ids")]
+        public string AssociatedItemIds { get; set; }
+        [XmlAttribute("auto_reset")]
+        public bool AutoReset { get; set; }
+        [XmlAttribute("battle_friendly_fire")]
+        public bool BattleFriendlyFire { get; set; }
+        [XmlAttribute("battle_kill_count")]
+        public int BattleKillCount { get; set; }
+        [XmlAttribute("battle_time_limit")]
+        public int BattleTimeLimit { get; set; }
+        [XmlAttribute("coolness")]
+        public float Coolness { get; set; }
+        [XmlAttribute("created_at")]
+        public string CreatedAt { get; set; }
+        [XmlAttribute("description")]
+        public string Description { get; set; }
+        [XmlAttribute("difficulty")]
+        public string Difficulty { get; set; }
+        [XmlAttribute("dlc_keys")]
+        public string DlcKeys { get; set; }
+        [XmlAttribute("downloads")]
+        public int Downloads { get; set; }
+        [XmlAttribute("downloads_last_week")]
+        public int DownloadsLastWeek { get; set; }
+        [XmlAttribute("downloads_this_week")]
+        public int DownloadsThisWeek { get; set; }
+        [XmlAttribute("first_published")]
+        public string FirstPublished { get; set; }
+        [XmlAttribute("hearted_by_me")]
+        public string HeartedByMe { get; set; }
+        [XmlAttribute("hearts")]
+        public int Hearts { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("is_remixable")]
+        public bool IsRemixable { get; set; }
+        [XmlAttribute("is_team_pick")]
+        public bool IsTeamPick { get; set; }
+        [XmlAttribute("last_published")]
+        public string LastPublished { get; set; }
+        [XmlAttribute("level_mode")]
+        public int LevelMode { get; set; }
+        [XmlAttribute("longest_drift")]
+        public float LongestDrift { get; set; }
+        [XmlAttribute("longest_hang_time")]
+        public float LongestHangTime { get; set; }
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+        [XmlAttribute("num_laps")]
+        public int NumLaps { get; set; }
+        [XmlAttribute("num_racers")]
+        public int NumRacers { get; set; }
+        [XmlAttribute("max_humans")]
+        public int MaxHumans { get; set; }
+        [XmlAttribute("platform")]
+        public string Platform { get; set; }
+        [XmlAttribute("player_creation_type")]
+        public string PlayerCreationType { get; set; }
+        [XmlAttribute("player_id")]
+        public int PlayerId { get; set; }
+        [XmlAttribute("queued_by_me")]
+        public string QueuedByMe { get; set; }
+        [XmlAttribute("race_type")]
+        public string RaceType { get; set; }
+        [XmlAttribute("races_finished")]
+        public int RacesFinished { get; set; }
+        [XmlAttribute("races_started")]
+        public int RacesStarted { get; set; }
+        [XmlAttribute("races_started_this_month")]
+        public int RacesStartedThisMonth { get; set; }
+        [XmlAttribute("races_started_this_week")]
+        public int RacesStartedThisWeek { get; set; }
+        [XmlAttribute("races_won")]
+        public int RacesWon { get; set; }
+        [XmlAttribute("rank")]
+        public int Rank { get; set; }
+        [XmlAttribute("rating_down")]
+        public int RatingDown { get; set; }
+        [XmlAttribute("rating_up")]
+        public int RatingUp { get; set; }
+        [XmlAttribute("reviewed_by_me")]
+        public string ReviewedByMe { get; set; }
+        [XmlAttribute("scoreboard_mode")]
+        public int ScoreboardMode { get; set; }
+        [XmlAttribute("speed")]
+        public string Speed { get; set; }
+        [XmlAttribute("tags")]
+        public string Tags { get; set; }
+        [XmlAttribute("track_theme")]
+        public int TrackTheme { get; set; }
+        [XmlAttribute("unique_racer_count")]
+        public int UniqueRacerCount { get; set; }
+        [XmlAttribute("updated_at")]
+        public string UpdatedAt { get; set; }
+        [XmlAttribute("user_tags")]
+        public string UserTags { get; set; }
+        [XmlAttribute("username")]
+        public string Username { get; set; }
+        [XmlAttribute("version")]
+        public int Version { get; set; }
+        [XmlAttribute("views")]
+        public int Views { get; set; }
+        [XmlAttribute("views_last_week")]
+        public int ViewsLastWeek { get; set; }
+        [XmlAttribute("views_this_week")]
+        public int ViewsThisWeek { get; set; }
+        [XmlAttribute("votes")]
+        public int Votes { get; set; }
+        [XmlAttribute("weapon_set")]
+        public string WeaponSet { get; set; }
+        [XmlElement("comments")]
+        public List<Comment> Comments { get; set; }
         [XmlElement("reviews")]
-        public List<Reviews> reviews { get; set; }
+        public List<Reviews> Reviews { get; set; }
         [XmlElement("activities")]
-        public List<Activities> activities { get; set; }
+        public List<Activities> Activities { get; set; }
         [XmlElement("photos")]
-        public List<Photos> photos { get; set; }
+        public List<Photos> Photos { get; set; }
         [XmlElement("leaderboard")]
-        public List<SubLeaderboard> leaderboard { get; set; }
+        public List<SubLeaderboard> Leaderboard { get; set; }
     }
 }

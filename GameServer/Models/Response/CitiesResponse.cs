@@ -3,27 +3,28 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    [XmlType(TypeName = "city")]
+    [XmlType(TypeName = "city")]    // TODO: Can we change this to XmlRoot?
     public class City
     {
-        [XmlAttribute]
-        public string name { get; set; }
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public float u { get; set; }
-        [XmlAttribute]
-        public float v { get; set; }
-        [XmlAttribute]
-        public float longitude { get; set; }
-        [XmlAttribute]
-        public float latitude { get; set; }
-        [XmlAttribute]
-        public bool has_new_unlocked { get; set; }
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("u")]
+        public float U { get; set; }
+        [XmlAttribute("v")]
+        public float V { get; set; }
+        [XmlAttribute("longitude")]
+        public float Longitude { get; set; }
+        [XmlAttribute("latitude")]
+        public float Latitude { get; set; }
+        [XmlAttribute("has_new_unlocked")]
+        public bool HasNewUnlocked { get; set; }
     }
 
     public class CitiesResponse
     {
-        public List<City> cities { get; set; }
+        [XmlElement("cities")]
+        public List<City> Cities { get; set; }
     }
 }

@@ -3,18 +3,20 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class profanity_filter 
+    [XmlRoot("profanity_filter")]
+    public class ProfanityFilter 
     {
         
-        [XmlAttribute]
-        public string pattern { get; set; }
-        [XmlAttribute]
-        public string replace { get; set; }
+        [XmlAttribute("pattern")]
+        public string Pattern { get; set; }
+        [XmlAttribute("replace")]
+        public string Replace { get; set; }
     }
 
-    public class profanity_filters
+    [XmlRoot("profanity_filters")]
+    public class ProfanityFilters
     {
         [XmlElement("profanity_filter")]
-        public List<profanity_filter> ProfanityFilterList { get; set; }
+        public List<ProfanityFilter> ProfanityFilterList { get; set; }
     }
 }

@@ -2,29 +2,34 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class profile_acls
+    [XmlRoot("profile_acls")]
+    public class ProfileAcls
     {
-        [XmlAttribute]
-        public bool allow_all { get; set; }
-        [XmlAttribute]
-        public bool allow_psn { get; set; }
-        [XmlAttribute]
-        public bool deny_all { get; set; }
+        [XmlAttribute("allow_all")]
+        public bool AllowAll { get; set; }
+        [XmlAttribute("allow_psn")]
+        public bool AllowPsn { get; set; }
+        [XmlAttribute("deny_all")]
+        public bool DenyAll { get; set; }
     }
 
-    public class player_creation_acls
+    [XmlRoot("player_creation_acls")]
+    public class PlayerCreationAcls
     {
-        [XmlAttribute]
-        public bool allow_all { get; set; }
-        [XmlAttribute]
-        public bool allow_psn { get; set; }
-        [XmlAttribute]
-        public bool deny_all { get; set; }
+        [XmlAttribute("allow_all")]
+        public bool AllowAll { get; set; }
+        [XmlAttribute("allow_psn")]
+        public bool AllowPsn { get; set; }
+        [XmlAttribute("deny_all")]
+        public bool DenyAll { get; set; }
     }
 
-    public class privacy_settings
+    [XmlRoot("privacy_settings")]
+    public class PrivacySettings
     {
-        public profile_acls profile_acls { get; set; }
-        public player_creation_acls player_creation_acls { get; set; }
+        [XmlElement("profile_acls")]
+        public ProfileAcls ProfileAcls { get; set; }
+        [XmlElement("player_creation_acls")]
+        public PlayerCreationAcls PlayerCreationAcls { get; set; }
     }
 }

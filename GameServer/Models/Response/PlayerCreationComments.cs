@@ -3,45 +3,47 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class player_creation_comment 
+    [XmlRoot("player_creation_comment")]
+    public class PlayerCreationComment
     {
-        [XmlAttribute]
-        public string body { get; set; }
-        [XmlAttribute]
-        public string created_at { get; set; }
-        [XmlAttribute]
-        public int id { get; set; }
-        [XmlAttribute]
-        public string platform { get; set; }
-        [XmlAttribute]
-        public int player_creation_id { get; set; }
-        [XmlAttribute]
-        public int player_id { get; set; }
-        [XmlAttribute]
-        public string updated_at { get; set; }
-        [XmlAttribute]
-        public string username { get; set; }
-        [XmlAttribute]
-        public int rating_up { get; set; }
-        [XmlAttribute]
-        public int rating_down { get; set; }
-        [XmlAttribute]
-        public bool rated_by_me { get; set; }
+        [XmlAttribute("body")]
+        public string Body { get; set; }
+        [XmlAttribute("created_at")]
+        public string CreatedAt { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("platform")]
+        public string Platform { get; set; }
+        [XmlAttribute("player_creation_id")]
+        public int PlayerCreationId { get; set; }
+        [XmlAttribute("player_id")]
+        public int PlayerId { get; set; }
+        [XmlAttribute("updated_at")]
+        public string UpdatedAt { get; set; }
+        [XmlAttribute("username")]
+        public string Username { get; set; }
+        [XmlAttribute("rating_up")]
+        public int RatingUp { get; set; }
+        [XmlAttribute("rating_down")]
+        public int RatingDown { get; set; }
+        [XmlAttribute("rated_by_me")]
+        public bool RatedByMe { get; set; }
     }
 
-    public class player_creation_comments
+    [XmlRoot("player_creation_comments")]
+    public class PlayerCreationComments
     {
-        [XmlAttribute]
-        public int page { get; set; }
-        [XmlAttribute]
-        public int row_end { get; set; }
-        [XmlAttribute]
-        public int row_start { get; set; }
-        [XmlAttribute]
-        public int total { get; set; }
-        [XmlAttribute]
-        public int total_pages { get; set; }
+        [XmlAttribute("page")]
+        public int Page { get; set; }
+        [XmlAttribute("row_end")]
+        public int RowEnd { get; set; }
+        [XmlAttribute("row_start")]
+        public int RowStart { get; set; }
+        [XmlAttribute("total")]
+        public int Total { get; set; }
+        [XmlAttribute("total_pages")]
+        public int TotalPages { get; set; }
         [XmlElement("player_creation_comment")]
-        public List<player_creation_comment> PlayerCreationCommentList { get; set; }
+        public List<PlayerCreationComments> PlayerCreationCommentList { get; set; }
     }
 }

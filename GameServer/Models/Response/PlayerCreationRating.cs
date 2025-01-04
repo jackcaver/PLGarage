@@ -3,32 +3,34 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    public class player_creation_rating 
+    [XmlRoot("player_creation_rating")]
+    public class PlayerCreationRating
     {
-        [XmlAttribute]
-        public string comments { get; set; }
-        [XmlAttribute]
-        public string rating { get; set; }
+        [XmlAttribute("comments")]
+        public string Comments { get; set; }
+        [XmlAttribute("rating")]
+        public string Rating { get; set; }
         //MNR
-        [XmlAttribute]
-        public string player_id { get; set; }
-        [XmlAttribute]
-        public string username { get; set; }
+        [XmlAttribute("player_id")]
+        public string PlayerId { get; set; }
+        [XmlAttribute("username")]
+        public string Username { get; set; }
     }
 
-    public class player_creation_ratings
+    [XmlRoot("player_creation_ratings")]
+    public class PlayerCreationRatings
     {
-        [XmlAttribute]
-        public int page { get; set; }
-        [XmlAttribute]
-        public int row_end { get; set; }
-        [XmlAttribute]
-        public int row_start { get; set; }
-        [XmlAttribute]
-        public int total { get; set; }
-        [XmlAttribute]
-        public int total_pages { get; set; }
+        [XmlAttribute("page")]
+        public int Page { get; set; }
+        [XmlAttribute("row_end")]
+        public int RowEnd { get; set; }
+        [XmlAttribute("row_start")]
+        public int RowStart { get; set; }
+        [XmlAttribute("total")]
+        public int Total { get; set; }
+        [XmlAttribute("total_pages")]
+        public int TotalPages { get; set; }
         [XmlElement("player_creation_rating")]
-        public List<player_creation_rating> PlayerCreationRatingList { get; set; }
+        public List<PlayerCreationRating> PlayerCreationRatingList { get; set; }
     }
 }

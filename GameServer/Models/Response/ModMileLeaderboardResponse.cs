@@ -5,49 +5,55 @@ namespace GameServer.Models.Response
 {
     public class ModMileLeaderboardStat
     {
-        [XmlAttribute]
-        public int rank { get; set; }
-        [XmlAttribute]
-        public string player { get; set; }
-        [XmlAttribute]
-        public int visits { get; set; }
-        [XmlAttribute]
-        public int travel_points { get; set; }
-        [XmlAttribute]
-        public string destination { get; set; }
-        [XmlAttribute]
-        public string city { get; set; }
-        [XmlAttribute]
-        public string country { get; set; }
+        [XmlAttribute("rank")]
+        public int Rank { get; set; }
+        [XmlAttribute("player")]
+        public string Player { get; set; }
+        [XmlAttribute("visits")]
+        public int Visits { get; set; }
+        [XmlAttribute("travel_points")]
+        public int TravelPoints { get; set; }
+        [XmlAttribute("destination")]
+        public string Destination { get; set; }
+        [XmlAttribute("city")]
+        public string City { get; set; }
+        [XmlAttribute("country")]
+        public string Country { get; set; }
     }
 
     public class ModMileLeaderboard
     {
-        [XmlAttribute]
-        public int total_pages { get; set; }
-        [XmlAttribute]
-        public int page { get; set; }
-        [XmlAttribute]
-        public int total { get; set; }
+        [XmlAttribute("total_pages")]
+        public int TotalPages { get; set; }
+        [XmlAttribute("page")]
+        public int Page { get; set; }
+        [XmlAttribute("total")]
+        public int Total { get; set; }
         [XmlElement("leaderboard_stats")]
         public List<ModMileLeaderboardStat> Scores { get; set; }
     }
 
     public class CitiesLeaderboardResponse
     {
-        public ModMileLeaderboardStat player_stats { get; set; }
-        public ModMileLeaderboard cities_leaderboard { get; set; }
+        [XmlElement("player_stats")]
+        public ModMileLeaderboardStat PlayerStats { get; set; }
+        [XmlElement("cities_leaderboard")]
+        public ModMileLeaderboard CitiesLeaderboard { get; set; }
     }
 
     public class DestinationsLeaderboardResponse
     {
-        public ModMileLeaderboardStat player_stats { get; set; }
-        public ModMileLeaderboard destinations_leaderboard { get; set; }
+        [XmlElement("player_stats")]
+        public ModMileLeaderboardStat PlayerStats { get; set; }
+        [XmlElement("destinations_leaderboard")]
+        public ModMileLeaderboard DestinationsLeaderboard { get; set; }
     }
 
     public class PlayersLeaderboardResponse
     {
-        public ModMileLeaderboardStat player_stats { get; set; }
-        public ModMileLeaderboard players_leaderboard { get; set; }
+        [XmlElement("player_stats")]
+        public ModMileLeaderboardStat PlayerStats { get; set; }
+        [XmlElement("players_leaderboard")]
+        public ModMileLeaderboard PlayersLeaderboard { get; set; }
     }
 }

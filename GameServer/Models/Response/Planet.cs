@@ -3,15 +3,15 @@ using System.Xml.Serialization;
 
 namespace GameServer.Models.Response
 {
-    [XmlType(TypeName = "tracks")]
+    [XmlType(TypeName = "tracks")]    // TODO: Can we change this to XmlRoot?
     public class Tracks {
-        [XmlAttribute]
-        public int total { get; set; }
+        [XmlAttribute("total")]
+        public int Total { get; set; }
         [XmlElement("track")]
         public List<Track> TrackList { get; set; }
     }
 
-    [XmlType(TypeName = "planet")]
+    [XmlType(TypeName = "planet")]    // TODO: Can we change this to XmlRoot?
     public class Planet
     {
         //[XmlAttribute]
@@ -34,22 +34,22 @@ namespace GameServer.Models.Response
         //public string first_published { get; set; }
         //[XmlAttribute]
         //public int hearts { get; set; }
-        [XmlAttribute]
-        public int id { get; set; }
+        [XmlAttribute("id")]
+        public int Id { get; set; }
         //[XmlAttribute]
         //public bool is_remixable { get; set; }
         //[XmlAttribute]
         //public string last_published { get; set; }
         //[XmlAttribute]
         //public string moderation_status { get; set; }
-        [XmlAttribute]
-        public string name { get; set; }
+        [XmlAttribute("name")]
+        public string Name { get; set; }
         //[XmlAttribute]
         //public string platform { get; set; }
         //[XmlAttribute]
         //public string player_creation_type { get; set; }
-        [XmlAttribute]
-        public int player_id { get; set; }
+        [XmlAttribute("player_id")]
+        public int PlayerId { get; set; }
         //[XmlAttribute]
         //public int rating_down { get; set; }
         //[XmlAttribute]
@@ -60,8 +60,8 @@ namespace GameServer.Models.Response
         //public string updated_at { get; set; }
         //[XmlAttribute]
         //public string user_tags { get; set; }
-        [XmlAttribute]
-        public string username { get; set; }
+        [XmlAttribute("username")]
+        public string Username { get; set; }
         //[XmlAttribute]
         //public int version { get; set; }
         //[XmlAttribute]
@@ -70,6 +70,7 @@ namespace GameServer.Models.Response
         //public int views_last_week { get; set; }
         //[XmlAttribute]
         //public int views_this_week { get; set; }
-        public Tracks tracks { get; set; }
+        [XmlElement("tracks")]
+        public Tracks Tracks { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -19,6 +20,6 @@ namespace GameServer.Models.PlayerData.PlayerCreations
 
         public User User { get; set; }
         public PlayerCreationData Creation { get; set; }
-        public PlayerCreationReviewRatingData ReviewRatings { get; set; }
+        public ICollection<PlayerCreationReviewRatingData> ReviewRatings { get; set; }
     }
 }

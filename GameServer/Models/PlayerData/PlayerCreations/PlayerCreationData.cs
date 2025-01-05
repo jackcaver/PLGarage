@@ -60,13 +60,15 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public ModerationStatus ModerationStatus { get; set; }
         //MNR
         public bool IsMNR { get; set; }
-        public int ParentCreationId { get; set; }
-        public int ParentPlayerId { get; set; }
-        public int OriginalPlayerId { get; set; }
         public float BestLapTime { get; set; }
         public bool HasPreview { get; set; } = true;    // Set as true by default as all creations uploaded via server will
 
         public User Author { get; set; }
+        //MNR
+        public PlayerCreationData ParentCreation { get; set; }
+        public User ParentPlayer { get; set; }
+        public User OriginalPlayer { get; set; }
+        //
         public ICollection<PlayerCreationUniqueRacer> UniqueRacers { get; set; }
         public ICollection<PlayerCreationRaceStarted> RacesStarted { get; set; }
         public ICollection<PlayerCreationDownload> Downloads { get; set; }

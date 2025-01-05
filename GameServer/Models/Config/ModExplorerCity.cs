@@ -10,8 +10,8 @@ namespace GameServer.Models.Config
         public float Latitude { get; set; }
         public float Longitude { get; set; }
         [JsonIgnore]
-        public float U => ModMile.GetU(Longitude);
+        public float U => ModMileImpl.GetU(Longitude);
         [JsonIgnore]
-        public float V => ModMile.GetV(Latitude);
+        public float V => ModMileImpl.GetV(Latitude);
     }
 }

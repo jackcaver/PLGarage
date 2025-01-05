@@ -23,7 +23,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(ModMile.TravelAwards(database, SessionID, per_page, page), "application/xml;charset=utf-8");
+            return Content(ModMileImpl.TravelAwards(database, SessionID, per_page, page), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -33,7 +33,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(ModMile.FeaturedCities(database, SessionID, per_page, page), "application/xml;charset=utf-8");
+            return Content(ModMileImpl.FeaturedCities(database, SessionID, per_page, page), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -43,7 +43,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(ModMile.POIList(database, SessionID, per_page, page, city_id), "application/xml;charset=utf-8");
+            return Content(ModMileImpl.POIList(database, SessionID, per_page, page, city_id), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -53,7 +53,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(ModMile.POIShow(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(ModMileImpl.POIShow(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -63,7 +63,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(ModMile.CheckinStatus(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(ModMileImpl.CheckinStatus(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -80,21 +80,21 @@ namespace GameServer.Controllers.Player
             if (FormLongitude != null)
                 longitude = float.Parse(FormLongitude, CultureInfo.InvariantCulture.NumberFormat);
 
-            return Content(ModMile.CheckinCreate(database, SessionID, latitude, longitude), "application/xml;charset=utf-8");
+            return Content(ModMileImpl.CheckinCreate(database, SessionID, latitude, longitude), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
         [Route("mod_mile/leaderboards/cities.xml")]
         public IActionResult LeaderboardCities(int page, int per_page, Timespan timespan, SortColumn sort_column, SortOrder sort_order)
         {
-            return Content(ModMile.LeaderboardCities(database, page, per_page, timespan, sort_column, sort_order), "application/xml;charset=utf-8");
+            return Content(ModMileImpl.LeaderboardCities(database, page, per_page, timespan, sort_column, sort_order), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
         [Route("mod_mile/leaderboards/destinations.xml")]
         public IActionResult LeaderboardDestinations(int page, int per_page, Timespan timespan, SortColumn sort_column, SortOrder sort_order)
         {
-            return Content(ModMile.LeaderboardDestinations(database, page, per_page, timespan, sort_column, sort_order), "application/xml;charset=utf-8");
+            return Content(ModMileImpl.LeaderboardDestinations(database, page, per_page, timespan, sort_column, sort_order), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -104,7 +104,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(ModMile.LeaderboardPlayers(database, SessionID, page, per_page, timespan, sort_column, sort_order, username), "application/xml;charset=utf-8");
+            return Content(ModMileImpl.LeaderboardPlayers(database, SessionID, page, per_page, timespan, sort_column, sort_order, username), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

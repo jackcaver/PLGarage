@@ -13,13 +13,13 @@ using System.Text;
 
 namespace GameServer.Implementation.Common
 {
-    public class Moderation
+    public class ModerationImpl
     {
         private static Dictionary<Guid, ModerationSessionInfo> Sessions = []; 
 
         public static string GriefReport(Database database, Guid SessionID, GriefReport grief_report)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -56,7 +56,7 @@ namespace GameServer.Implementation.Common
 
         public static string PlayerComplaints(Database database, Guid SessionID, PlayerComplaint player_complaint)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var player = database.Users.FirstOrDefault(match => match.UserId == player_complaint.player_id);
 
@@ -89,7 +89,7 @@ namespace GameServer.Implementation.Common
 
         public static string PlayerCreationComplaints(Database database, Guid SessionID, PlayerCreationComplaint player_creation_complaint)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == player_creation_complaint.player_creation_id);
 

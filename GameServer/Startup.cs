@@ -88,8 +88,8 @@ namespace GameServer
 
             appLifetime.ApplicationStopping.Register(() =>
             {
-                Session.DestroyAllSessions();
-                ServerCommunication.DisconnectAllServers("ServerStopping").Wait();
+                SessionImpl.DestroyAllSessions();
+                ServerCommunicationImpl.DisconnectAllServers("ServerStopping").Wait();
             });
         }
     }

@@ -21,7 +21,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(FavoritePlayerCreations.AddToFavorites(database, SessionID, player_creation_id), "application/xml;charset=utf-8");
+            return Content(FavoritePlayerCreationsImpl.AddToFavorites(database, SessionID, player_creation_id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -31,7 +31,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(FavoritePlayerCreations.RemoveFromFavorites(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(FavoritePlayerCreationsImpl.RemoveFromFavorites(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -41,7 +41,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(FavoritePlayerCreations.ListFavorites(database, SessionID, player_id_or_username), "application/xml;charset=utf-8");
+            return Content(FavoritePlayerCreationsImpl.ListFavorites(database, SessionID, player_id_or_username), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

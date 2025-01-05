@@ -20,7 +20,7 @@ namespace GameServer.Controllers.Player
         [Route("player_profile/view.xml")]
         public IActionResult ViewProfile(int player_id, Platform platform)
         {
-            return Content(PlayerProfiles.ViewProfile(database, player_id, platform), "application/xml;charset=utf-8");
+            return Content(PlayerProfilesImpl.ViewProfile(database, player_id, platform), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
@@ -31,7 +31,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerProfiles.UpdateProfile(database, SessionID, player_profile), "application/xml;charset=utf-8");
+            return Content(PlayerProfilesImpl.UpdateProfile(database, SessionID, player_profile), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

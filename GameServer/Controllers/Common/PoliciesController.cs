@@ -20,11 +20,11 @@ namespace GameServer.Controllers.Common
         public IActionResult ViewPolicy(PolicyType policy_type, Platform platform, string username)
         {
             if (Request.Cookies.ContainsKey("session_id") 
-                && Session.GetSession(Guid.Parse(Request.Cookies["session_id"])).Username != null 
+                && SessionImpl.GetSession(Guid.Parse(Request.Cookies["session_id"])).Username != null 
                 && (username == null || (platform == Platform.PSV && username == "X")))
-                username = Session.GetSession(Guid.Parse(Request.Cookies["session_id"])).Username;
+                username = SessionImpl.GetSession(Guid.Parse(Request.Cookies["session_id"])).Username;
 
-            return Content(Policy.View(database, policy_type, platform, username), "application/xml;charset=utf-8");
+            return Content(PolicyImpl.View(database, policy_type, platform, username), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -34,7 +34,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Policy.Accept(database, SessionID, id, username.Split("\0")[0]), "application/xml;charset=utf-8");
+            return Content(PolicyImpl.Accept(database, SessionID, id, username.Split("\0")[0]), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

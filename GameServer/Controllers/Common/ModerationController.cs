@@ -25,7 +25,7 @@ namespace GameServer.Controllers.Common
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             grief_report.data = Request.Form.Files.GetFile("grief_report[data]");
             grief_report.preview = Request.Form.Files.GetFile("grief_report[preview]");
-            return Content(Moderation.GriefReport(database, SessionID, grief_report), "application/xml;charset=utf-8");
+            return Content(ModerationImpl.GriefReport(database, SessionID, grief_report), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -35,7 +35,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Moderation.PlayerComplaints(database, SessionID, player_complaint), "application/xml;charset=utf-8");
+            return Content(ModerationImpl.PlayerComplaints(database, SessionID, player_complaint), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -46,7 +46,7 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             player_creation_complaint.preview = Request.Form.Files.GetFile("player_creation_complaint[preview]");
-            return Content(Moderation.PlayerCreationComplaints(database, SessionID, player_creation_complaint), "application/xml;charset=utf-8");
+            return Content(ModerationImpl.PlayerCreationComplaints(database, SessionID, player_creation_complaint), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -55,7 +55,7 @@ namespace GameServer.Controllers.Common
         {
             Guid sessionID = Guid.NewGuid();
             Response.Cookies.Append("moderation_session_id", sessionID.ToString());
-            return Content(Moderation.Login(database, sessionID, login, password));
+            return Content(ModerationImpl.Login(database, sessionID, login, password));
         }
 
         [HttpGet]
@@ -66,9 +66,9 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("moderation_session_id"))
                 SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
 
-            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+            if (!ModerationImpl.IsLoggedIn(SessionID)) return StatusCode(403);
 
-            return Content(Moderation.GetGriefReports(database, context, from));
+            return Content(ModerationImpl.GetGriefReports(database, context, from));
         }
 
         [HttpGet]
@@ -79,9 +79,9 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("moderation_session_id"))
                 SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
 
-            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+            if (!ModerationImpl.IsLoggedIn(SessionID)) return StatusCode(403);
 
-            var report = Moderation.GetGriefReport(database, id);
+            var report = ModerationImpl.GetGriefReport(database, id);
 
             if (report == null)
                 return NotFound();
@@ -97,7 +97,7 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("moderation_session_id"))
                 SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
 
-            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+            if (!ModerationImpl.IsLoggedIn(SessionID)) return StatusCode(403);
 
             var file = UserGeneratedContentUtils.LoadGriefReportData(id, "data.xml");
 
@@ -115,7 +115,7 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("moderation_session_id"))
                 SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
 
-            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+            if (!ModerationImpl.IsLoggedIn(SessionID)) return StatusCode(403);
 
             var file = UserGeneratedContentUtils.LoadGriefReportData(id, "preview.png");
 
@@ -133,9 +133,9 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("moderation_session_id"))
                 SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
 
-            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+            if (!ModerationImpl.IsLoggedIn(SessionID)) return StatusCode(403);
 
-            var result = Moderation.SetModerationStatus(database, id, status);
+            var result = ModerationImpl.SetModerationStatus(database, id, status);
 
             if (result == null)
                 return NotFound();
@@ -151,9 +151,9 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("moderation_session_id"))
                 SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
 
-            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+            if (!ModerationImpl.IsLoggedIn(SessionID)) return StatusCode(403);
 
-            var result = Moderation.SetBan(database, id, isBanned);
+            var result = ModerationImpl.SetBan(database, id, isBanned);
 
             if (result == null)
                 return NotFound();
@@ -169,9 +169,9 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("moderation_session_id"))
                 SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
 
-            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+            if (!ModerationImpl.IsLoggedIn(SessionID)) return StatusCode(403);
 
-            return Content(Moderation.GetPlayerComplaints(database, from, playerID));
+            return Content(ModerationImpl.GetPlayerComplaints(database, from, playerID));
         }
 
         [HttpGet]
@@ -182,9 +182,9 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("moderation_session_id"))
                 SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
 
-            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+            if (!ModerationImpl.IsLoggedIn(SessionID)) return StatusCode(403);
 
-            var report = Moderation.GetPlayerComplaint(database, id);
+            var report = ModerationImpl.GetPlayerComplaint(database, id);
 
             if (report == null)
                 return NotFound();
@@ -200,9 +200,9 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("moderation_session_id"))
                 SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
 
-            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+            if (!ModerationImpl.IsLoggedIn(SessionID)) return StatusCode(403);
 
-            return Content(Moderation.GetPlayerCreationComplaints(database, from, playerID, playerCreationID));
+            return Content(ModerationImpl.GetPlayerCreationComplaints(database, from, playerID, playerCreationID));
         }
 
         [HttpGet]
@@ -213,9 +213,9 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("moderation_session_id"))
                 SessionID = Guid.Parse(Request.Cookies["moderation_session_id"]);
 
-            if (!Moderation.IsLoggedIn(SessionID)) return StatusCode(403);
+            if (!ModerationImpl.IsLoggedIn(SessionID)) return StatusCode(403);
 
-            var report = Moderation.GetPlayerCreationComplaint(database, id);
+            var report = ModerationImpl.GetPlayerCreationComplaint(database, id);
 
             if (report == null)
                 return NotFound();

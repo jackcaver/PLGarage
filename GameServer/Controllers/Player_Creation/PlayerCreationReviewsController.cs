@@ -21,7 +21,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationReviews.ListReviews(database, SessionID, player_creation_id, page, per_page), "application/xml;charset=utf-8");
+            return Content(PlayerCreationReviewsImpl.ListReviews(database, SessionID, player_creation_id, page, per_page), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -31,7 +31,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationReviews.ListReviews(database, SessionID, 0, page, per_page, player_id, true), "application/xml;charset=utf-8");
+            return Content(PlayerCreationReviewsImpl.ListReviews(database, SessionID, 0, page, per_page, player_id, true), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -41,7 +41,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationReviews.CreateReview(database, SessionID, player_creation_id,
+            return Content(PlayerCreationReviewsImpl.CreateReview(database, SessionID, player_creation_id,
                 content, player_id, tags), "application/xml;charset=utf-8");
         }
 
@@ -52,7 +52,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationReviews.RemoveReview(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(PlayerCreationReviewsImpl.RemoveReview(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -62,7 +62,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationReviews.RateReview(database, SessionID, player_creation_review_id, rating), "application/xml;charset=utf-8");
+            return Content(PlayerCreationReviewsImpl.RateReview(database, SessionID, player_creation_review_id, rating), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

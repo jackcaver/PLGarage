@@ -33,7 +33,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             string resp;
             if (session.IsMNR && System.IO.File.Exists("GameResources/MNR.single_player_game.create_finish_and_post_stats.xml"))
                 resp = System.IO.File.ReadAllText("GameResources/MNR.single_player_game.create_finish_and_post_stats.xml");
@@ -52,7 +52,7 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             var Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.track_idx);
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             string FormScore = Request.Form["game_player_stats[score]"];
             string FormFinishTime = Request.Form["game_player_stats[finish_time]"];
@@ -374,7 +374,7 @@ namespace GameServer.Controllers.Common
                 filters.track = int.Parse(Request.Query["filters[track]"]);
             if (Request.Query.ContainsKey("filters[number_laps]"))
                 filters.number_laps = int.Parse(Request.Query["filters[number_laps]"]);
-            return Content(Games.GetList(page, per_page, filters), "application/xml;charset=utf-8");
+            return Content(GamesImpl.GetList(page, per_page, filters), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
@@ -385,7 +385,7 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             var HostIP = HttpContext.Connection.RemoteIpAddress.ToString();
-            return Content(Games.CreateGame(database, SessionID, game, HostIP), "application/xml;charset=utf-8");
+            return Content(GamesImpl.CreateGame(database, SessionID, game, HostIP), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
@@ -395,7 +395,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.LaunchGame(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(GamesImpl.LaunchGame(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpDelete]
@@ -405,7 +405,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.CancelGame(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(GamesImpl.CancelGame(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
@@ -415,7 +415,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.JoinGame(database, SessionID, game_id), "application/xml;charset=utf-8");
+            return Content(GamesImpl.JoinGame(database, SessionID, game_id), "application/xml;charset=utf-8");
         }
 
         [HttpDelete]
@@ -425,7 +425,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.RemovePlayer(database, SessionID, game_id), "application/xml;charset=utf-8");
+            return Content(GamesImpl.RemovePlayer(database, SessionID, game_id), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
@@ -435,7 +435,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.LeaveGame(database, SessionID, game_id), "application/xml;charset=utf-8");
+            return Content(GamesImpl.LeaveGame(database, SessionID, game_id), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
@@ -445,7 +445,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.PlayerCheckin(database, SessionID, game_id), "application/xml;charset=utf-8");
+            return Content(GamesImpl.PlayerCheckin(database, SessionID, game_id), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
@@ -455,7 +455,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.PlayerForfeit(database, SessionID, game_id), "application/xml;charset=utf-8");
+            return Content(GamesImpl.PlayerForfeit(database, SessionID, game_id), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
@@ -465,7 +465,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.PlayerFinish(database, SessionID, game_id), "application/xml;charset=utf-8");
+            return Content(GamesImpl.PlayerFinish(database, SessionID, game_id), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
@@ -475,7 +475,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.PlayerPostStats(database, SessionID, game_id, stats), "application/xml;charset=utf-8");
+            return Content(GamesImpl.PlayerPostStats(database, SessionID, game_id, stats), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

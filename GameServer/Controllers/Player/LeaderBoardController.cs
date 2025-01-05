@@ -28,10 +28,10 @@ namespace GameServer.Controllers.Player
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
 
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             if (platform == null)
                 platform = session.Platform;
-            return Content(LeaderBoards.ViewLeaderBoard(database, SessionID, type, game_type, platform.Value, page, per_page, column_page, 
+            return Content(LeaderBoardsImpl.ViewLeaderBoard(database, SessionID, type, game_type, platform.Value, page, per_page, column_page, 
                 cols_per_page, sort_column, sort_order, limit), "application/xml;charset=utf-8");
         }
 
@@ -44,10 +44,10 @@ namespace GameServer.Controllers.Player
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
 
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             if (platform == null)
                 platform = session.Platform;
-            return Content(LeaderBoards.ViewLeaderBoard(database, SessionID, type, game_type, platform.Value, page, per_page, column_page,
+            return Content(LeaderBoardsImpl.ViewLeaderBoard(database, SessionID, type, game_type, platform.Value, page, per_page, column_page,
                 cols_per_page, sort_column, sort_order, limit, Request.Query["filters[username]"], true), "application/xml;charset=utf-8");
         }
 
@@ -60,7 +60,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(LeaderBoards.ViewSubLeaderBoard(database, SessionID, sub_group_id, 
+            return Content(LeaderBoardsImpl.ViewSubLeaderBoard(database, SessionID, sub_group_id, 
                 sub_key_id, type, platform, page, per_page, column_page, cols_per_page, sort_column, 
                 sort_order, num_above_below, limit, playgroup_size, latitude, longitude), "application/xml;charset=utf-8");
         }
@@ -73,7 +73,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(LeaderBoards.ViewSubLeaderBoardAroundMe(database, SessionID, sub_group_id, sub_key_id, type, platform, 
+            return Content(LeaderBoardsImpl.ViewSubLeaderBoardAroundMe(database, SessionID, sub_group_id, sub_key_id, type, platform, 
                 column_page, cols_per_page, sort_column, sort_order, num_above_below, playgroup_size, limit), "application/xml;charset=utf-8");
         }
 
@@ -86,7 +86,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(LeaderBoards.ViewSubLeaderBoard(database, SessionID, sub_group_id,
+            return Content(LeaderBoardsImpl.ViewSubLeaderBoard(database, SessionID, sub_group_id,
                 sub_key_id, type, platform, page, per_page, column_page, cols_per_page, sort_column,
                 sort_order, num_above_below, limit, playgroup_size, latitude, longitude, Request.Query["filters[username]"], true), "application/xml;charset=utf-8");
         }
@@ -100,7 +100,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(LeaderBoards.ViewPersonalSubLeaderBoard(database, SessionID, limit, page, per_page, type,
+            return Content(LeaderBoardsImpl.ViewPersonalSubLeaderBoard(database, SessionID, limit, page, per_page, type,
                 sub_group_id, sub_key_id, platform, track_platform, sort_order, sort_column, longitude, latitude), "application/xml;charset=utf-8");
         }
 

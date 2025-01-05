@@ -10,11 +10,11 @@ using GameServer.Implementation.Common;
 
 namespace GameServer.Implementation.Player
 {
-    public class FavoritePlayers
+    public class FavoritePlayersImpl
     {
         public static string AddToFavorites(Database database, Guid SessionID, FavoritePlayer favorite_player)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
             if (favorite_player.username.Contains("\0"))
                 favorite_player.username = favorite_player.username.Split("\0")[0];
@@ -68,7 +68,7 @@ namespace GameServer.Implementation.Player
 
         public static string RemoveFromFavorites(Database database, Guid SessionID, FavoritePlayer favorite_player)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             if (favorite_player.username.Contains("\0"))
                 favorite_player.username = favorite_player.username.Split("\0")[0];
@@ -110,7 +110,7 @@ namespace GameServer.Implementation.Player
 
         public static string ListFavorites(Database database, Guid SessionID, string player_id_or_username)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var user = database.Users.FirstOrDefault(match => match.Username == player_id_or_username || match.UserId.ToString() == player_id_or_username);
 

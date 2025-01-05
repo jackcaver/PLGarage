@@ -1,4 +1,6 @@
-﻿namespace GameServer.Models.Request
+﻿using Microsoft.AspNetCore.Mvc;
+
+namespace GameServer.Models.Request
 {
     public class FavoritePlayer
     {

@@ -13,14 +13,14 @@ using System.Linq;
 
 namespace GameServer.Implementation.Player
 {
-    public class LeaderBoards
+    public class LeaderBoardsImpl
     {
         public static string ViewSubLeaderBoard(Database database, Guid SessionID, int sub_group_id, int sub_key_id, LeaderboardType type, Platform platform,
             int page, int per_page, int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int? num_above_below, int limit, int playgroup_size,
             float? latitude, float? longitude, string usernameFilter = null, bool FriendsView = false)
         {
             var scores = new List<Score> { };
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             UserGeneratedContentUtils.AddStoryLevel(database, sub_key_id);
@@ -218,7 +218,7 @@ namespace GameServer.Implementation.Player
         {
             var scores = database.Scores.Where(match => match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id
                 && match.PlaygroupSize == playgroup_size && match.Platform == platform).ToList();
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (sort_column == SortColumn.finish_time)
@@ -290,7 +290,7 @@ namespace GameServer.Implementation.Player
             int per_page, LeaderboardType type, int sub_group_id, int sub_key_id, Platform platform, 
             Platform track_platform, SortOrder sort_order, SortColumn sort_column, float longitude, float latitude)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -407,7 +407,7 @@ namespace GameServer.Implementation.Player
             int per_page, int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int limit, 
             string usernameFilter = null, bool FriendsView = false)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
             List<User> users = database.Users.Where(match => match.Username != "ufg" && match.PlayedMNR).ToList();
             List<Score> scores = database.Scores.Where(match => match.IsMNR && match.SubGroupId == (int)game_type-10).ToList();

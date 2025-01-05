@@ -30,7 +30,7 @@ namespace GameServer.Controllers.Player_Creation
             filters.player_creation_type = playerCreationType;
             filters.race_type = Request.Query["filters[race_type]"];
             filters.tags = Request.Query["filters[tags]"];
-            return Content(PlayerCreationBookmarks.ListBookmarks(database, SessionID, page, per_page, sort_column, sort_order, keyword, limit, platform, 
+            return Content(PlayerCreationBookmarksImpl.ListBookmarks(database, SessionID, page, per_page, sort_column, sort_order, keyword, limit, platform, 
                 filters), "application/xml;charset=utf-8");
         }
 
@@ -41,7 +41,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationBookmarks.CreateBookmark(database, SessionID, player_creation_id), "application/xml;charset=utf-8");
+            return Content(PlayerCreationBookmarksImpl.CreateBookmark(database, SessionID, player_creation_id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -51,7 +51,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationBookmarks.RemoveBookmark(database, SessionID, player_creation_id), "application/xml;charset=utf-8");
+            return Content(PlayerCreationBookmarksImpl.RemoveBookmark(database, SessionID, player_creation_id), "application/xml;charset=utf-8");
         }
 
         [Route("player_creation_bookmarks/tally.xml")]
@@ -60,7 +60,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationBookmarks.Tally(database, SessionID), "application/xml;charset=utf-8");
+            return Content(PlayerCreationBookmarksImpl.Tally(database, SessionID), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

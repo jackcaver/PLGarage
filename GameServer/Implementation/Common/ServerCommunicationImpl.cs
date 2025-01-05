@@ -19,7 +19,7 @@ using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Common
 {
-    public static class ServerCommunication
+    public static class ServerCommunicationImpl
     {
         private const string MasterServer = "API";
         private static readonly List<ServerInfo> Servers = [];

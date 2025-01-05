@@ -20,7 +20,7 @@ namespace GameServer.Controllers.Player
             {
                 Guid SessionID = Guid.NewGuid();
                 Response.Cookies.Append("session_id", SessionID.ToString());
-                Session.StartSession(SessionID);
+                SessionImpl.StartSession(SessionID);
             }
 
             var resp = new Response<List<Preference>>

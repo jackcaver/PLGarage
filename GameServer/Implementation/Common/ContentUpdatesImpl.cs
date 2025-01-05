@@ -16,7 +16,7 @@ using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Common
 {
-    public class ContentUpdates
+    public class ContentUpdatesImpl
     {
         public static string GetLatest(Database database, Platform platform, ContentUpdateType content_update_type, string serverURL)
         {

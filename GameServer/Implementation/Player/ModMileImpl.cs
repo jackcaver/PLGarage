@@ -12,11 +12,11 @@ using GameServer.Models.PlayerData;
 
 namespace GameServer.Implementation.Player
 {
-    public class ModMile
+    public class ModMileImpl
     {
         public static string TravelAwards(Database database, Guid SessionID, int per_page, int page)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             int globalPoints = database.TravelPoints.Sum(p => p.Amount);
@@ -58,7 +58,7 @@ namespace GameServer.Implementation.Player
 
         public static string FeaturedCities(Database database, Guid SessionID, int per_page, int page)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             var CityList = new List<City>();
@@ -97,7 +97,7 @@ namespace GameServer.Implementation.Player
 
         public static string POIList(Database database, Guid SessionID, int per_page, int page, int city_id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (!ModMileConfig.Instance.Cities.ContainsKey(city_id))
@@ -146,7 +146,7 @@ namespace GameServer.Implementation.Player
 
         public static string POIShow(Database database, Guid SessionID, int id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (!ModMileConfig.Instance.PointsOfInterest.ContainsKey(id))
@@ -194,7 +194,7 @@ namespace GameServer.Implementation.Player
 
         public static string CheckinStatus(Database database, Guid SessionID, int id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (!ModMileConfig.Instance.PointsOfInterest.ContainsKey(id))
@@ -243,7 +243,7 @@ namespace GameServer.Implementation.Player
 
         public static string CheckinCreate(Database database, Guid SessionID, float latitude, float longitude)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -471,7 +471,7 @@ namespace GameServer.Implementation.Player
 
         public static string LeaderboardPlayers(Database database, Guid SessionID, int page, int per_page, Timespan timespan, SortColumn sort_column, SortOrder sort_order, string username)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             var leaderboard = new List<ModMileLeaderboardStat>();

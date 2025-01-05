@@ -10,11 +10,11 @@ using System.Linq;
 
 namespace GameServer.Implementation.Player
 {
-    public class MailMessages
+    public class MailMessagesImpl
     {
         public static string GetMessages(Database database, Guid SessionID, int page, int per_page, string[] mail_message_types)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -95,7 +95,7 @@ namespace GameServer.Implementation.Player
 
         public static string GetMessage(Database database, Guid SessionID, int id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var message = database.MailMessages.FirstOrDefault(match => match.Id == id);
 
@@ -141,7 +141,7 @@ namespace GameServer.Implementation.Player
 
         public static string CreateMessage(Database database, Guid SessionID, int? reply_to_mail_message_id, MailMessage mail_message)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -209,7 +209,7 @@ namespace GameServer.Implementation.Player
 
         public static string RemoveMessage(Database database, Guid SessionID, int id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var message = database.MailMessages.FirstOrDefault(match => match.Id == id);
 

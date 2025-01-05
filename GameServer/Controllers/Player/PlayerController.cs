@@ -19,7 +19,7 @@ namespace GameServer.Controllers.Player
         [Route("players/to_id.xml")]
         public IActionResult ToID(string username)
         {
-            return Content(PlayerProfiles.GetPlayerID(database, username), "application/xml;charset=utf-8");
+            return Content(PlayerProfilesImpl.GetPlayerID(database, username), "application/xml;charset=utf-8");
         }
 
         [Route("players/{id}/info.xml")]
@@ -28,7 +28,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerProfiles.GetPlayerInfo(database, id, SessionID), "application/xml;charset=utf-8");
+            return Content(PlayerProfilesImpl.GetPlayerInfo(database, id, SessionID), "application/xml;charset=utf-8");
         }
 
         [Route("players/skill_levels.xml")]
@@ -37,7 +37,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerProfiles.GetSkillLevel(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(PlayerProfilesImpl.GetSkillLevel(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [Route("skill_levels.xml")]
@@ -53,7 +53,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerProfiles.IncrementRaceXP(database, SessionID, delta), "application/xml;charset=utf-8");
+            return Content(PlayerProfilesImpl.IncrementRaceXP(database, SessionID, delta), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

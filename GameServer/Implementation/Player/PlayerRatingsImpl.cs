@@ -9,11 +9,11 @@ using System.Linq;
 
 namespace GameServer.Implementation.Player
 {
-    public class PlayerRatings
+    public class PlayerRatingsImpl
     {
         public static string Create(Database database, Guid SessionID, PlayerRating player_rating)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var user = database.Users.FirstOrDefault(match => match.UserId == player_rating.player_id);
 

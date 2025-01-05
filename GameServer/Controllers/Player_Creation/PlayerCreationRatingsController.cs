@@ -22,14 +22,14 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationRatings.View(database, SessionID, player_creation_id, player_id), "application/xml;charset=utf-8");
+            return Content(PlayerCreationRatingsImpl.View(database, SessionID, player_creation_id, player_id), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
         [Route("player_creation_ratings.xml")]
         public IActionResult View(int player_creation_id, int page, int per_page)
         {
-            return Content(PlayerCreationRatings.List(database, player_creation_id, page, per_page), "application/xml;charset=utf-8");
+            return Content(PlayerCreationRatingsImpl.List(database, player_creation_id, page, per_page), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -39,7 +39,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationRatings.Create(database, SessionID, player_creation_rating), "application/xml;charset=utf-8");
+            return Content(PlayerCreationRatingsImpl.Create(database, SessionID, player_creation_rating), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -49,7 +49,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationRatings.Clear(database, SessionID, player_creation_id), "application/xml;charset=utf-8");
+            return Content(PlayerCreationRatingsImpl.Clear(database, SessionID, player_creation_id), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

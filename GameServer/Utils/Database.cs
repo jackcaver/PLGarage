@@ -1,6 +1,8 @@
-﻿using GameServer.Models.Config;
+﻿using AutoMapper;
+using GameServer.Models.Config;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
+using GameServer.Models.Profiles;
 using Microsoft.EntityFrameworkCore;
 using System;
 
@@ -45,6 +47,16 @@ namespace GameServer.Utils
         //Moderation
         public DbSet<Moderator> Moderators { get; set; }
 
+        public MapperConfiguration MapperConfig { get; }
+
+        public Database()
+        {
+            MapperConfig = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile<PlayerCreationProfile>();
+            });
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder options) =>
             options.UseMySql(ServerConfig.Instance.MysqlConnectionString, ServerVersion.AutoDetect(ServerConfig.Instance.MysqlConnectionString));
 
@@ -53,6 +65,9 @@ namespace GameServer.Utils
             modelBuilder.Entity<PlayerCreationData>()
                 .Property(b => b.HasPreview)
                 .HasDefaultValue(true);
+            modelBuilder.Entity<PlayerCreationData>()
+                .Property(b => b.Version)
+                .HasDefaultValue(1);
 
             base.OnModelCreating(modelBuilder);
         }

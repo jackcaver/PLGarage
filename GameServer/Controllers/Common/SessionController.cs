@@ -22,7 +22,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Session.Login(database, HttpContext.Connection.RemoteIpAddress.ToString(),
+            return Content(SessionImpl.Login(database, HttpContext.Connection.RemoteIpAddress.ToString(),
                 platform, ticket, hmac, console_id, SessionID), "application/xml;charset=utf-8");
         }
 
@@ -33,7 +33,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Session.SetPresence(presence.Split("\0")[0], SessionID), "application/xml;charset=utf-8");
+            return Content(SessionImpl.SetPresence(presence.Split("\0")[0], SessionID), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -44,7 +44,7 @@ namespace GameServer.Controllers.Common
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             
-            return Content(Session.Ping(SessionID), "application/xml;charset=utf-8");
+            return Content(SessionImpl.Ping(SessionID), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

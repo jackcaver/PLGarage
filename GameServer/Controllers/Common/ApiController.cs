@@ -38,7 +38,7 @@ namespace GameServer.Controllers.Common
                 Guid ServerID = Guid.Empty;
                 if (Request.Headers.TryGetValue("server_id", out StringValues server_id))
                     ServerID = Guid.Parse(server_id);
-                await ServerCommunication.HandleConnection(webSocket, ServerID);
+                await ServerCommunicationImpl.HandleConnection(webSocket, ServerID);
             }
         }
 
@@ -50,7 +50,7 @@ namespace GameServer.Controllers.Common
             if (Request.Headers.TryGetValue("server_id", out StringValues server_id))
                 ServerID = Guid.Parse(server_id);
 
-            if (ServerCommunication.GetServer(ServerID) == null)
+            if (ServerCommunicationImpl.GetServer(ServerID) == null)
                 return StatusCode(403);
 
             List<int> TrackIDs = [];

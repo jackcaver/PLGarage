@@ -15,7 +15,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             string protocol = Request.IsHttps ? "https://" : "http://";
             string serverURL = ServerConfig.Instance.ExternalURL.Replace("auto", $"{protocol}{Request.Host.Host}", System.StringComparison.CurrentCultureIgnoreCase);
             var resp = new Response<ContentURLsResponse>

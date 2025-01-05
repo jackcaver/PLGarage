@@ -12,9 +12,9 @@ namespace GameServer.Models.Config
         public float Longitude { get; set; }
         public float Radius { get; set; }
         [JsonIgnore]
-        public float U => ModMile.GetU(Longitude);
+        public float U => ModMileImpl.GetU(Longitude);
         [JsonIgnore]
-        public float V => ModMile.GetV(Latitude);
+        public float V => ModMileImpl.GetV(Latitude);
         public List<PointOfInterestAward> Awards { get; set; }
     }
 }

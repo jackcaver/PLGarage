@@ -1,35 +1,35 @@
-﻿using GameServer.Models.PlayerData.PlayerCreations;
+﻿using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Models;
-using System.Collections.Generic;
 using GameServer.Utils;
-using GameServer.Models.PlayerData;
+using System.Collections.Generic;
 using System.Linq;
 using System;
 using GameServer.Implementation.Common;
 using GameServer.Models.Common;
 
-namespace GameServer.Implementation.Player_Creation
+namespace GameServer.Implementation.Player
 {
-    public class PlayerCreationComments
+    public class PlayerCommentsImpl
     {
-        public static string ListComments(Database database, Guid SessionID, int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, string PlayerCreationIDFilter, string AuthorIDFilter)
+        public static string ListComments(Database database, Guid SessionID, int page, int per_page, int limit, SortColumn sort_column,
+            Platform platform, string PlayerIDFilter, string AuthorIDFilter)
         {
-            var Comments = new List<PlayerCreationCommentData> { };
-            var session = Session.GetSession(SessionID);
+            var Comments = new List<PlayerCommentData> { };
+            var session = SessionImpl.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
-            foreach (string id in PlayerCreationIDFilter.Split(','))
+            foreach (string id in PlayerIDFilter.Split(','))
             {
-                Comments = database.PlayerCreationComments.Where(match => match.PlayerCreationId == int.Parse(id)).ToList();
+                Comments.AddRange(database.PlayerComments.Where(match => match.PlayerId.ToString() == id).ToList());
             }
 
             //sorting
             if (sort_column == SortColumn.created_at)
                 Comments.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
 
-            var CommentsList = new List<player_creation_comment> { };
+            var commentsList = new List<player_comment> { };
 
             //calculating pages
             int pageEnd = PageCalculator.GetPageEnd(page, per_page);
@@ -44,14 +44,15 @@ namespace GameServer.Implementation.Player_Creation
                 var Comment = Comments[i];
                 if (Comment != null)
                 {
-                    CommentsList.Add(new player_creation_comment
+                    commentsList.Add(new player_comment
                     {
+                        author_id = Comment.AuthorId,
+                        author_username = Comment.AuthorUsername,
                         body = Comment.Body,
                         created_at = Comment.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                         updated_at = Comment.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                         id = Comment.Id,
                         platform = Comment.Platform.ToString(),
-                        player_creation_id = Comment.PlayerCreationId,
                         player_id = Comment.PlayerId,
                         username = Comment.Username,
                         rating_down = Comment.RatingDown,
@@ -61,29 +62,29 @@ namespace GameServer.Implementation.Player_Creation
                 }
             }
 
-            var resp = new Response<List<player_creation_comments>>
+            var resp = new Response<List<player_comments>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = [ new player_creation_comments {
+                response = [ new player_comments {
                     page = page,
                     row_start = pageStart,
                     row_end = pageEnd,
                     total = Comments.Count,
                     total_pages = totalPages,
-                    PlayerCreationCommentList = CommentsList
+                    PlayerCommentList = commentsList
                 } ]
             };
 
             return resp.Serialize();
         }
 
-        public static string CreateComment(Database database, Guid SessionID, PlayerCreationComment player_creation_comment)
+        public static string CreateComment(Database database, Guid SessionID, PlayerComment player_comment)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var author = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == player_creation_comment.player_creation_id);
+            var user = database.Users.FirstOrDefault(match => match.UserId == player_comment.player_id);
 
-            if (author == null || Creation == null)
+            if (user == null || author == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -93,28 +94,28 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            database.PlayerCreationComments.Add(new PlayerCreationCommentData
+            database.PlayerComments.Add(new PlayerCommentData
             {
-                PlayerId = author.UserId,
-                Body = player_creation_comment.body,
+                AuthorId = author.UserId,
+                Body = player_comment.body,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 Platform = Platform.PS3,
-                PlayerCreationId = player_creation_comment.player_creation_id
+                PlayerId = player_comment.player_id
             });
             database.SaveChanges();
             database.ActivityLog.Add(new ActivityEvent
             {
                 AuthorId = author.UserId,
-                Type = ActivityType.player_creation_event,
+                Type = ActivityType.player_event,
                 List = ActivityList.activity_log,
-                Topic = "player_creation_commented_on",
-                Description = player_creation_comment.body,
-                PlayerId = 0,
-                PlayerCreationId = Creation.PlayerCreationId,
+                Topic = "player_authored_comment",
+                Description = player_comment.body,
+                PlayerId = user.UserId,
+                PlayerCreationId = 0,
                 CreatedAt = DateTime.UtcNow,
-                AllusionId = database.PlayerCreationComments.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.PlayerCreationId == Creation.PlayerCreationId && match.PlayerId == author.UserId).Id,
-                AllusionType = "PlayerCreation::Comment"
+                AllusionId = database.PlayerComments.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.AuthorId == author.UserId && match.PlayerId == user.UserId).Id,
+                AllusionType = "PlayerComment"
             });
             database.SaveChanges();
 
@@ -126,11 +127,11 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string DeleteComment(Database database, Guid SessionID, int id)
+        public static string RemoveComment(Database database, Guid SessionID, int id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var comment = database.PlayerCreationComments.FirstOrDefault(match => match.Id == id);
+            var comment = database.PlayerComments.FirstOrDefault(match => match.Id == id);
 
             if (user == null || comment == null)
             {
@@ -142,22 +143,17 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == comment.PlayerCreationId);
-
-            if (creation != null)
+            if (comment.AuthorId != user.UserId && comment.PlayerId != user.UserId)
             {
-                if (creation.PlayerId != user.UserId && comment.PlayerId != user.UserId)
+                var errorResp = new Response<EmptyResponse>
                 {
-                    var errorResp = new Response<EmptyResponse>
-                    {
-                        status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
-                        response = new EmptyResponse { }
-                    };
-                    return errorResp.Serialize();
-                }
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
             }
 
-            database.PlayerCreationComments.Remove(comment);
+            database.PlayerComments.Remove(comment);
             database.SaveChanges();
 
             var resp = new Response<EmptyResponse>
@@ -168,11 +164,11 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string RateComment(Database database, Guid SessionID, PlayerCreationCommentRating player_creation_comment_rating)
+        public static string RateComment(Database database, Guid SessionID, PlayerCommentRating player_comment_rating)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var comment = database.PlayerCreationComments.FirstOrDefault(match => match.Id == player_creation_comment_rating.player_creation_comment_id);
+            var comment = database.PlayerComments.FirstOrDefault(match => match.Id == player_comment_rating.player_comment_id);
 
             if (user == null || comment == null)
             {
@@ -184,14 +180,14 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var rating = database.PlayerCreationCommentRatings.FirstOrDefault(match =>
-                match.PlayerCreationCommentId == player_creation_comment_rating.player_creation_comment_id && match.PlayerId == user.UserId);
+            var rating = database.PlayerCommentRatings.FirstOrDefault(match => match.PlayerCommentId == player_comment_rating.player_comment_id
+                && match.PlayerId == user.UserId);
 
             if (rating == null)
             {
-                database.PlayerCreationCommentRatings.Add(new PlayerCreationCommentRatingData
+                database.PlayerCommentRatings.Add(new PlayerCommentRatingData
                 {
-                    PlayerCreationCommentId = player_creation_comment_rating.player_creation_comment_id,
+                    PlayerCommentId = player_comment_rating.player_comment_id,
                     PlayerId = user.UserId,
                     Type = RatingType.YAY,
                     RatedAt = DateTime.UtcNow

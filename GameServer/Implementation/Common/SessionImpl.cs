@@ -16,7 +16,7 @@ using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Common
 {
-    public class Session
+    public class SessionImpl
     {
         private static readonly Dictionary<Guid, SessionInfo> Sessions = [];
 
@@ -142,7 +142,7 @@ namespace GameServer.Implementation.Common
                 && match.Key != SessionID && match.Value.Platform == platform))
             {
                 Sessions.Remove(Session.Key);
-                ServerCommunication.NotifySessionDestroyed(Session.Key);
+                ServerCommunicationImpl.NotifySessionDestroyed(Session.Key);
             }
 
             session.Ticket = NPTicket;
@@ -176,7 +176,7 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
             
-            ServerCommunication.NotifySessionCreated(SessionID, user.UserId, user.Username, (int)NPTicket.IssuerId, platform);
+            ServerCommunicationImpl.NotifySessionCreated(SessionID, user.UserId, user.Username, (int)NPTicket.IssuerId, platform);
             session.RandomSeed = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             var resp = new Response<List<login_data>>
@@ -268,14 +268,14 @@ namespace GameServer.Implementation.Common
                 && (DateTime.UtcNow > match.Value.LastPing.AddMinutes(60) /*|| DateTime.UtcNow > match.Value.ExpiryDate*/)))
             {
                 Sessions.Remove(Session.Key);
-                ServerCommunication.NotifySessionDestroyed(Session.Key);
+                ServerCommunicationImpl.NotifySessionDestroyed(Session.Key);
             }
 
             foreach (var Session in Sessions.Where(match => !match.Value.Authenticated
                 && DateTime.UtcNow > match.Value.LastPing.AddHours(3)))
             {
                 Sessions.Remove(Session.Key);
-                ServerCommunication.NotifySessionDestroyed(Session.Key);
+                ServerCommunicationImpl.NotifySessionDestroyed(Session.Key);
             }
         }
 
@@ -332,7 +332,7 @@ namespace GameServer.Implementation.Common
             foreach (var sessionID in Sessions.Keys.ToList())
             {
                 Sessions.Remove(sessionID);
-                ServerCommunication.NotifySessionDestroyed(sessionID);
+                ServerCommunicationImpl.NotifySessionDestroyed(sessionID);
             }
         }
     }

@@ -24,7 +24,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreations.GetTrackProfile(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(PlayerCreationsImpl.GetTrackProfile(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -34,7 +34,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreations.GetPlayerCreation(database, SessionID, id, is_counted), "application/xml;charset=utf-8");
+            return Content(PlayerCreationsImpl.GetPlayerCreation(database, SessionID, id, is_counted), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -44,14 +44,14 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreations.GetPlayerCreation(database, SessionID, id, is_counted, true), "application/xml;charset=utf-8");
+            return Content(PlayerCreationsImpl.GetPlayerCreation(database, SessionID, id, is_counted, true), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
         [Route("tracks/friends_published.xml")]
         public IActionResult FriendsPublished(Platform platform)
         {
-            return Content(PlayerCreations.PlayerCreationsFriendsPublished(database, Request.Query["filters[username]"], PlayerCreationType.TRACK),
+            return Content(PlayerCreationsImpl.PlayerCreationsFriendsPublished(database, Request.Query["filters[username]"], PlayerCreationType.TRACK),
                 "application/xml;charset=utf-8");
         }
 
@@ -68,7 +68,7 @@ namespace GameServer.Controllers.Player_Creation
             filters.tags = Request.Query.Keys.Contains("filters[tags]") ? Request.Query["filters[tags]"].ToString().Split(',') : null;
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_creation_type = PlayerCreationType.TRACK;
-            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, SortColumn.created_at, SortOrder.desc, limit, platform, filters, keyword, false, true), "application/xml;charset=utf-8");
+            return Content(PlayerCreationsImpl.SearchPlayerCreations(database, SessionID, page, per_page, SortColumn.created_at, SortOrder.desc, limit, platform, filters, keyword, false, true), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -84,7 +84,7 @@ namespace GameServer.Controllers.Player_Creation
             filters.tags = Request.Query.Keys.Contains("filters[tags]") ? Request.Query["filters[tags]"].ToString().Split(',') : null;
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_creation_type = PlayerCreationType.TRACK;
-            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, keyword, true), "application/xml;charset=utf-8");
+            return Content(PlayerCreationsImpl.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, keyword, true), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -100,7 +100,7 @@ namespace GameServer.Controllers.Player_Creation
             filters.tags = Request.Query.Keys.Contains("filters[tags]") ? Request.Query["filters[tags]"].ToString().Split(',') : null;
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_creation_type = PlayerCreationType.TRACK;
-            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, keyword),
+            return Content(PlayerCreationsImpl.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, keyword),
                 "application/xml;charset=utf-8");
         }
 
@@ -113,7 +113,7 @@ namespace GameServer.Controllers.Player_Creation
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             player_creation.data = Request.Form.Files.GetFile("player_creation[data]");
             player_creation.preview = Request.Form.Files.GetFile("player_creation[preview]");
-            return Content(PlayerCreations.CreatePlayerCreation(database, SessionID, player_creation));
+            return Content(PlayerCreationsImpl.CreatePlayerCreation(database, SessionID, player_creation));
         }
 
         [HttpPost]
@@ -125,7 +125,7 @@ namespace GameServer.Controllers.Player_Creation
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             player_creation.data = Request.Form.Files.GetFile("player_creation[data]");
             player_creation.preview = Request.Form.Files.GetFile("player_creation[preview]");
-            return Content(PlayerCreations.UpdatePlayerCreation(database, SessionID, player_creation, id),
+            return Content(PlayerCreationsImpl.UpdatePlayerCreation(database, SessionID, player_creation, id),
                 "application/xml;charset=utf-8");
         }
 
@@ -136,7 +136,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreations.RemovePlayerCreation(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(PlayerCreationsImpl.RemovePlayerCreation(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

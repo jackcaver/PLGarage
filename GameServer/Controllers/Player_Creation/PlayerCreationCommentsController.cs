@@ -23,7 +23,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationComments.ListComments(database, SessionID, page, per_page, sort_column, sort_order,
+            return Content(PlayerCreationCommentsImpl.ListComments(database, SessionID, page, per_page, sort_column, sort_order,
                 limit, platform, Request.Query["filters[player_creation_id]"], Request.Query["filters[player_id]"]), "application/xml;charset=utf-8");
         }
 
@@ -34,7 +34,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationComments.CreateComment(database, SessionID, player_creation_comment), "application/xml;charset=utf-8");
+            return Content(PlayerCreationCommentsImpl.CreateComment(database, SessionID, player_creation_comment), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -44,7 +44,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationComments.DeleteComment(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(PlayerCreationCommentsImpl.DeleteComment(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -54,7 +54,7 @@ namespace GameServer.Controllers.Player_Creation
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreationComments.RateComment(database, SessionID, player_creation_comment_rating), "application/xml;charset=utf-8");
+            return Content(PlayerCreationCommentsImpl.RateComment(database, SessionID, player_creation_comment_rating), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

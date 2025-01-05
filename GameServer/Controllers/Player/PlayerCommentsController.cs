@@ -23,7 +23,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerComments.ListComments(database, SessionID, page, per_page, limit,
+            return Content(PlayerCommentsImpl.ListComments(database, SessionID, page, per_page, limit,
                 sort_column, platform, Request.Query["filters[player_id]"], Request.Query["filters[author_id]"]), "application/xml;charset=utf-8");
         }
 
@@ -34,7 +34,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerComments.CreateComment(database, SessionID, player_comment), "application/xml;charset=utf-8");
+            return Content(PlayerCommentsImpl.CreateComment(database, SessionID, player_comment), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -44,7 +44,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerComments.RemoveComment(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(PlayerCommentsImpl.RemoveComment(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -54,7 +54,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerComments.RateComment(database, SessionID, player_comment_rating), "application/xml;charset=utf-8");
+            return Content(PlayerCommentsImpl.RateComment(database, SessionID, player_comment_rating), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

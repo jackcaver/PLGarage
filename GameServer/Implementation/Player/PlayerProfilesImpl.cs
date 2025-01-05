@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace GameServer.Implementation.Player
 {
-    public class PlayerProfiles
+    public class PlayerProfilesImpl
     {
         public static string ViewProfile(Database database, int player_id, Platform platform)
         {
@@ -39,7 +39,7 @@ namespace GameServer.Implementation.Player
         {
             int id = -130;
             string message = "The player doesn't exist";
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             if (user != null)
             {
@@ -81,7 +81,7 @@ namespace GameServer.Implementation.Player
 
         public static string GetPlayerInfo(Database database, int id, Guid SessionID)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.UserId == id);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
@@ -155,7 +155,7 @@ namespace GameServer.Implementation.Player
 
         public static string GetSkillLevel(Database database, Guid SessionID, int[] id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             List<User> users = [];
 
             foreach (var player_id in id)
@@ -206,7 +206,7 @@ namespace GameServer.Implementation.Player
         {
             int id = -130;
             string message = "The player doesn't exist";
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user != null)

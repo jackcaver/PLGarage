@@ -23,7 +23,7 @@ namespace GameServer.Controllers.Common
         {
             string protocol = Request.IsHttps ? "https://" : "http://";
             string serverURL = ServerConfig.Instance.ExternalURL.Replace("auto", $"{protocol}{Request.Host.Host}", System.StringComparison.CurrentCultureIgnoreCase);
-            return Content(ContentUpdates.GetLatest(database, platform, content_update_type, serverURL), "application/xml;charset=utf-8");
+            return Content(ContentUpdatesImpl.GetLatest(database, platform, content_update_type, serverURL), "application/xml;charset=utf-8");
         }
 
         [HttpGet]

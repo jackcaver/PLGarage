@@ -20,7 +20,7 @@ namespace GameServer.Controllers.Player_Creation
         [Route("planet.xml")]
         public IActionResult GetPlanet(int player_id, bool is_counted)
         {
-            return Content(PlayerCreations.GetPlanet(database, player_id), "application/xml;charset=utf-8");
+            return Content(PlayerCreationsImpl.GetPlanet(database, player_id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -32,14 +32,14 @@ namespace GameServer.Controllers.Player_Creation
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
             planet.player_creation_type = PlayerCreationType.PLANET;
             planet.data = Request.Form.Files.GetFile("planet[data]");
-            return Content(PlayerCreations.UpdatePlayerCreation(database, SessionID, planet), "application/xml;charset=utf-8");
+            return Content(PlayerCreationsImpl.UpdatePlayerCreation(database, SessionID, planet), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
         [Route("planet/profile.xml")]
         public IActionResult GetPlanetProfile(int player_id)
         {
-            return Content(PlayerCreations.GetPlanetProfile(database, player_id), "application/xml;charset=utf-8");
+            return Content(PlayerCreationsImpl.GetPlanetProfile(database, player_id), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

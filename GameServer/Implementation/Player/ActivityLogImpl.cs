@@ -12,13 +12,13 @@ using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Player
 {
-    public class ActivityLog
+    public class ActivityLogImpl
     {
         public static string GetActivityLog(Database database, Guid SessionID, int page, int per_page, ActivityList list = ActivityList.news_feed,
             int? player_id = null, int? player_creation_id = null)
         {
             // TODO: Optimise
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Activities = new List<ActivityEvent> { };
 
@@ -188,7 +188,7 @@ namespace GameServer.Implementation.Player
 
         public static string NewsFeedTally(Database database, Guid SessionID)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Activities = new List<ActivityEvent> { };
 
@@ -220,7 +220,7 @@ namespace GameServer.Implementation.Player
 
         public static string CreateEvent(Database database, Guid SessionID, ActivityType topic, int creator_id, PlayerEvent @event, ActivityList list_name)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (topic == ActivityType.system_event || user == null || creator_id != user.UserId)

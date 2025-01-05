@@ -13,11 +13,11 @@ using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Player_Creation
 {
-    public class PlayerCreationRatings
+    public class PlayerCreationRatingsImpl
     {
         public static string View(Database database, Guid SessionID, int player_creation_id, int player_id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -89,7 +89,7 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string Create(Database database, Guid SessionID, PlayerCreationRating player_creation_rating)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Creation = database.PlayerCreations
                 .Include(x => x.Author)
@@ -174,7 +174,7 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string Clear(Database database, Guid SessionID, int player_creation_id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var rating = database.PlayerCreationRatings.FirstOrDefault(match => match.PlayerId == user.UserId && match.PlayerCreationId == player_creation_id);
 

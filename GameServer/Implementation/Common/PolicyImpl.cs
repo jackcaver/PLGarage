@@ -10,7 +10,7 @@ using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Common
 {
-    public class Policy
+    public class PolicyImpl
     {
         private static readonly string PSVitaWarning = @"WARNING: This game sends your exact location to the server you're trying to connect to.
 Before continuing please make sure that you could trust the owner of this server
@@ -22,7 +22,7 @@ PLGarage and it's developers are not reliable for any possible data leaks or bla
         {
             List<string> whitelist = [];
             if (ServerConfig.Instance.Whitelist)
-                whitelist = Session.LoadWhitelist();
+                whitelist = SessionImpl.LoadWhitelist();
             bool is_accepted = false;
             string text = ServerConfig.Instance.NotWhitelistedText.Replace("%username", username).Replace("%platform", platform.ToString());
             var user = database.Users.FirstOrDefault(match => match.Username == username);
@@ -62,7 +62,7 @@ PLGarage and it's developers are not reliable for any possible data leaks or bla
             }
 
             if (user == null && username != "ufg")
-                Session.AcceptPolicy(SessionID);
+                SessionImpl.AcceptPolicy(SessionID);
 
             var resp = new Response<EmptyResponse>
             {

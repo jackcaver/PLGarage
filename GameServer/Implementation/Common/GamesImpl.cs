@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace GameServer.Implementation.Common
 {
-    public class Games
+    public class GamesImpl
     {
         private static readonly List<GameData> GameList = [];
         private static int NextId = 0;
@@ -91,7 +91,7 @@ namespace GameServer.Implementation.Common
 
         public static string CreateGame(Database database, Guid SessionID, Game game, string HostIP)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (game == null || user == null)
@@ -139,7 +139,7 @@ namespace GameServer.Implementation.Common
 
         public static string LaunchGame(Database database, Guid SessionID, int id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -195,7 +195,7 @@ namespace GameServer.Implementation.Common
 
         public static string CancelGame(Database database, Guid SessionID, int id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -222,7 +222,7 @@ namespace GameServer.Implementation.Common
 
         public static string JoinGame(Database database, Guid SessionID, int game_id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -251,7 +251,7 @@ namespace GameServer.Implementation.Common
 
         public static string LeaveGame(Database database, Guid SessionID, int game_id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -285,7 +285,7 @@ namespace GameServer.Implementation.Common
 
         public static string RemovePlayer(Database database, Guid SessionID, int game_id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -326,7 +326,7 @@ namespace GameServer.Implementation.Common
 
         public static string PlayerForfeit(Database database, Guid SessionID, int game_id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -360,7 +360,7 @@ namespace GameServer.Implementation.Common
 
         public static string PlayerFinish(Database database, Guid SessionID, int game_id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var game = GameList.FirstOrDefault(match => match.Id == game_id);
             var player = user != null && game != null ? game.Players.FirstOrDefault(match => match.PlayerId == user.UserId) : null;
@@ -433,7 +433,7 @@ namespace GameServer.Implementation.Common
 
         public static string PlayerPostStats(Database database, Guid SessionID, int game_id, GamePlayerStats stats)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var game = GameList.FirstOrDefault(match => match.Id == game_id);
 

@@ -22,7 +22,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerRatings.Create(database, SessionID, player_rating), "application/xml;charset=utf-8");
+            return Content(PlayerRatingsImpl.Create(database, SessionID, player_rating), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

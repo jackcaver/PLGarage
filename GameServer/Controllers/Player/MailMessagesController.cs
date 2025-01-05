@@ -22,7 +22,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(MailMessages.GetMessages(database, SessionID, page, per_page, mail_message_types.Split(",")), "application/xml;charset=utf-8");
+            return Content(MailMessagesImpl.GetMessages(database, SessionID, page, per_page, mail_message_types.Split(",")), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -32,7 +32,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(MailMessages.CreateMessage(database, SessionID, reply_to_mail_message_id, mail_message), "application/xml;charset=utf-8");
+            return Content(MailMessagesImpl.CreateMessage(database, SessionID, reply_to_mail_message_id, mail_message), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -42,7 +42,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(MailMessages.GetMessage(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(MailMessagesImpl.GetMessage(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         [HttpDelete]
@@ -52,7 +52,7 @@ namespace GameServer.Controllers.Player
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(MailMessages.RemoveMessage(database, SessionID, id), "application/xml;charset=utf-8");
+            return Content(MailMessagesImpl.RemoveMessage(database, SessionID, id), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

@@ -27,7 +27,7 @@ namespace GameServer.Models.PlayerData
         public int UserId { get; set; }
         public string Username { get; set; }
         public int Hearts => this.database.HeartedProfiles.Count(match => match.HeartedUserId == this.UserId);
-        public Presence Presence => Session.GetPresence(this.Username);
+        public Presence Presence => SessionImpl.GetPresence(this.Username);
         public int Quota { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

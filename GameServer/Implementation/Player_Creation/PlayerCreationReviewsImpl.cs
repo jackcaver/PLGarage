@@ -11,11 +11,11 @@ using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Player_Creation
 {
-    public class PlayerCreationReviews
+    public class PlayerCreationReviewsImpl
     {
         public static string ListReviews(Database database, Guid SessionID, int player_creation_id, int page, int per_page, int player_id = 0, bool byPlayer = false)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var user = database.Users.FirstOrDefault(match => match.UserId == player_id);
             var Reviews = byPlayer ? database.PlayerCreationReviews.Where(match => match.PlayerId == player_id).ToList() :
@@ -84,7 +84,7 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string CreateReview(Database database, Guid SessionID, int player_creation_id, string content, int? player_id, string tags)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == player_creation_id);
 
@@ -147,7 +147,7 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string RemoveReview(Database database, Guid SessionID, int id)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Review = database.PlayerCreationReviews.FirstOrDefault(match => match.Id == id && match.PlayerId == user.UserId);
 
@@ -174,7 +174,7 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string RateReview(Database database, Guid SessionID, int id, bool rating)
         {
-            var session = Session.GetSession(SessionID);
+            var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var review = database.PlayerCreationReviews.FirstOrDefault(match => match.Id == id);
 

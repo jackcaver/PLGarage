@@ -8,6 +8,9 @@ using System;
 using GameServer.Models.PlayerData;
 using GameServer.Implementation.Common;
 using GameServer.Models.Common;
+using GameServer.Utils.Extensions;
+using AutoMapper.QueryableExtensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -17,13 +20,8 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = SessionImpl.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var user = database.Users.FirstOrDefault(match => match.UserId == player_id);
-            var Reviews = byPlayer ? database.PlayerCreationReviews.Where(match => match.PlayerId == player_id).ToList() :
-                database.PlayerCreationReviews.Where(match => match.PlayerCreationId == player_creation_id).ToList();
 
-            Reviews.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
-
-            if (byPlayer && user == null)
+            if (byPlayer && !database.Users.Any(match => match.UserId == player_id))
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -33,50 +31,36 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var ReviewList = new List<Review> { };
+            var reviewsQuery = database.PlayerCreationReviews
+                .Include(x => x.User)
+                .Include(x => x.Creation)
+                .Include(x => x.Creation.Author)
+                .Include(x => x.ReviewRatings)
+                .Where(match => byPlayer ? match.User.UserId == player_id : match.Creation.Id == player_creation_id)
+                .OrderByDescending(match => match.CreatedAt);
 
             //calculating pages
-            int pageEnd = PageCalculator.GetPageEnd(page, per_page);
-            int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, Reviews.Count);
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+            var pageEnd = PageCalculator.GetPageStart(page, per_page);
+            var total = reviewsQuery.Count();
+            var totalPages = PageCalculator.GetTotalPages(total, per_page);
 
-            if (pageEnd > Reviews.Count)
-                pageEnd = Reviews.Count;
-
-            for (int i = pageStart; i < pageEnd; i++)
-            {
-                var Review = Reviews[i];
-                if (Review != null)
-                {
-                    ReviewList.Add(new Review
-                    {
-                        id = Review.Id,
-                        content = Review.Content,
-                        mine = requestedBy != null ? Review.IsMine(requestedBy.UserId).ToString().ToLower() : "false",
-                        player_creation_id = Review.PlayerCreationId,
-                        player_creation_name = Review.PlayerCreationName,
-                        player_creation_username = Review.PlayerCreationUsername,
-                        player_id = Review.PlayerId,
-                        rated_by_me = requestedBy != null ? Review.IsRatedByMe(requestedBy.UserId).ToString().ToLower() : "false",
-                        rating_down = Review.RatingDown.ToString(),
-                        rating_up = Review.RatingUp.ToString(),
-                        username = Review.Username,
-                        tags = Review.Tags,
-                        updated_at = Review.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
-                    });
-                }
-            }
+            var reviews = reviewsQuery
+                .Take(pageStart)
+                .Skip(per_page)
+                .ProjectTo<Review>(database.MapperConfig, new { requestedBy })
+                .ToList();
 
             var resp = new Response<List<Reviews>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [ new Reviews {
-                    page = page,
-                    row_start = pageStart,
-                    row_end = pageEnd,
-                    total_pages = totalPages,
-                    total = Reviews.Count,
-                    ReviewList = ReviewList
+                    Page = page,
+                    RowStart = pageStart,
+                    RowEnd = pageEnd,
+                    TotalPages = totalPages,
+                    Total = total,
+                    ReviewList = reviews
                 } ]
             };
             return resp.Serialize();
@@ -86,9 +70,8 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == player_creation_id);
 
-            if (user == null || Creation == null)
+            if (user == null || !database.PlayerCreations.Any(match => match.Id == player_creation_id))
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -98,30 +81,36 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var Review = database.PlayerCreationReviews.FirstOrDefault(match => match.PlayerCreationId == player_creation_id && match.PlayerId == user.UserId);
+            var creation = database.PlayerCreations
+                .FirstOrDefault(match => match.Id == player_creation_id);
+            var review = database.PlayerCreationReviews
+                .Include(x => x.User)
+                .Include(x => x.Creation)
+                .FirstOrDefault(match => match.Creation.Id == player_creation_id && match.User.UserId == user.UserId);
 
-            if (Review == null)
+            if (review == null)
             {
-                database.PlayerCreationReviews.Add(new PlayerCreationReview
+                var newReview = new PlayerCreationReview
                 {
                     Content = content,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
-                    PlayerId = user.UserId,
-                    PlayerCreationId = player_creation_id,
+                    User = user,
+                    Creation = creation,
                     Tags = tags
-                });
-                database.SaveChanges();
+                };
+                database.PlayerCreationReviews.Add(newReview);
+                // TODO: dbsave needed?
                 database.ActivityLog.Add(new ActivityEvent
                 {
-                    AuthorId = user.UserId,
+                    Author = user,
                     Type = ActivityType.player_creation_event,
                     List = ActivityList.activity_log,
                     Topic = "player_creation_reviewed",
                     Description = content,
-                    PlayerCreationId = player_creation_id,
+                    Creation = creation,
                     CreatedAt = DateTime.UtcNow,
-                    AllusionId = database.PlayerCreationReviews.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.PlayerCreationId == Creation.PlayerCreationId && match.PlayerId == user.UserId).Id,
+                    AllusionId = newReview.Id,
                     AllusionType = "PlayerCreation::Review",
                     Tags = tags
                 });
@@ -149,9 +138,10 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var Review = database.PlayerCreationReviews.FirstOrDefault(match => match.Id == id && match.PlayerId == user.UserId);
 
-            if (user == null || Review == null)
+            var review = database.PlayerCreationReviews.FirstOrDefault(match => match.Id == id && match.User.UserId == user.UserId);
+
+            if (user == null || review == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -161,7 +151,7 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            database.PlayerCreationReviews.Remove(Review);
+            database.PlayerCreationReviews.Remove(review);
             database.SaveChanges();
 
             var resp = new Response<EmptyResponse>
@@ -176,6 +166,7 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+
             var review = database.PlayerCreationReviews.FirstOrDefault(match => match.Id == id);
 
             if (user == null || review == null)
@@ -188,16 +179,19 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var Rating = database.PlayerCreationReviewRatings.FirstOrDefault(match => match.PlayerCreationReviewId == id && match.PlayerId == user.UserId);
+            var dbRating = database.PlayerCreationReviewRatings
+                .Include(x => x.Player)
+                .Include(x => x.Review)
+                .FirstOrDefault(match => match.Review.Id == id && match.Player.UserId == user.UserId);
 
-            if (!rating && Rating != null)
-                database.PlayerCreationReviewRatings.Remove(Rating);
+            if (!rating && dbRating != null)
+                database.PlayerCreationReviewRatings.Remove(dbRating);
 
-            if (Rating == null && rating)
+            if (dbRating == null && rating)
                 database.PlayerCreationReviewRatings.Add(new PlayerCreationReviewRatingData
                 {
-                    PlayerCreationReviewId = id,
-                    PlayerId = user.UserId,
+                    Review = review,
+                    Player = user,
                     Type = RatingType.YAY,
                     RatedAt = DateTime.UtcNow
                 });

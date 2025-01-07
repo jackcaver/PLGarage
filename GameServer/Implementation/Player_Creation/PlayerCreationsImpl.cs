@@ -15,6 +15,7 @@ using GameServer.Models.Common;
 using AutoMapper.QueryableExtensions;
 using GameServer.Models.Profiles;
 using System.Data;
+using GameServer.Utils.Extensions;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -485,7 +486,7 @@ namespace GameServer.Implementation.Player_Creation
             int limit, Platform platform, Filters filters, string keyword = null, bool TeamPicks = false, 
             bool LuckyDip = false, bool IsMNR = false)
         {
-            IQueryable<PlayerCreationData> creationQuery = database.PlayerCreations     // TODO: Is it an issue someone might be able to fudge the entire database out like this?
+            var creationQuery = database.PlayerCreations     // TODO: Is it an issue someone might be able to fudge the entire database out like this?
                 .Include(x => x.Downloads)
                 .Include(x => x.RacesStarted)
                 .Include(x => x.UniqueRacers)
@@ -708,24 +709,18 @@ namespace GameServer.Implementation.Player_Creation
 
             // TODO: sort_order
 
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+            var pageEnd = PageCalculator.GetPageStart(page, per_page);
             var total = creationQuery.Count();
-
-            //calculating pages
-            int pageEnd = PageCalculator.GetPageEnd(page, per_page);
-            int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, total);
-
-            if (pageEnd > total)
-                pageEnd = total;
-            if (pageStart > pageEnd)
-                pageStart = pageEnd;
+            var totalPages = PageCalculator.GetTotalPages(total, per_page);
 
             var creations = creationQuery
                 .Skip(pageStart)
-                .Take(pageEnd - pageStart)
+                .Take(per_page)
                 .ProjectTo<Models.Response.PlayerCreation>(database.MapperConfig)   // TODO: Can this go at beginning?
                 .ToList();
 
+            // TODO: !!! MOVE TO AUTOMAPPER !!!
             //var allPlayerCreations = database.PlayerCreations           // I dont really know how to optimise this any more without breaking the rank system?
             //                .Include(x => x.Points)
             //                .Where(match => match.Type == filters.player_creation_type)
@@ -786,20 +781,14 @@ namespace GameServer.Implementation.Player_Creation
                                     (track_id != null ? match.TrackId == track_id : true))
                                 .OrderByDescending(match => match.CreatedAt);
 
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+            var pageEnd = PageCalculator.GetPageStart(page, per_page);
             var total = photosQuery.Count();
-
-            int pageEnd = PageCalculator.GetPageEnd(page, per_page);
-            int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, total);
-
-            if (pageEnd > total)
-                pageEnd = total;
-            if (pageStart > pageEnd)
-                pageStart = pageEnd;
+            var totalPages = PageCalculator.GetTotalPages(total, per_page);
 
             var photos = photosQuery
                 .Skip(pageStart)
-                .Take(pageEnd - pageStart)
+                .Take(per_page)
                 .ProjectTo<Photo>(database.MapperConfig)
                 .ToList();
 

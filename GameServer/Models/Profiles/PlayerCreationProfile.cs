@@ -4,6 +4,7 @@ using System.Linq;
 using System.Xml;
 using AutoMapper;
 using GameServer.Models.Common;
+using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Response;
 
@@ -13,6 +14,8 @@ namespace GameServer.Models.Profiles
     {
         public PlayerCreationProfile()
         {
+            #region PlayerCreations
+
             CreateMap<PlayerCreationData, PlayerCreation>() // TODO: Can be projection?
                 .ForMember(dto => dto.Coolness, cfg => cfg.MapFrom(db => (db.Ratings.Count(match => match.Type == RatingType.YAY) - db.Ratings.Count(match => match.Type == RatingType.BOO)) +
                             ((db.RacesStarted.Count() + db.RacesFinished) / 2) + db.Hearts.Count()))
@@ -111,6 +114,31 @@ namespace GameServer.Models.Profiles
 
             CreateProjection<PlayerCreationData, PlayerCreationToVerify>()
                 .ForMember(dto => dto.SuggestedAction, cfg => cfg.MapFrom(db => db.ModerationStatus == ModerationStatus.BANNED || db.ModerationStatus == ModerationStatus.ILLEGAL ? "allow" : "ban"));
+
+            #endregion
+
+            #region PlayerCreationReviews
+
+            User requestedBy = null;
+
+            CreateProjection<PlayerCreationReview, Review>()
+                .ForMember(dto => dto.Mine, cfg => cfg.MapFrom(db => requestedBy != null ? (db.User.UserId == requestedBy.UserId).ToString().ToLower() : "false"))
+
+                .ForMember(dto => dto.PlayerCreationId, cfg => cfg.MapFrom(db => db.Creation.Id))
+                .ForMember(dto => dto.PlayerCreationName, cfg => cfg.MapFrom(db => db.Creation.Name))
+                .ForMember(dto => dto.PlayerCreationUsername, cfg => cfg.MapFrom(db => db.Creation.Author.Username))
+
+                .ForMember(dto => dto.PlayerId, cfg => cfg.MapFrom(db => db.User.UserId))
+
+                .ForMember(dto => dto.RatedByMe, cfg => cfg.MapFrom(db => requestedBy != null ? db.ReviewRatings.Any(match => match.Player.UserId == requestedBy.UserId).ToString().ToLower() : "false"))
+                .ForMember(dto => dto.RatingDown, cfg => cfg.MapFrom(db => db.ReviewRatings.Count(match => match.Type == RatingType.BOO)))
+                .ForMember(dto => dto.RatingUp, cfg => cfg.MapFrom(db => db.ReviewRatings.Count(match => match.Type == RatingType.YAY)))
+
+                .ForMember(dto => dto.Username, cfg => cfg.MapFrom(db => db.User.Username))
+                .ForMember(dto => dto.UpdatedAt, cfg => cfg.MapFrom(db => db.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")));
+
+            #endregion
+
         }
     }
 }

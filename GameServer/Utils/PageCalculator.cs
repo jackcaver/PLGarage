@@ -1,9 +1,9 @@
 ﻿using System.Linq;
 using System;
 
-namespace GameServer.Utils.Extensions
+namespace GameServer.Utils
 {
-    public static class PageCalculator
+    public class PageCalculator
     {
         public static int GetPageStart(int page, int perPage) => (page - 1) * perPage;
         public static int GetPageEnd(int page, int perPage) => GetPageStart(page, perPage) + perPage;

@@ -5,7 +5,7 @@ namespace GameServer.Models.Common
 {
     public class SessionInfo
     {
-        public string Username => Authenticated ? Ticket.Username : ""; // TODO: Can we add a user id for quicker lookups in db?
+        public string Username => Authenticated ? Ticket.Username : ""; // TODO: !!! IMPORTANT !!! Can we add the user object here?
         public Presence Presence { get; set; } = Presence.OFFLINE;
         public DateTime ExpiryDate => Ticket.ExpiryDate.UtcDateTime;
         public Ticket Ticket { get; set; }

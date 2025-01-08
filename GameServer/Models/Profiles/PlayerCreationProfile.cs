@@ -14,6 +14,12 @@ namespace GameServer.Models.Profiles
     {
         public PlayerCreationProfile()
         {
+            #region Variables
+
+            User requestedBy = null;
+
+            #endregion
+
             #region PlayerCreations
 
             CreateMap<PlayerCreationData, PlayerCreation>() // TODO: Can be projection?
@@ -119,8 +125,6 @@ namespace GameServer.Models.Profiles
 
             #region PlayerCreationReviews
 
-            User requestedBy = null;
-
             CreateProjection<PlayerCreationReview, Review>()
                 .ForMember(dto => dto.Mine, cfg => cfg.MapFrom(db => requestedBy != null ? (db.User.UserId == requestedBy.UserId).ToString().ToLower() : "false"))
 
@@ -139,6 +143,30 @@ namespace GameServer.Models.Profiles
 
             #endregion
 
+            #region PlayerCreationRatings
+
+            CreateProjection<PlayerCreationRatingData, PlayerCreationRating>()  // TODO: !!! IMPORTANT !!! DTO naming scheme mismatches
+                .ForMember(dto => dto.PlayerId, cfg => cfg.MapFrom(db => db.Player.UserId))
+                .ForMember(dto => dto.Username, cfg => cfg.MapFrom(db => db.Player.Username));
+
+            #endregion
+
+            #region PlayerCreationComments
+
+            CreateProjection<PlayerCreationCommentData, PlayerCreationComment>()
+                .ForMember(dto => dto.CreatedAt, cfg => cfg.MapFrom(db => db.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")))
+                .ForMember(dto => dto.UpdatedAt, cfg => cfg.MapFrom(db => db.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")))
+
+                .ForMember(dto => dto.PlayerCreationId, cfg => cfg.MapFrom(db => db.Creation.Id))
+
+                .ForMember(dto => dto.PlayerId, cfg => cfg.MapFrom(db => db.Player.UserId))
+                .ForMember(dto => dto.Username, cfg => cfg.MapFrom(db => db.Player.Username))
+
+                .ForMember(dto => dto.RatingDown, cfg => cfg.MapFrom(db => db.Ratings.Count(match => match.Type == RatingType.BOO)))
+                .ForMember(dto => dto.RatingUp, cfg => cfg.MapFrom(db => db.Ratings.Count(match => match.Type == RatingType.YAY)))
+                .ForMember(dto => dto.RatedByMe, cfg => cfg.MapFrom(db => requestedBy != null ? db.Ratings.Any(match => match.Player.UserId == requestedBy.UserId) : false));   // TODO: does bool serialise correctly? Why is everything not bool?
+
+            #endregion
         }
     }
 }

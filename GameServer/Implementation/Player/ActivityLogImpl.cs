@@ -9,7 +9,6 @@ using GameServer.Models.Request;
 using GameServer.Implementation.Common;
 using Microsoft.EntityFrameworkCore;
 using GameServer.Models.Common;
-using GameServer.Utils.Extensions;
 
 namespace GameServer.Implementation.Player
 {

@@ -44,6 +44,6 @@ namespace GameServer.Models.Response
         [XmlAttribute("total_pages")]
         public int TotalPages { get; set; }
         [XmlElement("player_creation_comment")]
-        public List<PlayerCreationComments> PlayerCreationCommentList { get; set; }
+        public List<PlayerCreationComment> PlayerCreationCommentList { get; set; }
     }
 }

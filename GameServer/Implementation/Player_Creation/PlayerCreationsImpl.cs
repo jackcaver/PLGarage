@@ -15,7 +15,6 @@ using GameServer.Models.Common;
 using AutoMapper.QueryableExtensions;
 using GameServer.Models.Profiles;
 using System.Data;
-using GameServer.Utils.Extensions;
 
 namespace GameServer.Implementation.Player_Creation
 {

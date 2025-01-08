@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using GameServer.Implementation.Common;
 using GameServer.Models.PlayerData;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper.QueryableExtensions;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -17,9 +18,6 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var Creation = database.PlayerCreations
-                .Include(x => x.Hearts)
-                .FirstOrDefault(match => match.PlayerCreationId == id);
 
             if (user == null)
             {
@@ -31,7 +29,12 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            if (Creation == null)
+            var creation = database.PlayerCreations
+                .Include(x => x.Hearts)
+                .ThenInclude(x => x.User)
+                .FirstOrDefault(match => match.Id == id);
+
+            if (creation == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -41,27 +44,26 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            if (!Creation.Hearts.Any(x => x.UserId == user.UserId))
+            if (!creation.Hearts.Any(x => x.User.UserId == user.UserId))
             {
                 database.HeartedPlayerCreations.Add(new HeartedPlayerCreation
                 {
-                    HeartedPlayerCreationId = Creation.PlayerCreationId,
-                    UserId = user.UserId,
+                    HeartedCreation = creation,
+                    User = user,
                     HeartedAt = DateTime.UtcNow,
                 });
                 if (!session.IsMNR)
                 {
                     database.ActivityLog.Add(new ActivityEvent
                     {
-                        AuthorId = user.UserId,
+                        Author = user,
                         Type = ActivityType.player_creation_event,
                         List = ActivityList.activity_log,
                         Topic = "player_creation_hearted",
                         Description = "",
-                        PlayerId = 0,
-                        PlayerCreationId = Creation.PlayerCreationId,
+                        Creation = creation,
                         CreatedAt = DateTime.UtcNow,
-                        AllusionId = Creation.PlayerCreationId,
+                        AllusionId = creation.Id,
                         AllusionType = "PlayerCreation::Track"
                     });
                 }
@@ -91,9 +93,12 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var HeartedCreation = database.HeartedPlayerCreations.FirstOrDefault(match => match.HeartedPlayerCreationId == id && match.UserId == user.UserId);
+            var heartedCreation = database.HeartedPlayerCreations
+                .Include(x => x.HeartedCreation)
+                .Include(x => x.User)
+                .FirstOrDefault(match => match.HeartedCreation.Id == id && match.User.UserId == user.UserId);
 
-            if (HeartedCreation == null)
+            if (heartedCreation == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -103,7 +108,7 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            database.HeartedPlayerCreations.Remove(HeartedCreation);
+            database.HeartedPlayerCreations.Remove(heartedCreation);
             database.SaveChanges();
 
             var resp = new Response<EmptyResponse>
@@ -129,28 +134,18 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var favoriteCrations = database.HeartedPlayerCreations.Where(match => match.UserId == user.UserId).ToList();
-            List<favorite_player_creation> favoriteCreationsList = [];
+            var favoriteCreations = database.HeartedPlayerCreations
+                .Include(x => x.User)
+                .Where(match => match.User.UserId == user.UserId && match.HeartedCreation.IsMNR == session.IsMNR)
+                .ProjectTo<FavoritePlayerCreation>(database.MapperConfig)
+                .ToList();
 
-            foreach (var Creation in favoriteCrations)
-            {
-                var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Creation.HeartedPlayerCreationId);
-                if (creation != null && creation.IsMNR == session.IsMNR)
-                {
-                    favoriteCreationsList.Add(new favorite_player_creation
-                    {
-                        player_creation_id = Creation.HeartedPlayerCreationId,
-                        player_creation_name = creation.Name
-                    });
-                }
-            }
-
-            var resp = new Response<List<favorite_player_creations>>
+            var resp = new Response<List<FavoritePlayerCreations>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = [ new favorite_player_creations {
-                    total = favoriteCreationsList.Count,
-                    PlayerCreations = favoriteCreationsList
+                response = [ new FavoritePlayerCreations {
+                    Total = favoriteCreations.Count,
+                    PlayerCreations = favoriteCreations
                 } ]
             };
             return resp.Serialize();

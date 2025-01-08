@@ -167,6 +167,14 @@ namespace GameServer.Models.Profiles
                 .ForMember(dto => dto.RatedByMe, cfg => cfg.MapFrom(db => requestedBy != null ? db.Ratings.Any(match => match.Player.UserId == requestedBy.UserId) : false));   // TODO: does bool serialise correctly? Why is everything not bool?
 
             #endregion
+
+            #region FavoritePlayerCreations
+
+            CreateProjection<HeartedPlayerCreation, FavoritePlayerCreation>()
+                .ForMember(dto => dto.PlayerCreationId, cfg => cfg.MapFrom(db => db.HeartedCreation.Id))
+                .ForMember(dto => dto.PlayerCreationName, cfg => cfg.MapFrom(db => db.HeartedCreation.Name));
+
+            #endregion
         }
     }
 }

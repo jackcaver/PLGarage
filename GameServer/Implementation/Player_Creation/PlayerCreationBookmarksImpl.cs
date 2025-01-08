@@ -29,16 +29,18 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            string idFilter = "";
-            var BookmarkedCreations = database.PlayerCreationBookmarks.Where(match => match.UserId == user.UserId).ToList();
-            BookmarkedCreations.Sort((curr, prev) => prev.BookmarkedAt.CompareTo(curr.BookmarkedAt));
+            // TODO: Is sort_column/sort_order even used here?
+            var bookmarkedCreations = database.PlayerCreationBookmarks
+                .Include(x => x.User)
+                .Include(x => x.BookmarkedCreation)
+                .Where(match => match.User.UserId == user.UserId)
+                .OrderByDescending(match => match.BookmarkedAt)
+                .Select(match => match.BookmarkedCreation.Id)
+                .ToList();
 
-            foreach (var bookmark in BookmarkedCreations)
-            {
-                idFilter += $"{bookmark.BookmarkedPlayerCreationId},";
-            }
-
-            filters.id = idFilter.Split(',');
+            filters.id = bookmarkedCreations
+                .Select(x => x.ToString())
+                .ToArray();
 
             return PlayerCreationsImpl.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, keyword);
         }
@@ -47,9 +49,6 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var Creation = database.PlayerCreations
-                .Include(x => x.Bookmarks)
-                .FirstOrDefault(match => match.PlayerCreationId == id);
 
             if (user == null)
             {
@@ -61,7 +60,11 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            if (Creation == null)
+            var creation = database.PlayerCreations
+                .Include(x => x.Bookmarks)
+                .FirstOrDefault(match => match.Id == id);
+
+            if (creation == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -71,12 +74,12 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            if (!Creation.Bookmarks.Any(match => match.UserId == user.UserId))
+            if (!creation.Bookmarks.Any(match => match.User.UserId == user.UserId))
             {
                 database.PlayerCreationBookmarks.Add(new PlayerCreationBookmark
                 {
-                    BookmarkedPlayerCreationId = Creation.PlayerCreationId,
-                    UserId = user.UserId,
+                    BookmarkedCreation = creation,
+                    User = user,
                     BookmarkedAt = DateTime.UtcNow,
                 });
                 database.SaveChanges();
@@ -105,9 +108,12 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var BookmarkedCreation = database.PlayerCreationBookmarks.FirstOrDefault(match => match.BookmarkedPlayerCreationId == id && match.UserId == user.UserId);
+            var bookmarkedCreation = database.PlayerCreationBookmarks
+                .Include(x => x.User)
+                .Include(x => x.BookmarkedCreation)
+                .FirstOrDefault(match => match.BookmarkedCreation.Id == id && match.User.UserId == user.UserId);
 
-            if (BookmarkedCreation == null)
+            if (bookmarkedCreation == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -117,7 +123,7 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            database.PlayerCreationBookmarks.Remove(BookmarkedCreation);
+            database.PlayerCreationBookmarks.Remove(bookmarkedCreation);
             database.SaveChanges();
 
             var resp = new Response<EmptyResponse>
@@ -143,12 +149,15 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var BookmarkedCreations = database.PlayerCreationBookmarks.Where(match => match.UserId == user.UserId).ToList();
+            var bookmarkedCreationsCount = database.PlayerCreationBookmarks
+                .Include(x => x.User)
+                .Where(match => match.User.UserId == user.UserId)
+                .Count();
 
             var resp = new Response<List<PlayerCreationBookmarksCount>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = [new PlayerCreationBookmarksCount { total = BookmarkedCreations.Count }]
+                response = [new PlayerCreationBookmarksCount { Total = bookmarkedCreationsCount }]
             };
             return resp.Serialize();
         }

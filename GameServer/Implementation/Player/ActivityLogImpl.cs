@@ -22,11 +22,18 @@ namespace GameServer.Implementation.Player
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Activities = new List<ActivityEvent> { };
 
+            var activitiesQuery = database.ActivityLog.AsQueryable();
+
             if (list == ActivityList.news_feed)
-                Activities.AddRange(database.ActivityLog.Where(match => match.Type == ActivityType.system_event).ToList());
+                activitiesQuery = activitiesQuery.Where(match => match.Type == ActivityType.system_event);
 
             if (player_id != null)
             {
+                var player = database.Users
+                    .Include(x => x.PlayerCreations)
+                    .Where(match => match.UserId == player_id)
+                    .FirstOrDefault();
+
                 Activities.AddRange(database.ActivityLog.Where(match => (match.AuthorId == player_id || match.PlayerId == player_id) &&
                     (match.List == list || match.List == ActivityList.both)).ToList());
                 foreach (var Creation in database.PlayerCreations.Where(match => match.PlayerId == player_id).ToList())

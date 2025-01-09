@@ -12,7 +12,7 @@ namespace GameServer.Implementation.Player
 {
     public class FavoritePlayersImpl
     {
-        public static string AddToFavorites(Database database, Guid SessionID, FavoritePlayer favorite_player)
+        public static string AddToFavorites(Database database, Guid SessionID, Models.Request.FavoritePlayer favorite_player)
         {
             var session = SessionImpl.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
@@ -30,12 +30,12 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            if (!user.IsHeartedByMe(requestedBy.UserId, session.IsMNR))
+            if (!user.HeartedProfiles.Any(match => match.User.UserId == requestedBy.UserId && match.IsMNR == session.IsMNR))
             {
                 database.HeartedProfiles.Add(new HeartedProfile
                 {
-                    HeartedUserId = user.UserId,
-                    UserId = requestedBy.UserId,
+                    HeartedUser = user,
+                    User = requestedBy,
                     HeartedAt = DateTime.UtcNow,
                     IsMNR = session.IsMNR
                 });
@@ -43,13 +43,12 @@ namespace GameServer.Implementation.Player
                 {
                     database.ActivityLog.Add(new ActivityEvent
                     {
-                        AuthorId = requestedBy.UserId,
+                        Author = requestedBy,
                         Type = ActivityType.player_event,
                         List = ActivityList.activity_log,
                         Topic = "player_hearted",
                         Description = "",
-                        PlayerId = user.UserId,
-                        PlayerCreationId = 0,
+                        Player = user,
                         CreatedAt = DateTime.UtcNow,
                         AllusionId = user.UserId,
                         AllusionType = "Player"

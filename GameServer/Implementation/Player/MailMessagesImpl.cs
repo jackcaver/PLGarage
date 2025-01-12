@@ -1,4 +1,5 @@
-﻿using GameServer.Implementation.Common;
+﻿using AutoMapper.QueryableExtensions;
+using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
@@ -27,66 +28,46 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            var messages = database.MailMessages.Where(match => match.RecipientId == user.UserId).ToList();
-            messages.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
+            var messagesQuery = database.MailMessages
+                // TODO: !!! SEMI IMPORTANT !!! I dont know if the below contains will work, as the underlying database wont have the context of enums, TO INVESTIGATE
+                .Where(match => match.Recipient.UserId == user.UserId && mail_message_types.Contains(match.Type.ToString()))
+                .OrderByDescending(match => match.CreatedAt);
 
-            if (!mail_message_types.Contains(MailMessageType.ALERT.ToString()))
-                messages.RemoveAll(match => match.Type == MailMessageType.ALERT);
-            if (!mail_message_types.Contains(MailMessageType.WEBSITE.ToString()))
-                messages.RemoveAll(match => match.Type == MailMessageType.WEBSITE);
-            if (!mail_message_types.Contains(MailMessageType.GAME.ToString()))
-                messages.RemoveAll(match => match.Type == MailMessageType.GAME);
+            // TODO: Remove below once above is answered
+            //if (!mail_message_types.Contains(MailMessageType.ALERT.ToString()))
+            //    messages.RemoveAll(match => match.Type == MailMessageType.ALERT);
+            //if (!mail_message_types.Contains(MailMessageType.WEBSITE.ToString()))
+            //    messages.RemoveAll(match => match.Type == MailMessageType.WEBSITE);
+            //if (!mail_message_types.Contains(MailMessageType.GAME.ToString()))
+            //    messages.RemoveAll(match => match.Type == MailMessageType.GAME);
 
             //calculating pages
-            int pageEnd = PageCalculator.GetPageEnd(page, per_page);
-            int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, messages.Count);
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+            var pageEnd = PageCalculator.GetPageStart(page, per_page);
+            var total = messagesQuery.Count();
+            var totalUnread = messagesQuery.Count(match => !match.HasRead);
+            var totalPages = PageCalculator.GetTotalPages(total, per_page);
+            var messages = messagesQuery
+                .Skip(pageStart)
+                .Take(per_page)
+                .ProjectTo<mailMessage>(database.MapperConfig)
+                .ToList();
 
-            if (pageEnd > messages.Count)
-                pageEnd = messages.Count;
-
-            var mailMessagesList = new List<mailMessage>();
-
-            for (int i = pageStart; i < pageEnd; i++)
-            {
-                var message = messages[i];
-                if (message != null)
-                {
-                    mailMessagesList.Add(new mailMessage
-                    {
-                        attachment_reference = message.AttachmentReference,
-                        created_at = message.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        has_deleted = false,
-                        has_forwarded = message.HasForwarded,
-                        has_read = message.HasRead,
-                        has_replied = message.HasReplied,
-                        id = message.Id,
-                        mail_message_type = message.Type.ToString(),
-                        recipient_id = message.RecipientId,
-                        recipient_list = message.RecipientList,
-                        sender_id = message.SenderId,
-                        sender_name = message.SenderName,
-                        subject = message.Subject,
-                        updated_at = message.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
-                    });
-                }
-            }
-
-            var resp = new Response<List<mail_messages>>
+            var resp = new Response<List<MailMessages>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response =
                 [
-                    new mail_messages
+                    new MailMessages
                     {
-                        page = page,
-                        row_end = pageEnd,
-                        row_start = pageStart,
-                        total = messages.Count(),
-                        total_pages = totalPages,
-                        player_id = user.UserId,
-                        unread_count = messages.Count(match => !match.HasRead),
-                        mailMessagesList = mailMessagesList
+                        Page = page,
+                        RowEnd = pageEnd,
+                        RowStart = pageStart,
+                        Total = messages.Count(),
+                        TotalPages = totalPages,
+                        PlayerId = user.UserId,
+                        UnreadCount = totalUnread,
+                        MailMessagesList = messages
                     }
                 ]
             };
@@ -97,9 +78,11 @@ namespace GameServer.Implementation.Player
         {
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var message = database.MailMessages.FirstOrDefault(match => match.Id == id);
+            
+            var message = database.MailMessages
+                .FirstOrDefault(match => match.Recipient.UserId == user.UserId && match.Id == id);
 
-            if (user == null || message.RecipientId != user.UserId || message == null)
+            if (user == null || message == null)    // TODO: User may be null
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -109,27 +92,10 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            var resp = new Response<List<mail_message>>
+            var resp = new Response<List<Models.Response.MailMessage>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response =
-                [
-                    new mail_message
-                    {
-                        attachment_reference = message.AttachmentReference,
-                        body = message.Body,
-                        created_at = message.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        has_deleted = false,
-                        has_forwarded = message.HasForwarded,
-                        has_read = message.HasRead,
-                        has_replied = message.HasReplied,
-                        id = message.Id,
-                        sender_id = message.SenderId,
-                        sender_name = message.SenderName,
-                        subject = message.Subject,
-                        updated_at = message.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
-                    }
-                ]
+                response = [database.MapperConfig.CreateMapper().Map<Models.Response.MailMessage>(message)]
             };
 
             message.HasRead = true;
@@ -139,7 +105,7 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string CreateMessage(Database database, Guid SessionID, int? reply_to_mail_message_id, MailMessage mail_message)
+        public static string CreateMessage(Database database, Guid SessionID, int? reply_to_mail_message_id, Models.Request.MailMessage mail_message)
         {
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
@@ -156,7 +122,8 @@ namespace GameServer.Implementation.Player
 
             if (reply_to_mail_message_id != null)
             {
-                var message = database.MailMessages.FirstOrDefault(match => match.RecipientId == user.UserId && match.Id == reply_to_mail_message_id);
+                var message = database.MailMessages
+                    .FirstOrDefault(match => match.Recipient.UserId == user.UserId && match.Id == reply_to_mail_message_id);
                 if (message != null) 
                 {
                     message.HasReplied = true;
@@ -165,34 +132,22 @@ namespace GameServer.Implementation.Player
                 }
             }
 
-            var RecipientList = new List<int>();
+            var recipientUsernames = mail_message.recipient_list.Split(", ");
+            var recipients = database.Users
+                .Where(match => recipientUsernames.Contains(match.Username))    // TODO: !!! IMPORTANT !!! Do we need to fail if any one username is not found? (Likely yes, though maybe not given how the below works)
+                .ToList();
 
-            foreach (var recipientName in mail_message.recipient_list.Split(", ")) 
+            foreach (var recipient in recipients)
             {
-                var recipient = database.Users.FirstOrDefault(match => match.Username == recipientName);
-                if (recipient == null)
-                {
-                    var errorResp = new Response<EmptyResponse>
-                    {
-                        status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
-                        response = new EmptyResponse { }
-                    };
-                    return errorResp.Serialize();
-                }
-                RecipientList.Add(recipient.UserId);
-            }
-
-            foreach (var id in RecipientList)
-            {
-                database.MailMessages.Add(new MailMessageData
+                database.MailMessages.Add(new MailMessageData   // TODO: Can we optimise by using one mail message object with multiple recipients?
                 {
                     AttachmentReference = mail_message.attachment_reference,
                     Body = mail_message.body,
                     Subject = mail_message.subject,
-                    RecipientList = mail_message.recipient_list,
+                    RecipientList = recipients,
                     Type = mail_message.mail_message_type,
-                    RecipientId = id,
-                    SenderId = user.UserId,
+                    Recipient = recipient,
+                    Sender = user,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 });
@@ -211,9 +166,11 @@ namespace GameServer.Implementation.Player
         {
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var message = database.MailMessages.FirstOrDefault(match => match.Id == id);
 
-            if (user == null || message.RecipientId != user.UserId || message == null)
+            var message = database.MailMessages
+                .FirstOrDefault(match => match.Recipient.UserId == user.UserId && match.Id == id);
+
+            if (user == null || message == null)    // TODO: User may be null
             {
                 var errorResp = new Response<EmptyResponse>
                 {

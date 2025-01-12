@@ -1,5 +1,6 @@
 ﻿using GameServer.Utils;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -12,7 +13,6 @@ namespace GameServer.Models.PlayerData
         public int Id { get; set; }
         public string Subject { get; set; }
         public string Body { get; set; }
-        public string RecipientList { get; set; }
         public string AttachmentReference { get; set; }
         public MailMessageType Type { get; set; }
         public bool HasRead { get; set; }
@@ -22,6 +22,8 @@ namespace GameServer.Models.PlayerData
         public DateTime UpdatedAt { get; set; }
 
         public User Sender { get; set; }
+        // TODO: Can we combine both the below?
         public User Recipient { get; set; }
+        public ICollection<User> RecipientList { get; set; }
     }
 }

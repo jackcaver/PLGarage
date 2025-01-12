@@ -15,9 +15,11 @@ namespace GameServer.Implementation.Player
         {
             var session = SessionImpl.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var user = database.Users.FirstOrDefault(match => match.UserId == player_rating.player_id);
 
-            if (user == null || user == null)
+            var user = database.Users
+                .FirstOrDefault(match => match.UserId == player_rating.player_id);
+
+            if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -27,21 +29,21 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            var rating = database.PlayerRatings.FirstOrDefault(match => match.PlayerId == player_rating.player_id && match.AuthorId == requestedBy.UserId);
+            var rating = database.PlayerRatings
+                .FirstOrDefault(match => match.Player.UserId == player_rating.player_id && match.Author.UserId == requestedBy.UserId);
 
             if (rating == null)
             {
                 database.PlayerRatings.Add(new PlayerRatingData {
-                    AuthorId = requestedBy.UserId,
-                    PlayerId = player_rating.player_id,
+                    Author = requestedBy,
+                    Player = user,
                     Rating = player_rating.rating,
                     Comment = player_rating.comments,
                     RatedAt = DateTime.UtcNow
                 });
                 database.SaveChanges();
             }
-
-            if (rating != null)
+            else
             {
                 rating.Rating = player_rating.rating;
                 rating.Comment = player_rating.comments;

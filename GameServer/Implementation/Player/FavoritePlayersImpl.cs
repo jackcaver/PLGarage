@@ -7,6 +7,7 @@ using System.Linq;
 using GameServer.Models.Request;
 using System.Collections.Generic;
 using GameServer.Implementation.Common;
+using AutoMapper.QueryableExtensions;
 
 namespace GameServer.Implementation.Player
 {
@@ -16,9 +17,9 @@ namespace GameServer.Implementation.Player
         {
             var session = SessionImpl.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            if (favorite_player.username.Contains("\0"))
-                favorite_player.username = favorite_player.username.Split("\0")[0];
-            var user = database.Users.FirstOrDefault(match => match.Username == favorite_player.username);
+
+            var user = database.Users
+                .FirstOrDefault(match => match.Username == favorite_player.username.Trim('\0'));
 
             if (user == null || requestedBy == null)
             {
@@ -30,7 +31,7 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            if (!user.HeartedProfiles.Any(match => match.User.UserId == requestedBy.UserId && match.IsMNR == session.IsMNR))
+            if (!user.HeartedProfileFromOthers.Any(match => match.User.UserId == requestedBy.UserId && match.IsMNR == session.IsMNR))
             {
                 database.HeartedProfiles.Add(new HeartedProfile
                 {
@@ -65,15 +66,15 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string RemoveFromFavorites(Database database, Guid SessionID, FavoritePlayer favorite_player)
+        public static string RemoveFromFavorites(Database database, Guid SessionID, Models.Request.FavoritePlayer favorite_player)
         {
             var session = SessionImpl.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            if (favorite_player.username.Contains("\0"))
-                favorite_player.username = favorite_player.username.Split("\0")[0];
-            int id = database.Users.FirstOrDefault(match => match.Username == favorite_player.username).UserId;
+            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            
+            var user = database.Users
+                .FirstOrDefault(match => match.Username == favorite_player.username.Trim('\0'));
 
-            if (user == null)
+            if (user == null || requestedBy == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -83,10 +84,10 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            var HeartedUser = database.HeartedProfiles.FirstOrDefault(match => match.HeartedUserId == id && match.UserId == user.UserId 
+            var heartedUser = database.HeartedProfiles.FirstOrDefault(match => match.HeartedUser.UserId == user.UserId && match.User.UserId == requestedBy.UserId 
                 && match.IsMNR == session.IsMNR);
 
-            if (HeartedUser == null)
+            if (heartedUser == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -96,7 +97,7 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            database.HeartedProfiles.Remove(HeartedUser);
+            database.HeartedProfiles.Remove(heartedUser);
             database.SaveChanges();
 
             var resp = new Response<EmptyResponse>
@@ -107,13 +108,16 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
+        // TODO: Particular point to bug check, this was slightly confusing to convert
         public static string ListFavorites(Database database, Guid SessionID, string player_id_or_username)
         {
             var session = SessionImpl.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var user = database.Users.FirstOrDefault(match => match.Username == player_id_or_username || match.UserId.ToString() == player_id_or_username);
 
-            if (user == null)
+            var user = database.Users
+                .FirstOrDefault(match => match.Username == player_id_or_username || match.UserId.ToString() == player_id_or_username);
+
+            if (user == null || requestedBy == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -123,33 +127,16 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            var Players = new List<favorite_player> { };
-            var HeartedUsers = database.HeartedProfiles.Where(match => match.UserId == user.UserId && match.IsMNR == session.IsMNR).ToList();
+            var heartedUsers = database.HeartedProfiles
+                .Where(match => match.User.UserId == user.UserId && match.IsMNR == session.IsMNR)
+                .OrderByDescending(match => match.HeartedAt)
+                .ProjectTo<Models.Response.FavoritePlayer>(database.MapperConfig, new { requestedBy })
+                .ToList();
 
-            HeartedUsers.Sort((curr, prev) => prev.HeartedAt.CompareTo(curr.HeartedAt));
-
-            foreach (var profile in HeartedUsers)
-            {
-                var heartedUser = database.Users.FirstOrDefault(match => match.UserId == profile.HeartedUserId);
-                if (heartedUser != null)
-                {
-                    Players.Add(new favorite_player
-                    {
-                        favorite_player_id = profile.HeartedUserId,
-                        hearted_by_me = requestedBy != null && heartedUser.IsHeartedByMe(requestedBy.UserId, session.IsMNR) ? 1 : 0,
-                        hearts = heartedUser.Hearts,
-                        id = Players.Count + 1,
-                        quote = heartedUser.Quote,
-                        total_tracks = heartedUser.TotalTracks,
-                        username = heartedUser.Username
-                    });
-                }
-            }
-
-            var resp = new Response<List<favorite_players>>
+            var resp = new Response<List<FavoritePlayers>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = [new favorite_players { total = Players.Count, Players = Players }]
+                response = [new FavoritePlayers { Total = heartedUsers.Count, Players = heartedUsers }]
             };
             return resp.Serialize();
         }

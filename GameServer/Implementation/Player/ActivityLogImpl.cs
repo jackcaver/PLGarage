@@ -12,6 +12,7 @@ using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Player
 {
+    // TODO: !!! IMPORTANT !!! Complete this, particular complex due to the broadness of activitylog
     public class ActivityLogImpl
     {
         public static string GetActivityLog(Database database, Guid SessionID, int page, int per_page, ActivityList list = ActivityList.news_feed,

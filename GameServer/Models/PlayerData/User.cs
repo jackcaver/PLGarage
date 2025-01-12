@@ -91,7 +91,9 @@ namespace GameServer.Models.PlayerData
         public ICollection<PlayerRatingData> PlayerRatings { get; set; }
         public ICollection<RaceStarted> OnlineRacesStarted { get; set; }
         public ICollection<RaceFinished> OnlineRacesFinished { get; set; }
-        public ICollection<HeartedProfile> HeartedProfiles { get; set; }
+        // TODO FOR BELOW: Determine which ICollection maps to which User key in HeartedProfile table
+        public ICollection<HeartedProfile> HeartedProfileFromOthers { get; set; }
+        public ICollection<HeartedProfile> HeartedProfilesByMe { get; set; }
         public ICollection<TravelPoint> TravelPoints { get; set; }
         public ICollection<POIVisit> POIVisits { get; set; }
 

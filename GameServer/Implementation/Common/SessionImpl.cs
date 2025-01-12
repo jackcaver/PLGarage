@@ -16,6 +16,7 @@ using GameServer.Models.Common;
 
 namespace GameServer.Implementation.Common
 {
+    // TODO: Investigate optimisation further
     public class SessionImpl
     {
         private static readonly Dictionary<Guid, SessionInfo> Sessions = [];
@@ -179,17 +180,17 @@ namespace GameServer.Implementation.Common
             ServerCommunicationImpl.NotifySessionCreated(SessionID, user.UserId, user.Username, (int)NPTicket.IssuerId, platform);
             session.RandomSeed = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            var resp = new Response<List<login_data>>
+            var resp = new Response<List<LoginData>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [
-                    new login_data {
-                        ip_address = ip,
-                        login_time = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        platform = platform.ToString(),
-                        player_id = user.UserId,
-                        player_name = user.Username,
-                        presence = user.Presence.ToString()
+                    new LoginData {
+                        IpAddress = ip,
+                        LoginTime = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                        Platform = platform.ToString(),
+                        PlayerId = user.UserId,
+                        PlayerName = user.Username,
+                        Presence = SessionImpl.GetPresence(user.Username).ToString()    // TODO
                     }
                 ]
             };

@@ -20,14 +20,14 @@ namespace GameServer.Implementation.Player
             int page, int per_page, int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int? num_above_below, int limit, int playgroup_size,
             float? latitude, float? longitude, string usernameFilter = null, bool FriendsView = false)
         {
-            var scores = new List<Score> { };
+            var scoresQuery = database.Scores;
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             UserGeneratedContentUtils.AddStoryLevel(database, sub_key_id);
 
             if (usernameFilter == null)
-                scores = database.Scores.Where(match => match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR && match.Platform == platform).ToList();
+                scoresQuery = scoresQuery.Where(match => match.Creation.Id == sub_key_id && match.SubGroupId == sub_group_id && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR && match.Platform == platform).ToList();
 
             if (usernameFilter != null)
             {

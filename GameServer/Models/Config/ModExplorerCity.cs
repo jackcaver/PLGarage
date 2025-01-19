@@ -1,4 +1,5 @@
-﻿using GameServer.Implementation.Player;
+﻿using System.Collections.Generic;
+using GameServer.Implementation.Player;
 using Newtonsoft.Json;
 
 namespace GameServer.Models.Config

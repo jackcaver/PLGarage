@@ -95,6 +95,7 @@ namespace GameServer.Models.PlayerData
         public ICollection<HeartedProfile> HeartedProfileFromOthers { get; set; }
         public ICollection<HeartedProfile> HeartedProfilesByMe { get; set; }
         public ICollection<TravelPoint> TravelPoints { get; set; }
+        public ICollection<AwardUnlock> AwardUnlocks { get; set; }
         public ICollection<POIVisit> POIVisits { get; set; }
 
         //public bool IsHeartedByMe(int id, bool IsMNR) 

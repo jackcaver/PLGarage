@@ -6,6 +6,7 @@ using AutoMapper;
 using GameServer.Models.Common;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
+using GameServer.Models.Request;
 using GameServer.Models.Response;
 
 namespace GameServer.Models.Profiles
@@ -56,6 +57,15 @@ namespace GameServer.Models.Profiles
                 .ForMember(dto => dto.SenderName, cfg => cfg.MapFrom(db => db.Sender.Username))
 
                 .ForMember(dto => dto.UpdatedAt, cfg => cfg.MapFrom(db => db.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")));
+
+            #endregion
+
+            #region ModMile
+
+            Timespan timespan;
+
+            CreateMap<POIVisit, ModMileLeaderboardStat>()
+                .ForMember(dto => dto.CreatedAt, cfg => cfg.MapFrom(db => db.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")))
 
             #endregion
         }

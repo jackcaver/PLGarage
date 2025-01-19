@@ -9,96 +9,117 @@ using GameServer.Utils;
 using GameServer.Implementation.Common;
 using System.Globalization;
 using GameServer.Models.PlayerData;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player
 {
+    // TODO: Move POI to DB?
     public class ModMileImpl
     {
         public static string TravelAwards(Database database, Guid SessionID, int per_page, int page)
         {
             var session = SessionImpl.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = database.Users
+                .Include(x => x.AwardUnlocks)
+                .FirstOrDefault(match => match.Username == session.Username);
+
+            // TODO: Should we have an error if user not found here?
 
             int globalPoints = database.TravelPoints.Sum(p => p.Amount);
-            int travelPoints = user != null ? user.TravelPoints : 0;
+            int travelPoints = user != null ? user.TravelPoints.Sum(p => p.Amount) : 0;
 
-            var AwardList = new List<TravelAward>();
+            // TODO: Can below be consolidated?
+            var awardList = new List<TravelAward>();
             foreach (var award in ModMileConfig.Instance.TravelAwards)
             {
                 bool unlocked = award.IsGlobalPoints ? (globalPoints >= award.Points) : (travelPoints >= award.Points);
-                bool new_unlock = unlocked && (user == null || database.AwardUnlocks.FirstOrDefault(match => match.PlayerId == user.UserId && match.Name == award.Name) == null);
+                bool new_unlock = unlocked && (user == null || user.AwardUnlocks.FirstOrDefault(match => match.Name == award.Name) == null);
                 if (new_unlock && user != null)
                 {
                     database.AwardUnlocks.Add(new AwardUnlock
                     {
-                        PlayerId = user.UserId,
+                        Player = user,
                         Name = award.Name
                     });
                     database.SaveChanges();
                 }
-                AwardList.Add(new TravelAward
+                awardList.Add(new TravelAward
                 {
-                    award_hash = award.Name,
-                    award_type = award.Type,
-                    global_points = award.IsGlobalPoints ? award.Points : 0,
-                    individual_points = award.IsGlobalPoints ? 0 : award.Points,
-                    is_global_type = award.IsGlobalPoints,
-                    name = award.Name,
-                    unlocked = unlocked,
-                    new_unlock = new_unlock
+                    AwardHash = award.Name,
+                    AwardType = award.Type,
+                    GlobalPoints = award.IsGlobalPoints ? award.Points : 0,
+                    IndividualPoints = award.IsGlobalPoints ? 0 : award.Points,
+                    IsGlobalType = award.IsGlobalPoints,
+                    Name = award.Name,
+                    Unlocked = unlocked,
+                    NewUnlock = new_unlock
                 });
             }
             var resp = new Response<TravelAwardsResponse>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new TravelAwardsResponse { travel_awards = AwardList }
+                response = new TravelAwardsResponse { TravelAwards = awardList }
             };
             return resp.Serialize();
         }
 
+        // TODO: This can be cleaned up further, but is fine for now
         public static string FeaturedCities(Database database, Guid SessionID, int per_page, int page)
         {
             var session = SessionImpl.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = database.Users
+                .Include(x => x.AwardUnlocks)
+                .FirstOrDefault(match => match.Username == session.Username);
 
-            var CityList = new List<City>();
+            var poiKeys = ModMileConfig.Instance.PointsOfInterest
+                .Select(x => x.Key)
+                .ToArray();
+            var poiCounts = database.POIVisits
+                .Where(match => poiKeys.Contains(match.PointOfInterestId))  // TODO: Does this slow down the database fetch? This sanity check isnt strictly needed imo
+                .GroupBy(match => match.PointOfInterestId)
+                .ToDictionary(match => match.Key, match => match.Count());
+
+            var cityList = new List<City>();
             foreach (var city in ModMileConfig.Instance.Cities)
             {
                 bool new_unlock = false;
                 foreach (var poi in ModMileConfig.Instance.PointsOfInterest.Where(match => match.Value.CityId == city.Key))
                 {
-                    int visits = database.POIVisits.Count(match => match.PointOfInterestId == poi.Key);
+                    int visits = poiCounts[poi.Key];
                     foreach (var award in poi.Value.Awards)
                     {
-                        new_unlock = visits >= award.CheckIns && (user == null || database.AwardUnlocks.FirstOrDefault(match => match.PlayerId == user.UserId && match.Name == award.Name) == null);
+                        new_unlock = visits >= award.CheckIns && (user == null || user.AwardUnlocks.FirstOrDefault(match => match.Name == award.Name) == null);
                         if (new_unlock) break;
                     }
                     if (new_unlock) break;
                 }
 
-                CityList.Add(new City
+                cityList.Add(new City
                 {
-                    name = city.Value.Name,
-                    has_new_unlocked = new_unlock,
-                    id = city.Key,
-                    latitude = city.Value.Latitude,
-                    longitude = city.Value.Longitude,
-                    u = city.Value.U,
-                    v = city.Value.V
+                    Name = city.Value.Name,
+                    HasNewUnlocked = new_unlock,
+                    Id = city.Key,
+                    Latitude = city.Value.Latitude,
+                    Longitude = city.Value.Longitude,
+                    U = city.Value.U,
+                    V = city.Value.V
                 });
             }
             var resp = new Response<CitiesResponse>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new CitiesResponse { cities = CityList }
+                response = new CitiesResponse { Cities = cityList }
             };
             return resp.Serialize();
         }
 
+        // TODO: This can be cleaned up further, but is fine for now
         public static string POIList(Database database, Guid SessionID, int per_page, int page, int city_id)
         {
             var session = SessionImpl.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = database.Users
+                .Include(x => x.AwardUnlocks)
+                .FirstOrDefault(match => match.Username == session.Username);
 
             if (!ModMileConfig.Instance.Cities.ContainsKey(city_id))
             {
@@ -109,45 +130,58 @@ namespace GameServer.Implementation.Player
                 };
                 return errorResp.Serialize();
             }
-            var POIList = new List<POI>();
+
+            var poiKeys = ModMileConfig.Instance.PointsOfInterest
+                .Where(x => x.Value.CityId == city_id)
+                .Select(x => x.Key)
+                .ToArray();
+            var poiCounts = database.POIVisits
+                .Where(match => poiKeys.Contains(match.PointOfInterestId))  // TODO: Does this slow down the database fetch? This sanity check isnt strictly needed imo
+                .GroupBy(match => match.PointOfInterestId)
+                .ToDictionary(match => match.Key, match => match.Count());
+
+            var poiList = new List<POI>();
             foreach (var poi in ModMileConfig.Instance.PointsOfInterest.Where(match => match.Value.CityId == city_id))
             {
                 bool new_unlock = false;
-                int visits = database.POIVisits.Count(match => match.PointOfInterestId == poi.Key);
+                int visits = poiCounts[poi.Key];
                 int unlocked = 0;
                 foreach (var award in poi.Value.Awards)
                     if (visits >= award.CheckIns)
                         unlocked++;
                 foreach (var award in poi.Value.Awards)
                 {
-                    new_unlock = visits >= award.CheckIns && (user == null || database.AwardUnlocks.FirstOrDefault(match => match.PlayerId == user.UserId && match.Name == award.Name) == null);
+                    new_unlock = visits >= award.CheckIns && (user == null || user.AwardUnlocks.FirstOrDefault(match => match.Name == award.Name) == null);
                     if (new_unlock) break;
                 }
-                POIList.Add(new POI
+                poiList.Add(new POI
                 {
-                    name = poi.Value.Name,
-                    global_checkin_count = database.POIVisits.Count(match => match.PointOfInterestId == poi.Key),
-                    id = poi.Key,
-                    latitude = poi.Value.Latitude,
-                    longitude = poi.Value.Longitude,
-                    u = poi.Value.U,
-                    v = poi.Value.V,
-                    locked = unlocked < poi.Value.Awards.Count,
-                    new_unlock = new_unlock
+                    Name = poi.Value.Name,
+                    GlobalCheckinCount = visits,
+                    Id = poi.Key,
+                    Latitude = poi.Value.Latitude,
+                    Longitude = poi.Value.Longitude,
+                    U = poi.Value.U,
+                    V = poi.Value.V,
+                    Locked = unlocked < poi.Value.Awards.Count,
+                    NewUnlock = new_unlock
                 });
             }
             var resp = new Response<POIListResponse>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new POIListResponse { points_of_interest = POIList }
+                response = new POIListResponse { PointsOfInterest = poiList }
             };
             return resp.Serialize();
         }
 
+        // TODO: This can be cleaned up further, but is fine for now
         public static string POIShow(Database database, Guid SessionID, int id)
         {
             var session = SessionImpl.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = database.Users
+                .Include(x => x.AwardUnlocks)
+                .FirstOrDefault(match => match.Username == session.Username);
 
             if (!ModMileConfig.Instance.PointsOfInterest.ContainsKey(id))
             {
@@ -161,33 +195,33 @@ namespace GameServer.Implementation.Player
 
             int visits = database.POIVisits.Count(match => match.PointOfInterestId == id);
 
-            var POIAwards = new List<POIAward>();
+            var poiAwards = new List<POIAward>();
             foreach (var award in ModMileConfig.Instance.PointsOfInterest[id].Awards)
             {
-                bool new_unlock = visits >= award.CheckIns && (user == null || database.AwardUnlocks.FirstOrDefault(match => match.PlayerId == user.UserId && match.Name == award.Name) == null);
+                bool new_unlock = visits >= award.CheckIns && (user == null || user.AwardUnlocks.FirstOrDefault(match => match.Name == award.Name) == null);
                 if (new_unlock && user != null)
                 {
                     database.AwardUnlocks.Add(new AwardUnlock
                     {
-                        PlayerId = user.UserId,
+                        Player = user,
                         Name = award.Name
                     });
                     database.SaveChanges();
                 }
-                POIAwards.Add(new POIAward
+                poiAwards.Add(new POIAward
                 {
-                    award_hash = award.Name,
-                    award_type = award.Type,
-                    name = award.Name,
-                    required_checkins = award.CheckIns,
-                    locked = visits < award.CheckIns,
-                    new_unlock = new_unlock
+                    AwardHash = award.Name,
+                    AwardType = award.Type,
+                    Name = award.Name,
+                    RequiredCheckins = award.CheckIns,
+                    Locked = visits < award.CheckIns,
+                    NewUnlock = new_unlock
                 });
             }
             var resp = new Response<List<POIResponse>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = [new POIResponse { awards = POIAwards }]
+                response = [new POIResponse { Awards = poiAwards }]
             };
             return resp.Serialize();
         }
@@ -195,7 +229,9 @@ namespace GameServer.Implementation.Player
         public static string CheckinStatus(Database database, Guid SessionID, int id)
         {
             var session = SessionImpl.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = database.Users
+                .Include(x => x.POIVisits)
+                .FirstOrDefault(match => match.Username == session.Username);
 
             if (!ModMileConfig.Instance.PointsOfInterest.ContainsKey(id))
             {
@@ -207,16 +243,18 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            if (user != null && (database.POIVisits.FirstOrDefault(match => match.PlayerId == user.UserId 
-                && match.PointOfInterestId == id) == null
+            var poiVisit = user.POIVisits
+                .OrderByDescending(e => e.CreatedAt)
+                .FirstOrDefault(match => match.PointOfInterestId == id);
+
+            if (user != null && (poiVisit == null
                 || (!ModMileConfig.Instance.RequireUniquePlayersToCheckIn
-                    && database.POIVisits.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.PlayerId == user.UserId
-                        && match.PointOfInterestId == id).CreatedAt <= DateTime.UtcNow.AddHours(-2))))
+                    && poiVisit.CreatedAt <= DateTime.UtcNow.AddHours(-2))))
             {
                 database.POIVisits.Add(new POIVisit
                 {
                     CreatedAt = DateTime.UtcNow,
-                    PlayerId = user.UserId,
+                    Player = user,
                     PointOfInterestId = id,
                 });
                 database.SaveChanges();
@@ -229,18 +267,19 @@ namespace GameServer.Implementation.Player
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [ new CheckinStatus
                 {
-                    id = id,
-                    latitude = poi.Latitude,
-                    longitude = poi.Longitude,
-                    name = poi.Name,
-                    radius = poi.Radius,
-                    u = poi.U,
-                    v = poi.V
+                    Id = id,
+                    Latitude = poi.Latitude,
+                    Longitude = poi.Longitude,
+                    Name = poi.Name,
+                    Radius = poi.Radius,
+                    U = poi.U,
+                    V = poi.V
                 } ]
             };
             return resp.Serialize();
         }
 
+        // TODO: This can be cleaned up further, but is fine for now
         public static string CheckinCreate(Database database, Guid SessionID, float latitude, float longitude)
         {
             var session = SessionImpl.GetSession(SessionID);
@@ -273,22 +312,31 @@ namespace GameServer.Implementation.Player
                 {
                     CreatedAt = DateTime.UtcNow,
                     Amount = travelPoints,
-                    PlayerId = user.UserId
+                    Player = user
                 });
             }
             if (!user.HasCheckedInBefore)
                 user.HasCheckedInBefore = true;
             database.SaveChanges();
 
+            // TODO: I honestly cbf to look at this right now, we need to look at this later and optimise
+            var poiKeys = ModMileConfig.Instance.PointsOfInterest
+                .Select(x => x.Key)
+                .ToArray();
+            var poiCounts = database.POIVisits
+                .Where(match => poiKeys.Contains(match.PointOfInterestId))  // TODO: Does this slow down the database fetch? This sanity check isnt strictly needed imo
+                .GroupBy(match => match.PointOfInterestId)
+                .ToDictionary(match => match.Key, match => match.Count());
+
             bool new_unlock = false;
             foreach (var city in ModMileConfig.Instance.Cities)
             {
                 foreach (var poi in ModMileConfig.Instance.PointsOfInterest.Where(match => match.Value.CityId == city.Key))
                 {
-                    int visits = database.POIVisits.Count(match => match.PointOfInterestId == poi.Key);
+                    int visits = poiCounts[poi.Key];
                     foreach (var award in poi.Value.Awards)
                     {
-                        new_unlock = visits < award.CheckIns && (user == null || database.AwardUnlocks.FirstOrDefault(match => match.PlayerId == user.UserId && match.Name == award.Name) == null);
+                        new_unlock = visits < award.CheckIns && (user == null || user.AwardUnlocks.FirstOrDefault(match => match.Name == award.Name) == null);
                         if (new_unlock) break;
                     }
                     if (new_unlock) break;
@@ -301,16 +349,16 @@ namespace GameServer.Implementation.Player
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [ new CheckinCreate
                 {
-                    id = GetPOI(latitude, longitude),
-                    global_miles = database.Users.Where(match => match.PlayedMNR).Sum(p => p.ModMiles),//Global Mod Miles Distance
-                    global_points = database.TravelPoints.Sum(p => p.Amount),//Global Travel Points
-                    last_miles = distance,//Mod Miles Distance
-                    last_points = travelPoints,//Travel Points Earned
-                    total_miles = user.ModMiles,//Total Mod Miles Distance
-                    travel_points = user.TravelPoints,//Total Travel Points and also My Travel Points
-                    u = GetU(longitude),
-                    v = GetV(latitude),
-                    new_unlock = new_unlock
+                    Id = GetPOI(latitude, longitude),
+                    GlobalMiles = database.Users.Where(match => match.PlayedMNR).Sum(p => p.ModMiles),//Global Mod Miles Distance
+                    GlobalPoints = database.TravelPoints.Sum(p => p.Amount),//Global Travel Points
+                    LastMiles = distance,//Mod Miles Distance
+                    LastPoints = travelPoints,//Travel Points Earned
+                    TotalMiles = user.ModMiles,//Total Mod Miles Distance
+                    TravelPoints = user.TravelPoints.Sum(p => p.Amount),//Total Travel Points and also My Travel Points
+                    U = GetU(longitude),
+                    V = GetV(latitude),
+                    NewUnlock = new_unlock
                 } ]
             };
             return resp.Serialize();
@@ -319,6 +367,8 @@ namespace GameServer.Implementation.Player
         public static string LeaderboardCities(Database database, int page, int per_page, Timespan timespan, SortColumn sort_column, SortOrder sort_order)
         {
             var leaderboard = new List<ModMileLeaderboardStat>();
+
+
 
             foreach (var city in ModMileConfig.Instance.Cities)
             {
@@ -336,13 +386,13 @@ namespace GameServer.Implementation.Player
 
                 leaderboard.Add(new ModMileLeaderboardStat
                 {
-                    city = city.Value.Name,
-                    country = city.Value.Country,
-                    destination = "",
-                    player = "",
-                    rank = city.Key,
-                    travel_points = 0,
-                    visits = visits
+                    City = city.Value.Name,
+                    Country = city.Value.Country,
+                    Destination = "",
+                    Player = "",
+                    Rank = city.Key,
+                    TravelPoints = 0,
+                    Visits = visits
                 });
             }
 

@@ -8,77 +8,59 @@ using System.Linq;
 using System;
 using GameServer.Implementation.Common;
 using GameServer.Models.Common;
+using Microsoft.EntityFrameworkCore;
+using AutoMapper.QueryableExtensions;
+using Microsoft.Extensions.FileProviders.Embedded;
 
 namespace GameServer.Implementation.Player
 {
     public class PlayerCommentsImpl
     {
         public static string ListComments(Database database, Guid SessionID, int page, int per_page, int limit, SortColumn sort_column,
-            Platform platform, string PlayerIDFilter, string AuthorIDFilter)
+            Platform platform, string playerIDFilter, string authorIDFilter)
         {
             var Comments = new List<PlayerCommentData> { };
             var session = SessionImpl.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
-            foreach (string id in PlayerIDFilter.Split(','))
-            {
-                Comments.AddRange(database.PlayerComments.Where(match => match.PlayerId.ToString() == id).ToList());
-            }
+            var playerIds = playerIDFilter.Split(',').Select(x => int.Parse(x));
+            var commentsQuery = database.PlayerComments
+                .Include(x => x.Player)
+                .Where(match => playerIds.Contains(match.Player.UserId));
 
             //sorting
             if (sort_column == SortColumn.created_at)
-                Comments.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
-
-            var commentsList = new List<player_comment> { };
+                commentsQuery = commentsQuery.OrderByDescending(match => match.CreatedAt);
 
             //calculating pages
-            int pageEnd = PageCalculator.GetPageEnd(page, per_page);
-            int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, Comments.Count);
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+            var pageEnd = PageCalculator.GetPageStart(page, per_page);
+            var total = commentsQuery.Count();
+            var totalPages = PageCalculator.GetTotalPages(total, per_page);
 
-            if (pageEnd > Comments.Count)
-                pageEnd = Comments.Count;
+            var comments = commentsQuery
+                .Skip(pageStart)
+                .Take(per_page)
+                .ProjectTo<Models.Response.PlayerComment>(database.MapperConfig, new { requestedBy })
+                .ToList();
 
-            for (int i = pageStart; i < pageEnd; i++)
-            {
-                var Comment = Comments[i];
-                if (Comment != null)
-                {
-                    commentsList.Add(new player_comment
-                    {
-                        author_id = Comment.AuthorId,
-                        author_username = Comment.AuthorUsername,
-                        body = Comment.Body,
-                        created_at = Comment.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        updated_at = Comment.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        id = Comment.Id,
-                        platform = Comment.Platform.ToString(),
-                        player_id = Comment.PlayerId,
-                        username = Comment.Username,
-                        rating_down = Comment.RatingDown,
-                        rating_up = Comment.RatingUp,
-                        rated_by_me = requestedBy != null ? Comment.IsRatedByMe(requestedBy.UserId) : false
-                    });
-                }
-            }
-
-            var resp = new Response<List<player_comments>>
+            var resp = new Response<List<PlayerComments>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = [ new player_comments {
-                    page = page,
-                    row_start = pageStart,
-                    row_end = pageEnd,
-                    total = Comments.Count,
-                    total_pages = totalPages,
-                    PlayerCommentList = commentsList
+                response = [ new PlayerComments {
+                    Page = page,
+                    RowStart = pageStart,
+                    RowEnd = pageEnd,
+                    Total = Comments.Count,
+                    TotalPages = totalPages,
+                    PlayerCommentList = comments
                 } ]
             };
 
             return resp.Serialize();
         }
 
-        public static string CreateComment(Database database, Guid SessionID, PlayerComment player_comment)
+        public static string CreateComment(Database database, Guid SessionID, Models.Request.PlayerComment player_comment)
         {
             var session = SessionImpl.GetSession(SessionID);
             var author = database.Users.FirstOrDefault(match => match.Username == session.Username);
@@ -94,27 +76,27 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            database.PlayerComments.Add(new PlayerCommentData
+            var comment = new PlayerCommentData
             {
-                AuthorId = author.UserId,
+                Author = author,
                 Body = player_comment.body,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 Platform = Platform.PS3,
-                PlayerId = player_comment.player_id
-            });
-            database.SaveChanges();
+                Player = user
+            };
+            database.PlayerComments.Add(comment);
+            //database.SaveChanges();   // TODO: Is this needed?
             database.ActivityLog.Add(new ActivityEvent
             {
-                AuthorId = author.UserId,
+                Author = author,
                 Type = ActivityType.player_event,
                 List = ActivityList.activity_log,
                 Topic = "player_authored_comment",
                 Description = player_comment.body,
-                PlayerId = user.UserId,
-                PlayerCreationId = 0,
+                Player = user,
                 CreatedAt = DateTime.UtcNow,
-                AllusionId = database.PlayerComments.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.AuthorId == author.UserId && match.PlayerId == user.UserId).Id,
+                AllusionId = comment.Id,
                 AllusionType = "PlayerComment"
             });
             database.SaveChanges();
@@ -143,7 +125,7 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            if (comment.AuthorId != user.UserId && comment.PlayerId != user.UserId)
+            if (comment.Author.UserId != user.UserId && comment.Player.UserId != user.UserId)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -180,15 +162,17 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            var rating = database.PlayerCommentRatings.FirstOrDefault(match => match.PlayerCommentId == player_comment_rating.player_comment_id
-                && match.PlayerId == user.UserId);
+            var rating = database.PlayerCommentRatings
+                .Include(x => x.Comment)
+                .FirstOrDefault(match => match.Comment.Id == player_comment_rating.player_comment_id
+                    && match.Player.UserId == user.UserId);
 
             if (rating == null)
             {
                 database.PlayerCommentRatings.Add(new PlayerCommentRatingData
                 {
-                    PlayerCommentId = player_comment_rating.player_comment_id,
-                    PlayerId = user.UserId,
+                    Comment = rating.Comment,
+                    Player = user,
                     Type = RatingType.YAY,
                     RatedAt = DateTime.UtcNow
                 });

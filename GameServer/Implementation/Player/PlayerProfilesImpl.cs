@@ -27,33 +27,38 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            var resp = new Response<List<player_profile>>
+            var resp = new Response<List<Models.Response.PlayerProfile>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = [new player_profile { player_id = user.UserId, quote = user.Quote, username = user.Username }]
+                response = [new Models.Response.PlayerProfile { PlayerId = user.UserId, Quote = user.Quote, Username = user.Username }]
             };
             return resp.Serialize();
         }
 
-        public static string UpdateProfile(Database database, Guid SessionID, PlayerProfile player_profile)
+        public static string UpdateProfile(Database database, Guid SessionID, Models.Request.PlayerProfile player_profile)
         {
-            int id = -130;
-            string message = "The player doesn't exist";
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            if (user != null)
+            
+            if (user == null)
             {
-                id = 0;
-                message = "Successful completion";
-                user.Quote = player_profile.quote.Replace("\0", "");
-                database.SaveChanges();
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
             }
+
+            user.Quote = player_profile.quote.Replace("\0", "");
+            database.SaveChanges();
 
             var resp = new Response<EmptyResponse>
             {
-                status = new ResponseStatus { id = id, message = message },
+                status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = new EmptyResponse { }
             };
+
             return resp.Serialize();
         }
 
@@ -73,7 +78,7 @@ namespace GameServer.Implementation.Player
             var resp = new Response<PlayerIDResponse>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = new PlayerIDResponse { player_id = user.UserId }
+                response = new PlayerIDResponse { PlayerId = user.UserId }
             };
 
             return resp.Serialize();

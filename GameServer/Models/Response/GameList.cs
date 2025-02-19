@@ -26,7 +26,7 @@ namespace GameServer.Models.Response
         [XmlAttribute("cur_players")]
         public int CurPlayers { get; set; }
         [XmlAttribute("number_laps")]
-        public int number_laps { get; set; }
+        public int NumberLaps { get; set; }
         [XmlAttribute("lobby_channel_id")]
         public int LobbyChannelId { get; set; }
         [XmlAttribute("track")]

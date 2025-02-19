@@ -158,26 +158,26 @@ namespace GameServer.Implementation.Common
                     {
                         if (ParseMessage(message, response, out EventStartedEvent info))
                         {
-                            PlayerCreationData creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == info.TrackId);
+                            var creation = database.PlayerCreations.FirstOrDefault(match => match.ParentCreation.Id == info.TrackId);
                             if (creation != null)
                             {
                                 database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted
                                 {
-                                    PlayerCreationId = info.TrackId,
+                                    Creation = creation,
                                     StartedAt = DateTime.UtcNow,
                                 });
                                 foreach (int playerId in info.PlayerIds)
                                 {
-                                    User user = database.Users.FirstOrDefault(match => match.UserId == playerId);
+                                    var user = database.Users.FirstOrDefault(match => match.UserId == playerId);   // TODO: Session?
                                     if (user != null)
                                     {
-                                        var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
-                                        var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
+                                        var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.ParentCreation.Id == user.CharacterIdx);
+                                        var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.ParentCreation.Id == user.KartIdx);
                                         if (character != null)
-                                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = DateTime.UtcNow });
+                                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { Creation = character.ParentCreation, StartedAt = DateTime.UtcNow });
                                         if (kart != null)
-                                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = DateTime.UtcNow });
-                                        database.OnlineRacesStarted.Add(new RaceStarted { PlayerId = user.UserId, StartedAt = DateTime.UtcNow });
+                                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { Creation = kart.ParentCreation, StartedAt = DateTime.UtcNow });
+                                        database.OnlineRacesStarted.Add(new RaceStarted { Player = user, StartedAt = DateTime.UtcNow });
                                     }
                                 }
                                 database.SaveChanges();
@@ -192,19 +192,19 @@ namespace GameServer.Implementation.Common
                     {
                         if (ParseMessage(message, response, out EventFinishedEvent info))
                         {
-                            PlayerCreationData creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == info.TrackId);
+                            var creation = database.PlayerCreations.FirstOrDefault(match => match.ParentCreation.Id == info.TrackId);
                             if (creation != null)
                             {
                                 creation.RacesFinished++;
                                 foreach (var player in info.Stats)
                                 {
-                                    User user = database.Users.FirstOrDefault(match => match.UserId == player.PlayerConnectId);
+                                    var user = database.Users.FirstOrDefault(match => match.UserId == player.PlayerConnectId);   // TODO: Session?
                                     if (user != null)
                                     {
                                         if (info.IsMNR)
                                         {
-                                            var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
-                                            var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
+                                            var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.ParentCreation.Id == user.CharacterIdx);
+                                            var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.ParentCreation.Id == user.KartIdx);
 
                                             if (character != null)
                                             {
@@ -235,7 +235,7 @@ namespace GameServer.Implementation.Common
                                             }
                                         }
 
-                                        database.OnlineRacesFinished.Add(new RaceFinished { PlayerId = user.UserId, FinishedAt = DateTime.UtcNow, IsWinner = player.Rank == 1 });
+                                        database.OnlineRacesFinished.Add(new RaceFinished { Player = user, FinishedAt = DateTime.UtcNow, IsWinner = player.Rank == 1 });
                                         
                                         if (player.Rank == 1)
                                         {
@@ -262,8 +262,8 @@ namespace GameServer.Implementation.Common
 
                                         if (!info.IsMNR)
                                         {
-                                            score = database.Scores.FirstOrDefault(match => match.PlayerId == player.PlayerConnectId
-                                                && match.SubKeyId == info.TrackId
+                                            score = database.Scores.FirstOrDefault(match => match.User.UserId == player.PlayerConnectId
+                                                && match.Creation.Id == info.TrackId
                                                 && match.SubGroupId == (int)info.GameType
                                                 && match.Platform == creation.Platform
                                                 && match.PlaygroupSize == player.PlaygroupSize
@@ -271,14 +271,14 @@ namespace GameServer.Implementation.Common
                                         }
                                         else
                                         {
-                                            score = database.Scores.FirstOrDefault(match => match.PlayerId == player.PlayerConnectId
-                                                && match.SubKeyId == info.TrackId
+                                            score = database.Scores.FirstOrDefault(match => match.User.UserId == player.PlayerConnectId
+                                                && match.Creation.Id == info.TrackId
                                                 && match.SubGroupId == (int)info.GameType - 10
                                                 && match.Platform == creation.Platform 
                                                 && match.IsMNR == info.IsMNR);
                                         }
 
-                                        var leaderboard = database.Scores.Where(match => match.SubKeyId == info.TrackId && match.SubGroupId == (int)info.GameType &&
+                                        var leaderboard = database.Scores.Where(match => match.Creation.Id == info.TrackId && match.SubGroupId == (int)info.GameType &&
                                             match.PlaygroupSize == player.PlaygroupSize && match.Platform == creation.Platform).ToList();
 
                                         if (creation.ScoreboardMode == 1)
@@ -294,15 +294,14 @@ namespace GameServer.Implementation.Common
                                             {
                                                 database.ActivityLog.Add(new ActivityEvent
                                                 {
-                                                    AuthorId = user.UserId,
+                                                    Author = user,
                                                     Type = ActivityType.player_event,
                                                     List = ActivityList.both,
                                                     Topic = "player_beat_finish_time",
                                                     Description = $"{player.FinishTime}",
-                                                    PlayerId = 0,
-                                                    PlayerCreationId = creation.PlayerCreationId,
+                                                    Creation = creation,
                                                     CreatedAt = DateTime.UtcNow,
-                                                    AllusionId = creation.PlayerCreationId,
+                                                    AllusionId = creation.Id,
                                                     AllusionType = "PlayerCreation::Track"
                                                 });
                                             }
@@ -310,15 +309,14 @@ namespace GameServer.Implementation.Common
                                             {
                                                 database.ActivityLog.Add(new ActivityEvent
                                                 {
-                                                    AuthorId = user.UserId,
+                                                    Author = user,
                                                     Type = ActivityType.player_event,
                                                     List = ActivityList.both,
                                                     Topic = "player_beat_score",
                                                     Description = $"{player.Points}",
-                                                    PlayerId = 0,
-                                                    PlayerCreationId = creation.PlayerCreationId,
+                                                    Creation = creation,
                                                     CreatedAt = DateTime.UtcNow,
-                                                    AllusionId = creation.PlayerCreationId,
+                                                    AllusionId = creation.Id,
                                                     AllusionType = "PlayerCreation::Track"
                                                 });
                                             }
@@ -353,11 +351,11 @@ namespace GameServer.Implementation.Common
                                                 CreatedAt = DateTime.UtcNow,
                                                 FinishTime = player.FinishTime,
                                                 Platform = creation.Platform,
-                                                PlayerId = player.PlayerConnectId,
+                                                User = user,
                                                 PlaygroupSize = player.PlaygroupSize,
                                                 Points = player.Points,
                                                 SubGroupId = info.IsMNR ? (int)info.GameType - 10 : (int)info.GameType,
-                                                SubKeyId = info.TrackId,
+                                                Creation = creation,
                                                 UpdatedAt = DateTime.UtcNow,
                                                 Latitude = 0,
                                                 Longitude = 0,

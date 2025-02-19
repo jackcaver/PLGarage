@@ -20,31 +20,31 @@ namespace GameServer.Implementation.Common
     {
         public static string GetLatest(Database database, Platform platform, ContentUpdateType content_update_type, string serverURL)
         {
-            var resp = new Response<List<content_update>>
+            var resp = new Response<List<ContentUpdate>>
             {
                 status = new ResponseStatus { id = -404, message = "Not Found" },
                 response = []
             };
 
-            if (content_update_type == ContentUpdateType.ROM_STATUES)
+            if (content_update_type == ContentUpdateType.ROM_STATUES)   // TODO: HasFlag?
             {
                 resp.status.id = 0;
                 resp.status.message = "Successful completion";
-                resp.response.Add(new content_update
+                resp.response.Add(new ContentUpdate
                 {
-                    available_date = "2011-06-28T00:00:00+00:00",
-                    content_update_type = content_update_type.ToString(),
-                    created_at = "2011-06-28T21:57:57+00:00",
-                    data_md5 = "4c1206b2e920e279bcb5cf6e600faeb5",
-                    description = "Backburn Mod and Kart",
-                    has_been_uploaded = true,
-                    id = 10541,
-                    name = "Bckburn",
-                    platform = "PS3",
-                    updated_at = "2011-06-28T21:57:57+00:00",
-                    uuid = "aec45604-a1d1-11e0-9406-1231390081e2",
-                    content_url = $"{serverURL}/content_updates/10541/data.bin",
-                    data = "PGRsY19zdGF0dWVzPiAKICA8ZGxjX3N0YXR1ZSBpZD0iMTIyNiIgdHlwZT0iQ0hBUkFDVEVSIiAvPiAKICA8ZGxjX3N0YXR1ZSBpZD0iMTE3IiB0eXBlPSJLQVJUIiAvPiAKPC9kbGNfc3RhdHVlcz4A"
+                    AvailableDate = "2011-06-28T00:00:00+00:00",
+                    ContentUpdateType = content_update_type.ToString(),
+                    CreatedAt = "2011-06-28T21:57:57+00:00",
+                    DataMd5 = "4c1206b2e920e279bcb5cf6e600faeb5",
+                    Description = "Backburn Mod and Kart",
+                    HasBeenUploaded = true,
+                    Id = 10541,
+                    Name = "Bckburn",
+                    Platform = "PS3",
+                    UpdatedAt = "2011-06-28T21:57:57+00:00",
+                    Uuid = "aec45604-a1d1-11e0-9406-1231390081e2",
+                    ContentUrl = $"{serverURL}/content_updates/10541/data.bin",
+                    Data = "PGRsY19zdGF0dWVzPiAKICA8ZGxjX3N0YXR1ZSBpZD0iMTIyNiIgdHlwZT0iQ0hBUkFDVEVSIiAvPiAKICA8ZGxjX3N0YXR1ZSBpZD0iMTE3IiB0eXBlPSJLQVJUIiAvPiAKPC9kbGNfc3RhdHVlcz4A"
                 });
             }
 
@@ -52,21 +52,21 @@ namespace GameServer.Implementation.Common
             {
                 resp.status.id = 0;
                 resp.status.message = "Successful completion";
-                resp.response.Add(new content_update
+                resp.response.Add(new ContentUpdate
                 {
-                    available_date = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    content_update_type = content_update_type.ToString(),
-                    created_at = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    data_md5 = BitConverter.ToString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(GetHotlapData(database)))).Replace("-", "").ToLower(),
-                    description = "",
-                    has_been_uploaded = true,
-                    id = 10542,
-                    name = "",
-                    platform = "PS3",
-                    updated_at = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    uuid = Guid.NewGuid().ToString(),
-                    content_url = "",
-                    data = Convert.ToBase64String(Encoding.UTF8.GetBytes(GetHotlapData(database)))
+                    AvailableDate = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    ContentUpdateType = content_update_type.ToString(),
+                    CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    DataMd5 = BitConverter.ToString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(GetHotlapData(database)))).Replace("-", "").ToLower(),
+                    Description = "",
+                    HasBeenUploaded = true,
+                    Id = 10542,
+                    Name = "",
+                    Platform = "PS3",
+                    UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    Uuid = Guid.NewGuid().ToString(),
+                    ContentUrl = "",
+                    Data = Convert.ToBase64String(Encoding.UTF8.GetBytes(GetHotlapData(database)))
                 });
             }
 
@@ -74,21 +74,21 @@ namespace GameServer.Implementation.Common
             {
                 resp.status.id = 0;
                 resp.status.message = "Successful completion";
-                resp.response.Add(new content_update
+                resp.response.Add(new ContentUpdate
                 {
-                    available_date = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    content_update_type = content_update_type.ToString(),
-                    created_at = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    data_md5 = BitConverter.ToString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(GetTopTracksData(database)))).Replace("-", "").ToLower(),
-                    description = "",
-                    has_been_uploaded = true,
-                    id = 10543,
-                    name = "",
-                    platform = "PS3",
-                    updated_at = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    uuid = Guid.NewGuid().ToString(),
-                    content_url = "",
-                    data = Convert.ToBase64String(Encoding.UTF8.GetBytes(GetTopTracksData(database)))
+                    AvailableDate = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    ContentUpdateType = content_update_type.ToString(),
+                    CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    DataMd5 = BitConverter.ToString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(GetTopTracksData(database)))).Replace("-", "").ToLower(),
+                    Description = "",
+                    HasBeenUploaded = true,
+                    Id = 10543,
+                    Name = "",
+                    Platform = "PS3",
+                    UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    Uuid = Guid.NewGuid().ToString(),
+                    ContentUrl = "",
+                    Data = Convert.ToBase64String(Encoding.UTF8.GetBytes(GetTopTracksData(database)))
                 });
             }
 
@@ -123,12 +123,12 @@ namespace GameServer.Implementation.Common
             }
 
             if (hotLap != null)
-                creation = creations.FirstOrDefault(match => match.PlayerCreationId == hotLap.TrackId);
+                creation = creations.FirstOrDefault(match => match.Id == hotLap.TrackId);
 
             var result = new XElement("events",
                 new XElement("event",
                     new XAttribute("name", creation != null ? creation.Name : "T1_ModCircuit"),
-                    new XAttribute("id", creation != null ? creation.PlayerCreationId : 288),
+                    new XAttribute("id", creation != null ? creation.Id : 288),
                     new XAttribute("laps", "1"),
                     new XAttribute("description", (creation != null && creation.Description != null) ? creation.Description : "")
                 )
@@ -151,7 +151,7 @@ namespace GameServer.Implementation.Common
             {
                 xmlResult.Add(new XElement("event",
                     new XAttribute("name", creation.Name),
-                    new XAttribute("id", creation.PlayerCreationId),
+                    new XAttribute("id", creation.Id),
                     new XAttribute("laps", "3"),
                     new XAttribute("description", creation.Description != null ? creation.Description : "")
                 ));

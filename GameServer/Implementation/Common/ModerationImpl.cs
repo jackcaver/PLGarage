@@ -34,7 +34,7 @@ namespace GameServer.Implementation.Common
 
             database.GriefReports.Add(new GriefReportData
             {
-                UserId = user.UserId,
+                User = user,
                 BadRectTop = grief_report.bad_rect_data.top,
                 BadRectBottom = grief_report.bad_rect_data.bottom,
                 Comments = grief_report.comments,
@@ -72,8 +72,8 @@ namespace GameServer.Implementation.Common
 
             database.PlayerComplaints.Add(new PlayerComplaintData
             {
-                UserId = user.UserId,
-                PlayerId = player_complaint.player_id,
+                User = user,
+                Player = player,
                 Reason = player_complaint.player_complaint_reason,
                 Comments = player_complaint.player_comments
             });
@@ -91,7 +91,8 @@ namespace GameServer.Implementation.Common
         {
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == player_creation_complaint.player_creation_id);
+            var player = database.Users.FirstOrDefault(match => match.UserId == player_creation_complaint.owner_player_id);
+            var creation = database.PlayerCreations.FirstOrDefault(match => match.Id == player_creation_complaint.player_creation_id);
 
             if (user == null || creation == null)
             {
@@ -105,9 +106,9 @@ namespace GameServer.Implementation.Common
 
             database.PlayerCreationComplaints.Add(new PlayerCreationComplaintData
             {
-                UserId = user.UserId,
-                PlayerId = player_creation_complaint.owner_player_id,
-                PlayerCreationId = player_creation_complaint.player_creation_id,
+                User = user,
+                Player = player,
+                PlayerCreation = creation,
                 Reason = player_creation_complaint.player_complaint_reason,
                 Comments = player_creation_complaint.player_comments
             });
@@ -167,7 +168,7 @@ namespace GameServer.Implementation.Common
         public static string GetGriefReports(Database database, string context, int? from)
         {
             List<int> reports = [];
-            IQueryable<GriefReportData> baseQuery = database.GriefReports.Where(match => from == null || match.UserId == from);
+            var baseQuery = database.GriefReports.Where(match => from == null || match.User.UserId == from);
 
             if (string.IsNullOrEmpty(context))
             {
@@ -195,7 +196,7 @@ namespace GameServer.Implementation.Common
 
         public static string SetModerationStatus(Database database, int id, ModerationStatus status)
         {
-            var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
+            var creation = database.PlayerCreations.FirstOrDefault(match => match.Id == id);
 
             if (creation == null)
                 return null;
@@ -222,7 +223,7 @@ namespace GameServer.Implementation.Common
         public static string GetPlayerComplaints(Database database, int? from, int? playerID)
         {
             List<int> reports = [];
-            IQueryable<PlayerComplaintData> baseQuery = database.PlayerComplaints.Where(match => from == null || match.UserId == from);
+            var baseQuery = database.PlayerComplaints.Where(match => from == null || match.User.UserId == from);
 
             if (playerID == null)
             {
@@ -231,7 +232,7 @@ namespace GameServer.Implementation.Common
             }
             else
             {
-                foreach (var report in baseQuery.Where(match => match.PlayerId == playerID))
+                foreach (var report in baseQuery.Where(match => match.Player.UserId == playerID))
                     reports.Add(report.Id);
             }
 
@@ -251,10 +252,10 @@ namespace GameServer.Implementation.Common
         public static string GetPlayerCreationComplaints(Database database, int? from, int? playerID, int? playerCreationID)
         {
             List<int> reports = [];
-            IQueryable<PlayerCreationComplaintData> baseQuery = database.PlayerCreationComplaints.Where(match => from == null || match.UserId == from);
+            var baseQuery = database.PlayerCreationComplaints.Where(match => from == null || match.User.UserId == from);
 
             if (playerID != null)
-                baseQuery = baseQuery.Where(match => match.PlayerId == playerID);
+                baseQuery = baseQuery.Where(match => match.Player.UserId == playerID);
 
             if (playerCreationID == null)
             {
@@ -263,7 +264,7 @@ namespace GameServer.Implementation.Common
             }
             else
             {
-                foreach (var report in baseQuery.Where(match => match.PlayerCreationId == playerCreationID))
+                foreach (var report in baseQuery.Where(match => match.PlayerCreation.Id == playerCreationID))
                     reports.Add(report.Id);
             }
 

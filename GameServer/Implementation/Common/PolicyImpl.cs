@@ -41,10 +41,10 @@ PLGarage and it's developers are not reliable for any possible data leaks or bla
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [ 
                     new PolicyResponse { 
-                        id = (int)policy_type, 
-                        is_accepted = is_accepted, 
-                        name = "Online User Agreement", 
-                        text = text 
+                        Id = (int)policy_type, 
+                        IsAccepted = is_accepted, 
+                        Name = "Online User Agreement", 
+                        Text = text 
                     } 
                 ]
             };

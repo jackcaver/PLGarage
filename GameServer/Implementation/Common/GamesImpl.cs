@@ -8,6 +8,7 @@ using GameServer.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace GameServer.Implementation.Common
 {
@@ -20,58 +21,49 @@ namespace GameServer.Implementation.Common
         {
             if (page == 0) page = 1;
 
-            var FilteredGameList = new List<GameData>(GameList);
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+            var pageEnd = PageCalculator.GetPageStart(page, per_page);
+            var total = GameList.Count();
+            var totalPages = PageCalculator.GetTotalPages(total, per_page);
 
-            if (filters.game_state != null)
-                FilteredGameList.RemoveAll(match => match.State != filters.game_state);
-            if (filters.is_ranked != null)
-                FilteredGameList.RemoveAll(match => match.IsRanked != filters.is_ranked);
-            if (filters.game_type != null)
-                FilteredGameList.RemoveAll(match => match.Type != filters.game_type);
-            if (filters.platform != null)
-                FilteredGameList.RemoveAll(match => match.Platform != filters.platform);
-            if (filters.track_group != null)
-                FilteredGameList.RemoveAll(match => match.TrackGroup != filters.track_group);
-            if (filters.privacy != null)
-                FilteredGameList.RemoveAll(match => match.Privacy != filters.privacy);
-            if (!string.IsNullOrEmpty(filters.speed_class))
-                FilteredGameList.RemoveAll(match => match.SpeedClass != filters.speed_class);
-            if (filters.track != null)
-                FilteredGameList.RemoveAll(match => match.Track != filters.track);
-            if (filters.number_laps != null)
-                FilteredGameList.RemoveAll(match => match.NumberLaps != filters.number_laps);
-
-            //calculating pages
-            int pageEnd = PageCalculator.GetPageEnd(page, per_page);
-            int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, GameList.Count);
-
-            if (pageEnd > FilteredGameList.Count)
-                pageEnd = FilteredGameList.Count;
+            var filteredGameList = new List<GameData>(GameList)
+                .Where(match => (filters.game_state != null ? match.State == filters.game_state : true) &&
+                                (filters.is_ranked != null ? match.IsRanked == filters.is_ranked : true) &&
+                                (filters.game_type != null ? match.Type == filters.game_type : true) &&
+                                (filters.platform != null ? match.Platform == filters.platform : true) &&
+                                (filters.track_group != null ? match.TrackGroup != filters.track_group : true) &&
+                                (filters.privacy != null ? match.Privacy != filters.privacy : true) &&
+                                (!string.IsNullOrEmpty(filters.speed_class) ? match.SpeedClass != filters.speed_class : true) &&
+                                (filters.track != null ? match.Track != filters.track : true) &&
+                                (filters.number_laps != null ? match.NumberLaps != filters.number_laps : true))
+                .Skip(pageStart)
+                .Take(per_page)
+                // TODO: AutoMapper
+                .ToList();
 
             var gameList = new List<GameListGame>();
 
             for (int i = pageStart; i < pageEnd; i++)
             {
-                var game = FilteredGameList[i];
+                var game = filteredGameList[i];
                 if (game != null)
                 {
                     gameList.Add(new GameListGame
                     {
-                        id = game.Id,
-                        name = game.Name,
-                        host_player_id = game.HostPlayerId,
-                        host_player_ip_address = game.HostPlayerIP,
-                        cur_players = game.Players.Count,
-                        max_players = game.MaxPlayers,
-                        min_players = game.MinPlayers,
-                        game_type = game.Type.ToString(),
-                        game_state_id = (int)game.State,
-                        is_ranked = game.IsRanked,
-                        track = game.Track,
-                        lobby_channel_id = game.LobbyChannelId,
-                        number_laps = game.NumberLaps,
-                        speed_class = game.SpeedClass
+                        Id = game.Id,
+                        Name = game.Name,
+                        HostPlayerId = game.HostPlayerId,
+                        HostPlayerIpAddress = game.HostPlayerIP,
+                        CurPlayers = game.Players.Count,
+                        MaxPlayers = game.MaxPlayers,
+                        MinPlayers = game.MinPlayers,
+                        GameType = game.Type.ToString(),
+                        GameStateId = (int)game.State,
+                        IsRanked = game.IsRanked,
+                        Track = game.Track,
+                        LobbyChannelId = game.LobbyChannelId,
+                        NumberLaps = game.NumberLaps,
+                        SpeedClass = game.SpeedClass
                     });
                 }
             }
@@ -80,9 +72,9 @@ namespace GameServer.Implementation.Common
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [ new GameList {
-                    page = page,
-                    total = GameList.Count,
-                    total_pages = totalPages,
+                    Page = page,
+                    Total = total,
+                    TotalPages = totalPages,
                     Games = gameList
                 } ]
             };
@@ -130,7 +122,7 @@ namespace GameServer.Implementation.Common
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [ new GameCreate {
-                    id = NextId
+                    Id = NextId
                 } ]
             };
             NextId++;
@@ -157,30 +149,30 @@ namespace GameServer.Implementation.Common
             {
                 game.State = GameState.ACTIVE;
 
-                var track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.Track);
+                var track = database.PlayerCreations.FirstOrDefault(match => match.Id == game.Track);
 
                 if (track != null)
-                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = track.PlayerCreationId, StartedAt = DateTime.UtcNow });
+                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { Creation = track, StartedAt = DateTime.UtcNow });
 
-                foreach (var player in game.Players)
+                foreach (var gamePlayer in game.Players)
                 {
-                    database.OnlineRacesStarted.Add(new RaceStarted
+                    var player = database.Users.FirstOrDefault(match => match.UserId == gamePlayer.PlayerId);
+                    if (player == null)
                     {
-                        PlayerId = player.PlayerId,
-                        StartedAt = DateTime.UtcNow,
-                    });
-                    player.State = GameState.ACTIVE;
+                        database.OnlineRacesStarted.Add(new RaceStarted
+                        {
+                            Player = player,
+                            StartedAt = DateTime.UtcNow,
+                        });
+                        gamePlayer.State = GameState.ACTIVE;
 
-                    var Player = database.Users.FirstOrDefault(match => match.UserId == player.PlayerId);
-                    if (Player == null)
-                    {
-                        var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == Player.CharacterIdx);
-                        var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == Player.KartIdx);
+                        var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.Id == player.CharacterIdx);
+                        var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.Id == player.KartIdx);
 
                         if (character != null)
-                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = DateTime.UtcNow });
+                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { Creation = character, StartedAt = DateTime.UtcNow });
                         if (kart != null)
-                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = DateTime.UtcNow });
+                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { Creation = kart, StartedAt = DateTime.UtcNow });
                     }
                 }
             }
@@ -382,11 +374,11 @@ namespace GameServer.Implementation.Common
             database.OnlineRacesFinished.Add(new RaceFinished {
                 FinishedAt = DateTime.UtcNow,
                 IsWinner = IsWinner,
-                PlayerId = user.UserId
+                Player = user
             });
 
-            var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
-            var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
+            var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.Id == user.CharacterIdx);
+            var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.Id == user.KartIdx);
 
             if (character != null)
             {
@@ -410,9 +402,9 @@ namespace GameServer.Implementation.Common
             }
             else user.WinStreak = 0;
 
-            if (game.Players.Count(match => match.HasFinished && match.State != GameState.DISCONNECTED && match.State != GameState.FORFEIT) == game.Players.Count(match => match.State != GameState.DISCONNECTED && match.State != GameState.FORFEIT))
+            if (game.Players.Where(match => match.State != GameState.DISCONNECTED && match.State != GameState.FORFEIT).All(match => match.HasFinished))
             {
-                PlayerCreationData creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.Track);
+                var creation = database.PlayerCreations.FirstOrDefault(match => match.Id == game.Track);
                 if (creation != null)
                 {
                     creation.RacesFinished++;
@@ -449,8 +441,9 @@ namespace GameServer.Implementation.Common
 
             if (stats.is_complete)
             {
-                var score = database.Scores.FirstOrDefault(match => match.PlayerId == user.UserId
-                    && match.SubKeyId == stats.track_idx
+                var track = database.PlayerCreations.FirstOrDefault(match => match.Id == stats.track_idx);
+                var score = database.Scores.FirstOrDefault(match => match.User.UserId == user.UserId
+                    && match.Creation == track  // TODO: Will this work?
                     && match.SubGroupId == (int)game.Type - 10
                     && match.Platform == session.Platform && match.IsMNR == session.IsMNR);
 
@@ -479,9 +472,9 @@ namespace GameServer.Implementation.Common
                         UpdatedAt = DateTime.UtcNow,
                         FinishTime = stats.finish_time,
                         Platform = session.Platform,
-                        PlayerId = user.UserId,
+                        User = user,
                         SubGroupId = session.IsMNR ? (int)game.Type - 10 : (int)game.Type,
-                        SubKeyId = stats.track_idx,
+                        Creation = track,
                         BestLapTime = stats.best_lap_time,
                         KartIdx = stats.kart_idx,
                         CharacterIdx = stats.character_idx,
@@ -506,8 +499,8 @@ namespace GameServer.Implementation.Common
             if (stats.longest_hang_time > user.LongestHangTime)
                 user.LongestHangTime = stats.longest_hang_time;
 
-            var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
-            var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
+            var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.Id == user.CharacterIdx);
+            var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.Id == user.KartIdx);
 
             if (character != null)
             {
@@ -529,7 +522,7 @@ namespace GameServer.Implementation.Common
                     kart.BestLapTime = stats.longest_hang_time;
             }
 
-            var Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.Track);
+            var Track = database.PlayerCreations.FirstOrDefault(match => match.Id == game.Track);
 
             if (Track != null)
             {

@@ -51,7 +51,7 @@ namespace GameServer.Controllers.Common
             Guid SessionID = Guid.Empty;
             if (Request.Cookies.ContainsKey("session_id"))
                 SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            var Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.track_idx);
+            var Track = database.PlayerCreations.FirstOrDefault(match => match.Id == game.track_idx);
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             string FormScore = Request.Form["game_player_stats[score]"];
@@ -67,8 +67,8 @@ namespace GameServer.Controllers.Common
 
             if (session.IsMNR)
             {
-                Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game_player_stats.track_idx);
-                game.host_player_id = database.Users.FirstOrDefault(match => match.Username == session.Username).UserId;
+                Track = database.PlayerCreations.FirstOrDefault(match => match.Id == game_player_stats.track_idx);
+                game.host_player_id = user.UserId;
                 game.track_idx = game_player_stats.track_idx;
             }
             UserGeneratedContentUtils.AddStoryLevel(database, game.track_idx);
@@ -129,24 +129,24 @@ namespace GameServer.Controllers.Common
 
             if (!session.IsMNR)
             {
-                score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id
-                    && match.SubKeyId == game.track_idx
+                score = database.Scores.FirstOrDefault(match => match.User.UserId == game.host_player_id
+                    && match.Creation.Id == game.track_idx
                     && match.SubGroupId == (int)game.game_type
                     && match.Platform == game.platform
                     && match.PlaygroupSize == game_player_stats.playgroup_size && match.IsMNR == session.IsMNR);
             }
             else if (session.Platform == Platform.PSV)
             {
-                score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id
-                    && match.SubKeyId == game_player_stats.track_idx
+                score = database.Scores.FirstOrDefault(match => match.User.UserId == game.host_player_id
+                    && match.Creation.Id == game_player_stats.track_idx
                     && match.SubGroupId == (int)game.game_type - 10
                     && match.Platform == session.Platform && match.IsMNR == session.IsMNR
                     && match.Latitude.ToString("0.000", CultureInfo.InvariantCulture) == game_player_stats.latitude.ToString("0.000", CultureInfo.InvariantCulture)
                     && match.Longitude.ToString("0.000", CultureInfo.InvariantCulture) == game_player_stats.longitude.ToString("0.000", CultureInfo.InvariantCulture));
                 if (score == null)
                 {
-                    score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id
-                        && match.SubKeyId == game_player_stats.track_idx
+                    score = database.Scores.FirstOrDefault(match => match.User.UserId == game.host_player_id
+                        && match.Creation.Id == game_player_stats.track_idx
                         && match.SubGroupId == (int)game.game_type - 10
                         && match.Platform == session.Platform && match.IsMNR == session.IsMNR
                         && match.LocationTag == null);
@@ -154,13 +154,13 @@ namespace GameServer.Controllers.Common
             }
             else
             {
-                score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id
-                    && match.SubKeyId == game_player_stats.track_idx
+                score = database.Scores.FirstOrDefault(match => match.User.UserId == game.host_player_id
+                    && match.Creation.Id == game_player_stats.track_idx
                     && match.SubGroupId == (int)game.game_type - 10
                     && match.Platform == session.Platform && match.IsMNR == session.IsMNR);
             }
 
-            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = game.track_idx, StartedAt = DateTime.UtcNow });
+            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { Creation = score.Creation /* I think this is correct? TODO */, StartedAt = DateTime.UtcNow });
             Track.RacesFinished++;
             if (game_player_stats.is_winner == 1)
                 Track.RacesWon++;
@@ -208,13 +208,16 @@ namespace GameServer.Controllers.Common
                     Track.BestLapTime = game_player_stats.longest_hang_time;
             }
 
-            var leaderboard = database.Scores.Where(match => match.SubKeyId == game.track_idx && match.SubGroupId == (int)game.game_type &&
-                match.PlaygroupSize == game_player_stats.playgroup_size && match.Platform == game.platform).ToList();
+            var leaderboardQuery = database.Scores
+                .Where(match => match.Creation.Id == game.track_idx && match.SubGroupId == (int)game.game_type &&
+                    match.PlaygroupSize == game_player_stats.playgroup_size && match.Platform == game.platform);
 
             if (Track.ScoreboardMode == 1)
-                leaderboard.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
+                leaderboardQuery = leaderboardQuery.OrderBy(match => match.FinishTime);
             else
-                leaderboard.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+                leaderboardQuery = leaderboardQuery.OrderByDescending(match => match.Points);
+
+            var leaderboard = leaderboardQuery.ToList();
 
             if (leaderboard != null && !session.IsMNR)
             {
@@ -231,7 +234,7 @@ namespace GameServer.Controllers.Common
                         Description = $"{game_player_stats.finish_time}",
                         Creation = Track,
                         CreatedAt = DateTime.UtcNow,
-                        AllusionId = Track.PlayerCreationId,
+                        AllusionId = Track.Id,
                         AllusionType = "PlayerCreation::Track"
                     });
                 }
@@ -246,7 +249,7 @@ namespace GameServer.Controllers.Common
                         Description = $"{game_player_stats.score}",
                         Creation = Track,
                         CreatedAt = DateTime.UtcNow,
-                        AllusionId = Track.PlayerCreationId,
+                        AllusionId = Track.Id,
                         AllusionType = "PlayerCreation::Track"
                     });
                 }
@@ -301,11 +304,11 @@ namespace GameServer.Controllers.Common
                     CreatedAt = DateTime.UtcNow,
                     FinishTime = game_player_stats.finish_time,
                     Platform = session.Platform,
-                    PlayerId = game.host_player_id,
+                    User = user,    // TODO: Will this be reliable for LBPK?
                     PlaygroupSize = game_player_stats.playgroup_size,
                     Points = game_player_stats.score,
                     SubGroupId = session.IsMNR ? (int)game.game_type - 10 : (int)game.game_type,
-                    SubKeyId = game.track_idx,
+                    Creation = score.Creation,  // TODO: Check
                     UpdatedAt = DateTime.UtcNow,
                     Latitude = game_player_stats.latitude,
                     Longitude = game_player_stats.longitude,
@@ -330,10 +333,10 @@ namespace GameServer.Controllers.Common
             var resp = new Response<List<GameResponse>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = [ new GameResponse {
-                    id = 0,
-                    game_player_id = 0,
-                    game_player_stats_id = 0
+                response = [ new GameResponse { // TODO: Does the game use the below?
+                    Id = 0,
+                    GamePlayerId = 0,
+                    GamePlayerStatsId = 0
                 } ]
             };
 

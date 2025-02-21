@@ -20,16 +20,22 @@ namespace GameServer.Implementation.Player
             int page, int per_page, int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int? num_above_below, int limit, int playgroup_size,
             float? latitude, float? longitude, string usernameFilter = null, bool FriendsView = false)
         {
-            var scoresQuery = database.Scores;
+            var scoresQuery = database.Scores.AsQueryable();
             var session = SessionImpl.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             UserGeneratedContentUtils.AddStoryLevel(database, sub_key_id);
 
-            if (usernameFilter == null)
-                scoresQuery = scoresQuery.Where(match => match.Creation.Id == sub_key_id && match.SubGroupId == sub_group_id && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR && match.Platform == platform).ToList();
-
             if (usernameFilter != null)
+            {
+                var usernames = usernameFilter.Split(',');
+                scoresQuery = scoresQuery
+                    .Where(match => match.Creation.Id == sub_key_id && match.SubGroupId == sub_group_id && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR && match.Platform == platform
+                        && usernames.Contains(match.User.Username));
+            }
+
+            if (usernameFilter == null)
+            else
             {
                 foreach (string name in usernameFilter.Split(','))
                 {
@@ -45,38 +51,55 @@ namespace GameServer.Implementation.Player
             }
 
             if (latitude != null && longitude != null)
-                scores.RemoveAll(match => !(match.Latitude >= latitude-0.24 && match.Latitude <= latitude+0.24 
+                scoresQuery = scoresQuery.Where(match => !(match.Latitude >= latitude-0.24 && match.Latitude <= latitude+0.24 
                     && match.Longitude >= longitude-0.24 && match.Longitude <= longitude+0.24));
 
-            if (sort_column == SortColumn.finish_time)
-                scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
-            if (sort_column == SortColumn.score)
-                scores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
-            if (sort_column == SortColumn.best_lap_time)
-                scores.Sort((curr, prev) => curr.BestLapTime.CompareTo(prev.BestLapTime));
+            switch (sort_column)
+            {
+                case SortColumn.finish_time:
+                    scoresQuery = scoresQuery.OrderBy(match => match.FinishTime);
+                    break;
+                case SortColumn.score:
+                    scoresQuery = scoresQuery.OrderByDescending(match => match.Points);
+                    break;
+                case SortColumn.best_lap_time:
+                    scoresQuery = scoresQuery.OrderBy(match => match.BestLapTime);
+                    break;
+            }
 
-            if (type == LeaderboardType.WEEKLY)
-                scores.RemoveAll(match => match.UpdatedAt < DateTime.UtcNow.AddDays(-7));
-            if (type == LeaderboardType.LAST_WEEK)
-                scores.RemoveAll(match => match.UpdatedAt < DateTime.UtcNow.AddDays(-14) || match.UpdatedAt > DateTime.UtcNow.AddDays(-7));
+            switch (type)
+            {
+                case LeaderboardType.WEEKLY:
+                    scoresQuery = scoresQuery.Where(match => match.UpdatedAt < DateTime.UtcNow.AddDays(-7));
+                    break;
+                case LeaderboardType.LAST_WEEK:
+                    scoresQuery = scoresQuery.Where(match => match.UpdatedAt < DateTime.UtcNow.AddDays(-14) || match.UpdatedAt > DateTime.UtcNow.AddDays(-7));
+                    break;
+            }
 
             Score MyStats = null;
 
             if (user != null)
             {
-                var playerScores = database.Scores.Where(match => match.PlayerId == user.UserId
-                    && match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id 
-                    && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR 
-                    && match.Platform == platform).ToList();
+                var playerScoresQuery = database.Scores.Where(match => match.User.UserId == user.UserId
+                    && match.Creation.Id == sub_key_id && match.SubGroupId == sub_group_id
+                    && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR
+                    && match.Platform == platform);
 
-                if (sort_column == SortColumn.finish_time)
-                    playerScores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
-                if (sort_column == SortColumn.score)
-                    playerScores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
-                if (sort_column == SortColumn.best_lap_time)
-                    playerScores.Sort((curr, prev) => curr.BestLapTime.CompareTo(prev.BestLapTime));
+                switch (sort_column)
+                {
+                    case SortColumn.finish_time:
+                        playerScoresQuery = playerScoresQuery.OrderBy(match => match.FinishTime);
+                        break;
+                    case SortColumn.score:
+                        playerScoresQuery = playerScoresQuery.OrderByDescending(match => match.Points);
+                        break;
+                    case SortColumn.best_lap_time:
+                        playerScoresQuery = playerScoresQuery.OrderBy(match => match.BestLapTime);
+                        break;
+                }
 
-                MyStats = playerScores.FirstOrDefault();
+                MyStats = playerScoresQuery.FirstOrDefault();
             }
 
             var mystats = new SubLeaderboardPlayer { };
@@ -104,6 +127,8 @@ namespace GameServer.Implementation.Player
                 mystats.skill_level_name = user.SkillLevelName(platform);
             }
 
+            // TODO: Why is the below here? Does database not just record the best score for each player and no others or does it store every score?
+            // If it is the latter, this could slowly drag down the database, we should ideally only store best scores if the game doesnt need to look up previous ones
             if (platform == Platform.PSV)
             {
                 List<int> players = [];

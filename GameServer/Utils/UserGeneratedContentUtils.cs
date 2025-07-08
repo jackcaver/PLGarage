@@ -177,10 +177,9 @@ namespace GameServer.Utils
 
         public static Stream Resize(Stream image, int width, int height)
         {
-            var reader = new BinaryReader(image);
-            var bytes = reader.ReadBytes((int)image.Length);
-            reader.Close();
-            reader.Dispose();
+            image.Position = 0;
+            var bytes = new byte[image.Length];
+            image.Read(bytes);
             return Resize(bytes, width, height);
         }
 

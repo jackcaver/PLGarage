@@ -1,0 +1,9 @@
+services:
+  plgarage:
+    build: .
+    container_name: PLGarage
+    restart: unless-stopped
+    ports:
+      - 10050:10050/tcp
+    volumes:
+      - "./data:/workdir"

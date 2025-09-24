@@ -76,7 +76,6 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public List<PlayerCreationBookmark> Bookmarks { get; set; }
         public List<PlayerCreationReview> Reviews { get; set; }
         public List<Score> Scores { get; set; }
-        public List<ActivityEvent> ActivityLog { get; set; }
 
         public int RacesStartedCount => RacesStarted.Count;
         public int Votes => Ratings.Count(match => !IsMNR || match.Rating != 0);

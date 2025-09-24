@@ -1008,13 +1008,14 @@ namespace GameServer.Implementation.Player_Creation
                 .ThenInclude(r => r.ReviewRatings)
                 .Include(x => x.Reviews)
                 .ThenInclude(r => r.User)
-                .Include(x => x.ActivityLog)
                 .FirstOrDefault(match => match.PlayerCreationId == id);
             var TrackPhotos = database.PlayerCreations
                 .Where(match => match.TrackId == id && match.Type == PlayerCreationType.PHOTO)
                 .OrderByDescending(match => match.CreatedAt)
                 .Take(3)
                 .ToList();
+            var ActivityLog = database.ActivityLog
+                .OrderByDescending(a => a.CreatedAt);
 
             List<Photo> PhotoList = [];
             List<SubLeaderboardPlayer> ScoresList = [];
@@ -1024,7 +1025,6 @@ namespace GameServer.Implementation.Player_Creation
 
             Track.Comments.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
             Track.Reviews.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
-            Track.ActivityLog.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
 
             if (Track == null || id < 9000)
             {
@@ -1101,7 +1101,8 @@ namespace GameServer.Implementation.Player_Creation
                 }
             }
 
-            foreach (var Activity in Track.ActivityLog.Take(3))
+            var trackActivity = ActivityLog.Take(3).ToList();
+            foreach (var Activity in trackActivity)
             {
                 var Author = database.Users.FirstOrDefault(match => match.UserId == Activity.AuthorId);
                 ActivityList.Add(new Activity
@@ -1200,7 +1201,7 @@ namespace GameServer.Implementation.Player_Creation
                         hearted_by_me = (requestedBy == null) ? "false" : Track.IsHeartedByMe(requestedBy.UserId).ToString().ToLower(),
                         queued_by_me = (requestedBy == null) ? "false" : Track.IsBookmarkedByMe(requestedBy.UserId).ToString().ToLower(),
                         reviewed_by_me = (requestedBy == null) ? "false" : Track.IsReviewedByMe(requestedBy.UserId).ToString().ToLower(),
-                        activities = [new Activities { total = Track.ActivityLog.Count, ActivityList = ActivityList }],
+                        activities = [new Activities { total = ActivityLog.Count(), ActivityList = ActivityList }],
                         comments = CommentsList,
                         leaderboard = [new SubLeaderboard { total = Track.Scores.Count, LeaderboardPlayersList = ScoresList }],
                         photos = [new Photos { total = PhotoList.Count, PhotoList = PhotoList }],

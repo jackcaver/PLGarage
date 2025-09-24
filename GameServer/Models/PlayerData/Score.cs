@@ -9,17 +9,6 @@ namespace GameServer.Models.PlayerData
 {
     public class Score
     {
-        private Database _database;
-        private Database database
-        {
-            get
-            {
-                if (_database != null) return _database;
-                return _database = new Database();
-            }
-            set => _database = value;
-        }
-
         public DateTime CreatedAt { get; set; }
         public int Id { get; set; }
         public Platform Platform { get; set; }
@@ -36,7 +25,7 @@ namespace GameServer.Models.PlayerData
         public PlayerCreationData Creation { get; set; }
 
         public DateTime UpdatedAt { get; set; }
-        public string Username => this.database.Users.FirstOrDefault(match => match.UserId == this.PlayerId).Username;
+        public string Username => User.Username;
         public float Points { get; set; }
         public float FinishTime { get; set; }
         //MNR
@@ -52,17 +41,20 @@ namespace GameServer.Models.PlayerData
 
         public int GetRank(SortColumn sortColumn)
         {
-            var scores = this.database.Scores.Where(match => match.SubKeyId == this.SubKeyId
-                && match.SubGroupId == this.SubGroupId
-                && match.Platform == this.Platform
-                && match.PlaygroupSize == this.PlaygroupSize).ToList();
+            using var database = new Database();
+            var scores = database.Scores.Where(match => match.SubKeyId == SubKeyId
+                && match.SubGroupId == SubGroupId
+                && match.Platform == Platform
+                && match.PlaygroupSize == PlaygroupSize);
+
             if (sortColumn == SortColumn.finish_time)
-                scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
+                scores = scores.OrderBy(s => s.FinishTime);
             if (sortColumn == SortColumn.score)
-                scores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+                scores = scores.OrderByDescending(s => s.Points);
             if (sortColumn == SortColumn.best_lap_time)
-                scores.Sort((curr, prev) => curr.BestLapTime.CompareTo(prev.BestLapTime));
-            return scores.FindIndex(match => match == this)+1;
+                scores = scores.OrderBy(s => s.BestLapTime);
+
+            return scores.Select(s => s.Id).ToList().FindIndex(match => match == Id)+1;
         }
     }
 }

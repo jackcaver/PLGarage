@@ -1,5 +1,5 @@
-﻿using GameServer.Utils;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
@@ -7,17 +7,6 @@ namespace GameServer.Models.PlayerData.PlayerCreations
 {
     public class PlayerCreationCommentData
     {
-        private Database _database;
-        private Database database
-        {
-            get
-            {
-                if (_database != null) return _database;
-                return _database = new Database();
-            }
-            set => _database = value;
-        }
-
         public string Body { get; set; }
         public DateTime CreatedAt { get; set; }
         public int Id { get; set; }
@@ -33,14 +22,16 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public User Player { get; set; }
 
         public DateTime UpdatedAt { get; set; }
-        public string Username => database.Users.FirstOrDefault(match => match.UserId == PlayerId).Username;
-        public int RatingUp => this.database.PlayerCreationCommentRatings.Count(match => match.PlayerCreationCommentId == this.Id && match.Type == RatingType.YAY);
-        public int RatingDown => this.database.PlayerCreationCommentRatings.Count(match => match.PlayerCreationCommentId == this.Id && match.Type == RatingType.BOO);
+        public string Username => Player.Username;
+
+        public List<PlayerCreationCommentRatingData> CommentRatings { get; set; }
+
+        public int RatingUp => CommentRatings.Count(match => match.Type == RatingType.YAY);
+        public int RatingDown => CommentRatings.Count(match => match.Type == RatingType.BOO);
 
         public bool IsRatedByMe(int id)
         {
-            var entry = this.database.PlayerCreationCommentRatings.FirstOrDefault(match => match.PlayerCreationCommentId == this.Id && match.PlayerId == id);
-            return entry != null;
+            return CommentRatings.Any(match => match.PlayerId == id);
         }
     }
 }

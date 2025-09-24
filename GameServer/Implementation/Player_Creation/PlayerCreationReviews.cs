@@ -7,6 +7,7 @@ using GameServer.Models.PlayerData.PlayerCreations;
 using System;
 using GameServer.Models.PlayerData;
 using GameServer.Implementation.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -15,14 +16,21 @@ namespace GameServer.Implementation.Player_Creation
         public static string ListReviews(Database database, Guid SessionID, int player_creation_id, int page, int per_page, int player_id = 0, bool byPlayer = false)
         {
             var session = Session.GetSession(SessionID);
-            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var user = database.Users.FirstOrDefault(match => match.UserId == player_id);
-            var Reviews = byPlayer ? database.PlayerCreationReviews.Where(match => match.PlayerId == player_id).ToList() :
-                database.PlayerCreationReviews.Where(match => match.PlayerCreationId == player_creation_id).ToList();
+            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var reviewsQuery = database.PlayerCreationReviews
+                .AsSplitQuery()
+                .Include(r => r.User)
+                .Include(r => r.Creation)
+                .ThenInclude(c => c.Author)
+                .Include(r => r.ReviewRatings)
+                .AsQueryable();
 
-            Reviews.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
+            reviewsQuery = byPlayer ? reviewsQuery.Where(match => match.PlayerId == player_id) :
+                reviewsQuery.Where(match => match.PlayerCreationId == player_creation_id);
 
-            if (byPlayer && user == null)
+            reviewsQuery = reviewsQuery.OrderBy(r => r.CreatedAt);
+
+            if (byPlayer && !database.Users.Any(match => match.UserId == player_id))
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -34,36 +42,36 @@ namespace GameServer.Implementation.Player_Creation
 
             var ReviewList = new List<Review> { };
 
+            var total = reviewsQuery.Count();
+
             //calculating pages
             int pageEnd = PageCalculator.GetPageEnd(page, per_page);
             int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, Reviews.Count);
+            int totalPages = PageCalculator.GetTotalPages(per_page, total);
 
-            if (pageEnd > Reviews.Count)
-                pageEnd = Reviews.Count;
+            if (pageEnd > total)
+                pageEnd = total;
 
-            for (int i = pageStart; i < pageEnd; i++)
+            var reviews = reviewsQuery.Skip(pageStart).Take(per_page).ToList();
+
+            foreach (var review in reviews)
             {
-                var Review = Reviews[i];
-                if (Review != null)
+                ReviewList.Add(new Review
                 {
-                    ReviewList.Add(new Review
-                    {
-                        id = Review.Id,
-                        content = Review.Content,
-                        mine = requestedBy != null ? Review.IsMine(requestedBy.UserId).ToString().ToLower() : "false",
-                        player_creation_id = Review.PlayerCreationId,
-                        player_creation_name = Review.PlayerCreationName,
-                        player_creation_username = Review.PlayerCreationUsername,
-                        player_id = Review.PlayerId,
-                        rated_by_me = requestedBy != null ? Review.IsRatedByMe(requestedBy.UserId).ToString().ToLower() : "false",
-                        rating_down = Review.RatingDown.ToString(),
-                        rating_up = Review.RatingUp.ToString(),
-                        username = Review.Username,
-                        tags = Review.Tags,
-                        updated_at = Review.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
-                    });
-                }
+                    id = review.Id,
+                    content = review.Content,
+                    mine = user != null ? review.IsMine(user.UserId).ToString().ToLower() : "false",
+                    player_creation_id = review.PlayerCreationId,
+                    player_creation_name = review.PlayerCreationName,
+                    player_creation_username = review.PlayerCreationUsername,
+                    player_id = review.PlayerId,
+                    rated_by_me = user != null ? review.IsRatedByMe(user.UserId).ToString().ToLower() : "false",
+                    rating_down = review.RatingDown.ToString(),
+                    rating_up = review.RatingUp.ToString(),
+                    username = review.Username,
+                    tags = review.Tags,
+                    updated_at = review.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
+                });
             }
 
             var resp = new Response<List<Reviews>>
@@ -74,7 +82,7 @@ namespace GameServer.Implementation.Player_Creation
                     row_start = pageStart,
                     row_end = pageEnd,
                     total_pages = totalPages,
-                    total = Reviews.Count,
+                    total = total,
                     ReviewList = ReviewList
                 } ]
             };
@@ -85,9 +93,8 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == player_creation_id);
 
-            if (user == null || Creation == null)
+            if (user == null || !database.PlayerCreations.Any(match => match.PlayerCreationId == player_creation_id))
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -111,29 +118,30 @@ namespace GameServer.Implementation.Player_Creation
                     Tags = tags
                 });
                 database.SaveChanges();
-                database.ActivityLog.Add(new ActivityEvent
+                if (!session.IsMNR)
                 {
-                    AuthorId = user.UserId,
-                    Type = ActivityType.player_creation_event,
-                    List = ActivityList.activity_log,
-                    Topic = "player_creation_reviewed",
-                    Description = content,
-                    PlayerCreationId = player_creation_id,
-                    CreatedAt = DateTime.UtcNow,
-                    AllusionId = database.PlayerCreationReviews.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.PlayerCreationId == Creation.PlayerCreationId && match.PlayerId == user.UserId).Id,
-                    AllusionType = "PlayerCreation::Review",
-                    Tags = tags
-                });
-                database.SaveChanges();
+                    database.ActivityLog.Add(new ActivityEvent
+                    {
+                        AuthorId = user.UserId,
+                        Type = ActivityType.player_creation_event,
+                        List = ActivityList.activity_log,
+                        Topic = "player_creation_reviewed",
+                        Description = content,
+                        PlayerCreationId = player_creation_id,
+                        CreatedAt = DateTime.UtcNow,
+                        AllusionId = database.PlayerCreationReviews.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.PlayerCreationId == player_creation_id && match.PlayerId == user.UserId).Id,
+                        AllusionType = "PlayerCreation::Review",
+                        Tags = tags
+                    });
+                    database.SaveChanges();
+                }
             }
             else
             {
-                var errorResp = new Response<EmptyResponse>
-                {
-                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
-                    response = new EmptyResponse { }
-                };
-                return errorResp.Serialize();
+                Review.UpdatedAt = DateTime.UtcNow;
+                Review.Tags = tags;
+                Review.Content = content;
+                database.SaveChanges();
             }
 
             var resp = new Response<EmptyResponse>
@@ -175,9 +183,8 @@ namespace GameServer.Implementation.Player_Creation
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var review = database.PlayerCreationReviews.FirstOrDefault(match => match.Id == id);
 
-            if (user == null || review == null)
+            if (user == null || !database.PlayerCreationReviews.Any(match => match.Id == id))
             {
                 var errorResp = new Response<EmptyResponse>
                 {

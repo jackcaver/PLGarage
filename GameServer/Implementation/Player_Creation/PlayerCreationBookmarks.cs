@@ -8,7 +8,6 @@ using GameServer.Utils;
 using System.Linq;
 using System.Collections.Generic;
 using GameServer.Implementation.Common;
-using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player_Creation
@@ -30,8 +29,9 @@ namespace GameServer.Implementation.Player_Creation
             }
 
             string idFilter = "";
-            var BookmarkedCreations = database.PlayerCreationBookmarks.Where(match => match.UserId == user.UserId).ToList();
-            BookmarkedCreations.Sort((curr, prev) => prev.BookmarkedAt.CompareTo(curr.BookmarkedAt));
+            var BookmarkedCreations = database.PlayerCreationBookmarks
+                .OrderBy(b => b.BookmarkedAt)
+                .Where(match => match.UserId == user.UserId).ToList();
 
             foreach (var bookmark in BookmarkedCreations)
             {
@@ -71,7 +71,7 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            if (!Creation.Bookmarks.Any(match => match.UserId == user.UserId))
+            if (!Creation.IsBookmarkedByMe(user.UserId))
             {
                 database.PlayerCreationBookmarks.Add(new PlayerCreationBookmark
                 {
@@ -143,12 +143,12 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var BookmarkedCreations = database.PlayerCreationBookmarks.Where(match => match.UserId == user.UserId).ToList();
-
             var resp = new Response<List<PlayerCreationBookmarksCount>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = [new PlayerCreationBookmarksCount { total = BookmarkedCreations.Count }]
+                response = [new PlayerCreationBookmarksCount { 
+                    total = database.PlayerCreationBookmarks.Count(match => match.UserId == user.UserId)
+                }]
             };
             return resp.Serialize();
         }

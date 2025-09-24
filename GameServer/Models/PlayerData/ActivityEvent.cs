@@ -1,7 +1,5 @@
-﻿using GameServer.Models.PlayerData.PlayerCreations;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameServer.Models.PlayerData
 {
@@ -13,8 +11,7 @@ namespace GameServer.Models.PlayerData
         public int PlayerId { get; set; }
         public int PlayerCreationId { get; set; }
 
-        [ForeignKey(nameof(PlayerCreationId))]
-        public PlayerCreationData Creation { get; set; }
+        //please don't add foreign key to player creations here, because not all events are linked to player creations...
 
         public DateTime CreatedAt { get; set; }
         public ActivityList List { get; set; }

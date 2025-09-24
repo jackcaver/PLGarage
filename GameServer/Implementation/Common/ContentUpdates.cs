@@ -1,18 +1,19 @@
-﻿using GameServer.Models.Config;
-using GameServer.Models.PlayerData.PlayerCreations;
+﻿using GameServer.Models;
+using GameServer.Models.Config;
 using GameServer.Models.PlayerData;
+using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
+using GameServer.Utils;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
-using System;
-using GameServer.Models;
-using GameServer.Utils;
-using System.Linq;
-using System.IO;
-using Newtonsoft.Json;
 
 namespace GameServer.Implementation.Common
 {
@@ -95,10 +96,42 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        private static string GetHotlapData(Database database)
+        private static HotLapData GetNewHotLap(Database database)
         {
             Random random = new();
-            var creations = database.PlayerCreations.Where(match => match.Type == PlayerCreationType.TRACK && match.IsMNR && match.Platform == Platform.PS3).ToList();
+
+            HotLapData result = null;
+
+            var candidates = database.PlayerCreations
+                .Include(p => p.Downloads)
+                .OrderByDescending(p => p.Downloads.Count)
+                .Where(match => match.Type == PlayerCreationType.TRACK
+                    && match.IsMNR && match.Platform == Platform.PS3)
+                .Select(p => p.PlayerCreationId);
+
+            int count = candidates.Count();
+
+            if (count > 0)
+            {
+                int trackid;
+
+                if (count > 1)
+                    trackid = candidates.Skip(random.Next(0, count)).FirstOrDefault();
+                else
+                    trackid = candidates.FirstOrDefault();
+
+                result = new()
+                {
+                    SelectedAt = DateTime.UtcNow,
+                    TrackId = trackid
+                };
+            }
+
+            return result;
+        }
+
+        private static string GetHotlapData(Database database)
+        {
             PlayerCreationData creation = null;
 
             HotLapData hotLap = null;
@@ -106,24 +139,24 @@ namespace GameServer.Implementation.Common
                 hotLap = JsonConvert.DeserializeObject<HotLapData>(File.ReadAllText("./hotlap.json"));
             else
             {
-                hotLap = creations.Count != 0 ? new HotLapData { TrackId = creations[random.Next(0, creations.Count - 1)].TrackId, SelectedAt = DateTime.UtcNow } : null;
+                hotLap = GetNewHotLap(database);
                 if (hotLap != null)
                     File.WriteAllText("./hotlap.json", JsonConvert.SerializeObject(hotLap));
             }
 
             if (hotLap != null && hotLap.SelectedAt < DateTime.UtcNow.AddDays(-1))
             {
-                foreach (var score in database.Scores.Where(match => match.SubGroupId == 700 && match.IsMNR).ToList())
-                {
-                    database.Scores.Remove(score);
-                }
+                database.Scores.RemoveRange(database.Scores.Where(match => match.SubGroupId == 700 && match.IsMNR).ToList());
+
                 database.SaveChanges();
-                hotLap = new HotLapData { TrackId = creations[random.Next(0, creations.Count - 1)].TrackId, SelectedAt = DateTime.UtcNow };
-                File.WriteAllText("./hotlap.json", JsonConvert.SerializeObject(hotLap));
+
+                hotLap = GetNewHotLap(database);
+                if (hotLap != null)
+                    File.WriteAllText("./hotlap.json", JsonConvert.SerializeObject(hotLap));
             }
 
             if (hotLap != null)
-                creation = creations.FirstOrDefault(match => match.PlayerCreationId == hotLap.TrackId);
+                creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == hotLap.TrackId);
 
             var result = new XElement("events",
                 new XElement("event",
@@ -140,8 +173,10 @@ namespace GameServer.Implementation.Common
         private static string GetTopTracksData(Database database)
         {
             var creations = database.PlayerCreations
+                .Include(p => p.Downloads)
+                .OrderByDescending(match => match.Downloads.Count)
                 .Where(match => match.Type == PlayerCreationType.TRACK && match.IsMNR && match.Platform == Platform.PS3)
-                .OrderBy(match => match.Points.Count())
+                .Take(3)
                 .ToList();
 
             var result = "";

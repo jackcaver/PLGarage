@@ -1,5 +1,5 @@
-﻿using GameServer.Utils;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
@@ -7,17 +7,6 @@ namespace GameServer.Models.PlayerData
 {
     public class PlayerCommentData
     {
-        private Database _database;
-        private Database database
-        {
-            get
-            {
-                if (_database != null) return _database;
-                return _database = new Database();
-            }
-            set => _database = value;
-        }
-
         public string Body { get; set; }
         public DateTime CreatedAt { get; set; }
         public int Id { get; set; }
@@ -33,15 +22,16 @@ namespace GameServer.Models.PlayerData
         public User Player { get; set; }
 
         public DateTime UpdatedAt { get; set; }
-        public string AuthorUsername => this.database.Users.FirstOrDefault(match => match.UserId == this.AuthorId).Username;
-        public string Username => this.database.Users.FirstOrDefault(match => match.UserId == this.PlayerId).Username;
-        public int RatingUp => this.database.PlayerCommentRatings.Count(match => match.PlayerCommentId == this.Id && match.Type == RatingType.YAY);
-        public int RatingDown => this.database.PlayerCommentRatings.Count(match => match.PlayerCommentId == this.Id && match.Type == RatingType.BOO);
+        public string AuthorUsername => Author.Username;
+        public string Username => Player.Username;
+
+        public List<PlayerCommentRatingData> CommentRating { get; set; }
+        public int RatingUp => CommentRating.Count(match => match.Type == RatingType.YAY);
+        public int RatingDown => CommentRating.Count(match => match.Type == RatingType.BOO);
 
         public bool IsRatedByMe(int id)
         {
-            var entry = this.database.PlayerCommentRatings.FirstOrDefault(match => match.PlayerCommentId == this.Id && match.PlayerId == id);
-            return entry != null;
+            return CommentRating.Any(match => match.PlayerId == id);
         }
     }
 }

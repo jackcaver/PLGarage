@@ -2,11 +2,10 @@
   "profiles": {
     "GameServer": {
       "commandName": "Project",
-      "workingDirectory": "$(OutputPath)",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "http://localhost:10050"
+      "applicationUrl": "http://*:10050"
     }
   }
 }

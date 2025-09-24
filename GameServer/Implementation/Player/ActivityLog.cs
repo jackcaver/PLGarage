@@ -69,10 +69,15 @@ namespace GameServer.Implementation.Player
             for (int i = pageStart; i < pageEnd; i++)
             {
                 var Activity = Activities[i];
-                var Author = database.Users.FirstOrDefault(match => match.UserId == Activity.AuthorId);
-                var Player = database.Users.FirstOrDefault(match => match.UserId == Activity.PlayerId);
+                var Author = database.Users
+                    .Include(u => u.HeartedByProfiles)
+                    .FirstOrDefault(match => match.UserId == Activity.AuthorId);
+                var Player = database.Users
+                    .Include(u => u.HeartedByProfiles)
+                    .FirstOrDefault(match => match.UserId == Activity.PlayerId);
                 UserGeneratedContentUtils.CheckStoryLevelName(database, Activity.PlayerCreationId);
                 var PlayerCreation = database.PlayerCreations
+                    .AsSplitQuery()
                     .Include(x => x.Hearts)
                     .Include(x => x.Ratings)
                     .Include(x => x.RacesStarted)
@@ -135,10 +140,10 @@ namespace GameServer.Implementation.Player
                     activityList.Add(new Activity
                     {
                         player_creation_id = Activity.PlayerCreationId,
-                        player_creation_hearts = PlayerCreation != null ? PlayerCreation.Hearts.Count() : 0,
-                        player_creation_rating_up = PlayerCreation != null ? PlayerCreation.Ratings.Count(match => match.Type == RatingType.YAY) : 0,
-                        player_creation_rating_down = PlayerCreation != null ? PlayerCreation.Ratings.Count(match => match.Type == RatingType.BOO) : 0,
-                        player_creation_races_started = PlayerCreation != null ? PlayerCreation.RacesStarted.Count() : 0,
+                        player_creation_hearts = PlayerCreation != null ? PlayerCreation.HeartsCount : 0,
+                        player_creation_rating_up = PlayerCreation != null ? PlayerCreation.RatingUp : 0,
+                        player_creation_rating_down = PlayerCreation != null ? PlayerCreation.RatingDown : 0,
+                        player_creation_races_started = PlayerCreation != null ? PlayerCreation.RacesStartedCount : 0,
                         player_creation_username = PlayerCreation != null ? PlayerCreation.Author.Username : "",
                         player_creation_description = PlayerCreation != null ? PlayerCreation.Description : "",
                         player_creation_name = PlayerCreation != null ? PlayerCreation.Name : "",
@@ -189,21 +194,22 @@ namespace GameServer.Implementation.Player
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var Activities = new List<ActivityEvent> { };
+            var total = 0;
 
-            Activities.AddRange(database.ActivityLog.Where(match => match.Type == ActivityType.system_event).ToList());
+            total += database.ActivityLog.Count(match => match.Type == ActivityType.system_event);
 
             if (user != null)
             {
                 foreach (var Heart in database.HeartedProfiles.Where(match => match.UserId == user.UserId).ToList())
                 {
-                    Activities.AddRange(database.ActivityLog.Where(match => (match.AuthorId == Heart.HeartedUserId || match.PlayerId == Heart.HeartedUserId) &&
-                        (match.List == ActivityList.news_feed || match.List == ActivityList.both)).ToList());
+                    total += database.ActivityLog.Count(match => (match.AuthorId == Heart.HeartedUserId 
+                        || match.PlayerId == Heart.HeartedUserId) 
+                        && (match.List == ActivityList.news_feed || match.List == ActivityList.both));
                     foreach (var Creation in database.PlayerCreations.Where(match => match.PlayerId == Heart.HeartedUserId).ToList())
                     {
-                        Activities.AddRange(database.ActivityLog.Where(match => match.PlayerCreationId == Creation.PlayerCreationId &&
+                        total += database.ActivityLog.Count(match => match.PlayerCreationId == Creation.PlayerCreationId &&
                             match.AuthorId != Heart.HeartedUserId && match.PlayerId != Heart.HeartedUserId &&
-                            (match.List == ActivityList.news_feed || match.List == ActivityList.both)).ToList());
+                            (match.List == ActivityList.news_feed || match.List == ActivityList.both));
                     }
                 }
             }
@@ -211,7 +217,7 @@ namespace GameServer.Implementation.Player
             var resp = new Response<List<Activities>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = [new Activities { total = Activities.Count }]
+                response = [new Activities { total = total }]
             };
 
             return resp.Serialize();

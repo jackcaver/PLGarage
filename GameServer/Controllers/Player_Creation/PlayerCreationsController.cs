@@ -9,7 +9,6 @@ using System;
 using GameServer.Implementation.Common;
 using Microsoft.AspNetCore.Http;
 using GameServer.Models.Config;
-using System.IO;
 
 namespace GameServer.Controllers.Player_Creation
 {
@@ -152,6 +151,13 @@ namespace GameServer.Controllers.Player_Creation
             filters.ai = ai;
             filters.is_remixable = is_remixable;
             filters.auto_reset = auto_reset;
+
+            if (Request.Query.Keys.Contains("filters[ai]"))
+                filters.ai = bool.Parse(Request.Query["filters[ai]"].ToString());
+            if (Request.Query.Keys.Contains("filters[is_remixable]"))
+                filters.is_remixable = bool.Parse(Request.Query["filters[is_remixable]"].ToString());
+            if (Request.Query.Keys.Contains("filters[auto_reset]"))
+                filters.auto_reset = bool.Parse(Request.Query["filters[auto_reset]"].ToString());
 
             return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, search, false, false, true),
                 "application/xml;charset=utf-8");

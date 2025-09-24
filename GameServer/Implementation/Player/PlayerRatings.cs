@@ -17,7 +17,7 @@ namespace GameServer.Implementation.Player
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var user = database.Users.FirstOrDefault(match => match.UserId == player_rating.player_id);
 
-            if (user == null || user == null)
+            if (user == null || requestedBy == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {

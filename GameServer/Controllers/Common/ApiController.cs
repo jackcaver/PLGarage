@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Primitives;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Controllers.Common
 {
@@ -56,23 +57,23 @@ namespace GameServer.Controllers.Common
             List<int> TrackIDs = [];
 
             Random random = new();
-            var creations = database.PlayerCreations.Where(match => match.Type == PlayerCreationType.TRACK && !match.IsMNR && match.PlayerCreationId != trackId && match.Platform == Platform.PS3).ToList();
+            var creations = database.PlayerCreations
+                .Include(x => x.Downloads)
+                .Where(match => match.Type == PlayerCreationType.TRACK && !match.IsMNR
+                    && match.PlayerCreationId != trackId && match.Platform == Platform.PS3)
+                .OrderByDescending(p => p.Downloads.Count)
+                .Select(p => p.PlayerCreationId);
 
-            if (creations.Count <= 3)
+            var count = creations.Count();
+            if (count > 3)
             {
-                foreach (var creation in creations)
-                {
-                    TrackIDs.Add(creation.PlayerCreationId);
-                }
+                creations = creations.Skip(random.Next(count-3));
             }
-            else
+
+            var list = creations.Take(3).ToList();
+            foreach (var creation in list)
             {
-                while (TrackIDs.Count < 3)
-                {
-                    var id = creations[random.Next(0, creations.Count - 1)].PlayerCreationId;
-                    if (!TrackIDs.Contains(id))
-                        TrackIDs.Add(id);
-                }
+                TrackIDs.Add(creation);
             }
 
             return Content(JsonConvert.SerializeObject(TrackIDs));

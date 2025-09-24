@@ -9,6 +9,7 @@ using GameServer.Utils;
 using GameServer.Implementation.Common;
 using System.Globalization;
 using GameServer.Models.PlayerData;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player
 {
@@ -17,7 +18,9 @@ namespace GameServer.Implementation.Player
         public static string TravelAwards(Database database, Guid SessionID, int per_page, int page)
         {
             var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = database.Users
+                .Include(x => x.TravelPointsData)
+                .FirstOrDefault(match => match.Username == session.Username);
 
             int globalPoints = database.TravelPoints.Sum(p => p.Amount);
             int travelPoints = user != null ? user.TravelPoints : 0;
@@ -26,7 +29,7 @@ namespace GameServer.Implementation.Player
             foreach (var award in ModMileConfig.Instance.TravelAwards)
             {
                 bool unlocked = award.IsGlobalPoints ? (globalPoints >= award.Points) : (travelPoints >= award.Points);
-                bool new_unlock = unlocked && (user == null || database.AwardUnlocks.FirstOrDefault(match => match.PlayerId == user.UserId && match.Name == award.Name) == null);
+                bool new_unlock = unlocked && (user == null || !database.AwardUnlocks.Any(match => match.PlayerId == user.UserId && match.Name == award.Name));
                 if (new_unlock && user != null)
                 {
                     database.AwardUnlocks.Add(new AwardUnlock
@@ -70,7 +73,7 @@ namespace GameServer.Implementation.Player
                     int visits = database.POIVisits.Count(match => match.PointOfInterestId == poi.Key);
                     foreach (var award in poi.Value.Awards)
                     {
-                        new_unlock = visits >= award.CheckIns && (user == null || database.AwardUnlocks.FirstOrDefault(match => match.PlayerId == user.UserId && match.Name == award.Name) == null);
+                        new_unlock = visits >= award.CheckIns && (user == null || !database.AwardUnlocks.Any(match => match.PlayerId == user.UserId && match.Name == award.Name));
                         if (new_unlock) break;
                     }
                     if (new_unlock) break;
@@ -120,7 +123,7 @@ namespace GameServer.Implementation.Player
                         unlocked++;
                 foreach (var award in poi.Value.Awards)
                 {
-                    new_unlock = visits >= award.CheckIns && (user == null || database.AwardUnlocks.FirstOrDefault(match => match.PlayerId == user.UserId && match.Name == award.Name) == null);
+                    new_unlock = visits >= award.CheckIns && (user == null || !database.AwardUnlocks.Any(match => match.PlayerId == user.UserId && match.Name == award.Name));
                     if (new_unlock) break;
                 }
                 POIList.Add(new POI
@@ -164,7 +167,7 @@ namespace GameServer.Implementation.Player
             var POIAwards = new List<POIAward>();
             foreach (var award in ModMileConfig.Instance.PointsOfInterest[id].Awards)
             {
-                bool new_unlock = visits >= award.CheckIns && (user == null || database.AwardUnlocks.FirstOrDefault(match => match.PlayerId == user.UserId && match.Name == award.Name) == null);
+                bool new_unlock = visits >= award.CheckIns && (user == null || !database.AwardUnlocks.Any(match => match.PlayerId == user.UserId && match.Name == award.Name));
                 if (new_unlock && user != null)
                 {
                     database.AwardUnlocks.Add(new AwardUnlock
@@ -195,7 +198,9 @@ namespace GameServer.Implementation.Player
         public static string CheckinStatus(Database database, Guid SessionID, int id)
         {
             var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = database.Users
+                .Include(x => x.POIVisits)
+                .FirstOrDefault(match => match.Username == session.Username);
 
             if (!ModMileConfig.Instance.PointsOfInterest.ContainsKey(id))
             {
@@ -207,11 +212,10 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            if (user != null && (database.POIVisits.FirstOrDefault(match => match.PlayerId == user.UserId 
-                && match.PointOfInterestId == id) == null
+            if (user != null && (!user.POIVisits.Any(match => match.PointOfInterestId == id)
                 || (!ModMileConfig.Instance.RequireUniquePlayersToCheckIn
-                    && database.POIVisits.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.PlayerId == user.UserId
-                        && match.PointOfInterestId == id).CreatedAt <= DateTime.UtcNow.AddHours(-2))))
+                    && user.POIVisits.OrderBy(e => e.CreatedAt)
+                        .LastOrDefault(match => match.PointOfInterestId == id).CreatedAt <= DateTime.UtcNow.AddHours(-2))))
             {
                 database.POIVisits.Add(new POIVisit
                 {
@@ -244,7 +248,9 @@ namespace GameServer.Implementation.Player
         public static string CheckinCreate(Database database, Guid SessionID, float latitude, float longitude)
         {
             var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = database.Users
+                .Include(x => x.TravelPointsData)
+                .FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
             {
@@ -288,7 +294,7 @@ namespace GameServer.Implementation.Player
                     int visits = database.POIVisits.Count(match => match.PointOfInterestId == poi.Key);
                     foreach (var award in poi.Value.Awards)
                     {
-                        new_unlock = visits < award.CheckIns && (user == null || database.AwardUnlocks.FirstOrDefault(match => match.PlayerId == user.UserId && match.Name == award.Name) == null);
+                        new_unlock = visits < award.CheckIns && (user == null || !database.AwardUnlocks.Any(match => match.PlayerId == user.UserId && match.Name == award.Name));
                         if (new_unlock) break;
                     }
                     if (new_unlock) break;
@@ -302,7 +308,7 @@ namespace GameServer.Implementation.Player
                 response = [ new CheckinCreate
                 {
                     id = GetPOI(latitude, longitude),
-                    global_miles = database.Users.Where(match => match.PlayedMNR).Sum(p => p.ModMiles),//Global Mod Miles Distance
+                    global_miles = database.Users.Where(match => match.HasCheckedInBefore).Sum(p => p.ModMiles),//Global Mod Miles Distance
                     global_points = database.TravelPoints.Sum(p => p.Amount),//Global Travel Points
                     last_miles = distance,//Mod Miles Distance
                     last_points = travelPoints,//Travel Points Earned
@@ -473,10 +479,15 @@ namespace GameServer.Implementation.Player
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var players = database.Users
+                .AsSplitQuery()
+                .Include(x => x.TravelPointsData)
+                .Include(x => x.POIVisits)
+                .Where(match => match.HasCheckedInBefore).ToList();
 
             var leaderboard = new List<ModMileLeaderboardStat>();
 
-            foreach (var player in database.Users.Where(match => match.HasCheckedInBefore).ToList())
+            foreach (var player in players)
             {
                 int travel_points = 0;
                 int visits = 0;

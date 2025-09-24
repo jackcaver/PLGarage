@@ -41,7 +41,7 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            if (!Creation.Hearts.Any(x => x.UserId == user.UserId))
+            if (!Creation.IsHeartedByMe(user.UserId))
             {
                 database.HeartedPlayerCreations.Add(new HeartedPlayerCreation
                 {
@@ -129,20 +129,18 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var favoriteCrations = database.HeartedPlayerCreations.Where(match => match.UserId == user.UserId).ToList();
+            var favoriteCrations = database.HeartedPlayerCreations
+                .Include(h => h.HeartedCreation)
+                .Where(match => match.UserId == user.UserId && match.HeartedCreation.IsMNR == session.IsMNR).ToList();
             List<favorite_player_creation> favoriteCreationsList = [];
 
-            foreach (var Creation in favoriteCrations)
+            foreach (var creation in favoriteCrations)
             {
-                var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Creation.HeartedPlayerCreationId);
-                if (creation != null && creation.IsMNR == session.IsMNR)
+                favoriteCreationsList.Add(new favorite_player_creation
                 {
-                    favoriteCreationsList.Add(new favorite_player_creation
-                    {
-                        player_creation_id = Creation.HeartedPlayerCreationId,
-                        player_creation_name = creation.Name
-                    });
-                }
+                    player_creation_id = creation.HeartedPlayerCreationId,
+                    player_creation_name = creation.Name
+                });
             }
 
             var resp = new Response<List<favorite_player_creations>>

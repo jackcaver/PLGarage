@@ -4,6 +4,7 @@ using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,49 +28,45 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            var messages = database.MailMessages.Where(match => match.RecipientId == user.UserId).ToList();
-            messages.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
+            var messagesQuery = database.MailMessages
+                .Include(x => x.Sender)
+                .Where(match => match.RecipientId == user.UserId
+                    && mail_message_types.Contains(match.Type.ToString()))
+                .OrderByDescending(x => x.CreatedAt);
 
-            if (!mail_message_types.Contains(MailMessageType.ALERT.ToString()))
-                messages.RemoveAll(match => match.Type == MailMessageType.ALERT);
-            if (!mail_message_types.Contains(MailMessageType.WEBSITE.ToString()))
-                messages.RemoveAll(match => match.Type == MailMessageType.WEBSITE);
-            if (!mail_message_types.Contains(MailMessageType.GAME.ToString()))
-                messages.RemoveAll(match => match.Type == MailMessageType.GAME);
+            var total = messagesQuery.Count();
 
             //calculating pages
             int pageEnd = PageCalculator.GetPageEnd(page, per_page);
             int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, messages.Count);
+            int totalPages = PageCalculator.GetTotalPages(per_page, total);
 
-            if (pageEnd > messages.Count)
-                pageEnd = messages.Count;
+            if (pageEnd > total)
+                pageEnd = total;
+
+            var messages = messagesQuery.Skip(pageStart).Take(per_page).ToList();
 
             var mailMessagesList = new List<mailMessage>();
 
-            for (int i = pageStart; i < pageEnd; i++)
+            foreach (var message in messages)
             {
-                var message = messages[i];
-                if (message != null)
+                mailMessagesList.Add(new mailMessage
                 {
-                    mailMessagesList.Add(new mailMessage
-                    {
-                        attachment_reference = message.AttachmentReference,
-                        created_at = message.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        has_deleted = false,
-                        has_forwarded = message.HasForwarded,
-                        has_read = message.HasRead,
-                        has_replied = message.HasReplied,
-                        id = message.Id,
-                        mail_message_type = message.Type.ToString(),
-                        recipient_id = message.RecipientId,
-                        recipient_list = message.RecipientList,
-                        sender_id = message.SenderId,
-                        sender_name = message.SenderName,
-                        subject = message.Subject,
-                        updated_at = message.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
-                    });
-                }
+                    attachment_reference = message.AttachmentReference,
+                    created_at = message.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    has_deleted = false,
+                    has_forwarded = message.HasForwarded,
+                    has_read = message.HasRead,
+                    has_replied = message.HasReplied,
+                    id = message.Id,
+                    mail_message_type = message.Type.ToString(),
+                    recipient_id = message.RecipientId,
+                    recipient_list = message.RecipientList,
+                    sender_id = message.SenderId,
+                    sender_name = message.SenderName,
+                    subject = message.Subject,
+                    updated_at = message.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
+                });
             }
 
             var resp = new Response<List<mail_messages>>
@@ -97,7 +94,9 @@ namespace GameServer.Implementation.Player
         {
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var message = database.MailMessages.FirstOrDefault(match => match.Id == id);
+            var message = database.MailMessages
+                .Include(x => x.Sender)
+                .FirstOrDefault(match => match.Id == id);
 
             if (user == null || message.RecipientId != user.UserId || message == null)
             {
@@ -179,7 +178,8 @@ namespace GameServer.Implementation.Player
                     };
                     return errorResp.Serialize();
                 }
-                RecipientList.Add(recipient.UserId);
+                if (!RecipientList.Contains(recipient.UserId))
+                    RecipientList.Add(recipient.UserId);
             }
 
             foreach (var id in RecipientList)

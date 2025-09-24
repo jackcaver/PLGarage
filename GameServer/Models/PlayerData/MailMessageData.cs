@@ -1,24 +1,11 @@
-﻿using GameServer.Utils;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
 
 namespace GameServer.Models.PlayerData
 {
     public class MailMessageData
     {
-        private Database _database;
-        private Database database
-        {
-            get
-            {
-                if (_database != null) return _database;
-                return _database = new Database();
-            }
-            set => _database = value;
-        }
-
         [Key]
         public int Id { get; set; }
         public int SenderId { get; set; }
@@ -26,7 +13,7 @@ namespace GameServer.Models.PlayerData
         [ForeignKey(nameof(SenderId))]
         public User Sender { get; set; }
 
-        public string SenderName => this.database.Users.FirstOrDefault(match => match.UserId == this.SenderId).Username;
+        public string SenderName => Sender.Username;
 
         public int RecipientId { get; set; }
 

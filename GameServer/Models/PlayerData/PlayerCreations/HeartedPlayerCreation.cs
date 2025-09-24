@@ -18,6 +18,8 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         [ForeignKey(nameof(HeartedPlayerCreationId))]
         public PlayerCreationData HeartedCreation { get; set; }
 
+        public string Name => HeartedCreation.Name;
+
         public DateTime HeartedAt { get; set; }
     }
 }

@@ -277,49 +277,52 @@ namespace GameServer.Implementation.Common
                                                 && match.IsMNR == info.IsMNR);
                                         }
 
-                                        var leaderboard = database.Scores.Where(match => match.SubKeyId == info.TrackId && match.SubGroupId == (int)info.GameType &&
-                                            match.PlaygroupSize == player.PlaygroupSize && match.Platform == creation.Platform).ToList();
-
-                                        if (creation.ScoreboardMode == 1)
-                                            leaderboard.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
-                                        else
-                                            leaderboard.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
-
-                                        if (leaderboard != null && !info.IsMNR)
+                                        if (!info.IsMNR)
                                         {
-                                            var FastestTime = leaderboard.FirstOrDefault();
-                                            var HighScore = leaderboard.FirstOrDefault();
-                                            if (creation.ScoreboardMode == 1 && FastestTime != null && FastestTime.FinishTime > player.FinishTime)
+                                            var leaderboard = database.Scores.Where(match => match.SubKeyId == info.TrackId
+                                                && match.SubGroupId == (int)info.GameType && match.PlaygroupSize == player.PlaygroupSize
+                                                && match.Platform == creation.Platform);
+
+                                            if (creation.ScoreboardMode == 1)
+                                                leaderboard = leaderboard.OrderBy(s => s.FinishTime);
+                                            else
+                                                leaderboard = leaderboard.OrderByDescending(s => s.Points);
+
+                                            if (leaderboard.Any())
                                             {
-                                                database.ActivityLog.Add(new ActivityEvent
+                                                var HighScore = leaderboard.FirstOrDefault();
+                                                if (creation.ScoreboardMode == 1 && HighScore != null && HighScore.FinishTime > player.FinishTime)
                                                 {
-                                                    AuthorId = user.UserId,
-                                                    Type = ActivityType.player_event,
-                                                    List = ActivityList.both,
-                                                    Topic = "player_beat_finish_time",
-                                                    Description = $"{player.FinishTime}",
-                                                    PlayerId = 0,
-                                                    PlayerCreationId = creation.PlayerCreationId,
-                                                    CreatedAt = DateTime.UtcNow,
-                                                    AllusionId = creation.PlayerCreationId,
-                                                    AllusionType = "PlayerCreation::Track"
-                                                });
-                                            }
-                                            if (creation.ScoreboardMode == 0 && HighScore != null && HighScore.Points < player.Points)
-                                            {
-                                                database.ActivityLog.Add(new ActivityEvent
+                                                    database.ActivityLog.Add(new ActivityEvent
+                                                    {
+                                                        AuthorId = user.UserId,
+                                                        Type = ActivityType.player_event,
+                                                        List = ActivityList.both,
+                                                        Topic = "player_beat_finish_time",
+                                                        Description = $"{player.FinishTime}",
+                                                        PlayerId = 0,
+                                                        PlayerCreationId = creation.PlayerCreationId,
+                                                        CreatedAt = DateTime.UtcNow,
+                                                        AllusionId = creation.PlayerCreationId,
+                                                        AllusionType = "PlayerCreation::Track"
+                                                    });
+                                                }
+                                                if (creation.ScoreboardMode == 0 && HighScore != null && HighScore.Points < player.Points)
                                                 {
-                                                    AuthorId = user.UserId,
-                                                    Type = ActivityType.player_event,
-                                                    List = ActivityList.both,
-                                                    Topic = "player_beat_score",
-                                                    Description = $"{player.Points}",
-                                                    PlayerId = 0,
-                                                    PlayerCreationId = creation.PlayerCreationId,
-                                                    CreatedAt = DateTime.UtcNow,
-                                                    AllusionId = creation.PlayerCreationId,
-                                                    AllusionType = "PlayerCreation::Track"
-                                                });
+                                                    database.ActivityLog.Add(new ActivityEvent
+                                                    {
+                                                        AuthorId = user.UserId,
+                                                        Type = ActivityType.player_event,
+                                                        List = ActivityList.both,
+                                                        Topic = "player_beat_score",
+                                                        Description = $"{player.Points}",
+                                                        PlayerId = 0,
+                                                        PlayerCreationId = creation.PlayerCreationId,
+                                                        CreatedAt = DateTime.UtcNow,
+                                                        AllusionId = creation.PlayerCreationId,
+                                                        AllusionType = "PlayerCreation::Track"
+                                                    });
+                                                }
                                             }
                                         }
 

@@ -7,6 +7,7 @@ using System.Linq;
 using GameServer.Models.Request;
 using System.Collections.Generic;
 using GameServer.Implementation.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player
 {
@@ -14,11 +15,12 @@ namespace GameServer.Implementation.Player
     {
         public static string AddToFavorites(Database database, Guid SessionID, FavoritePlayer favorite_player)
         {
+            favorite_player.username = favorite_player.username.TrimEnd('\0');
             var session = Session.GetSession(SessionID);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            if (favorite_player.username.Contains("\0"))
-                favorite_player.username = favorite_player.username.Split("\0")[0];
-            var user = database.Users.FirstOrDefault(match => match.Username == favorite_player.username);
+            var user = database.Users
+                .Include(u => u.HeartedByProfiles)
+                .FirstOrDefault(match => match.Username == favorite_player.username);
 
             if (user == null || requestedBy == null)
             {
@@ -68,10 +70,9 @@ namespace GameServer.Implementation.Player
 
         public static string RemoveFromFavorites(Database database, Guid SessionID, FavoritePlayer favorite_player)
         {
+            favorite_player.username = favorite_player.username.TrimEnd('\0');
             var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            if (favorite_player.username.Contains("\0"))
-                favorite_player.username = favorite_player.username.Split("\0")[0];
             int id = database.Users.FirstOrDefault(match => match.Username == favorite_player.username).UserId;
 
             if (user == null)
@@ -125,26 +126,25 @@ namespace GameServer.Implementation.Player
             }
 
             var Players = new List<favorite_player> { };
-            var HeartedUsers = database.HeartedProfiles.Where(match => match.UserId == user.UserId && match.IsMNR == session.IsMNR).ToList();
-
-            HeartedUsers.Sort((curr, prev) => prev.HeartedAt.CompareTo(curr.HeartedAt));
+            var HeartedUsers = database.HeartedProfiles
+                .AsSplitQuery()
+                .Include(u => u.HeartedUser.PlayerCreations)
+                .Include(u => u.HeartedUser.HeartedByProfiles)
+                .OrderBy(h => h.HeartedAt)
+                .Where(match => match.UserId == user.UserId && match.IsMNR == session.IsMNR).ToList();
 
             foreach (var profile in HeartedUsers)
             {
-                var heartedUser = database.Users.FirstOrDefault(match => match.UserId == profile.HeartedUserId);
-                if (heartedUser != null)
+                Players.Add(new favorite_player
                 {
-                    Players.Add(new favorite_player
-                    {
-                        favorite_player_id = profile.HeartedUserId,
-                        hearted_by_me = requestedBy != null && heartedUser.IsHeartedByMe(requestedBy.UserId, session.IsMNR) ? 1 : 0,
-                        hearts = heartedUser.Hearts,
-                        id = Players.Count + 1,
-                        quote = heartedUser.Quote,
-                        total_tracks = heartedUser.TotalTracks,
-                        username = heartedUser.Username
-                    });
-                }
+                    favorite_player_id = profile.HeartedUserId,
+                    hearted_by_me = requestedBy != null && profile.IsHeartedByMe(requestedBy.UserId, session.IsMNR) ? 1 : 0,
+                    hearts = profile.Hearts,
+                    id = profile.Id,
+                    quote = profile.Quote,
+                    total_tracks = profile.TotalTracks,
+                    username = profile.Username
+                });
             }
 
             var resp = new Response<List<favorite_players>>

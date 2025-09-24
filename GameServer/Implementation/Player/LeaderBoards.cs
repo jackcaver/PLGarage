@@ -6,6 +6,7 @@ using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,64 +19,49 @@ namespace GameServer.Implementation.Player
             int page, int per_page, int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int? num_above_below, int limit, int playgroup_size,
             float? latitude, float? longitude, string usernameFilter = null, bool FriendsView = false)
         {
-            var scores = new List<Score> { };
             var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var scoresQuery = database.Scores
+                .Include(s => s.User)
+                .ThenInclude(u => u.PlayerExperiencePoints)
+                .Include(s => s.User)
+                .ThenInclude(u => u.PlayerCreationPoints)
+                .Where(match => match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id 
+                    && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR 
+                    && match.Platform == platform);
+            var user = database.Users
+                .Include(u => u.PlayerExperiencePoints)
+                .Include(u => u.PlayerCreationPoints)
+                .FirstOrDefault(match => match.Username == session.Username);
 
             UserGeneratedContentUtils.AddStoryLevel(database, sub_key_id);
 
-            if (usernameFilter == null)
-                scores = database.Scores.Where(match => match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR && match.Platform == platform).ToList();
-
             if (usernameFilter != null)
             {
-                foreach (string name in usernameFilter.Split(','))
-                {
-                    var friend = database.Users.FirstOrDefault(match => match.Username == name);
-                    if (friend != null)
-                    {
-                        var score = database.Scores.FirstOrDefault(match => match.PlayerId == friend.UserId && match.SubKeyId == sub_key_id
-                            && match.SubGroupId == sub_group_id && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR && match.Platform == platform);
-                        if (score != null)
-                            scores.Add(score);
-                    }
-                }
+                var usernames = usernameFilter.Split(',');
+                scoresQuery = scoresQuery.Where(s => usernames.Contains(s.User.Username));
             }
-
+            
             if (latitude != null && longitude != null)
-                scores.RemoveAll(match => !(match.Latitude >= latitude-0.24 && match.Latitude <= latitude+0.24 
-                    && match.Longitude >= longitude-0.24 && match.Longitude <= longitude+0.24));
+                scoresQuery = scoresQuery.Where(match => match.Latitude >= latitude-0.24 
+                    && match.Latitude <= latitude+0.24 
+                    && match.Longitude >= longitude-0.24 && match.Longitude <= longitude+0.24);
 
             if (sort_column == SortColumn.finish_time)
-                scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
+                scoresQuery = scoresQuery.OrderBy(s => s.FinishTime);
             if (sort_column == SortColumn.score)
-                scores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+                scoresQuery = scoresQuery.OrderByDescending(s => s.Points);
             if (sort_column == SortColumn.best_lap_time)
-                scores.Sort((curr, prev) => curr.BestLapTime.CompareTo(prev.BestLapTime));
+                scoresQuery = scoresQuery.OrderBy(s => s.BestLapTime);
 
             if (type == LeaderboardType.WEEKLY)
-                scores.RemoveAll(match => match.UpdatedAt < DateTime.UtcNow.AddDays(-7));
+                scoresQuery = scoresQuery.Where(match => match.UpdatedAt >= DateTime.UtcNow.AddDays(-7));
             if (type == LeaderboardType.LAST_WEEK)
-                scores.RemoveAll(match => match.UpdatedAt < DateTime.UtcNow.AddDays(-14) || match.UpdatedAt > DateTime.UtcNow.AddDays(-7));
+                scoresQuery = scoresQuery.Where(match => match.UpdatedAt >= DateTime.UtcNow.AddDays(-14) || match.UpdatedAt <= DateTime.UtcNow.AddDays(-7));
 
             Score MyStats = null;
 
             if (user != null)
-            {
-                var playerScores = database.Scores.Where(match => match.PlayerId == user.UserId
-                    && match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id 
-                    && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR 
-                    && match.Platform == platform).ToList();
-
-                if (sort_column == SortColumn.finish_time)
-                    playerScores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
-                if (sort_column == SortColumn.score)
-                    playerScores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
-                if (sort_column == SortColumn.best_lap_time)
-                    playerScores.Sort((curr, prev) => curr.BestLapTime.CompareTo(prev.BestLapTime));
-
-                MyStats = playerScores.FirstOrDefault();
-            }
+                MyStats = scoresQuery.FirstOrDefault(match => match.PlayerId == user.UserId);
 
             var mystats = new SubLeaderboardPlayer { };
 
@@ -105,61 +91,58 @@ namespace GameServer.Implementation.Player
             if (platform == Platform.PSV)
             {
                 List<int> players = [];
-                foreach (var score in scores)
+                var duplicateFilter = scoresQuery;
+                foreach (var score in scoresQuery)
                 {
                     if (!players.Contains(score.PlayerId))
                         players.Add(score.PlayerId);
                 }
                 foreach (var player in players)
                 {
-                    var best = scores.FirstOrDefault(match => match.PlayerId == player);
-                    if (sort_column == SortColumn.finish_time)
-                        scores.RemoveAll(match => match.FinishTime > best.FinishTime);
-                    if (sort_column == SortColumn.score)
-                        scores.RemoveAll(match => match.Points < best.Points);
-                    if (sort_column == SortColumn.best_lap_time)
-                        scores.RemoveAll(match => match.BestLapTime > best.BestLapTime);
+                    var best = scoresQuery.FirstOrDefault(match => match.PlayerId == player);
+                    duplicateFilter = scoresQuery.Where(s => s.Id == best.Id);
                 }
+                scoresQuery = duplicateFilter;
             }
+
+            var total = scoresQuery.Count();
 
             //calculating pages
             int pageEnd = PageCalculator.GetPageEnd(page, per_page);
             int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, scores.Count);
+            int totalPages = PageCalculator.GetTotalPages(per_page, total);
 
-            if (pageEnd > scores.Count)
-                pageEnd = scores.Count;
+            if (pageEnd > total)
+                pageEnd = total;
 
             var leaderboardPlayers = new List<SubLeaderboardPlayer> { };
 
-            for (int i = pageStart; i < pageEnd; i++)
+            var scores = scoresQuery.Skip(pageStart).Take(per_page).ToList();
+
+            foreach (var score in scores)
             {
-                var score = scores[i];
-                if (score != null)
+                leaderboardPlayers.Add(new SubLeaderboardPlayer
                 {
-                    leaderboardPlayers.Add(new SubLeaderboardPlayer
-                    {
-                        id = score.Id,
-                        created_at = score.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        finish_time = score.FinishTime,
-                        platform = score.Platform.ToString(),
-                        player_id = score.PlayerId,
-                        username = score.Username,
-                        playgroup_size = score.PlaygroupSize,
-                        rank = score.GetRank(sort_column),
-                        score = score.Points,
-                        sub_group_id = score.SubGroupId,
-                        sub_key_id = score.SubKeyId,
-                        updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        //MNR
-                        best_lap_time = score.BestLapTime,
-                        character_idx = score.CharacterIdx,
-                        ghost_car_data_md5 = score.GhostCarDataMD5,
-                        kart_idx = score.KartIdx,
-                        skill_level_id = score.User.SkillLevelId(platform),
-                        skill_level_name = score.User.SkillLevelName(platform)
-                    });
-                }
+                    id = score.Id,
+                    created_at = score.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    finish_time = score.FinishTime,
+                    platform = score.Platform.ToString(),
+                    player_id = score.PlayerId,
+                    username = score.Username,
+                    playgroup_size = score.PlaygroupSize,
+                    rank = score.GetRank(sort_column),
+                    score = score.Points,
+                    sub_group_id = score.SubGroupId,
+                    sub_key_id = score.SubKeyId,
+                    updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    //MNR
+                    best_lap_time = score.BestLapTime,
+                    character_idx = score.CharacterIdx,
+                    ghost_car_data_md5 = score.GhostCarDataMD5,
+                    kart_idx = score.KartIdx,
+                    skill_level_id = score.User.SkillLevelId(platform),
+                    skill_level_name = score.User.SkillLevelName(platform)
+                });
             }
 
             if (FriendsView)
@@ -178,7 +161,7 @@ namespace GameServer.Implementation.Player
                             row_start = pageStart,
                             sub_group_id = sub_group_id,
                             sub_key_id = sub_key_id,
-                            total = scores.Count,
+                            total = total,
                             total_pages = totalPages,
                             type = type.ToString(),
                             LeaderboardPlayersList = leaderboardPlayers
@@ -202,7 +185,7 @@ namespace GameServer.Implementation.Player
                         row_start = pageStart,
                         sub_group_id = sub_group_id,
                         sub_key_id = sub_key_id,
-                        total = scores.Count,
+                        total = total,
                         total_pages = totalPages,
                         type = type.ToString(),
                         LeaderboardPlayersList = leaderboardPlayers
@@ -215,15 +198,23 @@ namespace GameServer.Implementation.Player
         public static string ViewSubLeaderBoardAroundMe(Database database, Guid SessionID, int sub_group_id, int sub_key_id, LeaderboardType type, Platform platform,
             int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int num_above_below, int playgroup_size, int limit)
         {
-            var scores = database.Scores.Where(match => match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id
-                && match.PlaygroupSize == playgroup_size && match.Platform == platform).ToList();
             var session = Session.GetSession(SessionID);
+            var scoresQuery = database.Scores
+                .Include(s => s.User)
+                .ThenInclude(u => u.PlayerExperiencePoints)
+                .Include(s => s.User)
+                .ThenInclude(u => u.PlayerCreationPoints)
+                .Where(match => match.SubKeyId == sub_key_id 
+                    && match.SubGroupId == sub_group_id && match.PlaygroupSize == playgroup_size 
+                    && match.Platform == platform && match.IsMNR == session.IsMNR);
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (sort_column == SortColumn.finish_time)
-                scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
+                scoresQuery = scoresQuery.OrderBy(s => s.FinishTime);
             if (sort_column == SortColumn.score)
-                scores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+                scoresQuery = scoresQuery.OrderByDescending(s => s.Points);
+            if (sort_column == SortColumn.best_lap_time)
+                scoresQuery = scoresQuery.OrderBy(s => s.BestLapTime);
 
             if (user == null)
             {
@@ -235,39 +226,35 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            int MyStatsIndex = scores.FindIndex(match => match.PlayerId == user.UserId);
+            var MyStatsIndex = scoresQuery.Select(s => s.PlayerId).ToList().FindIndex(match => match == user.UserId);
 
             var leaderboardPlayers = new List<SubLeaderboardPlayer> { };
-            int maxIndex = MyStatsIndex + num_above_below,
-                minIndex = MyStatsIndex - num_above_below;
+            int minIndex = MyStatsIndex - num_above_below;
 
-            if (maxIndex > scores.Count)
-                maxIndex = scores.Count;
+            var total = scoresQuery.Count();
 
             if (minIndex < 0)
                 minIndex = 0;
 
-            for (int i = minIndex; i < maxIndex; i++)
+            var scores = scoresQuery.Skip(minIndex).Take((num_above_below * 2) + 1).ToList();
+
+            foreach (var score in scores)
             {
-                var score = scores[i];
-                if (score != null)
+                leaderboardPlayers.Add(new SubLeaderboardPlayer
                 {
-                    leaderboardPlayers.Add(new SubLeaderboardPlayer
-                    {
-                        id = score.Id,
-                        created_at = score.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        finish_time = score.FinishTime,
-                        platform = score.Platform.ToString(),
-                        player_id = score.PlayerId,
-                        username = score.Username,
-                        playgroup_size = score.PlaygroupSize,
-                        rank = score.GetRank(sort_column),
-                        score = score.Points,
-                        sub_group_id = score.SubGroupId,
-                        sub_key_id = score.SubKeyId,
-                        updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
-                    });
-                }
+                    id = score.Id,
+                    created_at = score.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    finish_time = score.FinishTime,
+                    platform = score.Platform.ToString(),
+                    player_id = score.PlayerId,
+                    username = score.Username,
+                    playgroup_size = score.PlaygroupSize,
+                    rank = score.GetRank(sort_column),
+                    score = score.Points,
+                    sub_group_id = score.SubGroupId,
+                    sub_key_id = score.SubKeyId,
+                    updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
+                });
             }
 
             var resp = new Response<List<SubLeaderboard>>
@@ -277,7 +264,7 @@ namespace GameServer.Implementation.Player
                     playgroup_size = playgroup_size,
                     sub_group_id = sub_group_id,
                     sub_key_id = sub_key_id,
-                    total = leaderboardPlayers.Count,
+                    total = total,
                     type = type.ToString(),
                     LeaderboardPlayersList = leaderboardPlayers
                 }]
@@ -302,70 +289,73 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            var scores = database.Scores.Where(match => match.PlayerId == user.UserId && match.SubGroupId == sub_group_id 
-                && match.SubKeyId == sub_key_id && match.Platform == platform && match.IsMNR && match.LocationTag != null).ToList();
+            var scoresQuery = database.Scores
+                .Include(s => s.User)
+                .ThenInclude(u => u.PlayerExperiencePoints)
+                .Include(s => s.User)
+                .ThenInclude(u => u.PlayerCreationPoints)
+                .Where(match => match.PlayerId == user.UserId 
+                    && match.SubGroupId == sub_group_id && match.SubKeyId == sub_key_id 
+                    && match.Platform == platform && match.IsMNR && match.LocationTag != null);
 
             if (sort_column == SortColumn.finish_time)
-                scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
+                scoresQuery = scoresQuery.OrderBy(s => s.FinishTime);
             if (sort_column == SortColumn.score)
-                scores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+                scoresQuery = scoresQuery.OrderByDescending(s => s.Points);
             if (sort_column == SortColumn.best_lap_time)
-                scores.Sort((curr, prev) => curr.BestLapTime.CompareTo(prev.BestLapTime));
+                scoresQuery = scoresQuery.OrderBy(s => s.BestLapTime);
+
+            var total = scoresQuery.Count();
 
             //calculating pages
             int pageEnd = PageCalculator.GetPageEnd(page, per_page);
             int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, scores.Count);
+            int totalPages = PageCalculator.GetTotalPages(per_page, total);
 
-            if (pageEnd > scores.Count)
-                pageEnd = scores.Count;
+            if (pageEnd > total)
+                pageEnd = total;
+
+            var scores = scoresQuery.Skip(pageStart).Take(per_page).ToList();
 
             var LeaderboardScores = new List<PersonalSubLeaderboardPlayer>();
 
-            for (int i = pageStart; i < pageEnd; i++)
+            //for some reason my game skips the first record, so here is my weird way to fix it ._.
+            LeaderboardScores.Add(new PersonalSubLeaderboardPlayer
             {
-                var score = scores[i];
-                if (score != null)
+                player_id = scores[0].PlayerId,
+                username = scores[0].Username,
+                best_lap_time = scores[0].BestLapTime,
+                character_idx = scores[0].CharacterIdx,
+                kart_idx = scores[0].KartIdx,
+                rank = scores[0].GetRank(sort_column),
+                sub_key_id = scores[0].SubKeyId,
+                track_idx = scores[0].SubKeyId,
+                skill_level_id = scores[0].User.SkillLevelId(platform),
+                latitude = scores[0].Latitude,
+                longitude = scores[0].Longitude,
+                location_tag = scores[0].LocationTag
+            });
+
+            foreach (var score in scores)
+            {
+                LeaderboardScores.Add(new PersonalSubLeaderboardPlayer
                 {
-                    LeaderboardScores.Add(new PersonalSubLeaderboardPlayer
-                    {
-                        player_id = score.PlayerId,
-                        username = score.Username,
-                        best_lap_time  = score.BestLapTime,
-                        character_idx = score.CharacterIdx,
-                        kart_idx = score.KartIdx,
-                        rank = score.GetRank(sort_column),
-                        sub_key_id = score.SubKeyId,
-                        track_idx = score.SubKeyId,
-                        skill_level_id = score.User.SkillLevelId(platform),
-                        latitude = score.Latitude,
-                        longitude = score.Longitude,
-                        location_tag = score.LocationTag
-                    });
-                    if (i == pageStart) //for some reason my game skips the first record, so here is my weird way to fix it ._.
-                    {
-                        LeaderboardScores.Add(new PersonalSubLeaderboardPlayer
-                        {
-                            player_id = score.PlayerId,
-                            username = score.Username,
-                            best_lap_time = score.BestLapTime,
-                            character_idx = score.CharacterIdx,
-                            kart_idx = score.KartIdx,
-                            rank = score.GetRank(sort_column),
-                            sub_key_id = score.SubKeyId,
-                            track_idx = score.SubKeyId,
-                            skill_level_id = score.User.SkillLevelId(platform),
-                            latitude = score.Latitude,
-                            longitude = score.Longitude,
-                            location_tag = score.LocationTag
-                        });
-                    }
-                }
+                    player_id = score.PlayerId,
+                    username = score.Username,
+                    best_lap_time = score.BestLapTime,
+                    character_idx = score.CharacterIdx,
+                    kart_idx = score.KartIdx,
+                    rank = score.GetRank(sort_column),
+                    sub_key_id = score.SubKeyId,
+                    track_idx = score.SubKeyId,
+                    skill_level_id = score.User.SkillLevelId(platform),
+                    latitude = score.Latitude,
+                    longitude = score.Longitude,
+                    location_tag = score.LocationTag
+                });
             }
 
-            var MyStats = scores.FirstOrDefault(match => match.PlayerId == user.UserId
-                && match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id 
-                && match.IsMNR == session.IsMNR && match.Platform == platform);
+            var MyStats = scoresQuery.FirstOrDefault();
             var mystats = new PersonalSubLeaderboardPlayer { };
 
             if (MyStats != null)
@@ -394,7 +384,7 @@ namespace GameServer.Implementation.Player
                     {
                         page = page,
                         total_pages = totalPages,
-                        total = scores.Count,
+                        total = total,
                         Scores = LeaderboardScores
                     }
                 }
@@ -407,65 +397,75 @@ namespace GameServer.Implementation.Player
             string usernameFilter = null, bool FriendsView = false)
         {
             var session = Session.GetSession(SessionID);
-            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            List<User> users = database.Users.Where(match => match.Username != "ufg" && match.PlayedMNR).ToList();
-            List<Score> scores = database.Scores.Where(match => match.IsMNR && match.SubGroupId == (int)game_type-10).ToList();
+            var requestedBy = database.Users
+                .AsSplitQuery()
+                .Include(x => x.PlayerPoints)
+                .Include(x => x.RacesStarted)
+                .Include(x => x.RacesFinished)
+                .Include(x => x.PlayerCreationPoints)
+                .Include(x => x.PlayerExperiencePoints)
+                .FirstOrDefault(match => match.Username == session.Username);
+
+            var usersQuery = database.Users
+                .AsSplitQuery()
+                .Include(x => x.PlayerPoints)
+                .Include(x => x.RacesStarted)
+                .Include(x => x.RacesFinished)
+                .Include(x => x.PlayerCreationPoints)
+                .Include(x => x.PlayerExperiencePoints)
+                .Where(match => match.Username != "ufg" && match.PlayedMNR);
+            var scoresQuery = database.Scores
+                .Include(s => s.User)
+                .Where(match => match.IsMNR && match.SubGroupId == (int)game_type-10);
 
             if (usernameFilter != null)
             {
                 var usernames = usernameFilter.Split(',');
-                var unfilteredUsers = new List<User>(users);
-                foreach (var user in unfilteredUsers)
-                {
-                    if (!usernames.Contains(user.Username))
-                    {
-                        scores.RemoveAll(match => match.Username == user.Username);
-                        users.Remove(user);
-                    }
-                }
+                usersQuery = usersQuery.Where(u => usernames.Contains(u.Username));
+                scoresQuery = scoresQuery.Where(s => usernames.Contains(s.User.Username));
             }
 
             int Total = 0;
 
             //creator points
             if (game_type == GameType.OVERALL_CREATORS && type == LeaderboardType.LIFETIME)
-                users.Sort((curr, prev) => prev.CreatorPoints(platform).CompareTo(curr.CreatorPoints(platform)));
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerCreationPoints.Where(match => match.Platform == platform).Sum(p => p.Amount));
             if (game_type == GameType.OVERALL_CREATORS && type == LeaderboardType.WEEKLY)
-                users.Sort((curr, prev) => prev.CreatorPointsThisWeek(platform).CompareTo(curr.CreatorPointsThisWeek(platform)));
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerCreationPoints.Where(match => match.Platform == platform && match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount));
             if (game_type == GameType.OVERALL_CREATORS && type == LeaderboardType.LAST_WEEK)
-                users.Sort((curr, prev) => prev.CreatorPointsLastWeek(platform).CompareTo(curr.CreatorPointsLastWeek(platform)));
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerCreationPoints.Where(match => match.Platform == platform && match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount));
 
             //creator points for characters
             if (game_type == GameType.CHARACTER_CREATORS && type == LeaderboardType.LIFETIME)
-                users.Sort((curr, prev) => prev.CreatorPoints(platform, PlayerCreationType.CHARACTER).CompareTo(curr.CreatorPoints(platform, PlayerCreationType.CHARACTER)));
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerCreationPoints.Where(match => match.Platform == platform && match.Type == PlayerCreationType.CHARACTER).Sum(p => p.Amount));
             if (game_type == GameType.CHARACTER_CREATORS && type == LeaderboardType.WEEKLY)
-                users.Sort((curr, prev) => prev.CreatorPointsThisWeek(platform, PlayerCreationType.CHARACTER).CompareTo(curr.CreatorPointsThisWeek(platform, PlayerCreationType.CHARACTER)));
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerCreationPoints.Where(match => match.Platform == platform && match.Type == PlayerCreationType.CHARACTER && match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount));
             if (game_type == GameType.CHARACTER_CREATORS && type == LeaderboardType.LAST_WEEK)
-                users.Sort((curr, prev) =>  prev.CreatorPointsLastWeek(platform, PlayerCreationType.CHARACTER).CompareTo(curr.CreatorPointsLastWeek(platform, PlayerCreationType.CHARACTER)));
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerCreationPoints.Where(match => match.Platform == platform && match.Type == PlayerCreationType.CHARACTER && match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount));
 
             //creator points for karts
-            if (game_type == GameType.KART_CREATORS && type == LeaderboardType.LIFETIME)
-                users.Sort((curr, prev) => prev.CreatorPoints(platform, PlayerCreationType.KART).CompareTo(curr.CreatorPoints(platform, PlayerCreationType.KART)));
-            if (game_type == GameType.KART_CREATORS && type == LeaderboardType.WEEKLY)
-                users.Sort((curr, prev) => prev.CreatorPointsThisWeek(platform, PlayerCreationType.KART).CompareTo(curr.CreatorPointsThisWeek(platform, PlayerCreationType.KART)));
-            if (game_type == GameType.KART_CREATORS && type == LeaderboardType.LAST_WEEK)
-                users.Sort((curr, prev) => prev.CreatorPointsLastWeek(platform, PlayerCreationType.KART).CompareTo(curr.CreatorPointsLastWeek(platform, PlayerCreationType.KART)));
+            if (game_type == GameType.CHARACTER_CREATORS && type == LeaderboardType.LIFETIME)
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerCreationPoints.Where(match => match.Platform == platform && match.Type == PlayerCreationType.KART).Sum(p => p.Amount));
+            if (game_type == GameType.CHARACTER_CREATORS && type == LeaderboardType.WEEKLY)
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerCreationPoints.Where(match => match.Platform == platform && match.Type == PlayerCreationType.KART && match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount));
+            if (game_type == GameType.CHARACTER_CREATORS && type == LeaderboardType.LAST_WEEK)
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerCreationPoints.Where(match => match.Platform == platform && match.Type == PlayerCreationType.KART && match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount));
 
             //creator points for tracks
-            if (game_type == GameType.TRACK_CREATORS && type == LeaderboardType.LIFETIME)
-                users.Sort((curr, prev) => prev.CreatorPoints(platform, PlayerCreationType.TRACK).CompareTo(curr.CreatorPoints(platform, PlayerCreationType.TRACK)));
-            if (game_type == GameType.TRACK_CREATORS && type == LeaderboardType.WEEKLY)
-                users.Sort((curr, prev) => prev.CreatorPointsThisWeek(platform, PlayerCreationType.TRACK).CompareTo(curr.CreatorPointsThisWeek(platform, PlayerCreationType.TRACK)));
-            if (game_type == GameType.TRACK_CREATORS && type == LeaderboardType.LAST_WEEK)
-                users.Sort((curr, prev) => prev.CreatorPointsLastWeek(platform, PlayerCreationType.TRACK).CompareTo(curr.CreatorPointsLastWeek(platform, PlayerCreationType.TRACK)));
+            if (game_type == GameType.CHARACTER_CREATORS && type == LeaderboardType.LIFETIME)
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerCreationPoints.Where(match => match.Platform == platform && match.Type == PlayerCreationType.TRACK).Sum(p => p.Amount));
+            if (game_type == GameType.CHARACTER_CREATORS && type == LeaderboardType.WEEKLY)
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerCreationPoints.Where(match => match.Platform == platform && match.Type == PlayerCreationType.TRACK && match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount));
+            if (game_type == GameType.CHARACTER_CREATORS && type == LeaderboardType.LAST_WEEK)
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerCreationPoints.Where(match => match.Platform == platform && match.Type == PlayerCreationType.TRACK && match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount));
 
             //Experience points
             if (game_type == GameType.OVERALL && type == LeaderboardType.LIFETIME)
-                users.Sort((curr, prev) => prev.TotalXP(platform).CompareTo(curr.TotalXP(platform)));
+                usersQuery = usersQuery.OrderByDescending(u => (platform == Platform.PSV ? 0 : u.PlayerExperiencePoints.Sum(p => p.Amount)) + u.PlayerCreationPoints.Where(match => match.Platform == platform).Sum(p => p.Amount));
             if (game_type == GameType.OVERALL && type == LeaderboardType.WEEKLY)
-                users.Sort((curr, prev) => prev.TotalXPThisWeek(platform).CompareTo(curr.TotalXPThisWeek(platform)));
+                usersQuery = usersQuery.OrderByDescending(u => (platform == Platform.PSV ? 0 : u.PlayerExperiencePoints.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount)) + u.PlayerCreationPoints.Where(match => match.Platform == platform && match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount));
             if (game_type == GameType.OVERALL && type == LeaderboardType.LAST_WEEK)
-                users.Sort((curr, prev) => prev.TotalXPLastWeek(platform).CompareTo(curr.TotalXPLastWeek(platform)));
+                usersQuery = usersQuery.OrderByDescending(u => (platform == Platform.PSV ? 0 : u.PlayerExperiencePoints.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount)) + u.PlayerCreationPoints.Where(match => match.Platform == platform && match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount));
 
             if (game_type == GameType.OVERALL_RACE)
             {
@@ -473,35 +473,35 @@ namespace GameServer.Implementation.Player
                 {
                     case SortColumn.experience_points:
                         if (type == LeaderboardType.LIFETIME)
-                            users.Sort((curr, prev) => prev.ExperiencePoints.CompareTo(curr.ExperiencePoints));
+                            usersQuery = usersQuery.OrderByDescending(u => u.PlayerExperiencePoints.Sum(p => p.Amount));
                         if (type == LeaderboardType.WEEKLY)
-                            users.Sort((curr, prev) => prev.ExperiencePointsThisWeek.CompareTo(curr.ExperiencePointsThisWeek));
+                            usersQuery = usersQuery.OrderByDescending(u => u.PlayerExperiencePoints.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow).Sum(p => p.Amount));
                         if (type == LeaderboardType.LAST_WEEK)
-                            users.Sort((curr, prev) => prev.ExperiencePointsLastWeek.CompareTo(curr.ExperiencePointsLastWeek));
+                            usersQuery = usersQuery.OrderByDescending(u => u.PlayerExperiencePoints.Where(match => match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7)).Sum(p => p.Amount));
                         break;
 
                     case SortColumn.online_races:
-                        users.Sort((curr, prev) => prev.OnlineRaces.CompareTo(curr.OnlineRaces));
+                        usersQuery = usersQuery.OrderByDescending(u => u.RacesStarted.Count);
                         break;
 
                     case SortColumn.online_wins:
-                        users.Sort((curr, prev) => prev.OnlineWins.CompareTo(curr.OnlineWins));
+                        usersQuery = usersQuery.OrderByDescending(u => u.RacesFinished.Count(match => match.IsWinner));
                         break;
 
                     case SortColumn.longest_win_streak:
-                        users.Sort((curr, prev) => prev.LongestWinStreak.CompareTo(curr.LongestWinStreak));
+                        usersQuery = usersQuery.OrderByDescending(u => u.LongestWinStreak);
                         break;
 
                     case SortColumn.win_streak:
-                        users.Sort((curr, prev) => prev.WinStreak.CompareTo(curr.WinStreak));
+                        usersQuery = usersQuery.OrderByDescending(u => u.WinStreak);
                         break;
 
                     case SortColumn.longest_hang_time:
-                        users.Sort((curr, prev) => prev.LongestHangTime.CompareTo(curr.LongestHangTime));
+                        usersQuery = usersQuery.OrderByDescending(u => u.LongestHangTime);
                         break;
 
                     case SortColumn.longest_drift:
-                        users.Sort((curr, prev) => prev.LongestDrift.CompareTo(curr.LongestDrift));
+                        usersQuery = usersQuery.OrderByDescending(u => u.LongestDrift);
                         break;
 
                     default:
@@ -510,17 +510,19 @@ namespace GameServer.Implementation.Player
             }
 
             if (sort_column == SortColumn.finish_time)
-                scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
+                scoresQuery = scoresQuery.OrderBy(s => s.FinishTime);
+            if (sort_column == SortColumn.score)
+                scoresQuery = scoresQuery.OrderByDescending(s => s.Points);
             if (sort_column == SortColumn.best_lap_time)
-                scores.Sort((curr, prev) => curr.BestLapTime.CompareTo(prev.BestLapTime));
+                scoresQuery = scoresQuery.OrderBy(s => s.BestLapTime);
 
             if (game_type == GameType.OVERALL_CREATORS || game_type == GameType.CHARACTER_CREATORS 
                 || game_type == GameType.TRACK_CREATORS || game_type == GameType.KART_CREATORS 
-                || game_type == GameType.OVERALL || game_type == GameType.OVERALL_RACE) Total = users.Count();
+                || game_type == GameType.OVERALL || game_type == GameType.OVERALL_RACE) Total = usersQuery.Count();
 
-            if (game_type == GameType.ONLINE_HOT_SEAT_RACE) Total = scores.Count();
+            if (game_type == GameType.ONLINE_HOT_SEAT_RACE) Total = scoresQuery.Count();
 
-            var MyStats = requestedBy != null ? scores.FirstOrDefault(match => match.PlayerId == requestedBy.UserId) : null;
+            var MyStats = requestedBy != null ? scoresQuery.FirstOrDefault(match => match.PlayerId == requestedBy.UserId) : null;
             var mystats = new LeaderboardPlayer { };
 
             if (MyStats != null || ((game_type == GameType.OVERALL_CREATORS || game_type == GameType.CHARACTER_CREATORS
@@ -640,13 +642,43 @@ namespace GameServer.Implementation.Player
                 pageEnd = Total;
 
             var leaderboardPlayers = new List<LeaderboardPlayer>();
-            for (int i = pageStart; i < pageEnd; i++)
+
+            if (game_type == GameType.OVERALL_CREATORS || game_type == GameType.CHARACTER_CREATORS
+                    || game_type == GameType.TRACK_CREATORS || game_type == GameType.KART_CREATORS
+                    || game_type == GameType.OVERALL || game_type == GameType.OVERALL_RACE)
             {
-                if (game_type == GameType.OVERALL_CREATORS || game_type == GameType.CHARACTER_CREATORS 
-                    || game_type == GameType.TRACK_CREATORS || game_type == GameType.KART_CREATORS || game_type == GameType.OVERALL)
+                var users = usersQuery.Skip(pageStart).Take(per_page).ToList();
+                foreach (var user in users)
                 {
-                    var user = users[i];
-                    if (user != null)
+                    if (game_type == GameType.OVERALL_RACE)
+                    {
+                        leaderboardPlayers.Add(new LeaderboardPlayer
+                        {
+                            created_at = user.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                            experience_points = user.ExperiencePoints,
+                            id = user.UserId,
+                            longest_drift = user.LongestDrift,
+                            longest_hang_time = user.LongestHangTime,
+                            longest_win_streak = user.LongestWinStreak,
+                            online_disconnected = user.OnlineDisconnected,
+                            online_finished = user.OnlineFinished,
+                            online_forfeit = user.OnlineForfeit,
+                            online_quits = user.OnlineQuits,
+                            online_races = user.OnlineRaces,
+                            online_wins = user.OnlineWins,
+                            player_id = user.UserId,
+                            points = user.Points,
+                            updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                            username = user.Username,
+                            win_streak = user.WinStreak,
+                            rank = user.GetRank(game_type, type, platform, sort_column),
+                            skill_level_id = user.SkillLevelId(platform),
+                            skill_level_name = user.SkillLevelName(platform),
+                            character_idx = user.CharacterIdx,
+                            kart_idx = user.KartIdx
+                        });
+                    }
+                    else
                     {
                         float points = 0;
                         switch (game_type)
@@ -711,61 +743,29 @@ namespace GameServer.Implementation.Player
                         });
                     }
                 }
-                if (game_type == GameType.OVERALL_RACE)
+            }
+            if (game_type == GameType.ONLINE_HOT_SEAT_RACE)
+            {
+                var scores = scoresQuery.Skip(pageStart).Take(per_page).ToList();
+                foreach (var score in scores)
                 {
-                    var user = users[i];
-                    if (user != null)
+                    leaderboardPlayers.Add(new LeaderboardPlayer
                     {
-                        leaderboardPlayers.Add(new LeaderboardPlayer
-                        {
-                            created_at = user.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                            experience_points = user.ExperiencePoints,
-                            id = user.UserId,
-                            longest_drift = user.LongestDrift,
-                            longest_hang_time = user.LongestHangTime,
-                            longest_win_streak = user.LongestWinStreak,
-                            online_disconnected = user.OnlineDisconnected,
-                            online_finished = user.OnlineFinished,
-                            online_forfeit = user.OnlineForfeit,
-                            online_quits = user.OnlineQuits,
-                            online_races = user.OnlineRaces,
-                            online_wins = user.OnlineWins,
-                            player_id = user.UserId,
-                            points = user.Points,
-                            updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                            username = user.Username,
-                            win_streak = user.WinStreak,
-                            rank = user.GetRank(game_type, type, platform, sort_column),
-                            skill_level_id = user.SkillLevelId(platform),
-                            skill_level_name = user.SkillLevelName(platform),
-                            character_idx = user.CharacterIdx,
-                            kart_idx = user.KartIdx
-                        });
-                    }
-                }
-                if (game_type == GameType.ONLINE_HOT_SEAT_RACE)
-                {
-                    var score = scores[i];
-                    if (score != null)
-                    {
-                        leaderboardPlayers.Add(new LeaderboardPlayer
-                        {
-                            best_lap_time = score.BestLapTime,
-                            character_idx = score.CharacterIdx,
-                            created_at = score.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                            ghost_car_data_md5 = score.GhostCarDataMD5,
-                            id = score.Id,
-                            kart_idx = score.KartIdx,
-                            player_id = score.PlayerId,
-                            points = score.Points,
-                            track_idx = score.SubKeyId,
-                            updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                            username = score.Username,
-                            rank = score.GetRank(sort_column),
-                            skill_level_id = score.User.SkillLevelId(platform),
-                            skill_level_name = score.User.SkillLevelName(platform)
-                        });
-                    }
+                        best_lap_time = score.BestLapTime,
+                        character_idx = score.CharacterIdx,
+                        created_at = score.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                        ghost_car_data_md5 = score.GhostCarDataMD5,
+                        id = score.Id,
+                        kart_idx = score.KartIdx,
+                        player_id = score.PlayerId,
+                        points = score.Points,
+                        track_idx = score.SubKeyId,
+                        updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                        username = score.Username,
+                        rank = score.GetRank(sort_column),
+                        skill_level_id = score.User.SkillLevelId(platform),
+                        skill_level_name = score.User.SkillLevelName(platform)
+                    });
                 }
             }
 

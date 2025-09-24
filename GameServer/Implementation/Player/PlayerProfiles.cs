@@ -4,6 +4,7 @@ using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -81,7 +82,17 @@ namespace GameServer.Implementation.Player
         public static string GetPlayerInfo(Database database, int id, Guid SessionID)
         {
             var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.UserId == id);
+            var user = database.Users
+                .AsSplitQuery()
+                .Include(u => u.HeartedByProfiles)
+                .Include(u => u.RacesStarted)
+                .Include(u => u.RacesFinished)
+                .Include(u => u.PlayerRatings)
+                .Include(u => u.PlayerPoints)
+                .Include(u => u.PlayerExperiencePoints)
+                .Include(u => u.PlayerCreations)
+                .Include(u => u.PlayerCreationPoints)
+                .FirstOrDefault(match => match.UserId == id);
             var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
 
             if (user == null)
@@ -155,14 +166,11 @@ namespace GameServer.Implementation.Player
         public static string GetSkillLevel(Database database, Guid SessionID, int[] id)
         {
             var session = Session.GetSession(SessionID);
-            List<User> users = [];
-
-            foreach (var player_id in id)
-            {
-                var user = database.Users.FirstOrDefault(match => match.UserId == player_id);
-                if (user != null)
-                    users.Add(user);
-            }
+            var users = database.Users
+                    .AsSplitQuery()
+                    .Include(u => u.PlayerCreationPoints)
+                    .Include(u => u.PlayerExperiencePoints)
+                    .Where(match => id.Contains(match.UserId)).ToList();
 
             if (users.Count == 0)
             {

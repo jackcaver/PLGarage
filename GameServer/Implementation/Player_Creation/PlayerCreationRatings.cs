@@ -1,14 +1,15 @@
-﻿using GameServer.Models.Response;
+﻿using GameServer.Implementation.Common;
 using GameServer.Models;
-using System.Collections.Generic;
-using GameServer.Utils;
-using System.Linq;
-using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.PlayerData;
-using System;
+using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
-using GameServer.Implementation.Common;
+using GameServer.Models.Response;
+using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -36,7 +37,7 @@ namespace GameServer.Implementation.Player_Creation
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [ new player_creation_rating {
                     comments = rating != null ? rating.Comment : "",
-                    rating = session.IsMNR ? (rating != null ? rating.Rating.ToString() : "0") : (rating != null ? "true" : "false"),
+                    rating = session.IsMNR ? (rating != null ? rating.Rating.ToString("0.0", CultureInfo.InvariantCulture) : "0") : (rating != null ? "true" : "false"),
                 } ]
             };
             return resp.Serialize();
@@ -44,27 +45,32 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string List(Database database, int player_creation_id, int page, int per_page)
         {
-            var ratings = database.PlayerCreationRatings.Where(match => match.PlayerCreationId == player_creation_id).ToList();
+            var ratingsQuery = database.PlayerCreationRatings
+                .Include(r => r.Player)
+                .Where(match => match.PlayerCreationId == player_creation_id);
+
+            var total = ratingsQuery.Count();
 
             //calculating pages
             int pageEnd = PageCalculator.GetPageEnd(page, per_page);
             int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, ratings.Count);
+            int totalPages = PageCalculator.GetTotalPages(per_page, total);
 
-            if (pageEnd > ratings.Count)
-                pageEnd = ratings.Count;
+            if (pageEnd > total)
+                pageEnd = total;
+
+            var ratings = ratingsQuery.Skip(pageStart).Take(per_page).ToList();
 
             var ratingsList = new List<player_creation_rating>();
 
-            for (int i = pageStart; i < pageEnd; i++)
+            foreach (var rating in ratings)
             {
-                var rating = ratings[i];
                 ratingsList.Add(new player_creation_rating
                 {
                     comments = rating.Comment,
-                    rating = rating.Rating.ToString(),
+                    rating = rating.Rating.ToString("0.0", CultureInfo.InvariantCulture),
                     player_id = rating.PlayerId.ToString(),
-                    username = database.Users.FirstOrDefault(match => match.UserId == rating.PlayerId).Username
+                    username = rating.Username
                 });
             }
 
@@ -77,7 +83,7 @@ namespace GameServer.Implementation.Player_Creation
                         page = page,
                         row_end = pageEnd,
                         row_start = pageStart,
-                        total = ratings.Count,
+                        total = total,
                         total_pages = totalPages,
                         PlayerCreationRatingList = ratingsList,
                     }
@@ -117,36 +123,42 @@ namespace GameServer.Implementation.Player_Creation
                     Rating = player_creation_rating.rating,
                     Comment = player_creation_rating.comments
                 });
-                database.ActivityLog.Add(new ActivityEvent
+                if (!session.IsMNR)
                 {
-                    AuthorId = user.UserId,
-                    Type = ActivityType.player_creation_event,
-                    List = ActivityList.activity_log,
-                    Topic = "player_creation_rated_up",
-                    Description = "",
-                    PlayerId = 0,
-                    PlayerCreationId = Creation.PlayerCreationId,
-                    CreatedAt = DateTime.UtcNow,
-                    AllusionId = Creation.PlayerCreationId,
-                    AllusionType = "PlayerCreation::Track"
-                });
+                    database.ActivityLog.Add(new ActivityEvent
+                    {
+                        AuthorId = user.UserId,
+                        Type = ActivityType.player_creation_event,
+                        List = ActivityList.activity_log,
+                        Topic = "player_creation_rated_up",
+                        Description = "",
+                        PlayerId = 0,
+                        PlayerCreationId = Creation.PlayerCreationId,
+                        CreatedAt = DateTime.UtcNow,
+                        AllusionId = Creation.PlayerCreationId,
+                        AllusionType = "PlayerCreation::Track"
+                    });
+                }
                 database.SaveChanges();
             }
 
             if (player_creation_rating.comments != null && (rating == null || rating.Comment == null))
             {
                 database.PlayerCreationPoints.Add(new PlayerCreationPoint { PlayerCreationId = Creation.PlayerCreationId, PlayerId = Creation.PlayerId, Platform = Creation.Platform, Type = Creation.Type, CreatedAt = DateTime.UtcNow, Amount = 20 });
-                database.MailMessages.Add(new MailMessageData
+                if (session.IsMNR)
                 {
-                    Body = player_creation_rating.comments,
-                    Subject = Creation.Name,
-                    RecipientList = Creation.Author.Username,
-                    Type = MailMessageType.ALERT,
-                    RecipientId = Creation.PlayerId,
-                    SenderId = user.UserId,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                });
+                    database.MailMessages.Add(new MailMessageData
+                    {
+                        Body = player_creation_rating.comments,
+                        Subject = Creation.Name,
+                        RecipientList = Creation.Username,
+                        Type = MailMessageType.ALERT,
+                        RecipientId = Creation.PlayerId,
+                        SenderId = user.UserId,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    });
+                }
                 database.SaveChanges();
             }
 

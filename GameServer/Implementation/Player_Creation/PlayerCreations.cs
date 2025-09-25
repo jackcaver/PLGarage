@@ -1023,9 +1023,6 @@ namespace GameServer.Implementation.Player_Creation
             List<Review> ReviewsList = [];
             List<Activity> ActivityList = [];
 
-            Track.Comments.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
-            Track.Reviews.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
-
             if (Track == null || id < 9000)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -1035,6 +1032,9 @@ namespace GameServer.Implementation.Player_Creation
                 };
                 return errorResp.Serialize();
             }
+
+            Track.Comments.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
+            Track.Reviews.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
 
             if (Track.ScoreboardMode == 1)
                 Track.Scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));

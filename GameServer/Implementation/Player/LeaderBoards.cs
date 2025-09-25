@@ -21,6 +21,7 @@ namespace GameServer.Implementation.Player
         {
             var session = Session.GetSession(SessionID);
             var scoresQuery = database.Scores
+                .AsSplitQuery()
                 .Include(s => s.User)
                 .ThenInclude(u => u.PlayerExperiencePoints)
                 .Include(s => s.User)
@@ -200,6 +201,7 @@ namespace GameServer.Implementation.Player
         {
             var session = Session.GetSession(SessionID);
             var scoresQuery = database.Scores
+                .AsSplitQuery()
                 .Include(s => s.User)
                 .ThenInclude(u => u.PlayerExperiencePoints)
                 .Include(s => s.User)
@@ -290,6 +292,7 @@ namespace GameServer.Implementation.Player
             }
 
             var scoresQuery = database.Scores
+                .AsSplitQuery()
                 .Include(s => s.User)
                 .ThenInclude(u => u.PlayerExperiencePoints)
                 .Include(s => s.User)
@@ -415,7 +418,11 @@ namespace GameServer.Implementation.Player
                 .Include(x => x.PlayerExperiencePoints)
                 .Where(match => match.Username != "ufg" && match.PlayedMNR);
             var scoresQuery = database.Scores
+                .AsSplitQuery()
                 .Include(s => s.User)
+                .ThenInclude(u => u.PlayerExperiencePoints)
+                .Include(s => s.User)
+                .ThenInclude(u => u.PlayerCreationPoints)
                 .Where(match => match.IsMNR && match.SubGroupId == (int)game_type-10);
 
             if (usernameFilter != null)

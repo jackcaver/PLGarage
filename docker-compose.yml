@@ -1,9 +1,31 @@
 services:
+  db:
+    image: mariadb:latest
+    container_name: db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: PLG
+      MARIADB_DATABASE: PLGarage
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--su-mysql", "--connect"]
+      timeout: 10s
+      interval: 5s
+      retries: 5
+    volumes:
+      - "./database:/var/lib/mysql"
   plgarage:
     build: .
     container_name: PLGarage
     restart: unless-stopped
     ports:
       - 10050:10050/tcp
+    healthcheck:
+      test: curl --fail http://localhost:10050/api/GetInstanceName || exit 1
+      timeout: 10s
+      retries: 5
+      interval: 5s
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - "./data:/workdir"

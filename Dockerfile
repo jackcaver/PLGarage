@@ -8,6 +8,8 @@ RUN dotnet publish GameServer -c Release -o /build/publish/ --self-contained -p:
 
 FROM mcr.microsoft.com/dotnet/runtime:8.0.0-bookworm-slim AS runtime
 
+RUN apt-get update && apt-get install -y curl
+
 COPY --from=build /build/publish /GameServer
 COPY --from=build /build/docker-entrypoint.sh /GameServer
 

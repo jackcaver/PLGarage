@@ -145,7 +145,7 @@ namespace GameServer.Implementation.Player_Creation
             if (player_creation_rating.comments != null && (rating == null || rating.Comment == null))
             {
                 database.PlayerCreationPoints.Add(new PlayerCreationPoint { PlayerCreationId = Creation.PlayerCreationId, PlayerId = Creation.PlayerId, Platform = Creation.Platform, Type = Creation.Type, CreatedAt = DateTime.UtcNow, Amount = 20 });
-                if (session.IsMNR)
+                if (session.IsMNR && session.Platform == Platform.PS3)
                 {
                     database.MailMessages.Add(new MailMessageData
                     {

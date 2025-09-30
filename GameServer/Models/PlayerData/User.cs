@@ -58,7 +58,8 @@ namespace GameServer.Models.PlayerData
         public bool PolicyAccepted { get; set; }
         public bool IsBanned { get; set; }
         public bool ShowCreationsWithoutPreviews { get; set; }
-        
+        public bool AllowOppositePlatform { get; set; }
+
         //MNR
         public float LongestHangTime { get; set; }
         public float LongestDrift { get; set; }

@@ -43,15 +43,20 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
 
+            bool IsPSN = false;
+            bool IsRPCN = false;
+
             TicketVerifier verifier;
             switch (NPTicket.SignatureIdentifier)
             {
                 case "q�\u001dJ":
                     verifier = new(ticketData, NPTicket, new LbpkSigningKey());
+                    IsPSN = true;
                     break;
 
                 case "RPCN":
                     verifier = new(ticketData, NPTicket, RpcnSigningKey.Instance);
+                    IsRPCN = true;
                     break;
 
                 default:
@@ -72,14 +77,14 @@ namespace GameServer.Implementation.Common
 
             User user;
 
-            if (NPTicket.SignatureIdentifier == "q�\u001dJ")
+            if (IsPSN)
                 user = database.Users.FirstOrDefault(match => match.PSNID == NPTicket.UserId);
-            else if (NPTicket.SignatureIdentifier == "RPCN")
+            else if (IsRPCN)
                 user = database.Users.FirstOrDefault(match => match.RPCNID == NPTicket.UserId);
             else
                 user = null;
 
-            if (user != null && user.Username != NPTicket.Username)
+            if (user != null && user.Username != NPTicket.Username && IsPSN)
             {
                 if (ServerConfig.Instance.Whitelist)
                     whitelist = UpdateWhitelist(user.Username, NPTicket.Username);
@@ -87,25 +92,32 @@ namespace GameServer.Implementation.Common
                 database.SaveChanges();
             }
 
-            if (database.Users.FirstOrDefault(match => match.Username == NPTicket.Username) != null && user == null)
+            if (database.Users.Any(match => match.Username == NPTicket.Username) && user == null)
             {
                 var userByUsername = database.Users.FirstOrDefault(match => match.Username == NPTicket.Username);
-                if (NPTicket.SignatureIdentifier == "q�\u001dJ" && userByUsername.PSNID == 0 && userByUsername.RPCNID == 0)
+                if (IsPSN && userByUsername.PSNID == 0
+                    && (userByUsername.RPCNID == 0 || userByUsername.AllowOppositePlatform))
                 {
                     userByUsername.PSNID = NPTicket.UserId;
                     user = userByUsername;
                     database.SaveChanges();
                 }
-                else if (NPTicket.SignatureIdentifier == "RPCN" && userByUsername.PSNID == 0 && userByUsername.RPCNID == 0)
+                else if (IsRPCN && (userByUsername.PSNID == 0 || userByUsername.AllowOppositePlatform)
+                    && userByUsername.RPCNID == 0)
                 {
                     userByUsername.RPCNID = NPTicket.UserId;
                     user = userByUsername;
                     database.SaveChanges();
                 }
+                if (userByUsername.AllowOppositePlatform)
+                {
+                    userByUsername.AllowOppositePlatform = false;
+                    database.SaveChanges();
+                }
             }
 
             if (user == null && (!ServerConfig.Instance.Whitelist || whitelist.Contains(NPTicket.Username)) 
-                && database.Users.FirstOrDefault(match => match.Username == NPTicket.Username) == null)
+                && !database.Users.Any(match => match.Username == NPTicket.Username))
             {
                 var newUser = new User
                 {
@@ -116,9 +128,9 @@ namespace GameServer.Implementation.Common
                     UpdatedAt = DateTime.UtcNow,
                     PolicyAccepted = Sessions[SessionID].PolicyAccepted,
                 };
-                if (NPTicket.SignatureIdentifier == "q�\u001dJ")
+                if (IsPSN)
                     newUser.PSNID = NPTicket.UserId;
-                else if (NPTicket.SignatureIdentifier == "RPCN")
+                else if (IsRPCN)
                     newUser.RPCNID = NPTicket.UserId;
                 
                 database.Users.Add(newUser);

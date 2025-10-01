@@ -1,8 +1,10 @@
-﻿using GameServer.Models;
+﻿using GameServer.Implementation.Common;
+using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,9 +20,17 @@ namespace GameServer.Controllers.Common
         }
 
         [Route("announcements.xml")]
-        public IActionResult List(Platform platform)
+        public IActionResult List(Platform? platform)
         {
+            Guid SessionID = Guid.Empty;
+            if (Request.Cookies.ContainsKey("session_id"))
+                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var session = Session.GetSession(SessionID);
+
             var AnnouncementList = new List<Announcement>();
+
+            if (platform == null)
+                platform = session.Platform;
 
             foreach (var announcement in database.Announcements.Where(match => match.Platform == platform))
             {

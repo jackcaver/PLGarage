@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -20,24 +21,22 @@ namespace GameServer.Implementation.Common
 {
     public static class ServerCommunication
     {
+        private const int DefaultMessageCapacity = 4096;
         private const string MasterServer = "API";
         private static readonly List<ServerInfo> Servers = [];
-        private static Aes aes;
-        private static Aes Aes
+
+        private static readonly int EncryptedHeaderSize = AesGcm.NonceByteSizes.MaxSize + AesGcm.TagByteSizes.MaxSize;
+        private static readonly AesGcm Aes;
+        private static readonly bool HasKey = !string.IsNullOrEmpty(ServerConfig.Instance.ServerCommunicationKey);
+
+        static ServerCommunication()
         {
-            get
+            if (HasKey)
             {
-                if (aes == null)
-                {
-                    aes = Aes.Create();
-                    aes.Key = Encoding.UTF8.GetBytes(ServerConfig.Instance.ServerCommunicationKey);
-                    aes.Mode = CipherMode.ECB;
-                    aes.Padding = PaddingMode.Zeros;
-                }
-                return aes;
+                Aes = new AesGcm(Encoding.UTF8.GetBytes(ServerConfig.Instance.ServerCommunicationKey), AesGcm.TagByteSizes.MaxSize);
             }
         }
-        
+
         public static void NotifySessionCreated(Guid uuid, int playerConnectId, string username, int issuer, Platform platform)
         {
             DispatchEvent(GatewayEvents.PlayerSessionCreated, new PlayerSessionCreatedEvent
@@ -60,20 +59,19 @@ namespace GameServer.Implementation.Common
         
         public static async Task HandleConnection(WebSocket webSocket, Guid ServerID)
         {
+            byte[] scratch = new byte[DefaultMessageCapacity];
             while (webSocket.State == WebSocketState.Open)
             {
                 var buffer = new List<byte>();
                 WebSocketReceiveResult result;
                 try
                 {
-                    byte[] data = new byte[1];
-                    result = await webSocket.ReceiveAsync(data, CancellationToken.None);
-                    buffer.AddRange(data);
-                    while (!result.EndOfMessage)
+                    do
                     {
-                        result = await webSocket.ReceiveAsync(data, CancellationToken.None);
-                        buffer.AddRange(data);
+                        result = await webSocket.ReceiveAsync(scratch, CancellationToken.None);
+                        buffer.AddRange(scratch.AsSpan(0, result.Count));
                     }
+                    while (!result.EndOfMessage);
                 }
                 catch (Exception e)
                 {
@@ -81,28 +79,44 @@ namespace GameServer.Implementation.Common
                     continue;
                 }
 
-                if (result.MessageType == WebSocketMessageType.Text)
+                string payload;
+                if (result.MessageType == WebSocketMessageType.Text && !HasKey)
+                    payload = Encoding.UTF8.GetString(buffer.ToArray());
+                else if (result.MessageType == WebSocketMessageType.Binary && HasKey)
                 {
-                    string payload = Encoding.UTF8.GetString(buffer.ToArray());
+                    if (buffer.Count < EncryptedHeaderSize)
+                    {
+                        Log.Debug("Received message with invalid header!");
+                        break;
+                    }
+
                     try
                     {
-                        if (!string.IsNullOrEmpty(ServerConfig.Instance.ServerCommunicationKey))
-                            payload = Decrypt(payload);
-                        
-                        var message = JsonConvert.DeserializeObject<GatewayMessage>(payload);
-                        if (message != null)
-                        {
-                            message.From = ServerID.ToString();
-                            Database database = new();
-                            ProcessMessage(database, webSocket, message);
-                            database.Dispose();
-                        }
+                        payload = Decrypt(CollectionsMarshal.AsSpan(buffer));
                     }
                     catch (Exception e)
                     {
-                        Log.Debug($"Failed to process message: {e}");
-                    }    
-                } else if (result.MessageType == WebSocketMessageType.Close) break;
+                        Log.Debug($"Failed to decrypt message: {e}");
+                        break;
+                    }
+                }
+                else break;
+
+                try
+                {
+                    var message = JsonConvert.DeserializeObject<GatewayMessage>(payload);
+                    if (message != null)
+                    {
+                        message.From = ServerID.ToString();
+                        Database database = new();
+                        ProcessMessage(database, webSocket, message);
+                        database.Dispose();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Debug($"Failed to process message: {e}");
+                }
             }
 
             Servers.RemoveAll(match => match.ServerId == ServerID);
@@ -486,13 +500,16 @@ namespace GameServer.Implementation.Common
         {
             byte[] bytes;
 
-            if (!string.IsNullOrEmpty(ServerConfig.Instance.ServerCommunicationKey))
-                bytes = Encoding.UTF8.GetBytes(Encrypt(message));
-            else
-                bytes = Encoding.UTF8.GetBytes(message);
+            var type = WebSocketMessageType.Text;
+            if (HasKey)
+            {
+                type = WebSocketMessageType.Binary;
+                bytes = Encrypt(message);
+            }
+            else bytes = Encoding.UTF8.GetBytes(message);
 
             if (webSocket.State == WebSocketState.Open)
-                await webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+                await webSocket.SendAsync(bytes, type, true, CancellationToken.None);
         }
 
         public static ServerInfo GetServer(ServerType Type)
@@ -505,25 +522,29 @@ namespace GameServer.Implementation.Common
             return Servers.FirstOrDefault(match => match.ServerId == ServerID);
         }
 
-        private static string Encrypt(string message)
+        private static byte[] Encrypt(string message)
         {
-            using var stream = new MemoryStream();
-            using var cryptoTransform = Aes.CreateEncryptor(Aes.Key, null);
-            using var cryptoStream = new CryptoStream(stream, cryptoTransform, CryptoStreamMode.Write);
+            byte[] contents = Encoding.UTF8.GetBytes(message);
+            byte[] payload = new byte[EncryptedHeaderSize + contents.Length];
 
-            cryptoStream.Write(Encoding.UTF8.GetBytes(message));
-
-            return Convert.ToBase64String(stream.ToArray());
+            var nonce = payload.AsSpan(0, AesGcm.NonceByteSizes.MaxSize);
+            var tag = payload.AsSpan(AesGcm.NonceByteSizes.MaxSize, AesGcm.TagByteSizes.MaxSize);
+            var output = payload.AsSpan(EncryptedHeaderSize, contents.Length);
+            
+            RandomNumberGenerator.Fill(nonce);
+            Aes.Encrypt(nonce, contents, output, tag);
+            return payload;
         }
 
-        private static string Decrypt(string message)
+        private static string Decrypt(Span<byte> message)
         {
-            using var stream = new MemoryStream(Convert.FromBase64String(message));
-            using var cryptoTransform = Aes.CreateDecryptor(Aes.Key, null);
-            using var cryptoStream = new CryptoStream(stream, cryptoTransform, CryptoStreamMode.Read);
-            using var streamReader = new StreamReader(cryptoStream, Encoding.UTF8);
+            ReadOnlySpan<byte> nonce = message[..AesGcm.NonceByteSizes.MaxSize];
+            ReadOnlySpan<byte> tag = message.Slice(AesGcm.NonceByteSizes.MaxSize, AesGcm.TagByteSizes.MaxSize);
+            ReadOnlySpan<byte> data = message.Slice(EncryptedHeaderSize, message.Length - EncryptedHeaderSize);
 
-            return streamReader.ReadToEnd();
+            byte[] output = new byte[data.Length];
+            Aes.Decrypt(nonce, data, tag, output);
+            return Encoding.UTF8.GetString(output);
         }
 
         public static async Task DisconnectAllServers(string statusDescription)

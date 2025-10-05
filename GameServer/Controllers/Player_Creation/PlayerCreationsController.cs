@@ -1,14 +1,15 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using GameServer.Implementation.Common;
 using GameServer.Implementation.Player_Creation;
-using GameServer.Models.PlayerData.PlayerCreations;
+using GameServer.Models.Config;
 using GameServer.Models.PlayerData;
+using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Utils;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using GameServer.Implementation.Common;
 using Microsoft.AspNetCore.Http;
-using GameServer.Models.Config;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Player_Creation
 {
@@ -209,9 +210,11 @@ namespace GameServer.Controllers.Player_Creation
 
         [HttpPost]
         [Route("player_creations/verify.xml")]
-        public IActionResult Verify(List<int> id, List<int> offline_id)
+        public IActionResult Verify(string id, string offline_id)
         {
-            return Content(PlayerCreations.VerifyPlayerCreations(database, id, offline_id), "application/xml;charset=utf-8");
+            var ids = id != null ? id.Split(',').Select(x => int.Parse(x)).ToList() : [];
+            var offline_ids = offline_id != null ? offline_id.Split(',').Select(x => int.Parse(x)).ToList() : [];
+            return Content(PlayerCreations.VerifyPlayerCreations(database, ids, offline_ids), "application/xml;charset=utf-8");
         }
 
         private List<string> AcceptedTypes = [

@@ -46,8 +46,7 @@ namespace GameServer.Controllers.Player
             latitude = float.Parse(latitude.ToString("0.000", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
             longitude = float.Parse(longitude.ToString("0.000", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
 
-            var score = scores.FirstOrDefault(match => match.LocationTag != null
-                && match.Latitude == latitude && match.Longitude == longitude);
+            var score = scores.FirstOrDefault(match => match.Latitude == latitude && match.Longitude == longitude);
 
             var resp = new Response<List<Location>>
             {
@@ -58,7 +57,7 @@ namespace GameServer.Controllers.Player
                     {
                         latitude = latitude,
                         longitude = longitude,
-                        tag = score != null ? score.LocationTag : "",
+                        tag = score != null ? score.LocationTag != null ? score.LocationTag : "" : "",
                         is_tagged = score != null
                     }
                 ]

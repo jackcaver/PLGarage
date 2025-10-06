@@ -136,12 +136,16 @@ namespace GameServer.Controllers.Common
             }
             else if (session.Platform == Platform.PSV)
             {
+                float marginOfError = 0.0001f;
+
                 score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id
                     && match.SubKeyId == game_player_stats.track_idx
                     && match.SubGroupId == (int)game.game_type - 10
                     && match.Platform == session.Platform && match.IsMNR == session.IsMNR
-                    && match.Latitude == game_player_stats.latitude
-                    && match.Longitude == game_player_stats.longitude);
+                    && match.Latitude >= game_player_stats.latitude - marginOfError
+                    && match.Latitude <= game_player_stats.latitude + marginOfError 
+                    && match.Longitude >= game_player_stats.longitude - marginOfError
+                    && match.Longitude <= game_player_stats.longitude + marginOfError);
                 if (score == null)
                 {
                     score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id
@@ -150,6 +154,13 @@ namespace GameServer.Controllers.Common
                         && match.Platform == session.Platform && match.IsMNR == session.IsMNR
                         && match.LocationTag == null);
                 }
+
+                if (game_player_stats.location_tag != null)
+                    foreach (var dbscore in database.Scores.Where(match => match.Latitude >= game_player_stats.latitude - marginOfError
+                        && match.Latitude <= game_player_stats.latitude + marginOfError
+                        && match.Longitude >= game_player_stats.longitude - marginOfError
+                        && match.Longitude <= game_player_stats.longitude + marginOfError))
+                            dbscore.LocationTag = game_player_stats.location_tag;
             }
             else
             {
@@ -293,12 +304,6 @@ namespace GameServer.Controllers.Common
                 }
                 if (SaveGhost)
                     score.GhostCarDataMD5 = GhostDataMD5;
-                if (session.Platform == Platform.PSV && SaveGhost)
-                {
-                    score.Latitude = game_player_stats.latitude;
-                    score.Longitude = game_player_stats.longitude;
-                    score.LocationTag = game_player_stats.location_tag;
-                }
             }
             else
             {

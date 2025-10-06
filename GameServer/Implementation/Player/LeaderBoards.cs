@@ -299,7 +299,7 @@ namespace GameServer.Implementation.Player
                 .ThenInclude(u => u.PlayerCreationPoints)
                 .Where(match => match.PlayerId == user.UserId 
                     && match.SubGroupId == sub_group_id && match.SubKeyId == sub_key_id 
-                    && match.Platform == platform && match.IsMNR && match.LocationTag != null);
+                    && match.Platform == platform && match.IsMNR);
 
             if (sort_column == SortColumn.finish_time)
                 scoresQuery = scoresQuery.OrderBy(s => s.FinishTime);
@@ -323,21 +323,24 @@ namespace GameServer.Implementation.Player
             var LeaderboardScores = new List<PersonalSubLeaderboardPlayer>();
 
             //for some reason my game skips the first record, so here is my weird way to fix it ._.
-            LeaderboardScores.Add(new PersonalSubLeaderboardPlayer
+            if (scores.Count > 0)
             {
-                player_id = scores[0].PlayerId,
-                username = scores[0].Username,
-                best_lap_time = scores[0].BestLapTime,
-                character_idx = scores[0].CharacterIdx,
-                kart_idx = scores[0].KartIdx,
-                rank = scores[0].GetRank(sort_column),
-                sub_key_id = scores[0].SubKeyId,
-                track_idx = scores[0].SubKeyId,
-                skill_level_id = scores[0].User.SkillLevelId(platform),
-                latitude = scores[0].Latitude,
-                longitude = scores[0].Longitude,
-                location_tag = scores[0].LocationTag
-            });
+                LeaderboardScores.Add(new PersonalSubLeaderboardPlayer
+                {
+                    player_id = scores[0].PlayerId,
+                    username = scores[0].Username,
+                    best_lap_time = scores[0].BestLapTime,
+                    character_idx = scores[0].CharacterIdx,
+                    kart_idx = scores[0].KartIdx,
+                    rank = scores[0].GetRank(sort_column),
+                    sub_key_id = scores[0].SubKeyId,
+                    track_idx = scores[0].SubKeyId,
+                    skill_level_id = scores[0].User.SkillLevelId(platform),
+                    latitude = scores[0].Latitude,
+                    longitude = scores[0].Longitude,
+                    location_tag = scores[0].LocationTag != null ? scores[0].LocationTag : "Unnamed location"
+                });
+            }
 
             foreach (var score in scores)
             {
@@ -354,7 +357,7 @@ namespace GameServer.Implementation.Player
                     skill_level_id = score.User.SkillLevelId(platform),
                     latitude = score.Latitude,
                     longitude = score.Longitude,
-                    location_tag = score.LocationTag
+                    location_tag = score.LocationTag != null ? score.LocationTag : "Unnamed location"
                 });
             }
 
@@ -374,7 +377,7 @@ namespace GameServer.Implementation.Player
                 mystats.skill_level_id = MyStats.User.SkillLevelId(platform);
                 mystats.latitude = MyStats.Latitude;
                 mystats.longitude = MyStats.Longitude;
-                mystats.location_tag = MyStats.LocationTag;
+                mystats.location_tag = MyStats.LocationTag != null ? MyStats.LocationTag : "Unnamed location";
             }
 
             var resp = new Response<SubLeaderboardPersonalViewResponse>

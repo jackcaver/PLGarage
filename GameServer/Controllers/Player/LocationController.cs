@@ -42,9 +42,12 @@ namespace GameServer.Controllers.Player
             var scores = database.Scores.Where(match => match.PlayerId == user.UserId
                 && match.Platform == session.Platform).ToList();
 
+            //gps isn't 100% accurate so here is my way to get around it
+            latitude = float.Parse(latitude.ToString("0.000", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
+            longitude = float.Parse(longitude.ToString("0.000", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
+
             var score = scores.FirstOrDefault(match => match.LocationTag != null
-                && match.Latitude.ToString("0.000", CultureInfo.InvariantCulture) == latitude.ToString("0.000", CultureInfo.InvariantCulture) //gps isn't 100% accurate so here is my way to get around it
-                && match.Longitude.ToString("0.000", CultureInfo.InvariantCulture) == longitude.ToString("0.000", CultureInfo.InvariantCulture));
+                && match.Latitude == latitude && match.Longitude == longitude);
 
             var resp = new Response<List<Location>>
             {

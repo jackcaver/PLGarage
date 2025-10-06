@@ -140,8 +140,8 @@ namespace GameServer.Controllers.Common
                     && match.SubKeyId == game_player_stats.track_idx
                     && match.SubGroupId == (int)game.game_type - 10
                     && match.Platform == session.Platform && match.IsMNR == session.IsMNR
-                    && match.Latitude.ToString("0.000", CultureInfo.InvariantCulture) == game_player_stats.latitude.ToString("0.000", CultureInfo.InvariantCulture)
-                    && match.Longitude.ToString("0.000", CultureInfo.InvariantCulture) == game_player_stats.longitude.ToString("0.000", CultureInfo.InvariantCulture));
+                    && match.Latitude == game_player_stats.latitude
+                    && match.Longitude == game_player_stats.longitude);
                 if (score == null)
                 {
                     score = database.Scores.FirstOrDefault(match => match.PlayerId == game.host_player_id

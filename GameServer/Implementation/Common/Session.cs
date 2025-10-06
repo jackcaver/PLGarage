@@ -141,6 +141,11 @@ namespace GameServer.Implementation.Common
             if (user == null || !Sessions.TryGetValue(SessionID, out SessionInfo session) || user.IsBanned
                 || (ServerConfig.Instance.Whitelist && !whitelist.Contains(user.Username)))
             {
+                if (user == null)
+                    Log.Warning($"Unable find or create user for {NPTicket.Username}");
+                else if (!Sessions.ContainsKey(SessionID))
+                    Log.Warning($"{NPTicket.Username} does not have a session");
+
                 var errorResp = new Response<EmptyResponse>
                 {
                     status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
@@ -213,11 +218,10 @@ namespace GameServer.Implementation.Common
             int id = -130;
             string message = "The player doesn't exist";
 
-            if (Sessions.TryGetValue(SessionID, out SessionInfo session))
+            if (Sessions.TryGetValue(SessionID, out SessionInfo session) && Enum.TryParse(presence, out Presence userPresence))
             {
                 id = 0;
                 message = "Successful completion";
-                Enum.TryParse(presence, out Presence userPresence);
                 session.Presence = userPresence;
             }
 

@@ -10,6 +10,7 @@ using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Implementation.Common;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -136,8 +137,27 @@ namespace GameServer.Implementation.Player_Creation
             var deletedCreation = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.DELETED 
                 && ((match.Name == Creation.player_creation_type.ToString() && match.IsMNR == session.IsMNR
                 && match.Platform == session.Platform) || (match.Name == null && !session.IsMNR)));
+            
+            Stream data = null;
+            Stream preview = null;
 
-            if (user == null)
+            if (Creation.player_creation_type != PlayerCreationType.DELETED)
+                data = Creation.data.OpenReadStream();
+
+            if (Creation.player_creation_type != PlayerCreationType.PHOTO
+                && Creation.player_creation_type != PlayerCreationType.PLANET
+                && Creation.player_creation_type != PlayerCreationType.DELETED)
+                preview = Creation.preview.OpenReadStream();
+
+            if (user == null || Creation.player_creation_type == PlayerCreationType.DELETED
+                || (Creation.player_creation_type == PlayerCreationType.PHOTO
+                    && !UserGeneratedContentUtils.CheckImage(data)) //check if photo is a valid image
+                || (Creation.player_creation_type != PlayerCreationType.PHOTO 
+                    && UserGeneratedContentUtils.CheckImage(data)) //check if data for player creation is an image
+                || (Creation.player_creation_type != PlayerCreationType.PLANET 
+                    && Creation.player_creation_type != PlayerCreationType.PHOTO 
+                    && !UserGeneratedContentUtils.CheckImage(preview, 256, 256)) //check if preview for player creation is valid image
+                )
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -220,9 +240,9 @@ namespace GameServer.Implementation.Player_Creation
                 Version = 1,
                 //MNR
                 IsMNR = session.IsMNR,
-                ParentCreationId = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Creation.parent_creation_id) != null || Creation.parent_creation_id < 10000 ? Creation.parent_creation_id : 0,
-                ParentPlayerId = database.Users.FirstOrDefault(match => match.UserId == Creation.parent_player_id) != null ? Creation.parent_player_id == 0 ? Creation.parent_player_id : Creation.parent_player_id : 0,
-                OriginalPlayerId = database.Users.FirstOrDefault(match => match.UserId == Creation.original_player_id) != null ? Creation.original_player_id == 0 ? Creation.original_player_id : user.UserId : user.UserId,
+                ParentCreationId = database.PlayerCreations.Any(match => match.PlayerCreationId == Creation.parent_creation_id) || Creation.parent_creation_id < 10000 ? Creation.parent_creation_id : 0,
+                ParentPlayerId = database.Users.Any(match => match.UserId == Creation.parent_player_id) ? Creation.parent_player_id : user.UserId,
+                OriginalPlayerId = database.Users.Any(match => match.UserId == Creation.original_player_id) ? Creation.original_player_id : user.UserId,
                 BestLapTime = Creation.best_lap_time
             });
 
@@ -247,14 +267,11 @@ namespace GameServer.Implementation.Player_Creation
 
 
             if (Creation.player_creation_type == PlayerCreationType.PHOTO)
-                UserGeneratedContentUtils.SavePlayerPhoto(id,
-                   Creation.data.OpenReadStream());
+                UserGeneratedContentUtils.SavePlayerPhoto(id, data);
             else if (Creation.player_creation_type == PlayerCreationType.PLANET)
-                UserGeneratedContentUtils.SavePlayerCreation(id, Creation.data.OpenReadStream());
+                UserGeneratedContentUtils.SavePlayerCreation(id, data);
             else
-                UserGeneratedContentUtils.SavePlayerCreation(id,
-                   Creation.data.OpenReadStream(),
-                   Creation.preview.OpenReadStream());
+                UserGeneratedContentUtils.SavePlayerCreation(id, data, preview);
 
             if (Creation.player_creation_type == PlayerCreationType.PLANET)
             {
@@ -929,15 +946,11 @@ namespace GameServer.Implementation.Player_Creation
             IQueryable<PlayerCreationData> photosQuery = database.PlayerCreations
                                                             .Include(x => x.Author)
                                                             .Where(match => match.Type == PlayerCreationType.PHOTO);
-            int player_id = 0;
-            var user = database.Users.FirstOrDefault(match => match.Username == username);
-            if (user != null)
-                player_id = user.UserId;
 
             if (associated_usernames != null)
                 photosQuery = photosQuery.Where(match => match.AssociatedUsernames.Contains(associated_usernames));
             if (username != null)
-                photosQuery = photosQuery.Where(match => match.PlayerId == player_id);
+                photosQuery = photosQuery.Where(match => match.Author.Username == username);
             if (track_id != null)
                 photosQuery = photosQuery.Where(match => match.TrackId == track_id);
 
@@ -956,7 +969,7 @@ namespace GameServer.Implementation.Player_Creation
 
             var photos = photosQuery
                 .Skip(pageStart)
-                .Take(pageEnd - pageStart)
+                .Take(per_page)
                 .ToList();
 
             var PhotoList = new List<Photo>(photos.Select(photo => new Photo

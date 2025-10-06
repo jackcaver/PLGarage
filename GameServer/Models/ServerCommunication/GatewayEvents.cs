@@ -10,4 +10,5 @@ public class GatewayEvents
     public const string UpdatePlayerCount = "UPDATE_PLAYER_COUNT";
     public const string PlayerSessionCreated = "PLAYER_SESSION_CREATED";
     public const string PlayerSessionDestroyed = "PLAYER_SESSION_DESTROYED";
+    public const string HotSeatPlaylistReset = "HOT_SEAT_PLAYLIST_RESET";
 }

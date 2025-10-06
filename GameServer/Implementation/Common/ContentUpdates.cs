@@ -127,6 +127,8 @@ namespace GameServer.Implementation.Common
                 };
             }
 
+            ServerCommunication.NotifyHotSeatPlaylistReset();
+
             return result;
         }
 

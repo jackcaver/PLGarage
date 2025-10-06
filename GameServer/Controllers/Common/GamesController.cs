@@ -156,7 +156,9 @@ namespace GameServer.Controllers.Common
                 }
 
                 if (game_player_stats.location_tag != null)
-                    foreach (var dbscore in database.Scores.Where(match => match.Latitude >= game_player_stats.latitude - marginOfError
+                    foreach (var dbscore in database.Scores.Where(match => match.PlayerId == game.host_player_id
+                        && match.Platform == session.Platform
+                        && match.Latitude >= game_player_stats.latitude - marginOfError
                         && match.Latitude <= game_player_stats.latitude + marginOfError
                         && match.Longitude >= game_player_stats.longitude - marginOfError
                         && match.Longitude <= game_player_stats.longitude + marginOfError))

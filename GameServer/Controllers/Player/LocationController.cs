@@ -1,12 +1,12 @@
-﻿using GameServer.Models.Response;
+﻿using GameServer.Implementation.Common;
 using GameServer.Models;
-using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System;
+using GameServer.Models.Response;
 using GameServer.Utils;
-using System.Linq;
-using GameServer.Implementation.Common;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
 namespace GameServer.Controllers.Player
 {
@@ -39,14 +39,18 @@ namespace GameServer.Controllers.Player
                 return Content(errorResp.Serialize(), "application/xml;charset=utf-8");
             }
 
-            var scores = database.Scores.Where(match => match.PlayerId == user.UserId
-                && match.Platform == session.Platform).ToList();
-
             //gps isn't 100% accurate so here is my way to get around it
             latitude = float.Parse(latitude.ToString("0.000", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
             longitude = float.Parse(longitude.ToString("0.000", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
 
-            var score = scores.FirstOrDefault(match => match.Latitude == latitude && match.Longitude == longitude);
+            float marginOfError = 0.0001f;
+
+            var score = database.Scores.FirstOrDefault(match => match.PlayerId == user.UserId
+                && match.Platform == session.Platform
+                && match.Latitude >= latitude - marginOfError
+                && match.Latitude <= latitude + marginOfError
+                && match.Longitude >= longitude - marginOfError
+                && match.Longitude <= longitude + marginOfError);
 
             var resp = new Response<List<Location>>
             {

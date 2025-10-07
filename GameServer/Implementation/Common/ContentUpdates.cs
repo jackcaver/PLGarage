@@ -7,6 +7,7 @@ using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -96,13 +97,18 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        private static HotLapData GetNewHotLap(Database database)
+        public static void GetNewHotLap(Database database)
         {
+            database.Scores.RemoveRange(database.Scores.Where(match => match.SubGroupId == 700 && match.IsMNR).ToList());
+
+            database.SaveChanges();
+
             Random random = new();
 
-            HotLapData result = null;
+            HotLapData hotlap = null;
 
             var candidates = database.PlayerCreations
+                .AsSplitQuery()
                 .Include(p => p.Downloads)
                 .OrderByDescending(p => p.Downloads.Count)
                 .Where(match => match.Type == PlayerCreationType.TRACK
@@ -120,7 +126,7 @@ namespace GameServer.Implementation.Common
                 else
                     trackid = candidates.FirstOrDefault();
 
-                result = new()
+                hotlap = new()
                 {
                     SelectedAt = TimeUtils.Now,
                     TrackId = trackid
@@ -129,7 +135,16 @@ namespace GameServer.Implementation.Common
 
             ServerCommunication.NotifyHotSeatPlaylistReset();
 
-            return result;
+            Log.Debug($"New hotlap track picked {hotlap.TrackId}");
+
+            try
+            {
+                File.WriteAllText("./hotlap.json", JsonConvert.SerializeObject(hotlap));
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Unable to write hotlap file: {e}");
+            }
         }
 
         private static string GetHotlapData(Database database)
@@ -141,20 +156,9 @@ namespace GameServer.Implementation.Common
                 hotLap = JsonConvert.DeserializeObject<HotLapData>(File.ReadAllText("./hotlap.json"));
             else
             {
-                hotLap = GetNewHotLap(database);
-                if (hotLap != null)
-                    File.WriteAllText("./hotlap.json", JsonConvert.SerializeObject(hotLap));
-            }
-
-            if (hotLap != null && hotLap.SelectedAt < TimeUtils.Now.AddDays(-1))
-            {
-                database.Scores.RemoveRange(database.Scores.Where(match => match.SubGroupId == 700 && match.IsMNR).ToList());
-
-                database.SaveChanges();
-
-                hotLap = GetNewHotLap(database);
-                if (hotLap != null)
-                    File.WriteAllText("./hotlap.json", JsonConvert.SerializeObject(hotLap));
+                GetNewHotLap(database);
+                if (File.Exists("./hotlap.json"))
+                    JsonConvert.DeserializeObject<HotLapData>(File.ReadAllText("./hotlap.json"));
             }
 
             if (hotLap != null)

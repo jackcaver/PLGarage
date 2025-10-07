@@ -27,6 +27,7 @@ namespace GameServer
         {
             services.AddControllers();
             services.AddDbContext<Database>();
+            services.AddHostedService<DailyTickService>();
             if (ServerConfig.Instance.EnableRateLimiting)
                 services.AddRateLimiter(options => {  // TODO: Tweak
                     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>

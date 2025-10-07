@@ -1,10 +1,11 @@
+using System.IO;
+using GameServer.Utils;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using GameServer.Utils;
-using Microsoft.EntityFrameworkCore;
 using Serilog.Events;
-using System.IO;
 
 namespace GameServer
 {
@@ -64,7 +65,13 @@ namespace GameServer
             }
 
             Database database = new();
+            var newDb = !database.Database.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalDatabaseCreator>().Exists();
             database.Database.Migrate();
+            if (newDb)
+            {
+                database.Database.ExecuteSql($"ALTER TABLE PlayerCreations AUTO_INCREMENT = 10000;");   // Start id for PlayerCreations
+                database.SaveChanges();
+            }
             database.Dispose();
 
             CreateHostBuilder(args).Build().Run();

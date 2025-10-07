@@ -45,7 +45,11 @@ namespace GameServer.Utils
         public DbSet<Moderator> Moderators { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options) =>
-            options.UseMySql(ServerConfig.Instance.MysqlConnectionString, ServerVersion.AutoDetect(ServerConfig.Instance.MysqlConnectionString));
+            options.UseMySql(ServerConfig.Instance.MysqlConnectionString, ServerVersion.AutoDetect(ServerConfig.Instance.MysqlConnectionString))
+            .UseSeeding((context, _) =>
+            {
+                context.Database.SqlQueryRaw<int>("ALTER TABLE PlayerCreations AUTO_INCREMENT = 10000;");
+            });
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

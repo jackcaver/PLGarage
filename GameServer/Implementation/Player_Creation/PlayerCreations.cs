@@ -131,11 +131,7 @@ namespace GameServer.Implementation.Player_Creation
         public static string CreatePlayerCreation(Database database, Guid SessionID, PlayerCreation Creation)
         {
             var session = Session.GetSession(SessionID);
-            int id = database.PlayerCreations.Count(match => match.Type != PlayerCreationType.STORY) + 10000;
             var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var deletedCreation = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.DELETED 
-                && ((match.Name == Creation.player_creation_type.ToString() && match.IsMNR == session.IsMNR
-                && match.Platform == session.Platform) || (match.Name == null && !session.IsMNR)));
 
             if (user == null)
             {
@@ -160,26 +156,8 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            if (deletedCreation != null)
+            var playerCreation = new PlayerCreationData
             {
-                id = deletedCreation.PlayerCreationId;
-                database.Remove(deletedCreation);
-            }
-            else
-            {
-                //Check if id is not used by something...
-                bool IsAvailable = false;
-                while (!IsAvailable)
-                {
-                    var check = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
-                    IsAvailable = check == null || (check != null && check.Type == PlayerCreationType.DELETED);
-                    if (!IsAvailable) id++;
-                }
-            }
-
-            database.PlayerCreations.Add(new PlayerCreationData
-            {
-                PlayerCreationId = id,
                 AI = Creation.ai,
                 AssociatedCoordinates = Creation.associated_coordinates,
                 AssociatedItemIds = Creation.associated_item_ids,
@@ -216,7 +194,7 @@ namespace GameServer.Implementation.Player_Creation
                 UpdatedAt = DateTime.UtcNow,
                 UserTags = Creation.user_tags,
                 WeaponSet = Creation.weapon_set,
-                TrackId = Creation.track_id == 0 ? id : Creation.track_id,
+                TrackId = Creation.track_id,
                 Version = 1,
                 //MNR
                 IsMNR = session.IsMNR,
@@ -224,7 +202,18 @@ namespace GameServer.Implementation.Player_Creation
                 ParentPlayerId = database.Users.FirstOrDefault(match => match.UserId == Creation.parent_player_id) != null ? Creation.parent_player_id == 0 ? Creation.parent_player_id : Creation.parent_player_id : 0,
                 OriginalPlayerId = database.Users.FirstOrDefault(match => match.UserId == Creation.original_player_id) != null ? Creation.original_player_id == 0 ? Creation.original_player_id : user.UserId : user.UserId,
                 BestLapTime = Creation.best_lap_time
-            });
+            };
+            database.PlayerCreations.Add(playerCreation);
+            database.SaveChanges();
+
+            if (playerCreation.TrackId == 0)
+            {
+                playerCreation.TrackId = playerCreation.PlayerCreationId;
+                database.PlayerCreations.Update(playerCreation);
+                database.SaveChanges();
+            }
+
+            var id = playerCreation.PlayerCreationId;
 
             if (Creation.player_creation_type == PlayerCreationType.TRACK && !session.IsMNR)
             {

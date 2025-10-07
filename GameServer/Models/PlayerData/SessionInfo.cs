@@ -1,4 +1,5 @@
-﻿using NPTicket;
+﻿using GameServer.Utils;
+using NPTicket;
 using System;
 
 namespace GameServer.Models.PlayerData
@@ -7,11 +8,11 @@ namespace GameServer.Models.PlayerData
     {
         public string Username => Authenticated ? Ticket.Username : "";
         public Presence Presence { get; set; } = Presence.OFFLINE;
-        public DateTime ExpiryDate => Ticket.ExpiryDate.UtcDateTime;
+        public DateTime ExpiryDate => Ticket.ExpiryDate.DateTime;
         public Ticket Ticket { get; set; }
         public bool Authenticated => Ticket != null;
         public bool PolicyAccepted {  get; set; } = false;
-        public DateTime LastPing { get; set; } = DateTime.UtcNow;
+        public DateTime LastPing { get; set; } = TimeUtils.Now;
         public Platform Platform { get; set; }
         public bool IsMNR { get; set; }
         public int RandomSeed { get; set; }

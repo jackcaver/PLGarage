@@ -111,8 +111,8 @@ namespace GameServer.Implementation.Player_Creation
                 database.PlayerCreationReviews.Add(new PlayerCreationReview
                 {
                     Content = content,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
+                    CreatedAt = TimeUtils.Now,
+                    UpdatedAt = TimeUtils.Now,
                     PlayerId = user.UserId,
                     PlayerCreationId = player_creation_id,
                     Tags = tags
@@ -128,7 +128,7 @@ namespace GameServer.Implementation.Player_Creation
                         Topic = "player_creation_reviewed",
                         Description = content,
                         PlayerCreationId = player_creation_id,
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = TimeUtils.Now,
                         AllusionId = database.PlayerCreationReviews.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.PlayerCreationId == player_creation_id && match.PlayerId == user.UserId).Id,
                         AllusionType = "PlayerCreation::Review",
                         Tags = tags
@@ -138,7 +138,7 @@ namespace GameServer.Implementation.Player_Creation
             }
             else
             {
-                Review.UpdatedAt = DateTime.UtcNow;
+                Review.UpdatedAt = TimeUtils.Now;
                 Review.Tags = tags;
                 Review.Content = content;
                 database.SaveChanges();
@@ -205,7 +205,7 @@ namespace GameServer.Implementation.Player_Creation
                     PlayerCreationReviewId = id,
                     PlayerId = user.UserId,
                     Type = RatingType.YAY,
-                    RatedAt = DateTime.UtcNow
+                    RatedAt = TimeUtils.Now
                 });
             database.SaveChanges();
 

@@ -144,7 +144,7 @@ namespace GameServer.Implementation.Common
             Sessions.Add(sessionID, new()
             {
                 ModeratorID = moderator.ID,
-                ExpiresAt = DateTime.Now.AddDays(1)
+                ExpiresAt = TimeUtils.Now.AddDays(1)
             });
 
             return "ok";
@@ -152,7 +152,7 @@ namespace GameServer.Implementation.Common
 
         private static void ClearSessions()
         {
-            foreach (var session in Sessions.Where(match => DateTime.Now > match.Value.ExpiresAt))
+            foreach (var session in Sessions.Where(match => TimeUtils.Now > match.Value.ExpiresAt))
             {
                 Sessions.Remove(session.Key);
             }

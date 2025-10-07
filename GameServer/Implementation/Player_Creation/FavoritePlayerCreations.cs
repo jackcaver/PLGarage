@@ -47,7 +47,7 @@ namespace GameServer.Implementation.Player_Creation
                 {
                     HeartedPlayerCreationId = Creation.PlayerCreationId,
                     UserId = user.UserId,
-                    HeartedAt = DateTime.UtcNow,
+                    HeartedAt = TimeUtils.Now,
                 });
                 if (!session.IsMNR)
                 {
@@ -60,7 +60,7 @@ namespace GameServer.Implementation.Player_Creation
                         Description = "",
                         PlayerId = 0,
                         PlayerCreationId = Creation.PlayerCreationId,
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = TimeUtils.Now,
                         AllusionId = Creation.PlayerCreationId,
                         AllusionType = "PlayerCreation::Track"
                     });

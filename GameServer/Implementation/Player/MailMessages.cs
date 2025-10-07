@@ -132,7 +132,7 @@ namespace GameServer.Implementation.Player
             };
 
             message.HasRead = true;
-            message.UpdatedAt = DateTime.UtcNow;
+            message.UpdatedAt = TimeUtils.Now;
             database.SaveChanges();
 
             return resp.Serialize();
@@ -159,7 +159,7 @@ namespace GameServer.Implementation.Player
                 if (message != null) 
                 {
                     message.HasReplied = true;
-                    message.UpdatedAt = DateTime.UtcNow;
+                    message.UpdatedAt = TimeUtils.Now;
                     database.SaveChanges();
                 }
             }
@@ -193,8 +193,8 @@ namespace GameServer.Implementation.Player
                     Type = mail_message.mail_message_type,
                     RecipientId = id,
                     SenderId = user.UserId,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = TimeUtils.Now,
+                    UpdatedAt = TimeUtils.Now
                 });
                 database.SaveChanges();
             }

@@ -38,7 +38,7 @@ namespace GameServer.Implementation.Player
                 {
                     HeartedUserId = user.UserId,
                     UserId = requestedBy.UserId,
-                    HeartedAt = DateTime.UtcNow,
+                    HeartedAt = TimeUtils.Now,
                     IsMNR = session.IsMNR
                 });
                 if (!session.IsMNR)
@@ -52,7 +52,7 @@ namespace GameServer.Implementation.Player
                         Description = "",
                         PlayerId = user.UserId,
                         PlayerCreationId = 0,
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = TimeUtils.Now,
                         AllusionId = user.UserId,
                         AllusionType = "Player"
                     });

@@ -160,14 +160,14 @@ namespace GameServer.Implementation.Common
                 var track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.Track);
 
                 if (track != null)
-                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = track.PlayerCreationId, StartedAt = DateTime.UtcNow });
+                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = track.PlayerCreationId, StartedAt = TimeUtils.Now });
 
                 foreach (var player in game.Players)
                 {
                     database.OnlineRacesStarted.Add(new RaceStarted
                     {
                         PlayerId = player.PlayerId,
-                        StartedAt = DateTime.UtcNow,
+                        StartedAt = TimeUtils.Now,
                     });
                     player.State = GameState.ACTIVE;
 
@@ -178,9 +178,9 @@ namespace GameServer.Implementation.Common
                         var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == Player.KartIdx);
 
                         if (character != null)
-                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = DateTime.UtcNow });
+                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = TimeUtils.Now });
                         if (kart != null)
-                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = DateTime.UtcNow });
+                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = TimeUtils.Now });
                     }
                 }
             }
@@ -380,7 +380,7 @@ namespace GameServer.Implementation.Common
             player.State = GameState.FINISHED;
 
             database.OnlineRacesFinished.Add(new RaceFinished {
-                FinishedAt = DateTime.UtcNow,
+                FinishedAt = TimeUtils.Now,
                 IsWinner = IsWinner,
                 PlayerId = user.UserId
             });
@@ -459,14 +459,14 @@ namespace GameServer.Implementation.Common
                     if (score.FinishTime > stats.finish_time)
                     {
                         score.FinishTime = stats.finish_time;
-                        score.UpdatedAt = DateTime.UtcNow;
+                        score.UpdatedAt = TimeUtils.Now;
                         score.CharacterIdx = stats.character_idx;
                         score.KartIdx = stats.kart_idx;
                     }
                     if (score.BestLapTime > stats.best_lap_time)
                     {
                         score.BestLapTime = stats.best_lap_time;
-                        score.UpdatedAt = DateTime.UtcNow;
+                        score.UpdatedAt = TimeUtils.Now;
                         score.CharacterIdx = stats.character_idx;
                         score.KartIdx = stats.kart_idx;
                     }
@@ -475,8 +475,8 @@ namespace GameServer.Implementation.Common
                 {
                     database.Scores.Add(new Score
                     {
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow,
+                        CreatedAt = TimeUtils.Now,
+                        UpdatedAt = TimeUtils.Now,
                         FinishTime = stats.finish_time,
                         Platform = session.Platform,
                         PlayerId = user.UserId,

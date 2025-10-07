@@ -55,16 +55,16 @@ namespace GameServer.Implementation.Common
                 resp.status.message = "Successful completion";
                 resp.response.Add(new content_update
                 {
-                    available_date = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    available_date = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     content_update_type = content_update_type.ToString(),
-                    created_at = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    created_at = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     data_md5 = BitConverter.ToString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(GetHotlapData(database)))).Replace("-", "").ToLower(),
                     description = "",
                     has_been_uploaded = true,
                     id = 10542,
                     name = "",
                     platform = "PS3",
-                    updated_at = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    updated_at = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     uuid = Guid.NewGuid().ToString(),
                     content_url = "",
                     data = Convert.ToBase64String(Encoding.UTF8.GetBytes(GetHotlapData(database)))
@@ -77,16 +77,16 @@ namespace GameServer.Implementation.Common
                 resp.status.message = "Successful completion";
                 resp.response.Add(new content_update
                 {
-                    available_date = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    available_date = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     content_update_type = content_update_type.ToString(),
-                    created_at = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    created_at = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     data_md5 = BitConverter.ToString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(GetTopTracksData(database)))).Replace("-", "").ToLower(),
                     description = "",
                     has_been_uploaded = true,
                     id = 10543,
                     name = "",
                     platform = "PS3",
-                    updated_at = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    updated_at = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     uuid = Guid.NewGuid().ToString(),
                     content_url = "",
                     data = Convert.ToBase64String(Encoding.UTF8.GetBytes(GetTopTracksData(database)))
@@ -122,7 +122,7 @@ namespace GameServer.Implementation.Common
 
                 result = new()
                 {
-                    SelectedAt = DateTime.UtcNow,
+                    SelectedAt = TimeUtils.Now,
                     TrackId = trackid
                 };
             }
@@ -146,7 +146,7 @@ namespace GameServer.Implementation.Common
                     File.WriteAllText("./hotlap.json", JsonConvert.SerializeObject(hotLap));
             }
 
-            if (hotLap != null && hotLap.SelectedAt < DateTime.UtcNow.AddDays(-1))
+            if (hotLap != null && hotLap.SelectedAt < TimeUtils.Now.AddDays(-1))
             {
                 database.Scores.RemoveRange(database.Scores.Where(match => match.SubGroupId == 700 && match.IsMNR).ToList());
 

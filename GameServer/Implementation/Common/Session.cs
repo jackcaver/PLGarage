@@ -124,8 +124,8 @@ namespace GameServer.Implementation.Common
                     UserId = database.Users.Count(match => match.Username != "ufg") + 11,
                     Username = NPTicket.Username,
                     Quota = 30,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
+                    CreatedAt = TimeUtils.Now,
+                    UpdatedAt = TimeUtils.Now,
                     PolicyAccepted = Sessions[SessionID].PolicyAccepted,
                 };
                 if (IsPSN)
@@ -162,7 +162,7 @@ namespace GameServer.Implementation.Common
             }
 
             session.Ticket = NPTicket;
-            session.LastPing = DateTime.UtcNow;
+            session.LastPing = TimeUtils.Now;
             session.Platform = platform;
 
             List<string> MNR_IDs = [ "BCUS98167", "BCES00701", "BCES00764", "BCJS30041", "BCAS20105", 
@@ -201,7 +201,7 @@ namespace GameServer.Implementation.Common
                 response = [
                     new login_data {
                         ip_address = ip,
-                        login_time = DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                        login_time = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                         platform = platform.ToString(),
                         player_id = user.UserId,
                         player_name = user.Username,
@@ -258,7 +258,7 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
 
-            session.LastPing = DateTime.UtcNow;
+            session.LastPing = TimeUtils.Now;
 
             var resp = new Response<EmptyResponse>
             {
@@ -272,7 +272,7 @@ namespace GameServer.Implementation.Common
         {
             Sessions.Add(SessionID, new SessionInfo
             {
-                LastPing = DateTime.UtcNow,
+                LastPing = TimeUtils.Now,
                 Presence = Presence.OFFLINE
             });
         }
@@ -280,14 +280,14 @@ namespace GameServer.Implementation.Common
         private static void ClearSessions()
         {
             foreach (var Session in Sessions.Where(match => match.Value.Authenticated
-                && (DateTime.UtcNow > match.Value.LastPing.AddMinutes(60) /*|| DateTime.UtcNow > match.Value.ExpiryDate*/)))
+                && (TimeUtils.Now > match.Value.LastPing.AddMinutes(60) /*|| TimeUtils.Now > match.Value.ExpiryDate*/)))
             {
                 Sessions.Remove(Session.Key);
                 ServerCommunication.NotifySessionDestroyed(Session.Key);
             }
 
             foreach (var Session in Sessions.Where(match => !match.Value.Authenticated
-                && DateTime.UtcNow > match.Value.LastPing.AddHours(3)))
+                && TimeUtils.Now > match.Value.LastPing.AddHours(3)))
             {
                 Sessions.Remove(Session.Key);
                 ServerCommunication.NotifySessionDestroyed(Session.Key);

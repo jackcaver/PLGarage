@@ -36,7 +36,7 @@ namespace GameServer.Implementation.Player
                     PlayerId = player_rating.player_id,
                     Rating = player_rating.rating,
                     Comment = player_rating.comments,
-                    RatedAt = DateTime.UtcNow
+                    RatedAt = TimeUtils.Now
                 });
                 database.SaveChanges();
             }

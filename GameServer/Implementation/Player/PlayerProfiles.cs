@@ -222,7 +222,7 @@ namespace GameServer.Implementation.Player
                 message = "Successful completion";
                 database.PlayerExperiencePoints.Add(new PlayerExperiencePoint
                 {
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = TimeUtils.Now,
                     PlayerId = user.UserId,
                     Amount = delta
                 });

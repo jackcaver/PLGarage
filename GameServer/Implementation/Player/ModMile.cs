@@ -214,12 +214,12 @@ namespace GameServer.Implementation.Player
 
             if (user != null && (!user.POIVisits.Any(match => match.PointOfInterestId == id)
                 || (!ModMileConfig.Instance.RequireUniquePlayersToCheckIn
-                    && user.POIVisits.OrderBy(e => e.CreatedAt)
-                        .LastOrDefault(match => match.PointOfInterestId == id).CreatedAt <= DateTime.UtcNow.AddHours(-2))))
+                    && !user.POIVisits.Any(match => match.PointOfInterestId == id 
+                        && match.CreatedAt >= TimeUtils.Now.AddHours(-2)))))
             {
                 database.POIVisits.Add(new POIVisit
                 {
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = TimeUtils.Now,
                     PlayerId = user.UserId,
                     PointOfInterestId = id,
                 });
@@ -277,7 +277,7 @@ namespace GameServer.Implementation.Player
             {
                 database.TravelPoints.Add(new TravelPoint
                 {
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = TimeUtils.Now,
                     Amount = travelPoints,
                     PlayerId = user.UserId
                 });
@@ -332,10 +332,10 @@ namespace GameServer.Implementation.Player
 
                 if (timespan == Timespan.last_week)
                     foreach (var poi in ModMileConfig.Instance.PointsOfInterest.Where(match => match.Value.CityId == city.Key))
-                        visits += database.POIVisits.Count(match => match.PointOfInterestId == poi.Key && match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7));
+                        visits += database.POIVisits.Count(match => match.PointOfInterestId == poi.Key && match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart);
                 else if (timespan == Timespan.this_week)
                     foreach (var poi in ModMileConfig.Instance.PointsOfInterest.Where(match => match.Value.CityId == city.Key))
-                        visits += database.POIVisits.Count(match => match.PointOfInterestId == poi.Key && match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow);
+                        visits += database.POIVisits.Count(match => match.PointOfInterestId == poi.Key && match.CreatedAt >= TimeUtils.ThisWeekStart);
                 else
                     foreach (var poi in ModMileConfig.Instance.PointsOfInterest.Where(match => match.Value.CityId == city.Key))
                         visits += database.POIVisits.Count(match => match.PointOfInterestId == poi.Key);
@@ -409,9 +409,9 @@ namespace GameServer.Implementation.Player
                 int visits = 0;
 
                 if (timespan == Timespan.last_week)
-                    visits = database.POIVisits.Count(match => match.PointOfInterestId == poi.Key && match.CreatedAt >= DateTime.UtcNow.AddDays(-14) && match.CreatedAt <= DateTime.UtcNow.AddDays(-7));
+                    visits = database.POIVisits.Count(match => match.PointOfInterestId == poi.Key && match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart);
                 else if (timespan == Timespan.this_week)
-                    visits = database.POIVisits.Count(match => match.PointOfInterestId == poi.Key && match.CreatedAt >= DateTime.UtcNow.AddDays(-7) && match.CreatedAt <= DateTime.UtcNow);
+                    visits = database.POIVisits.Count(match => match.PointOfInterestId == poi.Key && match.CreatedAt >= TimeUtils.ThisWeekStart);
                 else
                     visits = database.POIVisits.Count(match => match.PointOfInterestId == poi.Key);
 

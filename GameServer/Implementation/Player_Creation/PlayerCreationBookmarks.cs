@@ -77,7 +77,7 @@ namespace GameServer.Implementation.Player_Creation
                 {
                     BookmarkedPlayerCreationId = Creation.PlayerCreationId,
                     UserId = user.UserId,
-                    BookmarkedAt = DateTime.UtcNow,
+                    BookmarkedAt = TimeUtils.Now,
                 });
                 database.SaveChanges();
             }

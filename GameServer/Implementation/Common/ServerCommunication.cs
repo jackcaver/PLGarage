@@ -181,7 +181,7 @@ namespace GameServer.Implementation.Common
                                 database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted
                                 {
                                     PlayerCreationId = info.TrackId,
-                                    StartedAt = DateTime.UtcNow,
+                                    StartedAt = TimeUtils.Now,
                                 });
                                 foreach (int playerId in info.PlayerIds)
                                 {
@@ -191,10 +191,10 @@ namespace GameServer.Implementation.Common
                                         var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
                                         var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
                                         if (character != null)
-                                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = DateTime.UtcNow });
+                                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = TimeUtils.Now });
                                         if (kart != null)
-                                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = DateTime.UtcNow });
-                                        database.OnlineRacesStarted.Add(new RaceStarted { PlayerId = user.UserId, StartedAt = DateTime.UtcNow });
+                                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = TimeUtils.Now });
+                                        database.OnlineRacesStarted.Add(new RaceStarted { PlayerId = user.UserId, StartedAt = TimeUtils.Now });
                                     }
                                 }
                                 database.SaveChanges();
@@ -252,7 +252,7 @@ namespace GameServer.Implementation.Common
                                             }
                                         }
 
-                                        database.OnlineRacesFinished.Add(new RaceFinished { PlayerId = user.UserId, FinishedAt = DateTime.UtcNow, IsWinner = player.Rank == 1 });
+                                        database.OnlineRacesFinished.Add(new RaceFinished { PlayerId = user.UserId, FinishedAt = TimeUtils.Now, IsWinner = player.Rank == 1 });
                                         
                                         if (player.Rank == 1)
                                         {
@@ -320,7 +320,7 @@ namespace GameServer.Implementation.Common
                                                         Description = $"{player.FinishTime}",
                                                         PlayerId = 0,
                                                         PlayerCreationId = creation.PlayerCreationId,
-                                                        CreatedAt = DateTime.UtcNow,
+                                                        CreatedAt = TimeUtils.Now,
                                                         AllusionId = creation.PlayerCreationId,
                                                         AllusionType = "PlayerCreation::Track"
                                                     });
@@ -336,7 +336,7 @@ namespace GameServer.Implementation.Common
                                                         Description = $"{player.Points}",
                                                         PlayerId = 0,
                                                         PlayerCreationId = creation.PlayerCreationId,
-                                                        CreatedAt = DateTime.UtcNow,
+                                                        CreatedAt = TimeUtils.Now,
                                                         AllusionId = creation.PlayerCreationId,
                                                         AllusionType = "PlayerCreation::Track"
                                                     });
@@ -349,19 +349,19 @@ namespace GameServer.Implementation.Common
                                             if (score.FinishTime > player.FinishTime)
                                             {
                                                 score.FinishTime = player.FinishTime;
-                                                score.UpdatedAt = DateTime.UtcNow;
+                                                score.UpdatedAt = TimeUtils.Now;
                                                 score.CharacterIdx = user.CharacterIdx;
                                                 score.KartIdx = user.KartIdx;
                                             }
                                             if (score.Points < player.Points)
                                             {
                                                 score.Points = player.Points;
-                                                score.UpdatedAt = DateTime.UtcNow;
+                                                score.UpdatedAt = TimeUtils.Now;
                                             }
                                             if (score.BestLapTime > player.BestLapTime)
                                             {
                                                 score.BestLapTime = player.BestLapTime;
-                                                score.UpdatedAt = DateTime.UtcNow;
+                                                score.UpdatedAt = TimeUtils.Now;
                                                 score.CharacterIdx = user.CharacterIdx;
                                                 score.KartIdx = user.KartIdx;
                                             }
@@ -370,7 +370,7 @@ namespace GameServer.Implementation.Common
                                         {
                                             database.Scores.Add(new Score
                                             {
-                                                CreatedAt = DateTime.UtcNow,
+                                                CreatedAt = TimeUtils.Now,
                                                 FinishTime = player.FinishTime,
                                                 Platform = creation.Platform,
                                                 PlayerId = player.PlayerConnectId,
@@ -378,7 +378,7 @@ namespace GameServer.Implementation.Common
                                                 Points = player.Points,
                                                 SubGroupId = info.IsMNR ? (int)info.GameType - 10 : (int)info.GameType,
                                                 SubKeyId = info.TrackId,
-                                                UpdatedAt = DateTime.UtcNow,
+                                                UpdatedAt = TimeUtils.Now,
                                                 Latitude = 0,
                                                 Longitude = 0,
                                                 BestLapTime = player.BestLapTime,

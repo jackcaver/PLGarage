@@ -101,8 +101,8 @@ namespace GameServer.Implementation.Player
             {
                 AuthorId = author.UserId,
                 Body = player_comment.body,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
+                CreatedAt = TimeUtils.Now,
+                UpdatedAt = TimeUtils.Now,
                 Platform = Platform.PS3,
                 PlayerId = player_comment.player_id
             });
@@ -119,7 +119,7 @@ namespace GameServer.Implementation.Player
                     Description = player_comment.body,
                     PlayerId = user.UserId,
                     PlayerCreationId = 0,
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = TimeUtils.Now,
                     AllusionId = database.PlayerComments.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.AuthorId == author.UserId && match.PlayerId == user.UserId).Id,
                     AllusionType = "PlayerComment"
                 });
@@ -196,7 +196,7 @@ namespace GameServer.Implementation.Player
                     PlayerCommentId = player_comment_rating.player_comment_id,
                     PlayerId = user.UserId,
                     Type = RatingType.YAY,
-                    RatedAt = DateTime.UtcNow
+                    RatedAt = TimeUtils.Now
                 });
                 database.SaveChanges();
             }

@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
@@ -56,7 +55,12 @@ namespace GameServer.Implementation.Common
                 SessionUuid = uuid.ToString()
             }).Wait();
         }
-        
+
+        public static void NotifyHotSeatPlaylistReset()
+        {
+            DispatchEvent(GatewayEvents.HotSeatPlaylistReset, null).Wait();
+        }
+
         public static async Task HandleConnection(WebSocket webSocket, Guid ServerID)
         {
             byte[] scratch = new byte[DefaultMessageCapacity];
@@ -488,7 +492,7 @@ namespace GameServer.Implementation.Common
                 Type = type,
                 From = MasterServer,
                 To = "Broadcast",
-                Content = JsonConvert.SerializeObject(evt)
+                Content = evt != null ? JsonConvert.SerializeObject(evt) : ""
             };
             
             string payload = JsonConvert.SerializeObject(message);

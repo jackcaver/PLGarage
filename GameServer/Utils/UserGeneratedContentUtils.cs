@@ -24,13 +24,18 @@ namespace GameServer.Utils
             if (!Directory.Exists($"UGC/PlayerAvatars/{UserId}/MNR/") && IsMNR)
                 Directory.CreateDirectory($"UGC/PlayerAvatars/{UserId}/MNR/");
 
+            var stream = avatar.avatar.OpenReadStream();
+
+            if (!CheckImage(stream, 256, 256))
+                return;
+
             FileStream file;
 
             if (!IsMNR)
                 file = File.Create($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type.ToString().ToLower()}.png");
             else
                 file = File.Create($"UGC/PlayerAvatars/{UserId}/MNR/{avatar.player_avatar_type.ToString().ToLower()}.png");
-            var stream = avatar.avatar.OpenReadStream();
+            
             stream.CopyTo(file);
             file.Close();
 
@@ -487,6 +492,30 @@ namespace GameServer.Utils
                 database.SaveChanges();
             }
             else CheckStoryLevelName(database, id);
+        }
+
+        public static bool CheckImage(Stream image, int MaxWidth = 0, int MaxHeight = 0)
+        {
+            ImageInfo info;
+
+            try
+            {
+                info = Image.Identify(image);
+            }
+            catch
+            {
+                image.Position = 0;
+                return false;
+            }
+
+            image.Position = 0;
+
+            if (info == null 
+                || (MaxWidth != 0 && info.Width > MaxWidth) 
+                || (MaxHeight != 0 && info.Height > MaxHeight))
+                return false;
+
+            return true;
         }
     }
 }

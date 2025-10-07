@@ -127,6 +127,8 @@ namespace GameServer.Implementation.Common
                 };
             }
 
+            ServerCommunication.NotifyHotSeatPlaylistReset();
+
             return result;
         }
 
@@ -176,7 +178,7 @@ namespace GameServer.Implementation.Common
                 .Include(p => p.Downloads)
                 .OrderByDescending(match => match.Downloads.Count)
                 .Where(match => match.Type == PlayerCreationType.TRACK && match.IsMNR && match.Platform == Platform.PS3)
-                .Take(3)
+                .Take(5)
                 .ToList();
 
             var result = "";

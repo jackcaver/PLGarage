@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace GameServer.Utils
 {
@@ -278,15 +279,21 @@ namespace GameServer.Utils
             else
                 return "";
 
-            string hash = BitConverter.ToString(MD5.Create().ComputeHash(fileStream)).Replace("-", "").ToLower();
+            string hash = BitConverter.ToString(MD5.HashData(fileStream)).Replace("-", "").ToLower();
             fileStream.Close();
             return hash;
         }
 
         public static string CalculateMD5(Stream stream)
         {
-            string hash = BitConverter.ToString(MD5.Create().ComputeHash(stream)).Replace("-", "").ToLower();
+            string hash = BitConverter.ToString(MD5.HashData(stream)).Replace("-", "").ToLower();
             stream.Position = 0;
+            return hash;
+        }
+
+        public static string CalculateMD5(string data)
+        {
+            string hash = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(data))).Replace("-", "").ToLower();
             return hash;
         }
 

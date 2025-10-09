@@ -26,9 +26,17 @@ namespace GameServer.Utils
         private void Tick(object state)
         {
             Logger.LogDebug("DailyTickService tick");
-            var database = new Database();
-            ContentUpdates.GetNewHotLap(database);
-            database.Dispose();
+
+            try
+            {
+                var database = new Database();
+                ContentUpdates.GetNewHotLap(database);
+                database.Dispose();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, "There was an error trying to process daily tick:");
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

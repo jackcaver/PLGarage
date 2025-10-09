@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
 
@@ -42,7 +41,7 @@ namespace GameServer.Implementation.Common
                     has_been_uploaded = true,
                     id = 10541,
                     name = "Bckburn",
-                    platform = "PS3",
+                    platform = platform.ToString(),
                     updated_at = "2011-06-28T21:57:57+00:00",
                     uuid = "aec45604-a1d1-11e0-9406-1231390081e2",
                     content_url = $"{serverURL}/content_updates/10541/data.bin",
@@ -59,12 +58,12 @@ namespace GameServer.Implementation.Common
                     available_date = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     content_update_type = content_update_type.ToString(),
                     created_at = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    data_md5 = BitConverter.ToString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(GetHotlapData(database)))).Replace("-", "").ToLower(),
+                    data_md5 = UserGeneratedContentUtils.CalculateMD5(GetHotlapData(database)),
                     description = "",
                     has_been_uploaded = true,
                     id = 10542,
                     name = "",
-                    platform = "PS3",
+                    platform = platform.ToString(),
                     updated_at = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     uuid = Guid.NewGuid().ToString(),
                     content_url = "",
@@ -81,12 +80,12 @@ namespace GameServer.Implementation.Common
                     available_date = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     content_update_type = content_update_type.ToString(),
                     created_at = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    data_md5 = BitConverter.ToString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(GetTopTracksData(database)))).Replace("-", "").ToLower(),
+                    data_md5 = UserGeneratedContentUtils.CalculateMD5(GetTopTracksData(database)),
                     description = "",
                     has_been_uploaded = true,
                     id = 10543,
                     name = "",
-                    platform = "PS3",
+                    platform = platform.ToString(),
                     updated_at = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     uuid = Guid.NewGuid().ToString(),
                     content_url = "",
@@ -103,48 +102,87 @@ namespace GameServer.Implementation.Common
 
             database.SaveChanges();
 
-            Random random = new();
-
             HotLapData hotlap = null;
+
+            try
+            {
+                if (File.Exists("./hotlap.json"))
+                    hotlap = JsonConvert.DeserializeObject<HotLapData>(File.ReadAllText("./hotlap.json"));
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Unable to read hotlap file: {e}");
+            }
 
             var candidates = database.PlayerCreations
                 .AsSplitQuery()
                 .Include(p => p.Downloads)
                 .OrderByDescending(p => p.Downloads.Count)
                 .Where(match => match.Type == PlayerCreationType.TRACK
-                    && match.IsMNR && match.Platform == Platform.PS3)
+                    && match.IsMNR && match.Platform == Platform.PS3
+                    && match.ModerationStatus != ModerationStatus.BANNED
+                    && match.ModerationStatus != ModerationStatus.ILLEGAL)
                 .Select(p => p.PlayerCreationId);
 
-            int count = candidates.Count();
-
-            if (count > 0)
+            if (hotlap == null || hotlap.Queue == null || hotlap.Queue.Count == 0)
             {
-                int trackid;
+                int count = candidates.Count();
 
-                if (count > 1)
-                    trackid = candidates.Skip(random.Next(0, count)).FirstOrDefault();
-                else
-                    trackid = candidates.FirstOrDefault();
-
-                hotlap = new()
+                if (count > 0)
                 {
-                    SelectedAt = TimeUtils.Now,
-                    TrackId = trackid
-                };
+                    Random random = new();
+
+                    int trackid;
+
+                    if (count > 1)
+                        trackid = candidates.Skip(random.Next(0, count)).FirstOrDefault();
+                    else
+                        trackid = candidates.FirstOrDefault();
+
+                    if (hotlap == null)
+                    {
+                        hotlap = new()
+                        {
+                            TrackId = trackid,
+                            Queue = []
+                        };
+                    }
+                    else
+                        hotlap.TrackId = trackid;
+
+                    Log.Debug($"New hotlap track picked {hotlap.TrackId}");
+                }
+                else
+                    Log.Debug("There were no candidates to choose hotlap from");
+            }
+            else
+            {
+                int candidate = hotlap.Queue.FirstOrDefault();
+
+                if (candidates.Any(match => match == candidate))
+                {
+                    hotlap.TrackId = candidate;
+                    Log.Debug($"New hotlap track picked from queue {hotlap.TrackId}");
+                }
+                else
+                    Log.Error($"Unable to find candidate {candidate} from hotlap queue");
+
+                hotlap.Queue.Remove(candidate);
+            }
+
+            if (hotlap != null)
+            {
+                try
+                {
+                    File.WriteAllText("./hotlap.json", JsonConvert.SerializeObject(hotlap, Formatting.Indented));
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"Unable to write hotlap file: {e}");
+                }
             }
 
             ServerCommunication.NotifyHotSeatPlaylistReset();
-
-            Log.Debug($"New hotlap track picked {hotlap.TrackId}");
-
-            try
-            {
-                File.WriteAllText("./hotlap.json", JsonConvert.SerializeObject(hotlap));
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Unable to write hotlap file: {e}");
-            }
         }
 
         private static string GetHotlapData(Database database)
@@ -194,7 +232,7 @@ namespace GameServer.Implementation.Common
                     new XAttribute("name", creation.Name),
                     new XAttribute("id", creation.PlayerCreationId),
                     new XAttribute("laps", "3"),
-                    new XAttribute("description", creation.Description != null ? creation.Description : "")
+                    new XAttribute("description", creation.Description ?? "")
                 ));
             }
 

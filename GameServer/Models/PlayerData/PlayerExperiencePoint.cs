@@ -15,5 +15,7 @@ namespace GameServer.Models.PlayerData
 
         public DateTime CreatedAt { get; set; }
         public int Amount { get; set; }
+
+        public Platform Platform { get; set; } = Platform.PS3;
     }
 }

@@ -471,11 +471,11 @@ namespace GameServer.Implementation.Player
 
             //Experience points
             if (game_type == GameType.OVERALL && type == LeaderboardType.LIFETIME)
-                usersQuery = usersQuery.OrderByDescending(u => (platform == Platform.PSV ? 0 : u.PlayerExperiencePoints.Sum(p => p.Amount)) + u.PlayerCreationPoints.Where(match => match.Platform == platform).Sum(p => p.Amount));
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerExperiencePoints.Where(match => match.Platform == platform).Sum(p => p.Amount) + u.PlayerCreationPoints.Where(match => match.Platform == platform).Sum(p => p.Amount));
             if (game_type == GameType.OVERALL && type == LeaderboardType.WEEKLY)
-                usersQuery = usersQuery.OrderByDescending(u => (platform == Platform.PSV ? 0 : u.PlayerExperiencePoints.Where(match => match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount)) + u.PlayerCreationPoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount));
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerExperiencePoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount) + u.PlayerCreationPoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount));
             if (game_type == GameType.OVERALL && type == LeaderboardType.LAST_WEEK)
-                usersQuery = usersQuery.OrderByDescending(u => (platform == Platform.PSV ? 0 : u.PlayerExperiencePoints.Where(match => match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount)) + u.PlayerCreationPoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount));
+                usersQuery = usersQuery.OrderByDescending(u => u.PlayerExperiencePoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount) + u.PlayerCreationPoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount));
 
             if (game_type == GameType.OVERALL_RACE)
             {
@@ -483,11 +483,11 @@ namespace GameServer.Implementation.Player
                 {
                     case SortColumn.experience_points:
                         if (type == LeaderboardType.LIFETIME)
-                            usersQuery = usersQuery.OrderByDescending(u => u.PlayerExperiencePoints.Sum(p => p.Amount));
+                            usersQuery = usersQuery.OrderByDescending(u => u.PlayerExperiencePoints.Where(match => match.Platform == platform).Sum(p => p.Amount));
                         if (type == LeaderboardType.WEEKLY)
-                            usersQuery = usersQuery.OrderByDescending(u => u.PlayerExperiencePoints.Where(match => match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount));
+                            usersQuery = usersQuery.OrderByDescending(u => u.PlayerExperiencePoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount));
                         if (type == LeaderboardType.LAST_WEEK)
-                            usersQuery = usersQuery.OrderByDescending(u => u.PlayerExperiencePoints.Where(match => match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount));
+                            usersQuery = usersQuery.OrderByDescending(u => u.PlayerExperiencePoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount));
                         break;
 
                     case SortColumn.online_races:
@@ -512,6 +512,15 @@ namespace GameServer.Implementation.Player
 
                     case SortColumn.longest_drift:
                         usersQuery = usersQuery.OrderByDescending(u => u.LongestDrift);
+                        break;
+
+                    case SortColumn.points:
+                        if (type == LeaderboardType.LIFETIME)
+                            usersQuery = usersQuery.OrderByDescending(u => u.PlayerPoints.Where(match => match.Platform == platform).Sum(p => p.Amount));
+                        if (type == LeaderboardType.WEEKLY)
+                            usersQuery = usersQuery.OrderByDescending(u => u.PlayerPoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount));
+                        if (type == LeaderboardType.LAST_WEEK)
+                            usersQuery = usersQuery.OrderByDescending(u => u.PlayerPoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount));
                         break;
 
                     default:
@@ -602,7 +611,7 @@ namespace GameServer.Implementation.Player
                 if (game_type == GameType.OVERALL_RACE)
                 {
                     mystats.created_at = requestedBy.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
-                    mystats.experience_points = requestedBy.ExperiencePoints;
+                    mystats.experience_points = requestedBy.ExperiencePoints(platform);
                     mystats.id = requestedBy.UserId;
                     mystats.longest_drift = requestedBy.LongestDrift;
                     mystats.longest_hang_time = requestedBy.LongestHangTime;
@@ -614,7 +623,7 @@ namespace GameServer.Implementation.Player
                     mystats.online_races = requestedBy.OnlineRaces;
                     mystats.online_wins = requestedBy.OnlineWins;
                     mystats.player_id = requestedBy.UserId;
-                    mystats.points = requestedBy.Points;
+                    mystats.points = requestedBy.Points(platform);
                     mystats.updated_at = requestedBy.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
                     mystats.username = requestedBy.Username;
                     mystats.win_streak = requestedBy.WinStreak;
@@ -665,7 +674,7 @@ namespace GameServer.Implementation.Player
                         leaderboardPlayers.Add(new LeaderboardPlayer
                         {
                             created_at = user.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                            experience_points = user.ExperiencePoints,
+                            experience_points = user.ExperiencePoints(platform),
                             id = user.UserId,
                             longest_drift = user.LongestDrift,
                             longest_hang_time = user.LongestHangTime,
@@ -677,7 +686,7 @@ namespace GameServer.Implementation.Player
                             online_races = user.OnlineRaces,
                             online_wins = user.OnlineWins,
                             player_id = user.UserId,
-                            points = user.Points,
+                            points = user.Points(platform),
                             updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                             username = user.Username,
                             win_streak = user.WinStreak,

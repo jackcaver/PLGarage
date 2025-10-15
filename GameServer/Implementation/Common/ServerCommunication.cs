@@ -186,7 +186,7 @@ namespace GameServer.Implementation.Common
                                 foreach (int playerId in info.PlayerIds)
                                 {
                                     User user = database.Users.FirstOrDefault(match => match.UserId == playerId);
-                                    if (user != null)
+                                    if (user != null && info.IsMNR)
                                     {
                                         var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
                                         var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
@@ -275,119 +275,122 @@ namespace GameServer.Implementation.Common
                                         if (player.BestLapTime > creation.BestLapTime)
                                             creation.BestLapTime = player.BestLapTime;
 
-                                        Score score;
-
-                                        if (!info.IsMNR)
+                                        if (player.Finished) 
                                         {
-                                            score = database.Scores.FirstOrDefault(match => match.PlayerId == player.PlayerConnectId
-                                                && match.SubKeyId == info.TrackId
-                                                && match.SubGroupId == (int)info.GameType
-                                                && match.Platform == creation.Platform
-                                                && match.PlaygroupSize == player.PlaygroupSize
-                                                && match.IsMNR == info.IsMNR);
-                                        }
-                                        else
-                                        {
-                                            score = database.Scores.FirstOrDefault(match => match.PlayerId == player.PlayerConnectId
-                                                && match.SubKeyId == info.TrackId
-                                                && match.SubGroupId == (int)info.GameType - 10
-                                                && match.Platform == creation.Platform 
-                                                && match.IsMNR == info.IsMNR);
-                                        }
+                                            Score score;
 
-                                        if (!info.IsMNR)
-                                        {
-                                            var leaderboard = database.Scores.Where(match => match.SubKeyId == info.TrackId
-                                                && match.SubGroupId == (int)info.GameType && match.PlaygroupSize == player.PlaygroupSize
-                                                && match.Platform == creation.Platform);
-
-                                            if (creation.ScoreboardMode == 1)
-                                                leaderboard = leaderboard.OrderBy(s => s.FinishTime);
+                                            if (!info.IsMNR)
+                                            {
+                                                score = database.Scores.FirstOrDefault(match => match.PlayerId == player.PlayerConnectId
+                                                    && match.SubKeyId == info.TrackId
+                                                    && match.SubGroupId == (int)info.GameType
+                                                    && match.Platform == creation.Platform
+                                                    && match.PlaygroupSize == player.PlaygroupSize
+                                                    && match.IsMNR == info.IsMNR);
+                                            }
                                             else
-                                                leaderboard = leaderboard.OrderByDescending(s => s.Points);
+                                            {
+                                                score = database.Scores.FirstOrDefault(match => match.PlayerId == player.PlayerConnectId
+                                                    && match.SubKeyId == info.TrackId
+                                                    && match.SubGroupId == (int)info.GameType - 10
+                                                    && match.Platform == creation.Platform
+                                                    && match.IsMNR == info.IsMNR);
+                                            }
 
-                                            if (leaderboard.Any())
+                                            if (!info.IsMNR)
                                             {
-                                                var HighScore = leaderboard.FirstOrDefault();
-                                                if (creation.ScoreboardMode == 1 && HighScore != null && HighScore.FinishTime > player.FinishTime)
-                                                {
-                                                    database.ActivityLog.Add(new ActivityEvent
-                                                    {
-                                                        AuthorId = user.UserId,
-                                                        Type = ActivityType.player_event,
-                                                        List = ActivityList.both,
-                                                        Topic = "player_beat_finish_time",
-                                                        Description = $"{player.FinishTime}",
-                                                        PlayerId = 0,
-                                                        PlayerCreationId = creation.PlayerCreationId,
-                                                        CreatedAt = TimeUtils.Now,
-                                                        AllusionId = creation.PlayerCreationId,
-                                                        AllusionType = "PlayerCreation::Track"
-                                                    });
-                                                }
-                                                if (creation.ScoreboardMode == 0 && HighScore != null && HighScore.Points < player.Points)
-                                                {
-                                                    database.ActivityLog.Add(new ActivityEvent
-                                                    {
-                                                        AuthorId = user.UserId,
-                                                        Type = ActivityType.player_event,
-                                                        List = ActivityList.both,
-                                                        Topic = "player_beat_score",
-                                                        Description = $"{player.Points}",
-                                                        PlayerId = 0,
-                                                        PlayerCreationId = creation.PlayerCreationId,
-                                                        CreatedAt = TimeUtils.Now,
-                                                        AllusionId = creation.PlayerCreationId,
-                                                        AllusionType = "PlayerCreation::Track"
-                                                    });
-                                                }
-                                            }
-                                        }
+                                                var leaderboard = database.Scores.Where(match => match.SubKeyId == info.TrackId
+                                                    && match.SubGroupId == (int)info.GameType && match.PlaygroupSize == player.PlaygroupSize
+                                                    && match.Platform == creation.Platform);
 
-                                        if (score != null)
-                                        {
-                                            if (score.FinishTime > player.FinishTime)
-                                            {
-                                                score.FinishTime = player.FinishTime;
-                                                score.UpdatedAt = TimeUtils.Now;
-                                                score.CharacterIdx = user.CharacterIdx;
-                                                score.KartIdx = user.KartIdx;
+                                                if (creation.ScoreboardMode == 1)
+                                                    leaderboard = leaderboard.OrderBy(s => s.FinishTime);
+                                                else
+                                                    leaderboard = leaderboard.OrderByDescending(s => s.Points);
+
+                                                if (leaderboard.Any())
+                                                {
+                                                    var HighScore = leaderboard.FirstOrDefault();
+                                                    if (creation.ScoreboardMode == 1 && HighScore != null && HighScore.FinishTime > player.FinishTime)
+                                                    {
+                                                        database.ActivityLog.Add(new ActivityEvent
+                                                        {
+                                                            AuthorId = user.UserId,
+                                                            Type = ActivityType.player_event,
+                                                            List = ActivityList.both,
+                                                            Topic = "player_beat_finish_time",
+                                                            Description = $"{player.FinishTime}",
+                                                            PlayerId = 0,
+                                                            PlayerCreationId = creation.PlayerCreationId,
+                                                            CreatedAt = TimeUtils.Now,
+                                                            AllusionId = creation.PlayerCreationId,
+                                                            AllusionType = "PlayerCreation::Track"
+                                                        });
+                                                    }
+                                                    if (creation.ScoreboardMode == 0 && HighScore != null && HighScore.Points < player.Points)
+                                                    {
+                                                        database.ActivityLog.Add(new ActivityEvent
+                                                        {
+                                                            AuthorId = user.UserId,
+                                                            Type = ActivityType.player_event,
+                                                            List = ActivityList.both,
+                                                            Topic = "player_beat_score",
+                                                            Description = $"{player.Points}",
+                                                            PlayerId = 0,
+                                                            PlayerCreationId = creation.PlayerCreationId,
+                                                            CreatedAt = TimeUtils.Now,
+                                                            AllusionId = creation.PlayerCreationId,
+                                                            AllusionType = "PlayerCreation::Track"
+                                                        });
+                                                    }
+                                                }
                                             }
-                                            if (score.Points < player.Points)
+
+                                            if (score != null)
                                             {
-                                                score.Points = player.Points;
-                                                score.UpdatedAt = TimeUtils.Now;
+                                                if (score.FinishTime > player.FinishTime)
+                                                {
+                                                    score.FinishTime = player.FinishTime;
+                                                    score.UpdatedAt = TimeUtils.Now;
+                                                    score.CharacterIdx = user.CharacterIdx;
+                                                    score.KartIdx = user.KartIdx;
+                                                }
+                                                if (score.Points < player.Points)
+                                                {
+                                                    score.Points = player.Points;
+                                                    score.UpdatedAt = TimeUtils.Now;
+                                                }
+                                                if (score.BestLapTime > player.BestLapTime)
+                                                {
+                                                    score.BestLapTime = player.BestLapTime;
+                                                    score.UpdatedAt = TimeUtils.Now;
+                                                    score.CharacterIdx = user.CharacterIdx;
+                                                    score.KartIdx = user.KartIdx;
+                                                }
                                             }
-                                            if (score.BestLapTime > player.BestLapTime)
+                                            else
                                             {
-                                                score.BestLapTime = player.BestLapTime;
-                                                score.UpdatedAt = TimeUtils.Now;
-                                                score.CharacterIdx = user.CharacterIdx;
-                                                score.KartIdx = user.KartIdx;
+                                                database.Scores.Add(new Score
+                                                {
+                                                    CreatedAt = TimeUtils.Now,
+                                                    FinishTime = player.FinishTime,
+                                                    Platform = creation.Platform,
+                                                    PlayerId = player.PlayerConnectId,
+                                                    PlaygroupSize = player.PlaygroupSize,
+                                                    Points = player.Points,
+                                                    SubGroupId = info.IsMNR ? (int)info.GameType - 10 : (int)info.GameType,
+                                                    SubKeyId = info.TrackId,
+                                                    UpdatedAt = TimeUtils.Now,
+                                                    Latitude = 0,
+                                                    Longitude = 0,
+                                                    BestLapTime = player.BestLapTime,
+                                                    KartIdx = user.KartIdx,
+                                                    CharacterIdx = user.CharacterIdx,
+                                                    GhostCarDataMD5 = "",
+                                                    IsMNR = info.IsMNR,
+                                                    LocationTag = null
+                                                });
                                             }
-                                        }
-                                        else
-                                        {
-                                            database.Scores.Add(new Score
-                                            {
-                                                CreatedAt = TimeUtils.Now,
-                                                FinishTime = player.FinishTime,
-                                                Platform = creation.Platform,
-                                                PlayerId = player.PlayerConnectId,
-                                                PlaygroupSize = player.PlaygroupSize,
-                                                Points = player.Points,
-                                                SubGroupId = info.IsMNR ? (int)info.GameType - 10 : (int)info.GameType,
-                                                SubKeyId = info.TrackId,
-                                                UpdatedAt = TimeUtils.Now,
-                                                Latitude = 0,
-                                                Longitude = 0,
-                                                BestLapTime = player.BestLapTime,
-                                                KartIdx = user.KartIdx,
-                                                CharacterIdx = user.CharacterIdx,
-                                                GhostCarDataMD5 = "",
-                                                IsMNR = info.IsMNR,
-                                                LocationTag = null
-                                            });
                                         }
                                     }
                                 }

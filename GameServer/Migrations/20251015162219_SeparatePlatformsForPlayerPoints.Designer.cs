@@ -4,6 +4,7 @@ using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GameServer.Migrations
 {
     [DbContext(typeof(Database))]
-    partial class DatabaseModelSnapshot : ModelSnapshot
+    [Migration("20251015162219_SeparatePlatformsForPlayerPoints")]
+    partial class SeparatePlatformsForPlayerPoints
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -74,7 +77,7 @@ namespace GameServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ActivityLog", (string)null);
+                    b.ToTable("ActivityLog");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.AnnouncementData", b =>
@@ -102,7 +105,7 @@ namespace GameServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Announcements", (string)null);
+                    b.ToTable("Announcements");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.AwardUnlock", b =>
@@ -123,7 +126,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("AwardUnlocks", (string)null);
+                    b.ToTable("AwardUnlocks");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.GriefReportData", b =>
@@ -156,7 +159,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("GriefReports", (string)null);
+                    b.ToTable("GriefReports");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.HeartedProfile", b =>
@@ -185,7 +188,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("HeartedProfiles", (string)null);
+                    b.ToTable("HeartedProfiles");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.MailMessageData", b =>
@@ -238,7 +241,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("MailMessages", (string)null);
+                    b.ToTable("MailMessages");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.Moderator", b =>
@@ -257,7 +260,7 @@ namespace GameServer.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("Moderators", (string)null);
+                    b.ToTable("Moderators");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.POIVisit", b =>
@@ -281,7 +284,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("POIVisits", (string)null);
+                    b.ToTable("POIVisits");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCommentData", b =>
@@ -316,7 +319,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerComments", (string)null);
+                    b.ToTable("PlayerComments");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCommentRatingData", b =>
@@ -345,7 +348,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerCommentRatings", (string)null);
+                    b.ToTable("PlayerCommentRatings");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerComplaintData", b =>
@@ -374,7 +377,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PlayerComplaints", (string)null);
+                    b.ToTable("PlayerComplaints");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreationComplaintData", b =>
@@ -408,7 +411,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PlayerCreationComplaints", (string)null);
+                    b.ToTable("PlayerCreationComplaints");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.HeartedPlayerCreation", b =>
@@ -434,7 +437,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("HeartedPlayerCreations", (string)null);
+                    b.ToTable("HeartedPlayerCreations");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationBookmark", b =>
@@ -460,7 +463,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PlayerCreationBookmarks", (string)null);
+                    b.ToTable("PlayerCreationBookmarks");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationCommentData", b =>
@@ -495,7 +498,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerCreationComments", (string)null);
+                    b.ToTable("PlayerCreationComments");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationCommentRatingData", b =>
@@ -524,7 +527,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerCreationCommentRatings", (string)null);
+                    b.ToTable("PlayerCreationCommentRatings");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", b =>
@@ -682,7 +685,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerCreations", (string)null);
+                    b.ToTable("PlayerCreations");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationDownload", b =>
@@ -703,7 +706,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerCreationId");
 
-                    b.ToTable("PlayerCreationDownloads", (string)null);
+                    b.ToTable("PlayerCreationDownloads");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationPoint", b =>
@@ -738,7 +741,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerCreationPoints", (string)null);
+                    b.ToTable("PlayerCreationPoints");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationRaceStarted", b =>
@@ -759,7 +762,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerCreationId");
 
-                    b.ToTable("PlayerCreationRacesStarted", (string)null);
+                    b.ToTable("PlayerCreationRacesStarted");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationRatingData", b =>
@@ -794,7 +797,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerCreationRatings", (string)null);
+                    b.ToTable("PlayerCreationRatings");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationReview", b =>
@@ -829,7 +832,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerCreationReviews", (string)null);
+                    b.ToTable("PlayerCreationReviews");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationReviewRatingData", b =>
@@ -858,7 +861,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerCreationReviewRatings", (string)null);
+                    b.ToTable("PlayerCreationReviewRatings");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationUniqueRacer", b =>
@@ -882,7 +885,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerCreationId");
 
-                    b.ToTable("PlayerCreationUniqueRacers", (string)null);
+                    b.ToTable("PlayerCreationUniqueRacers");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationView", b =>
@@ -903,7 +906,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerCreationId");
 
-                    b.ToTable("PlayerCreationViews", (string)null);
+                    b.ToTable("PlayerCreationViews");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerExperiencePoint", b =>
@@ -930,7 +933,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerExperiencePoints", (string)null);
+                    b.ToTable("PlayerExperiencePoints");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerPoint", b =>
@@ -957,7 +960,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerPoints", (string)null);
+                    b.ToTable("PlayerPoints");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerRatingData", b =>
@@ -989,7 +992,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerRatings", (string)null);
+                    b.ToTable("PlayerRatings");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.RaceFinished", b =>
@@ -1013,7 +1016,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("OnlineRacesFinished", (string)null);
+                    b.ToTable("OnlineRacesFinished");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.RaceStarted", b =>
@@ -1034,7 +1037,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("OnlineRacesStarted", (string)null);
+                    b.ToTable("OnlineRacesStarted");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.Score", b =>
@@ -1102,7 +1105,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("SubKeyId");
 
-                    b.ToTable("Scores", (string)null);
+                    b.ToTable("Scores");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.TravelPoint", b =>
@@ -1126,7 +1129,7 @@ namespace GameServer.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("TravelPoints", (string)null);
+                    b.ToTable("TravelPoints");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.User", b =>
@@ -1211,7 +1214,7 @@ namespace GameServer.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.AwardUnlock", b =>

@@ -132,7 +132,7 @@ namespace GameServer.Implementation.Player
                         online_wins_last_week = user.OnlineWinsLastWeek,
                         online_wins_this_week = user.OnlineWinsThisWeek,
                         player_creation_quota = user.Quota,
-                        points = user.Points,
+                        points = user.Points(session.Platform),
                         presence = user.Presence.ToString(),
                         quote = user.Quote != null ? user.Quote.Replace("\0", "") : "",
                         rank = user.Rank,
@@ -152,9 +152,9 @@ namespace GameServer.Implementation.Player
                         creator_points = user.CreatorPoints(session.Platform),
                         creator_points_last_week = user.CreatorPointsLastWeek(session.Platform), 
                         creator_points_this_week = user.CreatorPointsThisWeek(session.Platform),
-                        experience_points = user.ExperiencePoints,
-                        experience_points_last_week = user.ExperiencePointsLastWeek,
-                        experience_points_this_week = user.ExperiencePointsThisWeek,
+                        experience_points = user.ExperiencePoints(session.Platform),
+                        experience_points_last_week = user.ExperiencePointsLastWeek(session.Platform),
+                        experience_points_this_week = user.ExperiencePointsThisWeek(session.Platform),
                         longest_drift = user.LongestDrift,
                         longest_hang_time = user.LongestHangTime.ToString()
                     }
@@ -222,6 +222,7 @@ namespace GameServer.Implementation.Player
                 message = "Successful completion";
                 database.PlayerExperiencePoints.Add(new PlayerExperiencePoint
                 {
+                    Platform = session.Platform,
                     CreatedAt = TimeUtils.Now,
                     PlayerId = user.UserId,
                     Amount = delta

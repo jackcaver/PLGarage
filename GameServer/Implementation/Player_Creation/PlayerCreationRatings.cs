@@ -144,7 +144,8 @@ namespace GameServer.Implementation.Player_Creation
 
             if (player_creation_rating.comments != null && (rating == null || rating.Comment == null))
             {
-                database.PlayerCreationPoints.Add(new PlayerCreationPoint { PlayerCreationId = Creation.PlayerCreationId, PlayerId = Creation.PlayerId, Platform = Creation.Platform, Type = Creation.Type, CreatedAt = TimeUtils.Now, Amount = 20 });
+                if (session.IsMNR)
+                    database.PlayerCreationPoints.Add(new PlayerCreationPoint { PlayerCreationId = Creation.PlayerCreationId, PlayerId = Creation.PlayerId, Platform = Creation.Platform, Type = Creation.Type, CreatedAt = TimeUtils.Now, Amount = 20 });
                 if (session.IsMNR && session.Platform == Platform.PS3)
                 {
                     database.MailMessages.Add(new MailMessageData
@@ -162,7 +163,7 @@ namespace GameServer.Implementation.Player_Creation
                 database.SaveChanges();
             }
 
-            if (player_creation_rating.rating != 0 && (rating == null || rating.Rating == 0))
+            if (player_creation_rating.rating != 0 && (rating == null || rating.Rating == 0) && session.IsMNR)
             {
                 database.PlayerCreationPoints.Add(new PlayerCreationPoint { PlayerCreationId = Creation.PlayerCreationId, PlayerId = Creation.PlayerId, Platform = Creation.Platform, Type = Creation.Type, CreatedAt = TimeUtils.Now, Amount = 20 });
                 database.SaveChanges();

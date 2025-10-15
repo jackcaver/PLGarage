@@ -14,6 +14,7 @@ namespace GameServer.Models.PlayerData
         public User Player { get; set; }
 
         public DateTime CreatedAt { get; set; }
+        public Platform Platform { get; set; }
         public int Amount { get; set; }
     }
 }

@@ -48,9 +48,13 @@ namespace GameServer.Models.Config
         public bool EnableRequestLogging = false;
         public bool EnablePlaceholderImage = true;
         public bool EnableRateLimiting = true;
+        public bool DeleteCreationData = true;
+        public bool CreateDefaultModerator = true;
+        public bool HideUnmoderatedCreationsFromSearch = false;
         public int MaxConcurrentRequests = 3;
         public string InstanceName = "PLGarage";
         public string ServerCommunicationKey = "";
+        public string JWTSigningKey = "CHANGEMEPLEASE!!!!!!!!!!!!!!!!!!!";
 
         private static ServerConfig GetFromFile()
         {

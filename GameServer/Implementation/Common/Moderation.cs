@@ -1,4 +1,5 @@
 ﻿using GameServer.Models;
+using GameServer.Models.Moderation;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
@@ -6,17 +7,13 @@ using GameServer.Models.Response;
 using GameServer.Utils;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace GameServer.Implementation.Common
 {
     public class Moderation
     {
-        private static Dictionary<Guid, ModerationSessionInfo> Sessions = []; 
-
+        #region Game
         public static string GriefReport(Database database, Guid SessionID, GriefReport grief_report)
         {
             var session = Session.GetSession(SessionID);
@@ -123,62 +120,83 @@ namespace GameServer.Implementation.Common
             };
             return resp.Serialize();
         }
+        #endregion
 
-        public static string Login(Database database, Guid sessionID, string login, string password)
+        #region ModeratorSelf
+        public static string Login(Database database, string username, string password)
         {
-            var moderator = database.Moderators.FirstOrDefault(match => match.Username == login);
+            var moderator = database.Moderators.FirstOrDefault(match => match.Username == username);
 
-            if (moderator == null)
-                return "error";
+            if (moderator == null || !BCrypt.Net.BCrypt.Verify(password, moderator.Password))
+                return null;
 
-            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(password));
+            return JWTUtils.GenerateToken(moderator.ID, true);
+        }
 
-            if (moderator.Password != Convert.ToBase64String(hash))
-                return "error";
+        public static string SetUsername(Database database, int userID, string username)
+        {
+            var moderator = database.Moderators.FirstOrDefault(match => match.ID == userID);
 
-            foreach (var session in Sessions.Where(match => match.Value.ModeratorID == moderator.ID && match.Key != sessionID))
-            {
-                Sessions.Remove(session.Key);
-            }
+            if (moderator == null || string.IsNullOrEmpty(username))
+                return moderator == null ? "error_moderator_not_found" : "error_username_is_empty";
 
-            Sessions.Add(sessionID, new()
-            {
-                ModeratorID = moderator.ID,
-                ExpiresAt = TimeUtils.Now.AddDays(1)
-            });
+            moderator.Username = username;
+            database.SaveChanges();
 
             return "ok";
         }
 
-        private static void ClearSessions()
+        public static string SetPassword(Database database, int userID, string password)
         {
-            foreach (var session in Sessions.Where(match => TimeUtils.Now > match.Value.ExpiresAt))
-            {
-                Sessions.Remove(session.Key);
-            }
+            var moderator = database.Moderators.FirstOrDefault(match => match.ID == userID);
+
+            if (moderator == null || string.IsNullOrEmpty(password))
+                return moderator == null ? "error_moderator_not_found" : "error_password_is_empty";
+
+            moderator.Password = BCrypt.Net.BCrypt.HashPassword(password);
+            database.SaveChanges();
+
+            return "ok";
         }
 
-        public static bool IsLoggedIn(Guid sessionID)
+        public static string GetPermissions(Database database, int userID)
         {
-            ClearSessions();
-            return Sessions.ContainsKey(sessionID);
+            var moderator = database.Moderators.FirstOrDefault(match => match.ID == userID);
+
+            if (moderator == null)
+                return null;
+
+            var permissions = new ModeratorPermissions
+            {
+                BanUsers = moderator.BanUsers,
+                ChangeCreationStatus = moderator.ChangeCreationStatus,
+                ChangeUserSettings = moderator.ChangeUserSettings,
+                ManageModerators = moderator.ManageModerators,
+                ViewGriefReports = moderator.ViewGriefReports,
+                ViewPlayerComplaints = moderator.ViewPlayerComplaints,
+                ViewPlayerCreationComplaints = moderator.ViewPlayerCreationComplaints
+            };
+
+            return JsonConvert.SerializeObject(permissions);
         }
+        #endregion
 
-        public static string GetGriefReports(Database database, string context, int? from)
+        #region GriefReports
+        public static string GetGriefReports(Database database, int page, int per_page, string context, int? from)
         {
-            List<int> reports = [];
-            IQueryable<GriefReportData> baseQuery = database.GriefReports.Where(match => from == null || match.UserId == from);
+            if (page <= 0)
+                page = 1;
+            if (per_page <= 0)
+                per_page = 1;
 
-            if (string.IsNullOrEmpty(context))
-            {
-                foreach (var report in baseQuery)
-                    reports.Add(report.Id);
-            }
-            else
-            {
-                foreach (var report in baseQuery.Where(match => match.Context == context))
-                    reports.Add(report.Id);
-            }
+            IQueryable<GriefReportData> query = database.GriefReports.Where(match => from == null || match.UserId == from);
+
+            if (!string.IsNullOrEmpty(context))
+                query = query.Where(match => match.Context == context);
+
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+
+            var reports = query.Skip(pageStart).Take(per_page).ToList();
 
             return JsonConvert.SerializeObject(reports);
         }
@@ -192,7 +210,9 @@ namespace GameServer.Implementation.Common
 
             return JsonConvert.SerializeObject(report);
         }
+        #endregion
 
+        #region CreationManagement
         public static string SetModerationStatus(Database database, int id, ModerationStatus status)
         {
             var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id);
@@ -206,6 +226,36 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
 
+        public static string GetPlayerCreationsWithStatus(Database database, int page, int per_page, ModerationStatus status)
+        {
+            if (page <= 0)
+                page = 1;
+            if (per_page <= 0)
+                per_page = 1;
+
+            var query = database.PlayerCreations.Where(match => match.ModerationStatus == status);
+
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+
+            var creations = query.Select(creation => new MinimalCreationInfo
+            {
+                ID = creation.PlayerCreationId,
+                Name = creation.Name,
+                Description = creation.Description,
+                Type = creation.Type,
+                OriginalPlayerID = creation.OriginalPlayerId,
+                ParentPlayerID = creation.ParentPlayerId,
+                PlayerID = creation.PlayerId,
+                ParentCreationID = creation.ParentCreationId,
+                ModerationStatus = creation.ModerationStatus,
+                IsMNR = creation.IsMNR
+            }).Skip(pageStart).Take(per_page).ToList();
+
+            return JsonConvert.SerializeObject(creations);
+        }
+        #endregion
+
+        #region UserManagement
         public static string SetBan(Database database, int id, bool isBanned)
         {
             var user = database.Users.FirstOrDefault(match => match.UserId == id);
@@ -219,21 +269,71 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
 
-        public static string GetPlayerComplaints(Database database, int? from, int? playerID)
+        public static string SetUserSettings(Database database, int id, bool ShowCreationsWithoutPreviews, bool AllowOppositePlatform)
         {
-            List<int> reports = [];
-            IQueryable<PlayerComplaintData> baseQuery = database.PlayerComplaints.Where(match => from == null || match.UserId == from);
+            var user = database.Users.FirstOrDefault(match => match.UserId == id);
 
-            if (playerID == null)
+            if (user == null)
+                return null;
+
+            user.ShowCreationsWithoutPreviews = ShowCreationsWithoutPreviews;
+            user.AllowOppositePlatform = AllowOppositePlatform;
+            database.SaveChanges();
+
+            return "ok";
+        }
+
+        public static string GetUsers(Database database, int page, int per_page, bool? PlayedMNR, bool? IsPSNLinked, bool? IsRPCNLinked)
+        {
+            if (page <= 0)
+                page = 1;
+            if (per_page <= 0)
+                per_page = 1;
+
+            var query = database.Users.AsQueryable();
+
+            if (PlayedMNR != null)
+                query = query.Where(match => match.PlayedMNR == PlayedMNR);
+
+            if (IsPSNLinked != null)
+                query = query.Where(match => match.PSNID != 0);
+
+            if (IsRPCNLinked != null)
+                query = query.Where(match => match.RPCNID != 0);
+
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+
+            var creations = query.Select(user => new MinimalUserInfo
             {
-                foreach (var report in baseQuery)
-                    reports.Add(report.Id);
-            }
-            else
-            {
-                foreach (var report in baseQuery.Where(match => match.PlayerId == playerID))
-                    reports.Add(report.Id);
-            }
+                ID = user.UserId,
+                Username = user.Username,
+                PlayedMNR = user.PlayedMNR,
+                IsPSNLinked = user.PSNID != 0,
+                IsRPCNLinked = user.RPCNID != 0,
+                AllowOppositePlatform = user.AllowOppositePlatform,
+                ShowCreationsWithoutPreviews = user.ShowCreationsWithoutPreviews,
+            }).Skip(pageStart).Take(per_page).ToList();
+
+            return JsonConvert.SerializeObject(creations);
+        }
+        #endregion
+
+        #region PlayerComplaints
+        public static string GetPlayerComplaints(Database database, int page, int per_page, int? from, int? playerID)
+        {
+            if (page <= 0)
+                page = 1;
+            if (per_page <= 0)
+                per_page = 1;
+
+            IQueryable<PlayerComplaintData> query = database.PlayerComplaints.Where(match => from == null || match.UserId == from);
+
+            if (playerID != null)
+                query = query.Where(match => match.PlayerId == playerID);
+
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+
+            var reports = query.Skip(pageStart).Take(per_page).ToList();
 
             return JsonConvert.SerializeObject(reports);
         }
@@ -247,25 +347,26 @@ namespace GameServer.Implementation.Common
 
             return JsonConvert.SerializeObject(complaint);
         }
+        #endregion
 
-        public static string GetPlayerCreationComplaints(Database database, int? from, int? playerID, int? playerCreationID)
+        #region PlayerCreationComplaints
+        public static string GetPlayerCreationComplaints(Database database, int page, int per_page, int? from, int? playerID, int? playerCreationID)
         {
-            List<int> reports = [];
-            IQueryable<PlayerCreationComplaintData> baseQuery = database.PlayerCreationComplaints.Where(match => from == null || match.UserId == from);
+            if (page <= 0)
+                page = 1;
+            if (per_page <= 0)
+                per_page = 1;
+
+            IQueryable<PlayerCreationComplaintData> query = database.PlayerCreationComplaints.Where(match => from == null || match.UserId == from);
 
             if (playerID != null)
-                baseQuery = baseQuery.Where(match => match.PlayerId == playerID);
+                query = query.Where(match => match.PlayerId == playerID);
+            if (playerCreationID != null)
+                query = query.Where(match => match.PlayerCreationId == playerCreationID);
 
-            if (playerCreationID == null)
-            {
-                foreach (var report in baseQuery)
-                    reports.Add(report.Id);
-            }
-            else
-            {
-                foreach (var report in baseQuery.Where(match => match.PlayerCreationId == playerCreationID))
-                    reports.Add(report.Id);
-            }
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+
+            var reports = query.Skip(pageStart).Take(per_page).ToList();
 
             return JsonConvert.SerializeObject(reports);
         }
@@ -279,5 +380,104 @@ namespace GameServer.Implementation.Common
 
             return JsonConvert.SerializeObject(complaint);
         }
+        #endregion
+
+        #region ModeratorManagement
+        public static string CreateModerator(Database database, string username, string password, ModeratorPermissions permissions)
+        {
+            var usernameIsTaken = database.Moderators.Any(match => match.Username == username);
+            if (usernameIsTaken || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+                return usernameIsTaken ? "error_username_is_taken" : string.IsNullOrEmpty(username) ? "error_username_is_empty" : "error_password_is_empty";
+
+            database.Moderators.Add(new Moderator
+            {
+                Username = username,
+                Password = BCrypt.Net.BCrypt.HashPassword(password),
+                BanUsers = permissions.BanUsers,
+                ChangeCreationStatus = permissions.ChangeCreationStatus,
+                ChangeUserSettings = permissions.ChangeUserSettings,
+                ManageModerators = permissions.ManageModerators,
+                ViewGriefReports = permissions.ViewGriefReports,
+                ViewPlayerComplaints = permissions.ViewPlayerComplaints,
+                ViewPlayerCreationComplaints = permissions.ViewPlayerCreationComplaints
+            });
+
+            database.SaveChanges();
+
+            return "ok";
+        }
+
+        public static void CreateDefaultModerator(Database database)
+        {
+            if (database.Moderators.Any())
+                return;
+
+            CreateModerator(database, "admin", "admin", new ModeratorPermissions {
+                BanUsers = true,
+                ChangeCreationStatus = true,
+                ChangeUserSettings = true,
+                ManageModerators = true,
+                ViewGriefReports = true,
+                ViewPlayerComplaints = true,
+                ViewPlayerCreationComplaints = true
+            });
+        }
+
+        public static string DeleteModerator(Database database, int userID)
+        {
+            var moderator = database.Moderators.FirstOrDefault(match => match.ID == userID);
+
+            if (moderator == null) 
+                return null;
+
+            database.Moderators.Remove(moderator);
+            database.SaveChanges();
+
+            return "ok";
+        }
+
+        public static string GetModerators(Database database, int page, int per_page)
+        {
+            if (page <= 0)
+                page = 1;
+            if (per_page <= 0)
+                per_page = 1;
+
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+
+            var moderators = database.Moderators.Skip(pageStart).Take(per_page).ToList();
+
+            return JsonConvert.SerializeObject(moderators);
+        }
+
+        public static string GetModerator(Database database, int userID)
+        {
+            var moderator = database.Moderators.FirstOrDefault(match => match.ID == userID);
+
+            if (moderator == null)
+                return null;
+
+            return JsonConvert.SerializeObject(moderator);
+        }
+
+        public static string SetPermissions(Database database, int userID, ModeratorPermissions permissions)
+        {
+            var moderator = database.Moderators.FirstOrDefault(match => match.ID == userID);
+
+            if (moderator == null)
+                return "error_moderator_not_found";
+
+            moderator.BanUsers = permissions.BanUsers;
+            moderator.ChangeCreationStatus = permissions.ChangeCreationStatus;
+            moderator.ChangeUserSettings = permissions.ChangeUserSettings;
+            moderator.ManageModerators = permissions.ManageModerators;
+            moderator.ViewGriefReports = permissions.ViewGriefReports;
+            moderator.ViewPlayerComplaints = permissions.ViewPlayerComplaints;
+            moderator.ViewPlayerCreationComplaints = permissions.ViewPlayerCreationComplaints;
+            database.SaveChanges();
+
+            return "ok";
+        }
+        #endregion
     }
 }

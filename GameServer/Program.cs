@@ -1,4 +1,6 @@
 using System.IO;
+using GameServer.Implementation.Common;
+using GameServer.Models.Config;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -72,6 +74,10 @@ namespace GameServer
                 database.Database.ExecuteSql($"ALTER TABLE PlayerCreations AUTO_INCREMENT = 10000;");   // Start id for PlayerCreations
                 database.SaveChanges();
             }
+
+            if (ServerConfig.Instance.CreateDefaultModerator)
+                Moderation.CreateDefaultModerator(database);
+
             database.Dispose();
 
             CreateHostBuilder(args).Build().Run();

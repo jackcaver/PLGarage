@@ -1,15 +1,19 @@
 using GameServer.Implementation.Common;
 using GameServer.Models.Config;
 using GameServer.Utils;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Threading.RateLimiting;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
-using Microsoft.AspNetCore.Http;
+using System.Threading.RateLimiting;
+using System.Threading.Tasks;
 
 namespace GameServer
 {
@@ -26,6 +30,38 @@ namespace GameServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = JWTUtils.SigningKey,
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            if (context.Request.Cookies.TryGetValue("Token", out string token))
+                                context.Token = token;
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+            services.AddAuthorizationBuilder()
+                .SetDefaultPolicy(new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireClaim(JWTUtils.Role, JWTUtils.RoleUser)
+                    .Build())
+                .AddPolicy(JWTUtils.ModeratorPolicy, new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireClaim(JWTUtils.Role, JWTUtils.RoleModerator)
+                    .Build());
             services.AddDbContext<Database>();
             services.AddHostedService<DailyTickService>();
             if (ServerConfig.Instance.EnableRateLimiting)
@@ -72,8 +108,10 @@ namespace GameServer
                 });
             }
 
+            app.UseAuthentication();
             app.UseRouting();
             app.UseWebSockets();
+            app.UseAuthorization();
 
             if (ServerConfig.Instance.EnableRateLimiting)
                 app.UseRateLimiter();

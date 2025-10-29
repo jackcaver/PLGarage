@@ -1,15 +1,7 @@
-﻿using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
-
-namespace GameServer.Models.PlayerData
+﻿namespace GameServer.Models.Moderation
 {
-    public class Moderator
+    public class ModeratorPermissions
     {
-        [Key]
-        public int ID { get; set; }
-        public string Username { get; set; }
-        [JsonIgnore]
-        public string Password { get; set; }
         public bool ManageModerators { get; set; }
         public bool BanUsers { get; set; }
         public bool ChangeUserSettings { get; set; }

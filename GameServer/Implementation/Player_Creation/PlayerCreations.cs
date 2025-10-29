@@ -11,6 +11,7 @@ using GameServer.Implementation.Common;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
+using GameServer.Models.Config;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -307,7 +308,7 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            database.PlayerCreations.Remove(Creation);
+            Creation.Type = PlayerCreationType.DELETED;
 
             foreach (var item in database.PlayerCreations.Where(match => match.TrackId == id).ToList())
             {
@@ -323,18 +324,8 @@ namespace GameServer.Implementation.Player_Creation
 
             database.SaveChanges();
 
-            UserGeneratedContentUtils.RemovePlayerCreation(id);
-
-            database.PlayerCreations.Add(new PlayerCreationData
-            {
-                PlayerCreationId = id,
-                Name = Creation.Type.ToString(),
-                PlayerId = user.UserId,
-                Platform = Creation.Platform,
-                Type = PlayerCreationType.DELETED,
-                IsMNR = Creation.IsMNR
-            });
-            database.SaveChanges();
+            if (ServerConfig.Instance.DeleteCreationData)
+                UserGeneratedContentUtils.RemovePlayerCreation(id);
 
             var resp = new Response<EmptyResponse>
             {
@@ -607,6 +598,9 @@ namespace GameServer.Implementation.Player_Creation
 
             if (filters.player_id != null)
                 creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && filters.player_id.Any(x => match.PlayerId.ToString() == x));
+
+            if (filters.id == null && ServerConfig.Instance.HideUnmoderatedCreationsFromSearch)
+                creationQuery = creationQuery.Where(match => match.ModerationStatus != ModerationStatus.PENDING);
 
             creationQuery = creationQuery.Where(match => match.ModerationStatus != ModerationStatus.BANNED
                 && match.ModerationStatus != ModerationStatus.ILLEGAL);
@@ -1228,7 +1222,7 @@ namespace GameServer.Implementation.Player_Creation
                     {
                         id = item,
                         type = creation.Type.ToString(),
-                        suggested_action = "allow"
+                        suggested_action = creation.Type == PlayerCreationType.DELETED ? "destroy" : "allow"
                     });
                 }
                 else

@@ -145,7 +145,7 @@ namespace GameServer.Controllers.Api
         #region CreationManagement
         [HttpPost]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/setStatus")]
+        [Route("/api/moderation/setStatus")]
         public IActionResult SetModerationStatus(int id, ModerationStatus status)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -163,7 +163,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/player_creations")]
+        [Route("/api/moderation/player_creations")]
         public IActionResult GetPlayerCreationsWithStatus(int page, int per_page, ModerationStatus status)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -178,7 +178,7 @@ namespace GameServer.Controllers.Api
         #region UserManagement
         [HttpPost]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/setBan")]
+        [Route("/api/moderation/setBan")]
         public IActionResult SetBan(int id, bool isBanned)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -196,7 +196,7 @@ namespace GameServer.Controllers.Api
 
         [HttpPost]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/setUserSettings")]
+        [Route("/api/moderation/setUserSettings")]
         public IActionResult SetUserSettings(int id, bool ShowCreationsWithoutPreviews, bool AllowOppositePlatform)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -214,7 +214,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/users")]
+        [Route("/api/moderation/users")]
         public IActionResult GetUsers(int page, int per_page, bool? PlayedMNR, bool? IsPSNLinked, bool? IsRPCNLinked)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -230,7 +230,7 @@ namespace GameServer.Controllers.Api
         #region PlayerComplaints
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/player_complaints")]
+        [Route("/api/moderation/player_complaints")]
         public IActionResult GetPlayerComplaints(int page, int per_page, int? from, int? playerID)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -243,7 +243,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/player_complaints/{id}")]
+        [Route("/api/moderation/player_complaints/{id}")]
         public IActionResult GetPlayerComplaint(int id)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -263,7 +263,7 @@ namespace GameServer.Controllers.Api
         #region PlayerCreationComplaints
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/player_creation_complaints")]
+        [Route("/api/moderation/player_creation_complaints")]
         public IActionResult GetPlayerCreationComplaints(int page, int per_page, int? from, int? playerID, int? playerCreationID)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -276,7 +276,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/player_creation_complaints/{id}")]
+        [Route("/api/moderation/player_creation_complaints/{id}")]
         public IActionResult GetPlayerCreationComplaint(int id)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -296,7 +296,7 @@ namespace GameServer.Controllers.Api
         #region ModeratorManagement
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/moderators")]
+        [Route("/api/moderation/moderators")]
         public IActionResult GetModerators(int page, int per_page)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -309,7 +309,7 @@ namespace GameServer.Controllers.Api
 
         [HttpPost]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/moderators")]
+        [Route("/api/moderation/moderators")]
         public IActionResult CreateModerator(string username, string password, ModeratorPermissions permissions)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -329,7 +329,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/moderators/{id}")]
+        [Route("/api/moderation/moderators/{id}")]
         public IActionResult GetModerator(int id)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -347,7 +347,7 @@ namespace GameServer.Controllers.Api
 
         [HttpPost]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/{id}/set_username")]
+        [Route("/api/moderation/{id}/set_username")]
         public IActionResult SetUsernameForOtherUser(int id, string username)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -360,7 +360,7 @@ namespace GameServer.Controllers.Api
 
         [HttpPost]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/{id}/set_password")]
+        [Route("/api/moderation/{id}/set_password")]
         public IActionResult SetPasswordForOtherUser(int id, string password)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -373,7 +373,7 @@ namespace GameServer.Controllers.Api
 
         [HttpPost]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/{id}/set_permissions")]
+        [Route("/api/moderation/{id}/set_permissions")]
         public IActionResult SetPermissions(int id, ModeratorPermissions permissions)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -393,7 +393,7 @@ namespace GameServer.Controllers.Api
 
         [HttpDelete]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/moderators/{id}")]
+        [Route("/api/moderation/moderators/{id}")]
         public IActionResult DeleteModerator(int id)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);

@@ -80,8 +80,8 @@ namespace GameServer.Controllers.Api
         }
 
         [HttpGet]
-        [Route("api/get_player_count")]
-        public IActionResult GetPlayerCount(bool? isMnr = null)
+        [Route("/api/playercounts/sessioncount")]
+        public IActionResult GetSessionCount(bool? isMnr = null)
         {
             return Content($"{Session.GetSessions()
                 .Where(x =>

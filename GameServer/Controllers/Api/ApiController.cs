@@ -14,11 +14,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Controllers.Api
 {
-    public class CommonApiController : Controller
+    public class ApiController : Controller
     {
         private readonly Database database;
 
-        public CommonApiController(Database database)
+        public ApiController(Database database)
         {
             this.database = database;
         }
@@ -77,6 +77,18 @@ namespace GameServer.Controllers.Api
             }
 
             return Content(JsonConvert.SerializeObject(TrackIDs));
+        }
+
+        [HttpGet]
+        [Route("api/get_player_count")]
+        public IActionResult GetPlayerCount(bool? isMnr = null)
+        {
+            return Content($"{Session.GetSessions()
+                .Where(x =>
+                    (isMnr != null ? x.IsMNR == isMnr : true) &&
+                    x.Authenticated &&
+                    x.LastPing.AddMinutes(1) > DateTime.Now)
+                .Count()}");
         }
 
         protected override void Dispose(bool disposing)

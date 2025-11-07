@@ -79,18 +79,6 @@ namespace GameServer.Controllers.Api
             return Content(JsonConvert.SerializeObject(TrackIDs));
         }
 
-        [HttpGet]
-        [Route("/api/playercounts/sessioncount")]
-        public IActionResult GetSessionCount(bool? isMnr = null)
-        {
-            return Content($"{Session.GetSessions()
-                .Where(x =>
-                    (isMnr != null ? x.IsMNR == isMnr : true) &&
-                    x.Authenticated &&
-                    x.LastPing.AddMinutes(1) > DateTime.Now)
-                .Count()}");
-        }
-
         protected override void Dispose(bool disposing)
         {
             database.Dispose();

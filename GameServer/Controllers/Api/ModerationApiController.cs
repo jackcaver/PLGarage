@@ -23,7 +23,7 @@ namespace GameServer.Controllers.Api
 
         #region ModeratorSelf
         [HttpPost]
-        [Route("/moderation/login")]
+        [Route("/api/moderation/login")]
         public IActionResult Login(string login, string password)
         {
             var result = Moderation.Login(database, login, password);
@@ -38,7 +38,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/permissions")]
+        [Route("/api/moderation/permissions")]
         public IActionResult GetPermissions()
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -50,7 +50,7 @@ namespace GameServer.Controllers.Api
 
         [HttpPost]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/set_username")]
+        [Route("/api/moderation/set_username")]
         public IActionResult SetUsername(string username)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -62,7 +62,7 @@ namespace GameServer.Controllers.Api
 
         [HttpPost]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/set_password")]
+        [Route("/api/moderation/set_password")]
         public IActionResult SetPassword(string password)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -76,7 +76,7 @@ namespace GameServer.Controllers.Api
         #region GriefReports
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/grief_reports")]
+        [Route("/api/moderation/grief_reports")]
         public IActionResult GetGriefReports(int page, int per_page, string context, int? from)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -89,7 +89,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/grief_reports/{id}")]
+        [Route("/api/moderation/grief_reports/{id}")]
         public IActionResult GetGriefReport(int id)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -107,7 +107,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/grief_reports/{id}/data.xml")]
+        [Route("/api/moderation/grief_reports/{id}/data.xml")]
         public IActionResult GetGriefReportDataFile(int id)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
@@ -125,7 +125,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/moderation/grief_reports/{id}/preview.png")]
+        [Route("/api/moderation/grief_reports/{id}/preview.png")]
         public IActionResult GetGriefReportPreview(int id)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);

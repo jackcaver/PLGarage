@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.Primitives;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameServer.Controllers.Common
+namespace GameServer.Controllers.Api
 {
     public class ApiController : Controller
     {

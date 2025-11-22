@@ -1,17 +1,18 @@
-﻿using GameServer.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using GameServer.Models;
+using GameServer.Models.Config;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Response;
-using System.Collections.Generic;
-using System;
 using GameServer.Utils;
-using System.Linq;
-using NPTicket;
-using Serilog;
-using GameServer.Models.Config;
-using System.IO;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
+using NPTicket;
 using NPTicket.Verification;
 using NPTicket.Verification.Keys;
+using Serilog;
 
 namespace GameServer.Implementation.Common
 {
@@ -22,6 +23,17 @@ namespace GameServer.Implementation.Common
         public static string Login(Database database, string ip, Platform platform, string ticket, string hmac, string console_id, Guid SessionID)
         {
             ClearSessions();
+
+            if (!Sessions.ContainsKey(SessionID))
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+
             byte[] ticketData = Convert.FromBase64String(ticket.Trim('\n').Trim('\0'));
             List<string> whitelist = [];
             if (ServerConfig.Instance.Whitelist)
@@ -279,18 +291,11 @@ namespace GameServer.Implementation.Common
 
         private static void ClearSessions()
         {
-            foreach (var Session in Sessions.Where(match => match.Value.Authenticated
-                && (TimeUtils.Now > match.Value.LastPing.AddMinutes(60) /*|| TimeUtils.Now > match.Value.ExpiryDate*/)))
+            foreach (var Session in Sessions.Where(match => TimeUtils.Now > match.Value.LastPing.AddMinutes(60) /*|| TimeUtils.Now > match.Value.ExpiryDate*/))
             {
-                Sessions.Remove(Session.Key);
-                ServerCommunication.NotifySessionDestroyed(Session.Key);
-            }
-
-            foreach (var Session in Sessions.Where(match => !match.Value.Authenticated
-                && TimeUtils.Now > match.Value.LastPing.AddHours(3)))
-            {
-                Sessions.Remove(Session.Key);
-                ServerCommunication.NotifySessionDestroyed(Session.Key);
+                var sessionKey = Session.Key;
+                Sessions.Remove(sessionKey);
+                ServerCommunication.NotifySessionDestroyed(sessionKey);
             }
         }
 

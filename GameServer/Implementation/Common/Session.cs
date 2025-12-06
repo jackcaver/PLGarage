@@ -138,7 +138,7 @@ namespace GameServer.Implementation.Common
                     Quota = 30,
                     CreatedAt = TimeUtils.Now,
                     UpdatedAt = TimeUtils.Now,
-                    PolicyAccepted = Sessions[SessionID].PolicyAccepted,
+                    PolicyAccepted = Sessions.ContainsKey(SessionID) ? Sessions[SessionID].PolicyAccepted : false,
                 };
                 if (IsPSN)
                     newUser.PSNID = NPTicket.UserId;
@@ -166,8 +166,8 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
 
-            foreach (var Session in Sessions.Where(match => match.Value.Username == user.Username 
-                && match.Key != SessionID && match.Value.Platform == platform))
+            foreach (var Session in Sessions.Where(match => match.Value == null || (match.Value.Username == user.Username 
+                && match.Key != SessionID && match.Value.Platform == platform)))
             {
                 Sessions.Remove(Session.Key);
                 ServerCommunication.NotifySessionDestroyed(Session.Key);
@@ -291,7 +291,7 @@ namespace GameServer.Implementation.Common
 
         private static void ClearSessions()
         {
-            foreach (var Session in Sessions.Where(match => TimeUtils.Now > match.Value.LastPing.AddMinutes(60) /*|| TimeUtils.Now > match.Value.ExpiryDate*/))
+            foreach (var Session in Sessions.Where(match => match.Value == null || (TimeUtils.Now > match.Value.LastPing.AddMinutes(60) /*|| TimeUtils.Now > match.Value.ExpiryDate*/)))
             {
                 var sessionKey = Session.Key;
                 Sessions.Remove(sessionKey);

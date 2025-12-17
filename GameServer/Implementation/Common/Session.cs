@@ -248,7 +248,7 @@ namespace GameServer.Implementation.Common
         public static Presence GetPresence(string Username)
         {
             ClearSessions();
-            var Session = Sessions.FirstOrDefault(match => match.Value.Username == Username).Value;
+            var Session = Sessions.FirstOrDefault(match => match.Value != null && match.Value.Username == Username).Value;
             if (Session == null) 
             {
                 return Presence.OFFLINE;

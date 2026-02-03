@@ -18,9 +18,8 @@ namespace GameServer.Controllers.Player
         {
             if (Request.Cookies["session_id"] == null)
             {
-                Guid SessionID = Guid.NewGuid();
+                Guid SessionID = Session.StartSession();
                 Response.Cookies.Append("session_id", SessionID.ToString());
-                Session.StartSession(SessionID);
             }
 
             var resp = new Response<List<Preference>>

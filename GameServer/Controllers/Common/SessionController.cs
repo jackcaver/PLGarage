@@ -20,8 +20,13 @@ namespace GameServer.Controllers.Common
         public IActionResult Login(Platform platform, string ticket, string hmac, string console_id)
         {
             Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            if (!(Request.Cookies.ContainsKey("session_id") 
+                 && Guid.TryParse(Request.Cookies["session_id"], out SessionID) 
+                 && Session.SessionExists(SessionID)))
+            {
+                SessionID = Session.StartSession();
+                Response.Cookies.Append("session_id", SessionID.ToString());
+            }
             return Content(Session.Login(database, HttpContext.Connection.RemoteIpAddress.ToString(),
                 platform, ticket, hmac, console_id, SessionID), "application/xml;charset=utf-8");
         }

@@ -268,13 +268,30 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static void StartSession(Guid SessionID) 
+        public static Guid StartSession()
         {
-            Sessions.Add(SessionID, new SessionInfo
+            var sessionID = Guid.NewGuid();
+            
+            var session = new SessionInfo
             {
                 LastPing = TimeUtils.Now,
                 Presence = Presence.OFFLINE
-            });
+            };
+            
+            var startedAt = TimeUtils.Now;
+
+            while (!Sessions.TryAdd(sessionID, session))
+            {
+                if ((TimeUtils.Now - startedAt).Milliseconds > 500)
+                {//if it takes too long then something is not right and we should return an error to avoid issues...
+                    Log.Error("Took too long to start a new session");
+                    throw new TimeoutException(); 
+                }
+                
+                sessionID = Guid.NewGuid();
+            }
+            
+            return sessionID;
         }
 
         private static void ClearSessions()
@@ -305,6 +322,8 @@ namespace GameServer.Implementation.Common
 
             return session;
         }
+        
+        public static bool SessionExists(Guid SessionID) => Sessions.ContainsKey(SessionID);
 
         public static IEnumerable<SessionInfo> GetSessions() => Sessions.Values;
 

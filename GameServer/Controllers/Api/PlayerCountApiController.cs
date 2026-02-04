@@ -21,6 +21,7 @@ namespace GameServer.Controllers.Api
         {
             return Content($"{Session.GetSessions()
                 .Where(x =>
+                    x != null &&    // TODO: Why are session objects becoming null?
                     (isMnr != null ? x.IsMNR == isMnr : true) &&
                     x.Authenticated &&
                     x.LastPing.AddMinutes(1) > DateTime.Now)

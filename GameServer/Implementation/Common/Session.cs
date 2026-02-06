@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,7 +19,7 @@ namespace GameServer.Implementation.Common
 {
     public class Session
     {
-        private static readonly Dictionary<Guid, SessionInfo> Sessions = [];
+        private static readonly ConcurrentDictionary<Guid, SessionInfo> Sessions = [];
 
         public static string Login(Database database, string ip, Platform platform, string ticket, string hmac, string console_id, Guid SessionID)
         {
@@ -169,7 +170,7 @@ namespace GameServer.Implementation.Common
             foreach (var Session in Sessions.Where(match => match.Value == null || (match.Value.Username == user.Username 
                 && match.Key != SessionID && match.Value.Platform == platform)))
             {
-                Sessions.Remove(Session.Key);
+                Sessions.Remove(Session.Key, out _);
                 ServerCommunication.NotifySessionDestroyed(Session.Key);
             }
 
@@ -282,7 +283,7 @@ namespace GameServer.Implementation.Common
 
         public static void StartSession(Guid SessionID) 
         {
-            Sessions.Add(SessionID, new SessionInfo
+            Sessions.TryAdd(SessionID, new SessionInfo
             {
                 LastPing = TimeUtils.Now,
                 Presence = Presence.OFFLINE
@@ -294,7 +295,7 @@ namespace GameServer.Implementation.Common
             foreach (var Session in Sessions.Where(match => match.Value == null || (TimeUtils.Now > match.Value.LastPing.AddMinutes(60) /*|| TimeUtils.Now > match.Value.ExpiryDate*/)))
             {
                 var sessionKey = Session.Key;
-                Sessions.Remove(sessionKey);
+                Sessions.Remove(sessionKey, out _);
                 ServerCommunication.NotifySessionDestroyed(sessionKey);
             }
         }
@@ -353,7 +354,7 @@ namespace GameServer.Implementation.Common
         {
             foreach (var sessionID in Sessions.Keys.ToList())
             {
-                Sessions.Remove(sessionID);
+                Sessions.Remove(sessionID, out _);
                 ServerCommunication.NotifySessionDestroyed(sessionID);
             }
         }

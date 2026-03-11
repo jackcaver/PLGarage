@@ -227,6 +227,15 @@ namespace GameServer.Implementation.Player_Creation
             database.PlayerCreations.Add(playerCreation);
             database.SaveChanges();
 
+            if (playerCreation.PlayerCreationId < 10000)
+            {
+                database.PlayerCreations.Remove(playerCreation); //unfortunately .net ef can't update primary keys...
+                database.SaveChanges();
+                playerCreation.PlayerCreationId += 10000;
+                database.PlayerCreations.Add(playerCreation);
+                database.SaveChanges();
+            }
+            
             if (playerCreation.TrackId == 0)
             {
                 playerCreation.TrackId = playerCreation.PlayerCreationId;

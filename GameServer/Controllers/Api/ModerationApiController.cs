@@ -1,11 +1,10 @@
 ﻿using GameServer.Implementation.Common;
 using GameServer.Models.Moderation;
+using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
-using GameServer.Models.Request;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Linq;
 using System.Security.Claims;
 
@@ -293,6 +292,229 @@ namespace GameServer.Controllers.Api
         }
         #endregion
 
+        #region SystemEvents
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/system_events")]
+        public IActionResult GetSystemEvents(int page, int per_page)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageSystemEvents)))
+                return StatusCode(403);
+
+            return Content(Moderation.GetSystemEvents(database, page, per_page));
+        }
+        
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/system_events")]
+        public IActionResult CreateSystemEvent(string topic, string description, string imageURL)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageSystemEvents)))
+                return StatusCode(403);
+
+            return Content(Moderation.CreateSystemEvent(database, topic, description, imageURL));
+        }
+        
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/system_events/{id}")]
+        public IActionResult EditSystemEvent(int id, string topic, string description, string imageURL)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageSystemEvents)))
+                return StatusCode(403);
+
+            var result = Moderation.EditSystemEvent(database, id, topic, description, imageURL);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/system_events/{id}")]
+        public IActionResult DeleteSystemEvent(int id)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageSystemEvents)))
+                return StatusCode(403);
+
+            var result = Moderation.DeleteSystemEvent(database, id);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        #endregion
+
+        #region Announcements
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/announcements")]
+        public IActionResult GetAnnouncements(int page, int per_page, Platform? platform)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                && database.Moderators.Any(match => match.ID == userID && match.ManageAnnouncements)))
+                return StatusCode(403);
+
+            return Content(Moderation.GetAnnouncements(database, page, per_page, platform));
+        }
+
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/announcements")]
+        public IActionResult CreateAnnouncement(string languageCode, string subject, string text, Platform platform)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                && database.Moderators.Any(match => match.ID == userID && match.ManageAnnouncements)))
+                return StatusCode(403);
+
+            return Content(Moderation.CreateAnnouncement(database, languageCode, subject, text, platform));
+        }
+
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/announcements/{id}")]
+        public IActionResult EditAnnouncement(int id, string languageCode, string subject, string text, Platform platform)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                && database.Moderators.Any(match => match.ID == userID && match.ManageAnnouncements)))
+                return StatusCode(403);
+
+            var result = Moderation.EditAnnouncement(database, id, languageCode, subject, text, platform);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/announcements/{id}")]
+        public IActionResult DeleteAnnouncement(int id)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                && database.Moderators.Any(match => match.ID == userID && match.ManageAnnouncements)))
+                return StatusCode(403);
+
+            var result = Moderation.DeleteAnnouncement(database, id);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        #endregion
+
+        #region Hotlap
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/hotlap")]
+        public IActionResult GetHotLap()
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+                return StatusCode(403);
+
+            return Content(Moderation.GetHotLap(database));
+        }
+        
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/hotlap")]
+        public IActionResult SetHotLap(int creation)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+                return StatusCode(403);
+
+            return Content(Moderation.SetHotLap(database, creation));
+        }
+        
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/hotlap/reset")]
+        public IActionResult ResetHotLap()
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+                return StatusCode(403);
+
+            ContentUpdates.GetNewHotLap(database);
+            
+            return Content("ok");
+        }
+        
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/hotlap/until_next")]
+        public IActionResult GetNextHotLapReset()
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+                return StatusCode(403);
+
+            return Content(((int)TimeUtils.UntilNextDay.TotalSeconds).ToString());
+        }
+        
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/hotlap/queue")]
+        public IActionResult GetHotLapQueue(int page, int per_page)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+                return StatusCode(403);
+
+            return Content(Moderation.GetHotLapQueue(database, page, per_page));
+        }
+        
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/hotlap/queue")]
+        public IActionResult AddToHotLapQueue(int creation)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+                return StatusCode(403);
+
+            return Content(Moderation.AddToHotLapQueue(database, creation));
+        }
+        
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/hotlap/queue")]
+        public IActionResult RemoveFromHotLapQueue(int? index, int? creation)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+                return StatusCode(403);
+
+            return Content(Moderation.RemoveFromHotLapQueue(database, index, creation));
+        }
+        #endregion
+
         #region ModeratorManagement
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
@@ -321,7 +543,10 @@ namespace GameServer.Controllers.Api
                     && (!permissions.ChangeUserSettings || match.ChangeUserSettings)
                     && (!permissions.ViewGriefReports || match.ViewGriefReports)
                     && (!permissions.ViewPlayerComplaints || match.ViewPlayerComplaints)
-                    && (!permissions.ViewPlayerCreationComplaints || match.ViewPlayerCreationComplaints))))
+                    && (!permissions.ViewPlayerCreationComplaints || match.ViewPlayerCreationComplaints)
+                    && (!permissions.ManageHotlap || match.ManageHotlap)
+                    && (!permissions.ManageAnnouncements || match.ManageAnnouncements)
+                    && (!permissions.ManageSystemEvents || match.ManageSystemEvents))))
                 return StatusCode(403);
 
             return Content(Moderation.CreateModerator(database, username, password, permissions));
@@ -385,7 +610,10 @@ namespace GameServer.Controllers.Api
                     && (!permissions.ChangeUserSettings || match.ChangeUserSettings)
                     && (!permissions.ViewGriefReports || match.ViewGriefReports)
                     && (!permissions.ViewPlayerComplaints || match.ViewPlayerComplaints)
-                    && (!permissions.ViewPlayerCreationComplaints || match.ViewPlayerCreationComplaints))))
+                    && (!permissions.ViewPlayerCreationComplaints || match.ViewPlayerCreationComplaints)
+                    && (!permissions.ManageHotlap || match.ManageHotlap)
+                    && (!permissions.ManageAnnouncements || match.ManageAnnouncements)
+                    && (!permissions.ManageSystemEvents || match.ManageSystemEvents))))
                 return StatusCode(403);
 
             return Content(Moderation.SetPermissions(database, id, permissions));

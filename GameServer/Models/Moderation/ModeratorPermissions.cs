@@ -6,6 +6,9 @@
         public bool BanUsers { get; set; }
         public bool ChangeUserSettings { get; set; }
         public bool ChangeCreationStatus { get; set; }
+        public bool ManageAnnouncements { get; set; }
+        public bool ManageHotlap { get; set; }
+        public bool ManageSystemEvents { get; set; }
         public bool ViewGriefReports { get; set; }
         public bool ViewPlayerComplaints { get; set; }
         public bool ViewPlayerCreationComplaints { get; set; }

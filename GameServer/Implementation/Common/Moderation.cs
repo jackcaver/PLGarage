@@ -1,4 +1,5 @@
 ﻿using GameServer.Models;
+using GameServer.Models.Config;
 using GameServer.Models.Moderation;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
@@ -198,7 +199,11 @@ namespace GameServer.Implementation.Common
 
             var reports = query.Skip(pageStart).Take(per_page).ToList();
 
-            return JsonConvert.SerializeObject(reports);
+            return JsonConvert.SerializeObject(new ModerationPageResponse<GriefReportData>
+            {
+                Total = query.Count(),
+                Page = reports
+            });
         }
 
         public static string GetGriefReport(Database database, int id)
@@ -251,7 +256,11 @@ namespace GameServer.Implementation.Common
                 IsMNR = creation.IsMNR
             }).Skip(pageStart).Take(per_page).ToList();
 
-            return JsonConvert.SerializeObject(creations);
+            return JsonConvert.SerializeObject(new ModerationPageResponse<MinimalCreationInfo>
+            {
+                Total = query.Count(),
+                Page = creations
+            });
         }
         #endregion
 
@@ -335,7 +344,11 @@ namespace GameServer.Implementation.Common
 
             var reports = query.Skip(pageStart).Take(per_page).ToList();
 
-            return JsonConvert.SerializeObject(reports);
+            return JsonConvert.SerializeObject(new ModerationPageResponse<PlayerComplaintData>
+            {
+                Total = query.Count(),
+                Page = reports
+            });
         }
 
         public static string GetPlayerComplaint(Database database, int id)
@@ -368,7 +381,11 @@ namespace GameServer.Implementation.Common
 
             var reports = query.Skip(pageStart).Take(per_page).ToList();
 
-            return JsonConvert.SerializeObject(reports);
+            return JsonConvert.SerializeObject(new ModerationPageResponse<PlayerCreationComplaintData>
+            {
+                Total = query.Count(),
+                Page = reports
+            });
         }
 
         public static string GetPlayerCreationComplaint(Database database, int id)
@@ -382,6 +399,275 @@ namespace GameServer.Implementation.Common
         }
         #endregion
 
+        #region SystemEvents
+        public static string GetSystemEvents(Database database, int page, int per_page)
+        {
+            if (page <= 0)
+                page = 1;
+            if (per_page <= 0)
+                per_page = 1;
+
+            var query = database.ActivityLog.Where(match => match.Type == ActivityType.system_event);
+
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+
+            var events = query.Select(systemEvent => new MinimalSystemEventInfo
+            {
+               CreatedAt = systemEvent.CreatedAt,
+               Topic = systemEvent.Topic,
+               Description = systemEvent.Description,
+               ImageURL = systemEvent.ImageURL
+            }).Skip(pageStart).Take(per_page).ToList();
+
+            return JsonConvert.SerializeObject(new ModerationPageResponse<MinimalSystemEventInfo>
+            {
+                Total = query.Count(),
+                Page = events
+            });
+        }
+        
+        public static string CreateSystemEvent(Database database, string topic, string description, string imageURL)
+        {
+            database.ActivityLog.Add(new()
+            {
+                Type = ActivityType.system_event,
+                CreatedAt = TimeUtils.Now,
+                Topic = topic,
+                Description = description,
+                ImageURL = imageURL,
+                List = ActivityList.news_feed
+            });
+            
+            database.SaveChanges();
+
+            return "ok";
+        }
+
+        public static string EditSystemEvent(Database database, int id, string topic, string description, string imageURL)
+        {
+            var systemEvent = database.ActivityLog.FirstOrDefault(match => match.Id == id && match.Type == ActivityType.system_event);
+
+            if (systemEvent == null)
+                return null;
+            
+            systemEvent.Topic = topic;
+            systemEvent.Description = description;
+            systemEvent.ImageURL = imageURL;
+            database.SaveChanges();
+
+            return "ok";
+        }
+        
+        public static string DeleteSystemEvent(Database database, int id)
+        {
+            var activityEvent = database.ActivityLog.FirstOrDefault(match => match.Id == id && match.Type == ActivityType.system_event);
+
+            if (activityEvent == null)
+                return null;
+
+            database.ActivityLog.Remove(activityEvent);
+            database.SaveChanges();
+
+            return "ok";
+        }
+        #endregion
+
+        #region Announcements
+        public static string GetAnnouncements(Database database, int page, int per_page, Platform? platform)
+        {
+            if (page <= 0)
+                page = 1;
+            if (per_page <= 0)
+                per_page = 1;
+
+            var query = database.Announcements.AsQueryable();
+
+            if (platform != null)
+                query = query.Where(match => match.Platform == platform);
+
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+
+            var announcements = query.Skip(pageStart).Take(per_page).ToList();
+
+            return JsonConvert.SerializeObject(new ModerationPageResponse<AnnouncementData>
+            {
+                Total = query.Count(),
+                Page = announcements
+            });
+        }
+
+        public static string CreateAnnouncement(Database database, string languageCode, string subject, string text, Platform platform)
+        {
+            database.Announcements.Add(new()
+            {
+                CreatedAt = TimeUtils.Now,
+                LanguageCode = languageCode,
+                Subject = subject,
+                Text = text,
+                Platform = platform
+            });
+
+            database.SaveChanges();
+
+            return "ok";
+        }
+
+        public static string EditAnnouncement(Database database, int id, string languageCode, string subject, string text, Platform platform)
+        {
+            var announcement = database.Announcements.FirstOrDefault(match => match.Id == id);
+
+            if (announcement == null)
+                return null;
+
+            announcement.LanguageCode = languageCode;
+            announcement.Subject = subject;
+            announcement.Text = text;
+            announcement.Platform = platform;
+            database.SaveChanges();
+
+            return "ok";
+        }
+
+        public static string DeleteAnnouncement(Database database, int id)
+        {
+            var announcement = database.Announcements.FirstOrDefault(match => match.Id == id);
+
+            if (announcement == null)
+                return null;
+
+            database.Announcements.Remove(announcement);
+            database.SaveChanges();
+
+            return "ok";
+        }
+        #endregion
+
+        #region HotLap
+        public static string GetHotLap(Database database)
+        {
+            HotLapData hotLap = ContentUpdates.ReadHotlapData();
+
+            return hotLap == null ? "error_no_hotlap_file" : hotLap.TrackId.ToString();
+        }
+        
+        public static string SetHotLap(Database database, int creationID)
+        {
+            var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == creationID);
+            
+            if (creation == null)
+                return "error_creation_not_found";
+            else if (creation.Type != PlayerCreationType.TRACK && creation.Type != PlayerCreationType.STORY)
+                return "error_not_a_track";
+            else
+            {
+                var hotlap = ContentUpdates.ReadHotlapData();
+
+                if (hotlap == null)
+                {
+                    ContentUpdates.GetNewHotLap(database);
+                    hotlap = ContentUpdates.ReadHotlapData();
+                    if (hotlap == null)
+                        return "error_no_hotlap_file";
+                }
+                
+                hotlap.TrackId = creationID;
+                ContentUpdates.WriteHotlapData(hotlap);
+
+                return "ok";
+            }
+        }
+        
+        public static string GetHotLapQueue(Database database, int page, int per_page)
+        {
+            HotLapData hotlap = ContentUpdates.ReadHotlapData();
+
+            if (hotlap == null || hotlap.Queue == null)
+                return "[]";
+
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+            
+            var queuePage =  hotlap.Queue.Skip(pageStart).Take(per_page).ToList();
+
+            var queue = database.PlayerCreations.Select(creation => new MinimalCreationInfo
+            {
+                ID = creation.PlayerCreationId,
+                Name = creation.Name,
+                Description = creation.Description,
+                Type = creation.Type,
+                OriginalPlayerID = creation.OriginalPlayerId,
+                ParentPlayerID = creation.ParentPlayerId,
+                PlayerID = creation.PlayerId,
+                ParentCreationID = creation.ParentCreationId,
+                ModerationStatus = creation.ModerationStatus,
+                IsMNR = creation.IsMNR
+            }).Where(match => queuePage.Contains(match.ID)).ToList();
+            
+            return JsonConvert.SerializeObject(new ModerationPageResponse<MinimalCreationInfo>
+            {
+                Total = hotlap.Queue.Count,
+                Page = queue
+            });
+        }
+        
+        public static string AddToHotLapQueue(Database database, int creationID)
+        {
+            var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == creationID);
+            
+            if (creation == null)
+                return "error_creation_not_found";
+            else if (creation.Type != PlayerCreationType.TRACK && creation.Type != PlayerCreationType.STORY)
+                return "error_not_a_track";
+            else
+            {
+                var hotlap = ContentUpdates.ReadHotlapData();
+
+                if (hotlap == null)
+                {
+                    ContentUpdates.GetNewHotLap(database);
+                    hotlap = ContentUpdates.ReadHotlapData();
+                    if (hotlap == null)
+                        return "error_no_hotlap_file";
+                }
+
+                if (hotlap.Queue == null)
+                    hotlap.Queue = [creationID];
+                else
+                    hotlap.Queue.Add(creationID);
+                
+                ContentUpdates.WriteHotlapData(hotlap);
+
+                return "ok";
+            }
+        }
+        
+        public static string RemoveFromHotLapQueue(Database database, int? index, int? creationID)
+        {
+            var hotlap = ContentUpdates.ReadHotlapData();
+
+            if (hotlap == null)
+            {
+                ContentUpdates.GetNewHotLap(database);
+                hotlap = ContentUpdates.ReadHotlapData();
+                if (hotlap == null)
+                    return "error_no_hotlap_file";
+            }
+
+            if (hotlap.Queue == null)
+                hotlap.Queue = [];
+            else
+            {
+                if (index != null)
+                    hotlap.Queue.RemoveAt(index.Value);
+                if (creationID != null)
+                    hotlap.Queue.RemoveAll(match => match == creationID.Value);
+            }
+                
+            ContentUpdates.WriteHotlapData(hotlap);
+
+            return "ok";
+        }
+        #endregion
+
         #region ModeratorManagement
         public static string CreateModerator(Database database, string username, string password, ModeratorPermissions permissions)
         {
@@ -389,7 +675,7 @@ namespace GameServer.Implementation.Common
             if (usernameIsTaken || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 return usernameIsTaken ? "error_username_is_taken" : string.IsNullOrEmpty(username) ? "error_username_is_empty" : "error_password_is_empty";
 
-            database.Moderators.Add(new Moderator
+            database.Moderators.Add(new()
             {
                 Username = username,
                 Password = BCrypt.Net.BCrypt.HashPassword(password),
@@ -399,7 +685,10 @@ namespace GameServer.Implementation.Common
                 ManageModerators = permissions.ManageModerators,
                 ViewGriefReports = permissions.ViewGriefReports,
                 ViewPlayerComplaints = permissions.ViewPlayerComplaints,
-                ViewPlayerCreationComplaints = permissions.ViewPlayerCreationComplaints
+                ViewPlayerCreationComplaints = permissions.ViewPlayerCreationComplaints,
+                ManageHotlap = permissions.ManageHotlap,
+                ManageAnnouncements = permissions.ManageAnnouncements,
+                ManageSystemEvents = permissions.ManageSystemEvents
             });
 
             database.SaveChanges();
@@ -417,6 +706,9 @@ namespace GameServer.Implementation.Common
                 ChangeCreationStatus = true,
                 ChangeUserSettings = true,
                 ManageModerators = true,
+                ManageAnnouncements = true,
+                ManageSystemEvents = true,
+                ManageHotlap = true,
                 ViewGriefReports = true,
                 ViewPlayerComplaints = true,
                 ViewPlayerCreationComplaints = true
@@ -443,11 +735,17 @@ namespace GameServer.Implementation.Common
             if (per_page <= 0)
                 per_page = 1;
 
+            var query = database.Moderators.AsQueryable();
+
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
-            var moderators = database.Moderators.Skip(pageStart).Take(per_page).ToList();
+            var moderators = query.Skip(pageStart).Take(per_page).ToList();
 
-            return JsonConvert.SerializeObject(moderators);
+            return JsonConvert.SerializeObject(new ModerationPageResponse<Moderator>
+            {
+                Total = query.Count(),
+                Page = moderators
+            });
         }
 
         public static string GetModerator(Database database, int userID)
@@ -474,6 +772,9 @@ namespace GameServer.Implementation.Common
             moderator.ViewGriefReports = permissions.ViewGriefReports;
             moderator.ViewPlayerComplaints = permissions.ViewPlayerComplaints;
             moderator.ViewPlayerCreationComplaints = permissions.ViewPlayerCreationComplaints;
+            moderator.ManageAnnouncements = permissions.ManageAnnouncements;
+            moderator.ManageHotlap = permissions.ManageHotlap;
+            moderator.ManageSystemEvents = permissions.ManageSystemEvents;
             database.SaveChanges();
 
             return "ok";

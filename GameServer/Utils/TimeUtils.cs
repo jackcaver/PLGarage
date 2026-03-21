@@ -13,6 +13,7 @@ namespace GameServer.Utils
         public static DateTime LastWeekStart => GetWeekStart(Now.AddDays(-7));
         public static DateTime ThisMonthStart => new DateTime(Now.Year, Now.Month, 1);
         public static int SecondsAgo(DateTime date) => (int)(Now - date).TotalSeconds;
+        public static TimeSpan UntilNextDay => TimeUtils.DayStart.AddDays(1) - TimeUtils.Now;
 
         private static DateTime GetWeekStart(DateTime date) => date.AddDays(
             ((date.DayOfWeek - CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek + 7) % 7) * -1

@@ -1,13 +1,8 @@
 using GameServer.Implementation.Common;
-using GameServer.Models.Moderation;
-using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Utils;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Linq;
-using System.Security.Claims;
 
 namespace GameServer.Controllers.Common
 {

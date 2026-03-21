@@ -11,7 +11,6 @@ using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Common

@@ -1,6 +1,5 @@
 ﻿using GameServer.Models.Config;
 using Microsoft.IdentityModel.Tokens;
-using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -28,7 +27,7 @@ namespace GameServer.Utils
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddDays(2),
+                expires: TimeUtils.Now.AddDays(2),
                 signingCredentials: Credentials);
 
             return JwtSecurityTokenHandler.WriteToken(token);

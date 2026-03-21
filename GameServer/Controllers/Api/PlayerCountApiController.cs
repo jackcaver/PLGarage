@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using GameServer.Implementation.Common;
 using GameServer.Utils;
@@ -23,7 +22,7 @@ namespace GameServer.Controllers.Api
                 .Where(x =>
                     (isMnr != null ? x.IsMNR == isMnr : true) &&
                     x.Authenticated &&
-                    x.LastPing.AddMinutes(1) > DateTime.Now)
+                    x.LastPing.AddMinutes(1) > TimeUtils.Now)
                 .Count()}");
         }
 

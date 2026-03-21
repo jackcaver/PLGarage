@@ -16,9 +16,7 @@ namespace GameServer.Utils
         {
             Logger.LogDebug("DailyTickService started");
 
-            var untilNewDay = TimeUtils.DayStart.AddDays(1) - TimeUtils.Now;
-
-            Timer = new(Tick, null, untilNewDay, TimeSpan.FromDays(1));
+            Timer = new(Tick, null, TimeUtils.UntilNextDay, TimeSpan.FromDays(1));
 
             return Task.CompletedTask;
         }

@@ -175,7 +175,10 @@ namespace GameServer.Implementation.Common
                 ManageModerators = moderator.ManageModerators,
                 ViewGriefReports = moderator.ViewGriefReports,
                 ViewPlayerComplaints = moderator.ViewPlayerComplaints,
-                ViewPlayerCreationComplaints = moderator.ViewPlayerCreationComplaints
+                ViewPlayerCreationComplaints = moderator.ViewPlayerCreationComplaints,
+                ManageAnnouncements = moderator.ManageAnnouncements,
+                ManageHotlap = moderator.ManageHotlap,
+                ManageSystemEvents = moderator.ManageSystemEvents
             };
 
             return JsonConvert.SerializeObject(permissions);

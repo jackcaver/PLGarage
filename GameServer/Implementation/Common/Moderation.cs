@@ -172,6 +172,7 @@ namespace GameServer.Implementation.Common
                 BanUsers = moderator.BanUsers,
                 ChangeCreationStatus = moderator.ChangeCreationStatus,
                 ChangeUserSettings = moderator.ChangeUserSettings,
+                ChangeUserQuota = moderator.ChangeUserQuota,
                 ManageModerators = moderator.ManageModerators,
                 ViewGriefReports = moderator.ViewGriefReports,
                 ViewPlayerComplaints = moderator.ViewPlayerComplaints,
@@ -290,6 +291,21 @@ namespace GameServer.Implementation.Common
 
             user.ShowCreationsWithoutPreviews = ShowCreationsWithoutPreviews;
             user.AllowOppositePlatform = AllowOppositePlatform;
+            database.SaveChanges();
+
+            return "ok";
+        }
+        public static string SetUserQuota(Database database, int id, int quota)
+        {
+            var user = database.Users.FirstOrDefault(match => match.UserId == id);
+
+            if (user == null)
+                return null;
+
+            if (quota < 0)
+                return "error_invalid_quota";
+
+            user.Quota = quota;
             database.SaveChanges();
 
             return "ok";
@@ -685,6 +701,7 @@ namespace GameServer.Implementation.Common
                 BanUsers = permissions.BanUsers,
                 ChangeCreationStatus = permissions.ChangeCreationStatus,
                 ChangeUserSettings = permissions.ChangeUserSettings,
+                ChangeUserQuota = permissions.ChangeUserQuota,
                 ManageModerators = permissions.ManageModerators,
                 ViewGriefReports = permissions.ViewGriefReports,
                 ViewPlayerComplaints = permissions.ViewPlayerComplaints,
@@ -708,6 +725,7 @@ namespace GameServer.Implementation.Common
                 BanUsers = true,
                 ChangeCreationStatus = true,
                 ChangeUserSettings = true,
+                ChangeUserQuota = true,
                 ManageModerators = true,
                 ManageAnnouncements = true,
                 ManageSystemEvents = true,
@@ -771,6 +789,7 @@ namespace GameServer.Implementation.Common
             moderator.BanUsers = permissions.BanUsers;
             moderator.ChangeCreationStatus = permissions.ChangeCreationStatus;
             moderator.ChangeUserSettings = permissions.ChangeUserSettings;
+            moderator.ChangeUserQuota = permissions.ChangeUserQuota;
             moderator.ManageModerators = permissions.ManageModerators;
             moderator.ViewGriefReports = permissions.ViewGriefReports;
             moderator.ViewPlayerComplaints = permissions.ViewPlayerComplaints;

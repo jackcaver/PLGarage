@@ -266,6 +266,66 @@ namespace GameServer.Implementation.Common
                 Page = creations
             });
         }
+
+        public static string ResetCreationStats(Database database, int playerCreationID)
+        {
+            var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == playerCreationID);
+            if (creation == null)
+                return null;
+
+            // Downloads
+            database.PlayerCreationDownloads.RemoveRange(
+                database.PlayerCreationDownloads.Where(match => match.PlayerCreationId == playerCreationID));
+
+            // Views
+            database.PlayerCreationViews.RemoveRange(
+                database.PlayerCreationViews.Where(match => match.PlayerCreationId == playerCreationID));
+
+            // Ratings
+            database.PlayerCreationRatings.RemoveRange(
+                database.PlayerCreationRatings.Where(match => match.PlayerCreationId == playerCreationID));
+
+            // Comments
+            var commentIds = database.PlayerCreationComments
+                .Where(match => match.PlayerCreationId == playerCreationID)
+                .Select(match => match.Id)
+                .ToList();
+
+            if (commentIds.Count > 0)
+            {
+                database.PlayerCreationCommentRatings.RemoveRange(
+                    database.PlayerCreationCommentRatings.Where(r => commentIds.Contains(r.PlayerCreationCommentId)));
+            }
+
+            database.PlayerCreationComments.RemoveRange(
+                database.PlayerCreationComments.Where(match => match.PlayerCreationId == playerCreationID));
+
+            // Reviews
+            var reviewIds = database.PlayerCreationReviews
+                .Where(match => match.PlayerCreationId == playerCreationID)
+                .Select(match => match.Id)
+                .ToList();
+
+            if (reviewIds.Count > 0)
+            {
+                database.PlayerCreationReviewRatings.RemoveRange(
+                    database.PlayerCreationReviewRatings.Where(r => reviewIds.Contains(r.PlayerCreationReviewId)));
+            }
+
+            database.PlayerCreationReviews.RemoveRange(
+                database.PlayerCreationReviews.Where(match => match.PlayerCreationId == playerCreationID));
+
+            // Points
+            var points = database.PlayerCreationPoints
+                .Where(match => match.PlayerCreationId == playerCreationID)
+                .ToList();
+
+            foreach (var p in points)
+                p.Amount = 0;
+
+            database.SaveChanges();
+            return "ok";
+        }
         #endregion
 
         #region UserManagement

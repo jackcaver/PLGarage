@@ -211,6 +211,26 @@ namespace GameServer.Controllers.Api
                 return Content(result);
         }
 
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/setUserQuota")]
+        public IActionResult SetUserQuota(int id, int quota)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                && database.Moderators.Any(match => match.ID == userID && match.ChangeUserQuota)))
+                return StatusCode(403);
+
+            var result = Moderation.SetUserQuota(database, id, quota);
+
+            if (result == null)
+                return NotFound();
+            else if (result == "error_invalid_quota")
+                return BadRequest();
+            else
+                return Content(result);
+        }
+
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/users")]
@@ -541,6 +561,7 @@ namespace GameServer.Controllers.Api
                     && (!permissions.BanUsers || match.BanUsers)
                     && (!permissions.ChangeCreationStatus || match.ChangeCreationStatus)
                     && (!permissions.ChangeUserSettings || match.ChangeUserSettings)
+                    && (!permissions.ChangeUserQuota || match.ChangeUserQuota)
                     && (!permissions.ViewGriefReports || match.ViewGriefReports)
                     && (!permissions.ViewPlayerComplaints || match.ViewPlayerComplaints)
                     && (!permissions.ViewPlayerCreationComplaints || match.ViewPlayerCreationComplaints)
@@ -608,6 +629,7 @@ namespace GameServer.Controllers.Api
                     && (!permissions.BanUsers || match.BanUsers)
                     && (!permissions.ChangeCreationStatus || match.ChangeCreationStatus)
                     && (!permissions.ChangeUserSettings || match.ChangeUserSettings)
+                    && (!permissions.ChangeUserQuota || match.ChangeUserQuota)
                     && (!permissions.ViewGriefReports || match.ViewGriefReports)
                     && (!permissions.ViewPlayerComplaints || match.ViewPlayerComplaints)
                     && (!permissions.ViewPlayerCreationComplaints || match.ViewPlayerCreationComplaints)

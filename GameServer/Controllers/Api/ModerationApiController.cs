@@ -172,6 +172,24 @@ namespace GameServer.Controllers.Api
 
             return Content(Moderation.GetPlayerCreationsWithStatus(database, page, per_page, status));
         }
+
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/player_creations/{playerCreationID}/reset_stats")]
+        public IActionResult ResetCreationStats(int playerCreationID)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                && database.Moderators.Any(match => match.ID == userID && match.ChangeCreationStatus)))
+                return StatusCode(403);
+
+            var result = Moderation.ResetCreationStats(database, playerCreationID);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
         #endregion
 
         #region UserManagement

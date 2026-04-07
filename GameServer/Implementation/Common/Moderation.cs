@@ -9,6 +9,7 @@ using GameServer.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Common
 {
@@ -265,6 +266,38 @@ namespace GameServer.Implementation.Common
                 Total = query.Count(),
                 Page = creations
             });
+        }
+
+        public static string ResetCreationStats(Database database, int playerCreationID)
+        {
+            if (!database.PlayerCreations.Any(c => c.PlayerCreationId == playerCreationID))
+                return null;
+
+            database.PlayerCreationDownloads
+                .Where(x => x.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
+
+            database.PlayerCreationViews
+                .Where(x => x.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
+
+            database.PlayerCreationRatings
+                .Where(x => x.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
+
+            database.PlayerCreationPoints
+                .Where(x => x.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
+
+            database.PlayerCreationComments
+                .Where(x => x.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
+
+            database.PlayerCreationReviews
+                .Where(x => x.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
+
+            return "ok";
         }
         #endregion
 

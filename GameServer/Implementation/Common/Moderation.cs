@@ -9,6 +9,7 @@ using GameServer.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Common
 {
@@ -269,61 +270,33 @@ namespace GameServer.Implementation.Common
 
         public static string ResetCreationStats(Database database, int playerCreationID)
         {
-            var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == playerCreationID);
-            if (creation == null)
+            if (!database.PlayerCreations.Any(c => c.PlayerCreationId == playerCreationID))
                 return null;
 
-            // Downloads
-            database.PlayerCreationDownloads.RemoveRange(
-                database.PlayerCreationDownloads.Where(match => match.PlayerCreationId == playerCreationID));
+            database.PlayerCreationDownloads
+                .Where(x => x.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
 
-            // Views
-            database.PlayerCreationViews.RemoveRange(
-                database.PlayerCreationViews.Where(match => match.PlayerCreationId == playerCreationID));
+            database.PlayerCreationViews
+                .Where(x => x.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
 
-            // Ratings
-            database.PlayerCreationRatings.RemoveRange(
-                database.PlayerCreationRatings.Where(match => match.PlayerCreationId == playerCreationID));
+            database.PlayerCreationRatings
+                .Where(x => x.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
 
-            // Comments
-            var commentIds = database.PlayerCreationComments
-                .Where(match => match.PlayerCreationId == playerCreationID)
-                .Select(match => match.Id)
-                .ToList();
+            database.PlayerCreationPoints
+                .Where(x => x.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
 
-            if (commentIds.Count > 0)
-            {
-                database.PlayerCreationCommentRatings.RemoveRange(
-                    database.PlayerCreationCommentRatings.Where(r => commentIds.Contains(r.PlayerCreationCommentId)));
-            }
+            database.PlayerCreationComments
+                .Where(x => x.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
 
-            database.PlayerCreationComments.RemoveRange(
-                database.PlayerCreationComments.Where(match => match.PlayerCreationId == playerCreationID));
+            database.PlayerCreationReviews
+                .Where(x => x.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
 
-            // Reviews
-            var reviewIds = database.PlayerCreationReviews
-                .Where(match => match.PlayerCreationId == playerCreationID)
-                .Select(match => match.Id)
-                .ToList();
-
-            if (reviewIds.Count > 0)
-            {
-                database.PlayerCreationReviewRatings.RemoveRange(
-                    database.PlayerCreationReviewRatings.Where(r => reviewIds.Contains(r.PlayerCreationReviewId)));
-            }
-
-            database.PlayerCreationReviews.RemoveRange(
-                database.PlayerCreationReviews.Where(match => match.PlayerCreationId == playerCreationID));
-
-            // Points
-            var points = database.PlayerCreationPoints
-                .Where(match => match.PlayerCreationId == playerCreationID)
-                .ToList();
-
-            foreach (var p in points)
-                p.Amount = 0;
-
-            database.SaveChanges();
             return "ok";
         }
         #endregion

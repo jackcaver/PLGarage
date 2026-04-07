@@ -8,15 +8,8 @@ using System;
 
 namespace GameServer.Controllers.Player_Creation
 {
-    public class TracksController : Controller
+    public class TracksController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public TracksController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpGet]
         [Route("tracks/{id}/profile.xml")]
         public IActionResult GetProfile(int id)

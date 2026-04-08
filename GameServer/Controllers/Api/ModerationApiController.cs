@@ -252,16 +252,20 @@ namespace GameServer.Controllers.Api
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/users")]
-        public IActionResult GetUsers(int page, int per_page, bool? PlayedMNR, bool? IsPSNLinked, bool? IsRPCNLinked)
-        {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID
-                    && (match.BanUsers || match.ChangeUserSettings))))
-                return StatusCode(403);
+        public IActionResult GetUsers(
+            int page, int per_page,
+            bool? PlayedMNR, bool? IsPSNLinked, bool? IsRPCNLinked,
+            bool? IsBanned
+        )
+                {
+                    var uidString = User.FindFirstValue(JWTUtils.UserID);
+                    if (!(int.TryParse(uidString, out int userID)
+                        && database.Moderators.Any(match => match.ID == userID
+                            && (match.BanUsers || match.ChangeUserSettings))))
+                        return StatusCode(403);
 
-            return Content(Moderation.GetUsers(database, page, per_page, PlayedMNR, IsPSNLinked, IsRPCNLinked));
-        }
+                    return Content(Moderation.GetUsers(database, page, per_page, PlayedMNR, IsPSNLinked, IsRPCNLinked, IsBanned));
+                }
         #endregion
 
         #region PlayerComplaints

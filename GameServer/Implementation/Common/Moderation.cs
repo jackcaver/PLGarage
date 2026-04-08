@@ -344,7 +344,7 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
 
-        public static string GetUsers(Database database, int page, int per_page, bool? PlayedMNR, bool? IsPSNLinked, bool? IsRPCNLinked)
+        public static string GetUsers(Database database, int page, int per_page, bool? PlayedMNR, bool? IsPSNLinked, bool? IsRPCNLinked, bool? IsBanned)
         {
             if (page <= 0)
                 page = 1;
@@ -362,20 +362,30 @@ namespace GameServer.Implementation.Common
             if (IsRPCNLinked != null)
                 query = query.Where(match => match.RPCNID != 0);
 
+            if (IsBanned != null)
+                query = query.Where(u => u.IsBanned == IsBanned);
+
+            var total = query.Count();
+
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
-            var creations = query.Select(user => new MinimalUserInfo
+            var users = query.Select(user => new MinimalUserInfo
             {
                 ID = user.UserId,
                 Username = user.Username,
                 PlayedMNR = user.PlayedMNR,
                 IsPSNLinked = user.PSNID != 0,
                 IsRPCNLinked = user.RPCNID != 0,
+                IsBanned = user.IsBanned,
                 AllowOppositePlatform = user.AllowOppositePlatform,
                 ShowCreationsWithoutPreviews = user.ShowCreationsWithoutPreviews,
             }).Skip(pageStart).Take(per_page).ToList();
 
-            return JsonConvert.SerializeObject(creations);
+            return JsonConvert.SerializeObject(new ModerationPageResponse<MinimalUserInfo>
+            {
+                Total = total,
+                Page = users
+            });
         }
         #endregion
 

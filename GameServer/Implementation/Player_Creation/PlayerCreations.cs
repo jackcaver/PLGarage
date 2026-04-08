@@ -374,17 +374,14 @@ namespace GameServer.Implementation.Player_Creation
             {
                 bool isOwner = User.UserId == Creation.PlayerId;
 
-                if (IsCounted && !download)
+                if (IsCounted && !download && !isOwner)
                 {
-                    if (!isOwner)
+                    database.PlayerCreationViews.Add(new PlayerCreationView
                     {
-                        database.PlayerCreationViews.Add(new PlayerCreationView
-                        {
-                            PlayerCreationId = Creation.PlayerCreationId,
-                            ViewedAt = TimeUtils.Now
-                        });
-                        database.SaveChanges();
-                    }
+                        PlayerCreationId = Creation.PlayerCreationId,
+                        ViewedAt = TimeUtils.Now
+                    });
+                    database.SaveChanges();
                 }
 
                 if (IsCounted && download)

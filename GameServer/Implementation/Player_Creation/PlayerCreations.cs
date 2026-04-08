@@ -384,10 +384,8 @@ namespace GameServer.Implementation.Player_Creation
                     database.SaveChanges();
                 }
 
-                if (IsCounted && download)
+                if (IsCounted && download && !isOwner)
                 {
-                    if (!isOwner)
-                    {
                         var uniqueRacer = database.PlayerCreationUniqueRacers
                             .FirstOrDefault(match =>
                                 match.PlayerId == User.UserId &&
@@ -496,7 +494,6 @@ namespace GameServer.Implementation.Player_Creation
                         }
 
                         database.SaveChanges();
-                    }
                 }
             }
 

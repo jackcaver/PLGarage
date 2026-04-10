@@ -249,6 +249,24 @@ namespace GameServer.Controllers.Api
                 return Content(result);
         }
 
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/users/{id}/reset_profile")]
+        public IActionResult ResetUserProfile(int id, bool removeCreations = false)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                && database.Moderators.Any(match => match.ID == userID && match.ChangeUserSettings)))
+                return StatusCode(403);
+
+            var result = Moderation.ResetUserProfile(database, id, removeCreations);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/users")]

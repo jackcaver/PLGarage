@@ -374,6 +374,8 @@ namespace GameServer.Implementation.Common
             database.Scores.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
             database.AwardUnlocks.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
             database.HeartedPlayerCreations.Where(x => x.UserId == targetUserId).ExecuteDelete();
+            database.HeartedProfiles.Where(x => x.UserId == targetUserId || x.HeartedUserId == targetUserId).ExecuteDelete();
+            database.PlayerCreationBookmarks.Where(x => x.UserId == targetUserId).ExecuteDelete();
 
             var userCreations = database.PlayerCreations.Where(c => c.PlayerId == targetUserId);
 

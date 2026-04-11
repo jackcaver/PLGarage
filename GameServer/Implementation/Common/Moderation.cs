@@ -351,6 +351,7 @@ namespace GameServer.Implementation.Common
                 return null;
 
             var user = database.Users.First(u => u.UserId == targetUserId);
+
             user.OnlineForfeit = 0;
             user.OnlineDisconnected = 0;
             user.WinStreak = 0;
@@ -374,32 +375,46 @@ namespace GameServer.Implementation.Common
             database.Scores.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
             database.AwardUnlocks.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
             database.HeartedPlayerCreations.Where(x => x.UserId == targetUserId).ExecuteDelete();
-            database.HeartedProfiles.Where(x => x.UserId == targetUserId || x.HeartedUserId == targetUserId).ExecuteDelete();
             database.PlayerCreationBookmarks.Where(x => x.UserId == targetUserId).ExecuteDelete();
+            database.HeartedProfiles.Where(x => x.UserId == targetUserId || x.HeartedUserId == targetUserId).ExecuteDelete();
 
             var userCreations = database.PlayerCreations.Where(c => c.PlayerId == targetUserId);
 
+            var creationIds = userCreations
+                .Select(c => c.PlayerCreationId)
+                .ToList();
+
+            if (creationIds.Count > 0)
+            {
+                database.HeartedPlayerCreations
+                    .Where(h => creationIds.Contains(h.HeartedPlayerCreationId))
+                    .ExecuteDelete();
+
+                database.PlayerCreationBookmarks
+                    .Where(b => creationIds.Contains(b.BookmarkedPlayerCreationId))
+                    .ExecuteDelete();
+            }
+
             if (removeCreations)
             {
-                var creationIds = userCreations
-                    .Select(c => c.PlayerCreationId)
-                    .ToList();
-
                 foreach (var creationId in creationIds)
+                {
                     UserGeneratedContentUtils.RemovePlayerCreation(creationId);
+                }
 
                 userCreations.ExecuteDelete();
             }
             else
             {
-                var creationIds = userCreations.Select(c => c.PlayerCreationId);
-
-                database.PlayerCreationDownloads.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
-                database.PlayerCreationViews.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
-                database.PlayerCreationRatings.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
-                database.PlayerCreationPoints.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
-                database.PlayerCreationComments.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
-                database.PlayerCreationReviews.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                if (creationIds.Count > 0)
+                {
+                    database.PlayerCreationDownloads.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                    database.PlayerCreationViews.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                    database.PlayerCreationRatings.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                    database.PlayerCreationPoints.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                    database.PlayerCreationComments.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                    database.PlayerCreationReviews.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                }
             }
 
             database.SaveChanges();

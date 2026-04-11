@@ -328,6 +328,7 @@ namespace GameServer.Implementation.Common
 
             return "ok";
         }
+        
         public static string SetUserQuota(Database database, int id, int quota)
         {
             var user = database.Users.FirstOrDefault(match => match.UserId == id);
@@ -341,6 +342,82 @@ namespace GameServer.Implementation.Common
             user.Quota = quota;
             database.SaveChanges();
 
+            return "ok";
+        }
+
+        public static string ResetUserProfile(Database database, int targetUserId, bool removeCreations)
+        {
+            if (!database.Users.Any(u => u.UserId == targetUserId))
+                return null;
+
+            var user = database.Users.First(u => u.UserId == targetUserId);
+
+            user.OnlineForfeit = 0;
+            user.OnlineDisconnected = 0;
+            user.WinStreak = 0;
+            user.LongestWinStreak = 0;
+            user.CharacterIdx = 0;
+            user.KartIdx = 0;
+            user.LongestDrift = 0;
+            user.LongestHangTime = 0;
+            user.ModMiles = 0;
+            user.PlayedMNR = false;
+            user.HasCheckedInBefore = false;
+            user.LastLatitude = 0;
+            user.LastLongitude = 0;
+            user.Quote = null;
+
+            database.PlayerExperiencePoints.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
+            database.PlayerPoints.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
+            database.TravelPoints.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
+            database.OnlineRacesStarted.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
+            database.OnlineRacesFinished.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
+            database.Scores.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
+            database.AwardUnlocks.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
+            database.HeartedPlayerCreations.Where(x => x.UserId == targetUserId).ExecuteDelete();
+            database.PlayerCreationBookmarks.Where(x => x.UserId == targetUserId).ExecuteDelete();
+            database.HeartedProfiles.Where(x => x.UserId == targetUserId || x.HeartedUserId == targetUserId).ExecuteDelete();
+
+            var userCreations = database.PlayerCreations.Where(c => c.PlayerId == targetUserId);
+
+            var creationIds = userCreations
+                .Select(c => c.PlayerCreationId)
+                .ToList();
+
+            if (creationIds.Count > 0)
+            {
+                database.HeartedPlayerCreations
+                    .Where(h => creationIds.Contains(h.HeartedPlayerCreationId))
+                    .ExecuteDelete();
+
+                database.PlayerCreationBookmarks
+                    .Where(b => creationIds.Contains(b.BookmarkedPlayerCreationId))
+                    .ExecuteDelete();
+            }
+
+            if (removeCreations)
+            {
+                foreach (var creationId in creationIds)
+                {
+                    UserGeneratedContentUtils.RemovePlayerCreation(creationId);
+                }
+
+                userCreations.ExecuteDelete();
+            }
+            else
+            {
+                if (creationIds.Count > 0)
+                {
+                    database.PlayerCreationDownloads.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                    database.PlayerCreationViews.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                    database.PlayerCreationRatings.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                    database.PlayerCreationPoints.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                    database.PlayerCreationComments.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                    database.PlayerCreationReviews.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                }
+            }
+
+            database.SaveChanges();
             return "ok";
         }
 

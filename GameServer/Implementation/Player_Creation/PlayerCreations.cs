@@ -376,21 +376,39 @@ namespace GameServer.Implementation.Player_Creation
 
                 if (IsCounted && !download && !isOwner)
                 {
-                    database.PlayerCreationViews.Add(new PlayerCreationView
+                    var uniqueViewer = database.PlayerCreationUniqueRacers
+                        .FirstOrDefault(match =>
+                            match.PlayerId == User.UserId &&
+                            match.PlayerCreationId == Creation.PlayerCreationId);
+
+                    if (uniqueViewer == null)
                     {
-                        PlayerCreationId = Creation.PlayerCreationId,
-                        ViewedAt = TimeUtils.Now
-                    });
-                    database.SaveChanges();
+                        database.PlayerCreationViews.Add(new PlayerCreationView
+                        {
+                            PlayerCreationId = Creation.PlayerCreationId,
+                            ViewedAt = TimeUtils.Now
+                        });
+
+                        database.PlayerCreationUniqueRacers.Add(new PlayerCreationUniqueRacer
+                        {
+                            PlayerId = User.UserId,
+                            PlayerCreationId = Creation.PlayerCreationId,
+                            Version = Creation.Version
+                        });
+
+                        database.SaveChanges();
+                    }
                 }
 
                 if (IsCounted && download && !isOwner)
                 {
-                        var uniqueRacer = database.PlayerCreationUniqueRacers
-                            .FirstOrDefault(match =>
-                                match.PlayerId == User.UserId &&
-                                match.PlayerCreationId == Creation.PlayerCreationId);
+                    var uniqueRacer = database.PlayerCreationUniqueRacers
+                        .FirstOrDefault(match =>
+                            match.PlayerId == User.UserId &&
+                            match.PlayerCreationId == Creation.PlayerCreationId);
 
+                    if (uniqueRacer == null)
+                    {
                         database.PlayerCreationDownloads.Add(new PlayerCreationDownload
                         {
                             PlayerCreationId = Creation.PlayerCreationId,
@@ -410,90 +428,46 @@ namespace GameServer.Implementation.Player_Creation
                             });
                         }
 
-                        if (uniqueRacer == null)
+                        database.PlayerCreationUniqueRacers.Add(new PlayerCreationUniqueRacer
                         {
-                            database.PlayerCreationUniqueRacers.Add(new PlayerCreationUniqueRacer
+                            PlayerId = User.UserId,
+                            PlayerCreationId = Creation.PlayerCreationId,
+                            Version = Creation.Version
+                        });
+
+                        if (!session.IsMNR)
+                        {
+                            database.ActivityLog.Add(new ActivityEvent
                             {
-                                PlayerId = User.UserId,
+                                AuthorId = User.UserId,
+                                Type = ActivityType.player_creation_event,
+                                List = ActivityList.activity_log,
+                                Topic = "player_creation_downloaded",
+                                Description = "",
+                                PlayerId = 0,
                                 PlayerCreationId = Creation.PlayerCreationId,
-                                Version = Creation.Version
+                                CreatedAt = TimeUtils.Now,
+                                AllusionId = Creation.PlayerCreationId,
+                                AllusionType = "PlayerCreation::Track"
                             });
 
-                            if (!session.IsMNR)
+                            database.ActivityLog.Add(new ActivityEvent
                             {
-                                database.ActivityLog.Add(new ActivityEvent
-                                {
-                                    AuthorId = User.UserId,
-                                    Type = ActivityType.player_creation_event,
-                                    List = ActivityList.activity_log,
-                                    Topic = "player_creation_downloaded",
-                                    Description = "",
-                                    PlayerId = 0,
-                                    PlayerCreationId = Creation.PlayerCreationId,
-                                    CreatedAt = TimeUtils.Now,
-                                    AllusionId = Creation.PlayerCreationId,
-                                    AllusionType = "PlayerCreation::Track"
-                                });
-
-                                database.ActivityLog.Add(new ActivityEvent
-                                {
-                                    AuthorId = User.UserId,
-                                    Type = ActivityType.player_creation_event,
-                                    List = ActivityList.activity_log,
-                                    Topic = "player_creation_played",
-                                    Description = "",
-                                    PlayerId = 0,
-                                    PlayerCreationId = Creation.PlayerCreationId,
-                                    CreatedAt = TimeUtils.Now,
-                                    AllusionId = Creation.PlayerCreationId,
-                                    AllusionType = "PlayerCreation::Track"
-                                });
-                            }
-                        }
-
-                        else if (uniqueRacer.Version != Creation.Version)
-                        {
-                            database.PlayerCreationDownloads.Add(new PlayerCreationDownload
-                            {
+                                AuthorId = User.UserId,
+                                Type = ActivityType.player_creation_event,
+                                List = ActivityList.activity_log,
+                                Topic = "player_creation_played",
+                                Description = "",
+                                PlayerId = 0,
                                 PlayerCreationId = Creation.PlayerCreationId,
-                                DownloadedAt = TimeUtils.Now
+                                CreatedAt = TimeUtils.Now,
+                                AllusionId = Creation.PlayerCreationId,
+                                AllusionType = "PlayerCreation::Track"
                             });
-
-                            if (!session.IsMNR)
-                            {
-                                database.ActivityLog.Add(new ActivityEvent
-                                {
-                                    AuthorId = User.UserId,
-                                    Type = ActivityType.player_creation_event,
-                                    List = ActivityList.activity_log,
-                                    Topic = "player_creation_downloaded",
-                                    Description = "",
-                                    PlayerId = 0,
-                                    PlayerCreationId = Creation.PlayerCreationId,
-                                    CreatedAt = TimeUtils.Now,
-                                    AllusionId = Creation.PlayerCreationId,
-                                    AllusionType = "PlayerCreation::Track"
-                                });
-
-                                database.ActivityLog.Add(new ActivityEvent
-                                {
-                                    AuthorId = User.UserId,
-                                    Type = ActivityType.player_creation_event,
-                                    List = ActivityList.activity_log,
-                                    Topic = "player_creation_played",
-                                    Description = "",
-                                    PlayerId = 0,
-                                    PlayerCreationId = Creation.PlayerCreationId,
-                                    CreatedAt = TimeUtils.Now,
-                                    AllusionId = Creation.PlayerCreationId,
-                                    AllusionType = "PlayerCreation::Track"
-                                });
-                            }
-
-                            uniqueRacer.Version = Creation.Version;
                         }
 
                         database.SaveChanges();
+                    }
                 }
             }
 

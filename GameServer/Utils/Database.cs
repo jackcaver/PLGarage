@@ -45,7 +45,8 @@ namespace GameServer.Utils
         public DbSet<Moderator> Moderators { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options) =>
-            options.UseMySql(ServerConfig.Instance.MysqlConnectionString, ServerVersion.AutoDetect(ServerConfig.Instance.MysqlConnectionString));
+            options.UseMySql(ServerConfig.Instance.MysqlConnectionString, ServerVersion.AutoDetect(ServerConfig.Instance.MysqlConnectionString))
+                .UseProjectables();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EntityFrameworkCore.Projectables;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -21,10 +22,15 @@ namespace GameServer.Models.PlayerData
         public DateTime HeartedAt { get; set; }
         public bool IsMNR { get; set; }
 
+        [Projectable]
         public int Hearts => HeartedUser.Hearts;
+        [Projectable]
         public string Quote => HeartedUser.Quote;
+        [Projectable]
         public int TotalTracks => HeartedUser.TotalTracks;
+        [Projectable]
         public string Username => HeartedUser.Username;
+        [Projectable]
         public bool IsHeartedByMe(int id, bool IsMNR) => HeartedUser.IsHeartedByMe(id, IsMNR);
     }
 }

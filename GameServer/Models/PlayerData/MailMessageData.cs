@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EntityFrameworkCore.Projectables;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -13,6 +14,7 @@ namespace GameServer.Models.PlayerData
         [ForeignKey(nameof(SenderId))]
         public User Sender { get; set; }
 
+        [Projectable]
         public string SenderName => Sender.Username;
 
         public int RecipientId { get; set; }

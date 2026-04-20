@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EntityFrameworkCore.Projectables;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -22,16 +23,17 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public User Player { get; set; }
 
         public DateTime UpdatedAt { get; set; }
+        [Projectable]
         public string Username => Player.Username;
 
         public List<PlayerCreationCommentRatingData> CommentRatings { get; set; }
 
+        [Projectable]
         public int RatingUp => CommentRatings.Count(match => match.Type == RatingType.YAY);
+        [Projectable]
         public int RatingDown => CommentRatings.Count(match => match.Type == RatingType.BOO);
-
-        public bool IsRatedByMe(int id)
-        {
-            return CommentRatings.Any(match => match.PlayerId == id);
-        }
+        [Projectable]
+        public bool IsRatedByMe(int id) => CommentRatings.Any(match => match.PlayerId == id);
+        
     }
 }

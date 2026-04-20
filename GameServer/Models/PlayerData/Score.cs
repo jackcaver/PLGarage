@@ -1,4 +1,5 @@
-﻿using GameServer.Models.PlayerData.PlayerCreations;
+﻿using EntityFrameworkCore.Projectables;
+using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Utils;
 using System;
@@ -25,6 +26,7 @@ namespace GameServer.Models.PlayerData
         public PlayerCreationData Creation { get; set; }
 
         public DateTime UpdatedAt { get; set; }
+        [Projectable]
         public string Username => User.Username;
         public float Points { get; set; }
         public float FinishTime { get; set; }

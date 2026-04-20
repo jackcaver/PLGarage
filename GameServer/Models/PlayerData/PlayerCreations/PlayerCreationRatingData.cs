@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EntityFrameworkCore.Projectables;
+using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameServer.Models.PlayerData.PlayerCreations
@@ -20,6 +21,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public RatingType Type { get; set; }
         public int Rating { get; set; }
         public string Comment { get; set; }
+        [Projectable]
         public string Username => Player.Username;
     }
 }

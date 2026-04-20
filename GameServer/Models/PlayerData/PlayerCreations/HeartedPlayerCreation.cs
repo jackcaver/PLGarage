@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EntityFrameworkCore.Projectables;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -18,6 +19,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         [ForeignKey(nameof(HeartedPlayerCreationId))]
         public PlayerCreationData HeartedCreation { get; set; }
 
+        [Projectable]
         public string Name => HeartedCreation.Name;
 
         public DateTime HeartedAt { get; set; }

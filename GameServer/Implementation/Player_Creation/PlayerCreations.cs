@@ -564,17 +564,9 @@ namespace GameServer.Implementation.Player_Creation
 
             if (usernameFilter != null)
             {
-                foreach (string username in usernameFilter.Split(','))
-                {
-                    var user = database.Users.FirstOrDefault(match => match.Username == username);
-                    if (user != null)
-                    {
-                        var userTracks = database.PlayerCreations.Where(match => match.PlayerId == user.UserId
-                            && match.Type == type).ToList();
-                        if (userTracks != null)
-                            Creations.AddRange(userTracks);
-                    }
-                }
+                var usernames = usernameFilter.Split(',');
+                Creations.AddRange(database.PlayerCreations.Where(match => usernames.Contains(match.Username) 
+                                                                    && match.Type == type).ToList());
             }
 
             var resp = new Response<List<player_creations>>
@@ -608,13 +600,13 @@ namespace GameServer.Implementation.Player_Creation
 
             //filters
             if (filters.username != null)
-                creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && filters.username.Any(x => match.Author.Username == x));
+                creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && filters.username.Contains(match.Username));
 
             if (filters.id != null)
-                creationQuery = creationQuery.Where(match => (match.Type == filters.player_creation_type || match.Type == PlayerCreationType.STORY) && filters.id.Any(x => match.PlayerCreationId.ToString() == x));
+                creationQuery = creationQuery.Where(match => (match.Type == filters.player_creation_type || match.Type == PlayerCreationType.STORY) && filters.id.Contains(match.PlayerCreationId.ToString()));
 
             if (filters.player_id != null)
-                creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && filters.player_id.Any(x => match.PlayerId.ToString() == x));
+                creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type && filters.player_id.Contains(match.PlayerId.ToString()));
 
             if (filters.id == null && ServerConfig.Instance.HideUnmoderatedCreationsFromSearch)
                 creationQuery = creationQuery.Where(match => match.ModerationStatus != ModerationStatus.PENDING);
@@ -656,10 +648,8 @@ namespace GameServer.Implementation.Player_Creation
                 case SortColumn.coolness:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => (match.Ratings.Count(match => match.Type == RatingType.YAY) - match.Ratings.Count(match => match.Type == RatingType.BOO)) +
-                                ((match.RacesStarted.Count() + match.RacesFinished) / 2) + match.Hearts.Count()) :
-                            creationQuery.OrderByDescending(match => (match.Ratings.Count(match => match.Type == RatingType.YAY) - match.Ratings.Count(match => match.Type == RatingType.BOO)) +
-                                ((match.RacesStarted.Count() + match.RacesFinished) / 2) + match.Hearts.Count());
+                            creationQuery.OrderBy(match => match.Coolness) :
+                            creationQuery.OrderByDescending(match => match.Coolness);
                     break;
 
                 //newest levels
@@ -674,140 +664,140 @@ namespace GameServer.Implementation.Player_Creation
                 case SortColumn.races_started:
                     creationQuery =
                         sort_order == SortOrder.asc ? 
-                            creationQuery.OrderBy(match => match.RacesStarted.Count()) : 
-                            creationQuery.OrderByDescending(match => match.RacesStarted.Count());
+                            creationQuery.OrderBy(match => match.RacesStartedCount) : 
+                            creationQuery.OrderByDescending(match => match.RacesStartedCount);
                     break;
                 case SortColumn.races_started_this_week:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.RacesStarted.Count(match => match.StartedAt >= TimeUtils.ThisWeekStart)) : 
-                            creationQuery.OrderByDescending(match => match.RacesStarted.Count(match => match.StartedAt >= TimeUtils.ThisWeekStart));
+                            creationQuery.OrderBy(match => match.RacesStartedThisWeek) : 
+                            creationQuery.OrderByDescending(match => match.RacesStartedThisWeek);
                     break;
                 case SortColumn.races_started_this_month:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.RacesStarted.Count(match => match.StartedAt >= TimeUtils.ThisMonthStart)) :
-                            creationQuery.OrderByDescending(match => match.RacesStarted.Count(match => match.StartedAt >= TimeUtils.ThisMonthStart));
+                            creationQuery.OrderBy(match => match.RacesStartedThisMonth) :
+                            creationQuery.OrderByDescending(match => match.RacesStartedThisMonth);
                     break;
 
                 //highest rated
                 case SortColumn.rating_up:
                     creationQuery =
                         sort_order == SortOrder.asc ? 
-                            creationQuery.OrderBy(match => match.Ratings.Count(match => match.Type == RatingType.YAY)) : 
-                            creationQuery.OrderByDescending(match => match.Ratings.Count(match => match.Type == RatingType.YAY));
+                            creationQuery.OrderBy(match => match.RatingUp) : 
+                            creationQuery.OrderByDescending(match => match.RatingUp);
                     break;
                 case SortColumn.rating_up_this_week:
                     creationQuery =
                         sort_order == SortOrder.asc ? 
-                            creationQuery.OrderBy(match => match.Ratings.Count(match => match.Type == RatingType.YAY && match.RatedAt >= TimeUtils.ThisWeekStart)) : 
-                            creationQuery.OrderByDescending(match => match.Ratings.Count(match => match.Type == RatingType.YAY && match.RatedAt >= TimeUtils.ThisWeekStart));
+                            creationQuery.OrderBy(match => match.RatingUpThisWeek) : 
+                            creationQuery.OrderByDescending(match => match.RatingUpThisWeek);
                     break;
                 case SortColumn.rating_up_this_month:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Ratings.Count(match => match.Type == RatingType.YAY && match.RatedAt >= TimeUtils.ThisMonthStart)) :
-                            creationQuery.OrderByDescending(match => match.Ratings.Count(match => match.Type == RatingType.YAY && match.RatedAt >= TimeUtils.ThisMonthStart));
+                            creationQuery.OrderBy(match => match.RatingUpThisMonth) :
+                            creationQuery.OrderByDescending(match => match.RatingUpThisMonth);
                     break;
 
                 //most hearted
                 case SortColumn.hearts:
                     creationQuery =
                         sort_order == SortOrder.asc ? 
-                            creationQuery.OrderBy(match => match.Hearts.Count()) : 
-                            creationQuery.OrderByDescending(match => match.Hearts.Count());
+                            creationQuery.OrderBy(match => match.HeartsCount) : 
+                            creationQuery.OrderByDescending(match => match.HeartsCount);
                     break;
                 case SortColumn.hearts_this_week:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Hearts.Count(match => match.HeartedAt >= TimeUtils.ThisWeekStart)) :
-                            creationQuery.OrderByDescending(match => match.Hearts.Count(match => match.HeartedAt >= TimeUtils.ThisWeekStart));
+                            creationQuery.OrderBy(match => match.HeartsThisWeek) :
+                            creationQuery.OrderByDescending(match => match.HeartsThisWeek);
                     break;
                 case SortColumn.hearts_this_month:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Hearts.Count(match => match.HeartedAt >= TimeUtils.ThisMonthStart)) :
-                            creationQuery.OrderByDescending(match => match.Hearts.Count(match => match.HeartedAt >= TimeUtils.ThisMonthStart));
+                            creationQuery.OrderBy(match => match.HeartsThisMonth) :
+                            creationQuery.OrderByDescending(match => match.HeartsThisMonth);
                     break;
 
                 //MNR
                 case SortColumn.rating:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Ratings.Count() != 0 ? (float)match.Ratings.Average(r => r.Rating) : 0) :   // Can we simplify this and remove the count check?
-                            creationQuery.OrderByDescending(match => match.Ratings.Count() != 0 ? (float)match.Ratings.Average(r => r.Rating) : 0);
+                            creationQuery.OrderBy(match => match.Rating) :   // Can we simplify this and remove the count check?
+                            creationQuery.OrderByDescending(match => match.Rating);
                     break;
 
                 //points
                 case SortColumn.points:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Points.Sum(p => p.Amount)) :
-                            creationQuery.OrderByDescending(match => match.Points.Sum(p => p.Amount));
+                            creationQuery.OrderBy(match => match.PointsAmount) :
+                            creationQuery.OrderByDescending(match => match.PointsAmount);
                     break;
                 case SortColumn.points_today:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Points.Where(match => match.CreatedAt >= TimeUtils.DayStart).Sum(p => p.Amount)) :
-                            creationQuery.OrderByDescending(match => match.Points.Where(match => match.CreatedAt >= TimeUtils.DayStart).Sum(p => p.Amount));
+                            creationQuery.OrderBy(match => match.PointsToday) :
+                            creationQuery.OrderByDescending(match => match.PointsToday);
                     break;
                 case SortColumn.points_yesterday:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Points.Where(match => match.CreatedAt >= TimeUtils.YesterdayStart && match.CreatedAt < TimeUtils.DayStart).Sum(p => p.Amount)) :
-                            creationQuery.OrderByDescending(match => match.Points.Where(match => match.CreatedAt >= TimeUtils.YesterdayStart && match.CreatedAt < TimeUtils.DayStart).Sum(p => p.Amount));
+                            creationQuery.OrderBy(match => match.PointsYesterday) :
+                            creationQuery.OrderByDescending(match => match.PointsYesterday);
                     break;
                 case SortColumn.points_this_week:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderByDescending(match => match.Points.Where(match => match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount)) :
-                            creationQuery.OrderBy(match => match.Points.Where(match => match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount));
+                            creationQuery.OrderByDescending(match => match.PointsThisWeek) :
+                            creationQuery.OrderBy(match => match.PointsThisWeek);
                     break;
                 case SortColumn.points_last_week:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Points.Where(match => match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount)) :
-                            creationQuery.OrderByDescending(match => match.Points.Where(match => match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount));
+                            creationQuery.OrderBy(match => match.PointsLastWeek) :
+                            creationQuery.OrderByDescending(match => match.PointsLastWeek);
                     break;
 
                 //download
                 case SortColumn.downloads:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Downloads.Count()) :
-                            creationQuery.OrderByDescending(match => match.Downloads.Count());
+                            creationQuery.OrderBy(match => match.DownloadsCount) :
+                            creationQuery.OrderByDescending(match => match.DownloadsCount);
                     break;
                 case SortColumn.downloads_this_week:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Downloads.Count(match => match.DownloadedAt >= TimeUtils.ThisWeekStart)) :
-                            creationQuery.OrderByDescending(match => match.Downloads.Count(match => match.DownloadedAt >= TimeUtils.ThisWeekStart));
+                            creationQuery.OrderBy(match => match.DownloadsThisWeek) :
+                            creationQuery.OrderByDescending(match => match.DownloadsThisWeek);
                     break;
                 case SortColumn.downloads_last_week:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Downloads.Count(match => match.DownloadedAt >= TimeUtils.LastWeekStart && match.DownloadedAt < TimeUtils.ThisWeekStart)) :
-                            creationQuery.OrderByDescending(match => match.Downloads.Count(match => match.DownloadedAt >= TimeUtils.LastWeekStart && match.DownloadedAt < TimeUtils.ThisWeekStart));
+                            creationQuery.OrderBy(match => match.DownloadsLastWeek) :
+                            creationQuery.OrderByDescending(match => match.DownloadsLastWeek);
                     break;
 
                 //views
                 case SortColumn.views:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Views.Count()) :
-                            creationQuery.OrderByDescending(match => match.Views.Count());
+                            creationQuery.OrderBy(match => match.ViewsCount) :
+                            creationQuery.OrderByDescending(match => match.ViewsCount);
                     break;
                 case SortColumn.views_this_week:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Views.Count(match => match.ViewedAt >= TimeUtils.ThisWeekStart)) :
-                            creationQuery.OrderByDescending(match => match.Views.Count(match => match.ViewedAt >= TimeUtils.ThisWeekStart));
+                            creationQuery.OrderBy(match => match.ViewsThisWeek) :
+                            creationQuery.OrderByDescending(match => match.ViewsThisWeek);
                     break;
                 case SortColumn.views_last_week:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.Views.Count(match => match.ViewedAt >= TimeUtils.LastWeekStart && match.ViewedAt < TimeUtils.ThisWeekStart)) :
-                            creationQuery.OrderByDescending(match => match.Views.Count(match => match.ViewedAt >= TimeUtils.LastWeekStart && match.ViewedAt < TimeUtils.ThisWeekStart));
+                            creationQuery.OrderBy(match => match.ViewsLastWeek) :
+                            creationQuery.OrderByDescending(match => match.ViewsLastWeek);
                     break;
             }
 
@@ -951,7 +941,7 @@ namespace GameServer.Implementation.Player_Creation
             if (associated_usernames != null)
                 photosQuery = photosQuery.Where(match => match.AssociatedUsernames.Contains(associated_usernames));
             if (username != null)
-                photosQuery = photosQuery.Where(match => match.Author.Username == username);
+                photosQuery = photosQuery.Where(match => match.Username == username);
             if (track_id != null)
                 photosQuery = photosQuery.Where(match => match.TrackId == track_id);
 

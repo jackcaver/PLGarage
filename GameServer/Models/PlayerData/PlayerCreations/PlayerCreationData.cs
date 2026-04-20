@@ -1,4 +1,5 @@
-﻿using GameServer.Utils;
+﻿using EntityFrameworkCore.Projectables;
+using GameServer.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -77,49 +78,68 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public List<PlayerCreationReview> Reviews { get; set; }
         public List<Score> Scores { get; set; }
 
+        [Projectable]
         public int RacesStartedCount => RacesStarted.Count;
+        [Projectable]
         public int Votes => Ratings.Count(match => !IsMNR || match.Rating != 0);
+        [Projectable]
         public int RacesStartedThisWeek => RacesStarted.Count(match => match.StartedAt >= TimeUtils.ThisWeekStart);
+        [Projectable]
         public int RacesStartedThisMonth => RacesStarted.Count(match => match.StartedAt >= TimeUtils.ThisMonthStart);
+        [Projectable]
         public int UniqueRacerCount => UniqueRacers.Count;
+        [Projectable]
         public float Coolness => (RatingUp - RatingDown) + ((RacesStartedCount + RacesFinished) / 2) + HeartsCount;
+        [Projectable]
         public int DownloadsCount => Downloads.Count;
+        [Projectable]
         public int DownloadsLastWeek => Downloads.Count(match => match.DownloadedAt >= TimeUtils.LastWeekStart && match.DownloadedAt < TimeUtils.ThisWeekStart);
+        [Projectable]
         public int DownloadsThisWeek => Downloads.Count(match => match.DownloadedAt >= TimeUtils.ThisWeekStart);
+        [Projectable]
         public int HeartsCount => Hearts.Count;
+        [Projectable]
         public int HeartsThisWeek => Hearts.Count(match => match.HeartedAt >= TimeUtils.ThisWeekStart);
+        [Projectable]
         public int HeartsThisMonth => Hearts.Count(match => match.HeartedAt >= TimeUtils.ThisMonthStart);
+        //[Projectable]
         public int Rank => GetRank();
+        [Projectable]
         public int RatingDown => Ratings.Count(match => match.Type == RatingType.BOO);
+        [Projectable]
         public int RatingUp => Ratings.Count(match => match.Type == RatingType.YAY);
+        [Projectable]
         public int RatingUpThisWeek => Ratings.Count(match => match.Type == RatingType.YAY && match.RatedAt >= TimeUtils.ThisWeekStart);
+        [Projectable]
         public int RatingUpThisMonth => Ratings.Count(match => match.Type == RatingType.YAY && match.RatedAt >= TimeUtils.ThisMonthStart);
+        [Projectable]
         public string Username => Author.Username;
+        [Projectable]
         public int ViewsCount => Views.Count;
+        [Projectable]
         public int ViewsLastWeek => Views.Count(match => match.ViewedAt >= TimeUtils.LastWeekStart && match.ViewedAt < TimeUtils.ThisWeekStart);
+        [Projectable]
         public int ViewsThisWeek => Views.Count(match => match.ViewedAt >= TimeUtils.ThisWeekStart);
+        [Projectable]
         public float PointsAmount => Points.Sum(p => p.Amount);
+        [Projectable]
         public float PointsLastWeek => Points.Where(match => match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount);
+        [Projectable]
         public float PointsThisWeek => Points.Where(match => match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount);
+        [Projectable]
         public float PointsToday => Points.Where(match => match.CreatedAt >= TimeUtils.DayStart).Sum(p => p.Amount);
+        [Projectable]
         public float PointsYesterday => Points.Where(match => match.CreatedAt >= TimeUtils.YesterdayStart && match.CreatedAt < TimeUtils.DayStart).Sum(p => p.Amount);
+        [Projectable]
         public float Rating => Ratings.Count != 0 ? (float)Ratings.Average(r => r.Rating) : 0;
+        //[Projectable]
         public string StarRating => Rating.ToString("0.0", CultureInfo.InvariantCulture);
-
-        public bool IsHeartedByMe(int id)
-        {
-            return Hearts.Any(match => match.UserId == id);
-        }
-
-        public bool IsBookmarkedByMe(int id)
-        {
-            return Bookmarks.Any(match => match.UserId == id);
-        }
-
-        public bool IsReviewedByMe(int id)
-        {
-            return Reviews.Any(match => match.PlayerId == id);
-        }
+        [Projectable]
+        public bool IsHeartedByMe(int id) => Hearts.Any(match => match.UserId == id);
+        [Projectable]
+        public bool IsBookmarkedByMe(int id) => Bookmarks.Any(match => match.UserId == id);
+        [Projectable]
+        public bool IsReviewedByMe(int id) => Reviews.Any(match => match.PlayerId == id);
 
         public int GetRank()
         {

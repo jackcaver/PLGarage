@@ -188,8 +188,8 @@ namespace GameServer.Implementation.Common
                                     User user = database.Users.FirstOrDefault(match => match.UserId == playerId);
                                     if (user != null && info.IsMNR)
                                     {
-                                        var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
-                                        var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
+                                        var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx && match.PlayerId != user.UserId);
+                                        var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx && match.PlayerId != user.UserId);
                                         if (character != null)
                                             database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = TimeUtils.Now });
                                         if (kart != null)
@@ -220,8 +220,8 @@ namespace GameServer.Implementation.Common
                                     {
                                         if (info.IsMNR)
                                         {
-                                            var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
-                                            var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
+                                            var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx && match.PlayerId != user.UserId);
+                                            var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx && match.PlayerId != user.UserId);
 
                                             if (character != null)
                                             {

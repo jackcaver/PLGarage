@@ -296,6 +296,54 @@ namespace GameServer.Implementation.Common
             database.PlayerCreationReviews
                 .Where(x => x.PlayerCreationId == playerCreationID)
                 .ExecuteDelete();
+            
+            database.HeartedPlayerCreations
+                .Where(h => h.HeartedPlayerCreationId == playerCreationID)
+                .ExecuteDelete();
+            
+            database.PlayerCreationBookmarks
+                .Where(b => b.BookmarkedPlayerCreationId == playerCreationID)
+                .ExecuteDelete();
+            
+            database.ActivityLog
+                .Where(match => match.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
+
+            return "ok";
+        }
+        
+        public static string RemovePlayerCreation(Database database, int playerCreationID)
+        {
+            var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == playerCreationID);
+
+            if (Creation == null)
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -620, message = "No player creation exists for the given ID" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+
+            Creation.Type = PlayerCreationType.DELETED;
+
+            foreach (var item in database.PlayerCreations.Where(match => match.TrackId == playerCreationID).ToList())
+            {
+                var Photo = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item.PlayerCreationId);
+                Photo.TrackId = 4912;
+            }
+
+            foreach (var item in database.ActivityLog.Where(match => match.PlayerCreationId == playerCreationID).ToList())
+            {
+                var Activity = database.ActivityLog.FirstOrDefault(match => match.Id == item.Id);
+                database.ActivityLog.Remove(Activity);
+            }
+
+            database.SaveChanges();
+
+            if (ServerConfig.Instance.DeleteCreationData)
+                UserGeneratedContentUtils.RemovePlayerCreation(playerCreationID);
 
             return "ok";
         }
@@ -378,31 +426,37 @@ namespace GameServer.Implementation.Common
             database.PlayerCreationBookmarks.Where(x => x.UserId == targetUserId).ExecuteDelete();
             database.HeartedProfiles.Where(x => x.UserId == targetUserId || x.HeartedUserId == targetUserId).ExecuteDelete();
 
-            var userCreations = database.PlayerCreations.Where(c => c.PlayerId == targetUserId);
-
-            var creationIds = userCreations
+            database.ActivityLog.Where(match => match.AuthorId == user.UserId 
+                || match.PlayerId == user.UserId).Select(i => i.Id).ExecuteDelete();
+            
+            var creationIds = database.PlayerCreations.Where(c => c.PlayerId == targetUserId)
                 .Select(c => c.PlayerCreationId)
                 .ToList();
-
-            if (creationIds.Count > 0)
-            {
-                database.HeartedPlayerCreations
-                    .Where(h => creationIds.Contains(h.HeartedPlayerCreationId))
-                    .ExecuteDelete();
-
-                database.PlayerCreationBookmarks
-                    .Where(b => creationIds.Contains(b.BookmarkedPlayerCreationId))
-                    .ExecuteDelete();
-            }
 
             if (removeCreations)
             {
                 foreach (var creationId in creationIds)
                 {
-                    UserGeneratedContentUtils.RemovePlayerCreation(creationId);
-                }
+                    var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == creationId && match.PlayerId == user.UserId);
 
-                userCreations.ExecuteDelete();
+                    if (Creation == null)
+                        continue;
+
+                    Creation.Type = PlayerCreationType.DELETED;
+
+                    foreach (var item in database.PlayerCreations.Where(match => match.TrackId == creationId).ToList())
+                    {
+                        var Photo = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item.PlayerCreationId);
+                        Photo.TrackId = 4912;
+                    }
+
+                    database.ActivityLog.Where(match => match.PlayerCreationId == creationId).ExecuteDelete();
+
+                    database.SaveChanges();
+
+                    if (ServerConfig.Instance.DeleteCreationData)
+                        UserGeneratedContentUtils.RemovePlayerCreation(creationId);
+                }
             }
             else
             {
@@ -414,9 +468,77 @@ namespace GameServer.Implementation.Common
                     database.PlayerCreationPoints.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
                     database.PlayerCreationComments.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
                     database.PlayerCreationReviews.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
+                    database.HeartedPlayerCreations.Where(h => creationIds.Contains(h.HeartedPlayerCreationId)).ExecuteDelete();
+                    database.PlayerCreationBookmarks.Where(b => creationIds.Contains(b.BookmarkedPlayerCreationId)).ExecuteDelete();
+                    database.ActivityLog.Where(match => creationIds.Contains(match.PlayerCreationId)).ExecuteDelete();
                 }
             }
 
+            database.SaveChanges();
+            return "ok";
+        }
+        
+        public static string RemovePlayerCreations(Database database, int targetUserId)
+        {
+            if (!database.Users.Any(u => u.UserId == targetUserId))
+                return null;
+        
+            var user = database.Users.First(u => u.UserId == targetUserId);
+            
+            var creationIds = database.PlayerCreations.Where(c => c.PlayerId == targetUserId)
+                .Select(c => c.PlayerCreationId)
+                .ToList();
+        
+            foreach (var creationId in creationIds)
+            {
+                var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == creationId && match.PlayerId == user.UserId);
+        
+                if (Creation == null)
+                    continue;
+        
+                Creation.Type = PlayerCreationType.DELETED;
+        
+                foreach (var item in database.PlayerCreations.Where(match => match.TrackId == creationId).ToList())
+                {
+                    var Photo = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item.PlayerCreationId);
+                    Photo.TrackId = 4912;
+                }
+        
+                database.ActivityLog.Where(match => match.PlayerCreationId == creationId).ExecuteDelete();
+        
+                database.SaveChanges();
+        
+                if (ServerConfig.Instance.DeleteCreationData)
+                    UserGeneratedContentUtils.RemovePlayerCreation(creationId);
+            }
+        
+            database.SaveChanges();
+            return "ok";
+        }
+        
+        public static string RemoveUser(Database database, int targetUserId)
+        {
+            if (!database.Users.Any(u => u.UserId == targetUserId))
+                return null;
+        
+            var user = database.Users.First(u => u.UserId == targetUserId);
+            
+            var creationIds = database.PlayerCreations.Where(c => c.PlayerId == targetUserId)
+                .Select(c => c.PlayerCreationId)
+                .ToList();
+        
+            
+            foreach (var item in database.PlayerCreations.Where(match => creationIds.Contains(match.TrackId)).ToList())
+            {
+                var Photo = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item.PlayerCreationId);
+                Photo.TrackId = 4912;
+            }
+
+            database.ActivityLog.Where(match => creationIds.Contains(match.PlayerCreationId) 
+                || match.AuthorId == user.UserId || match.PlayerId == user.UserId).ExecuteDelete();
+
+            database.Users.Remove(user);
+            
             database.SaveChanges();
             return "ok";
         }
@@ -806,6 +928,69 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
         #endregion
+        
+        #region Whitelist
+        public static string GetWhitelist(int page, int per_page)
+        {
+            var whitelist = Session.LoadWhitelist();
+
+            if (whitelist == null)
+                return "[]";
+
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+            
+            var whitelistPage = whitelist.Skip(pageStart).Take(per_page).ToList();
+            
+            return JsonConvert.SerializeObject(new ModerationPageResponse<string>
+            {
+                Total = whitelist.Count,
+                Page = whitelistPage
+            });
+        }
+        
+        public static string AddToWhitelist(string username)
+        {
+            var whitelist = Session.LoadWhitelist();
+
+            if (whitelist == null || string.IsNullOrEmpty(username))
+                return null;
+
+            if (whitelist.Contains(username))
+                return "error_already_exists";
+
+            whitelist.Add(username);
+            
+            Session.WriteWhitelist(whitelist);
+            
+            return "ok";
+        }
+        
+        public static string UpdateWhitelist(string oldUsername, string newUsername)
+        {
+            var whitelist = Session.LoadWhitelist();
+
+            if (whitelist == null || string.IsNullOrEmpty(oldUsername) || string.IsNullOrEmpty(newUsername))
+                return null;
+
+            Session.UpdateWhitelist(oldUsername, newUsername);
+            
+            return "ok";
+        }
+        
+        public static string RemoveFromWhitelist(string username)
+        {
+            var whitelist = Session.LoadWhitelist();
+
+            if (whitelist == null || string.IsNullOrEmpty(username) || !whitelist.Contains(username))
+                return null;
+
+            whitelist.RemoveAll(match => match == username);
+            
+            Session.WriteWhitelist(whitelist);
+            
+            return "ok";
+        }
+        #endregion
 
         #region ModeratorManagement
         public static string CreateModerator(Database database, string username, string password, ModeratorPermissions permissions)
@@ -828,7 +1013,12 @@ namespace GameServer.Implementation.Common
                 ViewPlayerCreationComplaints = permissions.ViewPlayerCreationComplaints,
                 ManageHotlap = permissions.ManageHotlap,
                 ManageAnnouncements = permissions.ManageAnnouncements,
-                ManageSystemEvents = permissions.ManageSystemEvents
+                ManageSystemEvents = permissions.ManageSystemEvents,
+                ManageWhitelist = permissions.ManageWhitelist,
+                RemovePlayerCreations = permissions.RemovePlayerCreations,
+                ResetCreationStats = permissions.ResetCreationStats,
+                ResetUserStats = permissions.ResetUserStats,
+                RemoveUsers = permissions.RemoveUsers
             });
 
             database.SaveChanges();
@@ -852,7 +1042,12 @@ namespace GameServer.Implementation.Common
                 ManageHotlap = true,
                 ViewGriefReports = true,
                 ViewPlayerComplaints = true,
-                ViewPlayerCreationComplaints = true
+                ViewPlayerCreationComplaints = true,
+                RemovePlayerCreations = true,
+                ManageWhitelist = true,
+                ResetCreationStats = true,
+                ResetUserStats = true,
+                RemoveUsers = true
             });
         }
 
@@ -917,6 +1112,11 @@ namespace GameServer.Implementation.Common
             moderator.ManageAnnouncements = permissions.ManageAnnouncements;
             moderator.ManageHotlap = permissions.ManageHotlap;
             moderator.ManageSystemEvents = permissions.ManageSystemEvents;
+            moderator.ManageWhitelist = permissions.ManageWhitelist;
+            moderator.RemovePlayerCreations = permissions.RemovePlayerCreations;
+            moderator.ResetCreationStats = permissions.ResetCreationStats;
+            moderator.ResetUserStats = permissions.ResetUserStats;
+            moderator.RemoveUsers = permissions.ResetUserStats;
             database.SaveChanges();
 
             return "ok";

@@ -335,30 +335,31 @@ namespace GameServer.Implementation.Common
             session.PolicyAccepted = true;
         }
 
+        public static void WriteWhitelist(List<string> whitelist)
+        {
+            File.WriteAllText("./whitelist.json", JsonConvert.SerializeObject(whitelist));
+        }
+        
         public static List<string> LoadWhitelist()
         {
             if (!File.Exists("./whitelist.json"))
             {
-                File.WriteAllText("./whitelist.json", JsonConvert.SerializeObject(new List<string>()));
-                return [];
+                List<string> whitelist = [];
+                WriteWhitelist(whitelist);
+                return whitelist;
             }
             return JsonConvert.DeserializeObject<List<string>>(File.ReadAllText("./whitelist.json"));
         }
 
-        private static List<string> UpdateWhitelist(string OldUsername, string NewUsername)
+        public static List<string> UpdateWhitelist(string OldUsername, string NewUsername)
         {
-            if (!File.Exists("./whitelist.json"))
-            {
-                Log.Error("Cannot update whitelist if it doesn't exist");
-                return [];
-            }
-            List<string> whitelist = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText("./whitelist.json"));
+            List<string> whitelist = LoadWhitelist();
             if (!whitelist.Contains(OldUsername))
                 return whitelist;
             int EntryIndex = whitelist.FindIndex(match => match == OldUsername);
             if (EntryIndex != -1)
                 whitelist[EntryIndex] = NewUsername;
-            File.WriteAllText("./whitelist.json", JsonConvert.SerializeObject(whitelist));
+            WriteWhitelist(whitelist);
 
             return whitelist;
         }

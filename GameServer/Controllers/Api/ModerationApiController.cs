@@ -167,23 +167,42 @@ namespace GameServer.Controllers.Api
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
             if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ChangeCreationStatus)))
+                && database.Moderators.Any(match => match.ID == userID 
+                   && (match.ChangeCreationStatus || match.ResetCreationStats || match.RemovePlayerCreations))))
                 return StatusCode(403);
 
             return Content(Moderation.GetPlayerCreationsWithStatus(database, page, per_page, status));
         }
 
-        [HttpPost]
+        [HttpDelete]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/api/moderation/player_creations/{playerCreationID}/reset_stats")]
+        [Route("/api/moderation/player_creations/{playerCreationID}/stats")]
         public IActionResult ResetCreationStats(int playerCreationID)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
             if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ChangeCreationStatus)))
+                && database.Moderators.Any(match => match.ID == userID && match.ResetCreationStats)))
                 return StatusCode(403);
 
             var result = Moderation.ResetCreationStats(database, playerCreationID);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/player_creations/{playerCreationID}")]
+        public IActionResult RemovePlayerCreation(int playerCreationID)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.RemovePlayerCreations)))
+                return StatusCode(403);
+
+            var result = Moderation.RemovePlayerCreation(database, playerCreationID);
 
             if (result == null)
                 return NotFound();
@@ -248,18 +267,55 @@ namespace GameServer.Controllers.Api
             else
                 return Content(result);
         }
-
-        [HttpPost]
+        
+        [HttpDelete]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/api/moderation/users/{id}/reset_profile")]
+        [Route("/api/moderation/users/{id}")]
+        public IActionResult RemoveUser(int id)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.RemoveUsers)))
+                return StatusCode(403);
+
+            var result = Moderation.RemoveUser(database, id);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/users/{id}/stats")]
         public IActionResult ResetUserProfile(int id, bool removeCreations = false)
         {
             var uidString = User.FindFirstValue(JWTUtils.UserID);
             if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ChangeUserSettings)))
+                && database.Moderators.Any(match => match.ID == userID && match.ResetUserStats 
+                   && (!removeCreations || match.RemovePlayerCreations))))
                 return StatusCode(403);
 
             var result = Moderation.ResetUserProfile(database, id, removeCreations);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/users/{id}/creations")]
+        public IActionResult RemovePlayerCreations(int id)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.RemovePlayerCreations)))
+                return StatusCode(403);
+
+            var result = Moderation.RemovePlayerCreations(database, id);
 
             if (result == null)
                 return NotFound();
@@ -275,15 +331,16 @@ namespace GameServer.Controllers.Api
             bool? PlayedMNR, bool? IsPSNLinked, bool? IsRPCNLinked,
             bool? IsBanned
         )
-                {
-                    var uidString = User.FindFirstValue(JWTUtils.UserID);
-                    if (!(int.TryParse(uidString, out int userID)
-                        && database.Moderators.Any(match => match.ID == userID
-                            && (match.BanUsers || match.ChangeUserSettings))))
-                        return StatusCode(403);
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                && database.Moderators.Any(match => match.ID == userID
+                    && (match.BanUsers || match.ChangeUserSettings || match.ChangeUserQuota 
+                        || match.ResetUserStats || match.RemovePlayerCreations || match.RemoveUsers))))
+                return StatusCode(403);
 
-                    return Content(Moderation.GetUsers(database, page, per_page, PlayedMNR, IsPSNLinked, IsRPCNLinked, IsBanned));
-                }
+            return Content(Moderation.GetUsers(database, page, per_page, PlayedMNR, IsPSNLinked, IsRPCNLinked, IsBanned));
+        }
         #endregion
 
         #region PlayerComplaints
@@ -575,6 +632,75 @@ namespace GameServer.Controllers.Api
         }
         #endregion
 
+        #region Whitelist
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/whitelist")]
+        public IActionResult GetWhitelist(int page, int per_page)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageWhitelist)))
+                return StatusCode(403);
+
+            return Content(Moderation.GetWhitelist(page, per_page));
+        }
+        
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/whitelist")]
+        public IActionResult AddToWhitelist(string username)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageWhitelist)))
+                return StatusCode(403);
+
+            var result = Moderation.AddToWhitelist(username);
+            
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        
+        [HttpPatch]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/whitelist")]
+        public IActionResult UpdateWhitelist(string oldUsername, string newUsername)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageWhitelist)))
+                return StatusCode(403);
+
+            var result = Moderation.UpdateWhitelist(oldUsername, newUsername);
+            
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/whitelist")]
+        public IActionResult RemoveFromWhitelist(string username)
+        {
+            var uidString = User.FindFirstValue(JWTUtils.UserID);
+            if (!(int.TryParse(uidString, out int userID)
+                  && database.Moderators.Any(match => match.ID == userID && match.ManageWhitelist)))
+                return StatusCode(403);
+
+            var result = Moderation.RemoveFromWhitelist(username);
+            
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        #endregion
+        
         #region ModeratorManagement
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
@@ -607,6 +733,11 @@ namespace GameServer.Controllers.Api
                     && (!permissions.ViewPlayerCreationComplaints || match.ViewPlayerCreationComplaints)
                     && (!permissions.ManageHotlap || match.ManageHotlap)
                     && (!permissions.ManageAnnouncements || match.ManageAnnouncements)
+                    && (!permissions.ManageWhitelist || match.ManageWhitelist)
+                    && (!permissions.RemovePlayerCreations || match.RemovePlayerCreations)
+                    && (!permissions.ResetCreationStats || match.ResetCreationStats)
+                    && (!permissions.ResetUserStats || match.ResetUserStats)
+                    && (!permissions.RemoveUsers || match.RemoveUsers)
                     && (!permissions.ManageSystemEvents || match.ManageSystemEvents))))
                 return StatusCode(403);
 
@@ -675,6 +806,11 @@ namespace GameServer.Controllers.Api
                     && (!permissions.ViewPlayerCreationComplaints || match.ViewPlayerCreationComplaints)
                     && (!permissions.ManageHotlap || match.ManageHotlap)
                     && (!permissions.ManageAnnouncements || match.ManageAnnouncements)
+                    && (!permissions.ManageWhitelist || match.ManageWhitelist)
+                    && (!permissions.RemovePlayerCreations || match.RemovePlayerCreations)
+                    && (!permissions.ResetCreationStats || match.ResetCreationStats)
+                    && (!permissions.ResetUserStats || match.ResetUserStats)
+                    && (!permissions.RemoveUsers || match.RemoveUsers)
                     && (!permissions.ManageSystemEvents || match.ManageSystemEvents))))
                 return StatusCode(403);
 

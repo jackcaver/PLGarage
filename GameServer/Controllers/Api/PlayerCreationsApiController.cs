@@ -8,11 +8,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Controllers.Api
 {
-    public class PlayerCreationCountApiController : Controller
+    public class PlayerCreationsApiController : Controller
     {
         private readonly Database database;
 
-        public PlayerCreationCountApiController(Database database)
+        public PlayerCreationsApiController(Database database)
         {
             this.database = database;
         }

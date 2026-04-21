@@ -24,8 +24,6 @@ namespace GameServer.Controllers.Api
             this.database = database;
         }
 
-        // this is one not so useless like the player creation count one
-
         [HttpGet]
         [Route("/api/hotlap")]
         public IActionResult GetHotlap([FromQuery] int max = 10)
@@ -39,6 +37,7 @@ namespace GameServer.Controllers.Api
             PlayerCreationData track = database.PlayerCreations
                 .AsNoTracking()
                 .Include(c => c.Author)
+                .Include(c => c.Ratings)
                 .FirstOrDefault(c => c.PlayerCreationId == hotlap.TrackId);
 
             if (track == null)
@@ -50,11 +49,9 @@ namespace GameServer.Controllers.Api
                 {
                     id = track.PlayerCreationId,
                     name = track.Name,
-                    creator = track.Author == null ? null : new HotlapUserDto
-                    {
-                        id = track.Author.UserId,
-                        username = track.Author.Username
-                    }
+                    rating = (float)Math.Round(track.Rating, 1),
+                    creatorId = track.Author?.UserId,
+                    creatorUsername = track.Author?.Username
                 },
                 resetInSeconds = (int)TimeUtils.UntilNextDay.TotalSeconds,
                 topTimes = max == 0 ? new List<HotlapTimeDto>() : GetTopTimes(track.PlayerCreationId, max)

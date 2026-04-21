@@ -20,7 +20,9 @@ namespace GameServer.Models.Response
     {
         public int id { get; set; }
         public string name { get; set; }
-        public HotlapUserDto creator { get; set; }
+        public float rating { get; set; }
+        public int? creatorId { get; set; }
+        public string creatorUsername { get; set; }
     }
 
     public class HotlapUserDto

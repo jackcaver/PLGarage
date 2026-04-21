@@ -52,35 +52,22 @@ namespace GameServer.Controllers.Api
                 .GroupBy(x => x.Platform)
                 .ToDictionary(
                     g => g.Key.ToString(),
-                    g => new
-                    {
-                        total = g.Sum(x => x.Count),
-                        type = g.ToDictionary(
-                            x => x.Type.ToString(),
-                            x => x.Count
-                        )
-                    }
+                    g => g.ToDictionary(
+                        x => x.Type.ToString(),
+                        x => x.Count
+                    )
                 );
 
             var lbpkTotal = lbpkTypeCounts.Values.Sum();
-            var mnrTotal = mnrPlatformCounts.Values.Sum(x => x.total);
+            var mnrTotal = mnrRows.Sum(x => x.Count);
 
             return Json(new
             {
                 total,
-                game = new
-                {
-                    lbpk = new
-                    {
-                        total = lbpkTotal,
-                        type = lbpkTypeCounts
-                    },
-                    mnr = new
-                    {
-                        total = mnrTotal,
-                        platform = mnrPlatformCounts
-                    }
-                }
+                totalLBPK = lbpkTotal,
+                totalMNR = mnrTotal,
+                lbpk = lbpkTypeCounts,
+                mnr = mnrPlatformCounts
             });
         }
 

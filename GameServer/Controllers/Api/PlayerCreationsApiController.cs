@@ -23,30 +23,35 @@ namespace GameServer.Controllers.Api
         {
             var q = database.PlayerCreations
                 .AsNoTracking()
-                .Where(x => x.Type != PlayerCreationType.DELETED);
+                .Where(x => x.Type != PlayerCreationType.DELETED 
+                && x.Type != PlayerCreationType.STORY);
 
             var total = q.Count();
 
-            var grouped = q
-                .GroupBy(x => new { x.IsMNR, x.Platform, x.Type })
+            var lbpkTypeCounts = q
+                .Where(x => !x.IsMNR)
+                .GroupBy(x => x.Type)
                 .Select(g => new
                 {
-                    IsMnr = g.Key.IsMNR,
+                    Type = g.Key,
+                    Count = g.Count()
+                })
+                .ToList()
+                .ToDictionary(
+                    g => g.Type.ToString(),
+                    g => g.Count
+                );
+
+            var mnrRows = q
+                .Where(x => x.IsMNR)
+                .GroupBy(x => new { x.Platform, x.Type })
+                .Select(g => new
+                {
                     Platform = g.Key.Platform,
                     Type = g.Key.Type,
                     Count = g.Count()
                 })
                 .ToList();
-
-            var lbpkRows = grouped.Where(x => !x.IsMnr).ToList();
-            var mnrRows = grouped.Where(x => x.IsMnr).ToList();
-
-            var lbpkTypeCounts = lbpkRows
-                .GroupBy(x => x.Type)
-                .ToDictionary(
-                    g => g.Key.ToString(),
-                    g => g.Sum(x => x.Count)
-                );
 
             var mnrPlatformCounts = mnrRows
                 .GroupBy(x => x.Platform)
@@ -58,8 +63,8 @@ namespace GameServer.Controllers.Api
                     )
                 );
 
-            var lbpkTotal = lbpkTypeCounts.Values.Sum();
-            var mnrTotal = mnrRows.Sum(x => x.Count);
+            var lbpkTotal = q.Count(x => !x.IsMNR);
+            var mnrTotal = q.Count(x => x.IsMNR);
 
             return Json(new
             {

@@ -49,7 +49,7 @@ namespace GameServer.Controllers.Api
                 {
                     id = track.PlayerCreationId,
                     name = track.Name,
-                    rating = (float)Math.Round(track.Rating, 1),
+                    rating = track.StarRating,
                     creatorId = track.Author?.UserId,
                     creatorUsername = track.Author?.Username
                 },

@@ -16,7 +16,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/playercounts")]
-        public IActionResult GetPlayerCount(bool? isMnr = null)
+        public IActionResult GetPlayerCount()
         {
             return Content($"{database.Users.Count(x => !x.IsBanned && x.PolicyAccepted)}");
         }

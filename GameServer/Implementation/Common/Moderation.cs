@@ -427,7 +427,7 @@ namespace GameServer.Implementation.Common
             database.HeartedProfiles.Where(x => x.UserId == targetUserId || x.HeartedUserId == targetUserId).ExecuteDelete();
 
             database.ActivityLog.Where(match => match.AuthorId == user.UserId 
-                || match.PlayerId == user.UserId).Select(i => i.Id).ExecuteDelete();
+                || match.PlayerId == user.UserId).ExecuteDelete();
             
             var creationIds = database.PlayerCreations.Where(c => c.PlayerId == targetUserId)
                 .Select(c => c.PlayerCreationId)

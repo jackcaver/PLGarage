@@ -5,7 +5,6 @@ using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -89,11 +88,8 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string CreateGame(Database database, Guid SessionID, Game game, string HostIP)
+        public static string CreateGame(Database database, User user, Game game, string HostIP)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (game == null || user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -137,11 +133,8 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string LaunchGame(Database database, Guid SessionID, int id)
+        public static string LaunchGame(Database database, User user, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -193,11 +186,8 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string CancelGame(Database database, Guid SessionID, int id)
+        public static string CancelGame(Database database, User user, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -220,11 +210,8 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string JoinGame(Database database, Guid SessionID, int game_id)
+        public static string JoinGame(Database database, User user, int game_id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -249,11 +236,8 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string LeaveGame(Database database, Guid SessionID, int game_id)
+        public static string LeaveGame(Database database, User user, int game_id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -283,11 +267,8 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string RemovePlayer(Database database, Guid SessionID, int game_id)
+        public static string RemovePlayer(Database database, User user, int game_id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -314,7 +295,7 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string PlayerCheckin(Database database, Guid SessionID, int game_id)
+        public static string PlayerCheckin(Database database, User user, int game_id)
         {
             var resp = new Response<EmptyResponse>
             {
@@ -324,11 +305,8 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string PlayerForfeit(Database database, Guid SessionID, int game_id)
+        public static string PlayerForfeit(Database database, User user, int game_id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -358,10 +336,8 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string PlayerFinish(Database database, Guid SessionID, int game_id)
+        public static string PlayerFinish(Database database, User user, int game_id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var game = GameList.FirstOrDefault(match => match.Id == game_id);
             var player = user != null && game != null ? game.Players.FirstOrDefault(match => match.PlayerId == user.UserId) : null;
 
@@ -431,10 +407,9 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string PlayerPostStats(Database database, Guid SessionID, int game_id, GamePlayerStats stats)
+        public static string PlayerPostStats(Database database, SessionData session, int game_id, GamePlayerStats stats)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = session.User;
             var game = GameList.FirstOrDefault(match => match.Id == game_id);
 
             if (user == null || game == null)

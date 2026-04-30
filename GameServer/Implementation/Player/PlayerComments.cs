@@ -5,20 +5,15 @@ using GameServer.Models;
 using GameServer.Utils;
 using System.Collections.Generic;
 using System.Linq;
-using System;
-using GameServer.Implementation.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player
 {
     public class PlayerComments
     {
-        public static string ListComments(Database database, Guid SessionID, int page, int per_page, int limit, SortColumn sort_column,
+        public static string ListComments(Database database, User requestedBy, int page, int per_page, int limit, SortColumn sort_column,
             Platform platform, string PlayerIDFilter, string AuthorIDFilter)
         {
-            var session = Session.GetSession(SessionID);
-            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             var playerIDs = PlayerIDFilter.Split(',');
 
             var commentsQuery = database.PlayerComments
@@ -81,10 +76,9 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string CreateComment(Database database, Guid SessionID, PlayerComment player_comment)
+        public static string CreateComment(Database database, SessionData session, PlayerComment player_comment)
         {
-            var session = Session.GetSession(SessionID);
-            var author = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var author = session.User;
             var user = database.Users.FirstOrDefault(match => match.UserId == player_comment.player_id);
 
             if (user == null || author == null)
@@ -97,7 +91,7 @@ namespace GameServer.Implementation.Player
                 return errorResp.Serialize();
             }
 
-            database.PlayerComments.Add(new PlayerCommentData
+            var comment = new PlayerCommentData
             {
                 AuthorId = author.UserId,
                 Body = player_comment.body,
@@ -105,7 +99,8 @@ namespace GameServer.Implementation.Player
                 UpdatedAt = TimeUtils.Now,
                 Platform = Platform.PS3,
                 PlayerId = player_comment.player_id
-            });
+            };
+            database.PlayerComments.Add(comment);
             database.SaveChanges();
 
             if (!session.IsMNR)
@@ -120,7 +115,7 @@ namespace GameServer.Implementation.Player
                     PlayerId = user.UserId,
                     PlayerCreationId = 0,
                     CreatedAt = TimeUtils.Now,
-                    AllusionId = database.PlayerComments.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.AuthorId == author.UserId && match.PlayerId == user.UserId).Id,
+                    AllusionId = comment.Id,
                     AllusionType = "PlayerComment"
                 });
                 database.SaveChanges();
@@ -134,23 +129,12 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string RemoveComment(Database database, Guid SessionID, int id)
+        public static string RemoveComment(Database database, User user, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var comment = database.PlayerComments.FirstOrDefault(match => match.Id == id);
 
-            if (user == null || comment == null)
-            {
-                var errorResp = new Response<EmptyResponse>
-                {
-                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
-                    response = new EmptyResponse { }
-                };
-                return errorResp.Serialize();
-            }
-
-            if (comment.AuthorId != user.UserId && comment.PlayerId != user.UserId)
+            if (user == null || comment == null 
+                || (comment.AuthorId != user.UserId && comment.PlayerId != user.UserId))
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -171,11 +155,8 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string RateComment(Database database, Guid SessionID, PlayerCommentRating player_comment_rating)
+        public static string RateComment(Database database, User user, PlayerCommentRating player_comment_rating)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null 
                 || !database.PlayerComments.Any(match => match.Id == player_comment_rating.player_comment_id))
             {

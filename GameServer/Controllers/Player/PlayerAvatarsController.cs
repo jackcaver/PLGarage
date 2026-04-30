@@ -1,38 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Player
 {
-    public class PlayerAvatarsController : Controller
+    public class PlayerAvatarsController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public PlayerAvatarsController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpPut]
         [HttpPost]
+        [Authorize]
         [Route("player_avatars/update.xml")]
         public IActionResult Upload(PlayerAvatar player_avatar)
         {
             player_avatar.avatar = Request.Form.Files.GetFile("player_avatar[avatar]");
 
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var session = Session.GetSession(database, User);
+            var user = session.User;
 
             if (user != null)
                 UserGeneratedContentUtils.SaveAvatar(user.UserId, player_avatar, session.IsMNR);

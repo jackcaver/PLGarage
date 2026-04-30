@@ -24,7 +24,7 @@ namespace GameServer.Models.PlayerData
 
         [Projectable]
         public int Hearts => HeartedByProfiles.Count;
-        public Presence Presence => Session.GetPresence(Username);
+        public Presence Presence(Database database, Platform platform) => Session.GetPresence(database, Username, platform);
         public int Quota { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
@@ -162,6 +162,7 @@ namespace GameServer.Models.PlayerData
         {
             using var database = new Database();
             var users = database.Users
+                .AsNoTracking()
                 .AsSplitQuery()
                 .Include(x => x.PlayerPoints)
                 .Include(x => x.RacesStarted)

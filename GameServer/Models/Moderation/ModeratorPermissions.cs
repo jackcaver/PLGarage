@@ -7,6 +7,7 @@
         public bool ChangeUserSettings { get; set; }
         public bool ChangeUserQuota { get; set; }
         public bool ResetUserStats { get; set; }
+        public bool ManageUserSessions { get; set; }
         public bool RemoveUsers { get; set; }
         public bool ChangeCreationStatus { get; set; }
         public bool ResetCreationStats { get; set; }

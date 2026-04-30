@@ -8,15 +8,8 @@ using System;
 
 namespace GameServer.Controllers.Common
 {
-    public class ContentUpdateController : Controller
+    public class ContentUpdateController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public ContentUpdateController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpGet]
         [Route("content_updates/latest.xml")]
         public IActionResult Latest(Platform platform, ContentUpdateType content_update_type)

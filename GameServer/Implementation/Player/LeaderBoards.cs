@@ -1,5 +1,4 @@
-﻿using GameServer.Implementation.Common;
-using GameServer.Models;
+﻿using GameServer.Models;
 using GameServer.Models.GameBrowser;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
@@ -7,7 +6,6 @@ using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,12 +13,12 @@ namespace GameServer.Implementation.Player
 {
     public class LeaderBoards
     {
-        public static string ViewSubLeaderBoard(Database database, Guid SessionID, int sub_group_id, int sub_key_id, LeaderboardType type, Platform platform,
+        public static string ViewSubLeaderBoard(Database database, SessionData session, int sub_group_id, int sub_key_id, LeaderboardType type, Platform platform,
             int page, int per_page, int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int? num_above_below, int limit, int playgroup_size,
             float? latitude, float? longitude, string usernameFilter = null, bool FriendsView = false)
         {
-            var session = Session.GetSession(SessionID);
             var scoresQuery = database.Scores
+                .AsNoTracking()
                 .AsSplitQuery()
                 .Include(s => s.User)
                 .ThenInclude(u => u.PlayerExperiencePoints)
@@ -30,9 +28,10 @@ namespace GameServer.Implementation.Player
                     && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR 
                     && match.Platform == platform);
             var user = database.Users
+                .AsNoTracking()
                 .Include(u => u.PlayerExperiencePoints)
                 .Include(u => u.PlayerCreationPoints)
-                .FirstOrDefault(match => match.Username == session.Username);
+                .FirstOrDefault(match => match.UserId == session.UserId);
 
             UserGeneratedContentUtils.AddStoryLevel(database, sub_key_id);
 
@@ -116,35 +115,28 @@ namespace GameServer.Implementation.Player
             if (pageEnd > total)
                 pageEnd = total;
 
-            var leaderboardPlayers = new List<SubLeaderboardPlayer> { };
-
-            var scores = scoresQuery.Skip(pageStart).Take(per_page).ToList();
-
-            foreach (var score in scores)
+            var scores = scoresQuery.Skip(pageStart).Take(per_page).Select(score => new SubLeaderboardPlayer
             {
-                leaderboardPlayers.Add(new SubLeaderboardPlayer
-                {
-                    id = score.Id,
-                    created_at = score.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    finish_time = score.FinishTime,
-                    platform = score.Platform.ToString(),
-                    player_id = score.PlayerId,
-                    username = score.Username,
-                    playgroup_size = score.PlaygroupSize,
-                    rank = score.GetRank(sort_column),
-                    score = score.Points,
-                    sub_group_id = score.SubGroupId,
-                    sub_key_id = score.SubKeyId,
-                    updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    //MNR
-                    best_lap_time = score.BestLapTime,
-                    character_idx = score.CharacterIdx,
-                    ghost_car_data_md5 = score.GhostCarDataMD5,
-                    kart_idx = score.KartIdx,
-                    skill_level_id = score.User.SkillLevelId(platform),
-                    skill_level_name = score.User.SkillLevelName(platform)
-                });
-            }
+                id = score.Id,
+                created_at = score.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                finish_time = score.FinishTime,
+                platform = score.Platform.ToString(),
+                player_id = score.PlayerId,
+                username = score.Username,
+                playgroup_size = score.PlaygroupSize,
+                rank = score.GetRank(sort_column),
+                score = score.Points,
+                sub_group_id = score.SubGroupId,
+                sub_key_id = score.SubKeyId,
+                updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                //MNR
+                best_lap_time = score.BestLapTime,
+                character_idx = score.CharacterIdx,
+                ghost_car_data_md5 = score.GhostCarDataMD5,
+                kart_idx = score.KartIdx,
+                skill_level_id = score.User.SkillLevelId(platform),
+                skill_level_name = score.User.SkillLevelName(platform)
+            }).ToList();
 
             if (FriendsView)
             {
@@ -165,7 +157,7 @@ namespace GameServer.Implementation.Player
                             total = total,
                             total_pages = totalPages,
                             type = type.ToString(),
-                            LeaderboardPlayersList = leaderboardPlayers
+                            LeaderboardPlayersList = scores
                         }
                     }
                 };
@@ -189,18 +181,18 @@ namespace GameServer.Implementation.Player
                         total = total,
                         total_pages = totalPages,
                         type = type.ToString(),
-                        LeaderboardPlayersList = leaderboardPlayers
+                        LeaderboardPlayersList = scores
                     }
                 }
             };
             return resp.Serialize();
         }
 
-        public static string ViewSubLeaderBoardAroundMe(Database database, Guid SessionID, int sub_group_id, int sub_key_id, LeaderboardType type, Platform platform,
+        public static string ViewSubLeaderBoardAroundMe(Database database, SessionData session, int sub_group_id, int sub_key_id, LeaderboardType type, Platform platform,
             int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int num_above_below, int playgroup_size, int limit)
         {
-            var session = Session.GetSession(SessionID);
             var scoresQuery = database.Scores
+                .AsNoTracking()
                 .AsSplitQuery()
                 .Include(s => s.User)
                 .ThenInclude(u => u.PlayerExperiencePoints)
@@ -209,7 +201,7 @@ namespace GameServer.Implementation.Player
                 .Where(match => match.SubKeyId == sub_key_id 
                     && match.SubGroupId == sub_group_id && match.PlaygroupSize == playgroup_size 
                     && match.Platform == platform && match.IsMNR == session.IsMNR);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = session.User;
 
             if (sort_column == SortColumn.finish_time)
                 scoresQuery = scoresQuery.OrderBy(s => s.FinishTime);
@@ -230,7 +222,6 @@ namespace GameServer.Implementation.Player
 
             var MyStatsIndex = scoresQuery.Select(s => s.PlayerId).ToList().FindIndex(match => match == user.UserId);
 
-            var leaderboardPlayers = new List<SubLeaderboardPlayer> { };
             int minIndex = MyStatsIndex - num_above_below;
 
             var total = scoresQuery.Count();
@@ -238,26 +229,21 @@ namespace GameServer.Implementation.Player
             if (minIndex < 0)
                 minIndex = 0;
 
-            var scores = scoresQuery.Skip(minIndex).Take((num_above_below * 2) + 1).ToList();
-
-            foreach (var score in scores)
+            var scores = scoresQuery.Skip(minIndex).Take((num_above_below * 2) + 1).Select(score => new SubLeaderboardPlayer
             {
-                leaderboardPlayers.Add(new SubLeaderboardPlayer
-                {
-                    id = score.Id,
-                    created_at = score.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    finish_time = score.FinishTime,
-                    platform = score.Platform.ToString(),
-                    player_id = score.PlayerId,
-                    username = score.Username,
-                    playgroup_size = score.PlaygroupSize,
-                    rank = score.GetRank(sort_column),
-                    score = score.Points,
-                    sub_group_id = score.SubGroupId,
-                    sub_key_id = score.SubKeyId,
-                    updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
-                });
-            }
+                id = score.Id,
+                created_at = score.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                finish_time = score.FinishTime,
+                platform = score.Platform.ToString(),
+                player_id = score.PlayerId,
+                username = score.Username,
+                playgroup_size = score.PlaygroupSize,
+                rank = score.GetRank(sort_column),
+                score = score.Points,
+                sub_group_id = score.SubGroupId,
+                sub_key_id = score.SubKeyId,
+                updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
+            }).ToList();
 
             var resp = new Response<List<SubLeaderboard>>
             {
@@ -268,18 +254,17 @@ namespace GameServer.Implementation.Player
                     sub_key_id = sub_key_id,
                     total = total,
                     type = type.ToString(),
-                    LeaderboardPlayersList = leaderboardPlayers
+                    LeaderboardPlayersList = scores
                 }]
             };
             return resp.Serialize();
         }
 
-        public static string ViewPersonalSubLeaderBoard(Database database, Guid SessionID, int limit, int page, 
+        public static string ViewPersonalSubLeaderBoard(Database database, SessionData session, int limit, int page, 
             int per_page, LeaderboardType type, int sub_group_id, int sub_key_id, Platform platform, 
             Platform track_platform, SortOrder sort_order, SortColumn sort_column, float longitude, float latitude)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = session.User;
 
             if (user == null)
             {
@@ -292,6 +277,7 @@ namespace GameServer.Implementation.Player
             }
 
             var scoresQuery = database.Scores
+                .AsNoTracking()
                 .AsSplitQuery()
                 .Include(s => s.User)
                 .ThenInclude(u => u.PlayerExperiencePoints)
@@ -318,47 +304,28 @@ namespace GameServer.Implementation.Player
             if (pageEnd > total)
                 pageEnd = total;
 
-            var scores = scoresQuery.Skip(pageStart).Take(per_page).ToList();
+            var scores = scoresQuery.Skip(pageStart).Take(per_page).Select(score => new PersonalSubLeaderboardPlayer
+            {
+                player_id = score.PlayerId,
+                username = score.Username,
+                best_lap_time = score.BestLapTime,
+                character_idx = score.CharacterIdx,
+                kart_idx = score.KartIdx,
+                rank = score.GetRank(sort_column),
+                sub_key_id = score.SubKeyId,
+                track_idx = score.SubKeyId,
+                skill_level_id = score.User.SkillLevelId(platform),
+                latitude = score.Latitude,
+                longitude = score.Longitude,
+                location_tag = score.LocationTag != null ? score.LocationTag : "Unnamed location"
+            }).ToList();
 
             var LeaderboardScores = new List<PersonalSubLeaderboardPlayer>();
 
-            //for some reason my game skips the first record, so here is my weird way to fix it ._.
             if (scores.Count > 0)
             {
-                LeaderboardScores.Add(new PersonalSubLeaderboardPlayer
-                {
-                    player_id = scores[0].PlayerId,
-                    username = scores[0].Username,
-                    best_lap_time = scores[0].BestLapTime,
-                    character_idx = scores[0].CharacterIdx,
-                    kart_idx = scores[0].KartIdx,
-                    rank = scores[0].GetRank(sort_column),
-                    sub_key_id = scores[0].SubKeyId,
-                    track_idx = scores[0].SubKeyId,
-                    skill_level_id = scores[0].User.SkillLevelId(platform),
-                    latitude = scores[0].Latitude,
-                    longitude = scores[0].Longitude,
-                    location_tag = scores[0].LocationTag != null ? scores[0].LocationTag : "Unnamed location"
-                });
-            }
-
-            foreach (var score in scores)
-            {
-                LeaderboardScores.Add(new PersonalSubLeaderboardPlayer
-                {
-                    player_id = score.PlayerId,
-                    username = score.Username,
-                    best_lap_time = score.BestLapTime,
-                    character_idx = score.CharacterIdx,
-                    kart_idx = score.KartIdx,
-                    rank = score.GetRank(sort_column),
-                    sub_key_id = score.SubKeyId,
-                    track_idx = score.SubKeyId,
-                    skill_level_id = score.User.SkillLevelId(platform),
-                    latitude = score.Latitude,
-                    longitude = score.Longitude,
-                    location_tag = score.LocationTag != null ? score.LocationTag : "Unnamed location"
-                });
+                LeaderboardScores.Add(scores[0]);//for some reason my game skips the first record, so here is my weird way to fix it ._.
+                LeaderboardScores.AddRange(scores);
             }
 
             var MyStats = scoresQuery.FirstOrDefault();
@@ -398,21 +365,22 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string ViewLeaderBoard(Database database, Guid SessionID, LeaderboardType type, GameType game_type, Platform platform, int page, 
+        public static string ViewLeaderBoard(Database database, SessionData session, LeaderboardType type, GameType game_type, Platform platform, int page, 
             int per_page, int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int limit, 
             string usernameFilter = null, bool FriendsView = false)
         {
-            var session = Session.GetSession(SessionID);
             var requestedBy = database.Users
+                .AsNoTracking()
                 .AsSplitQuery()
                 .Include(x => x.PlayerPoints)
                 .Include(x => x.RacesStarted)
                 .Include(x => x.RacesFinished)
                 .Include(x => x.PlayerCreationPoints)
                 .Include(x => x.PlayerExperiencePoints)
-                .FirstOrDefault(match => match.Username == session.Username);
+                .FirstOrDefault(match => match.UserId == session.UserId);
 
             var usersQuery = database.Users
+                .AsNoTracking()
                 .AsSplitQuery()
                 .Include(x => x.PlayerPoints)
                 .Include(x => x.RacesStarted)
@@ -421,6 +389,7 @@ namespace GameServer.Implementation.Player
                 .Include(x => x.PlayerExperiencePoints)
                 .Where(match => match.Username != "ufg" && match.PlayedMNR);
             var scoresQuery = database.Scores
+                .AsNoTracking()
                 .AsSplitQuery()
                 .Include(s => s.User)
                 .ThenInclude(u => u.PlayerExperiencePoints)

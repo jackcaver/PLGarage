@@ -1,34 +1,24 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.Response;
 using GameServer.Models.ServerCommunication;
 using GameServer.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Common
 {
-    public class ServerController : Controller
+    public class ServerController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public ServerController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpPost]
+        [Authorize]
         [Route("servers/select.xml")]
         public IActionResult ServerSelect(ServerType server_type, string server_version)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var session = Session.GetSession(database, User);
+            var user = session.User;
 
             ServerInfo server = ServerCommunication.GetServer(server_type);
 
@@ -49,13 +39,13 @@ namespace GameServer.Controllers.Common
                     server_type = server_type.ToString(),
                     address = server.Address,
                     port = server.Port,
-                    session_uuid = SessionID.ToString(),
+                    session_uuid = session.SessionId.ToString(),
                     server_private_key = server.ServerPrivateKey,
                     ticket = new TicketResponse {
-                        session_uuid = SessionID.ToString(),
+                        session_uuid = session.SessionId.ToString(),
                         player_id = user.UserId,
                         username = user.Username,
-                        expiration_date = session.ExpiryDate.ToString("ddd MMM dd hh:mm:ss zzz yyyy", CultureInfo.InvariantCulture.DateTimeFormat),
+                        expiration_date = TimeUtils.Now.AddDays(1).ToString("ddd MMM dd hh:mm:ss zzz yyyy", CultureInfo.InvariantCulture.DateTimeFormat),
                         signature = "98b93493e8beb1318533fb87897f1e80"
                     }
                 } ]

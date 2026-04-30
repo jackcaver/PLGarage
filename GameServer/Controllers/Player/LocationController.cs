@@ -2,32 +2,23 @@
 using GameServer.Models;
 using GameServer.Models.Response;
 using GameServer.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
 namespace GameServer.Controllers.Player
 {
-    public class LocationController : Controller
+    public class LocationController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public LocationController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpGet]
+        [Authorize]
         [Route("locations.xml")]
         public IActionResult Lookup(float latitude, float longitude)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var session = Session.GetSession(database, User);
+            var user = session.User;
 
             if (user == null)
             {
@@ -69,15 +60,13 @@ namespace GameServer.Controllers.Player
             return Content(resp.Serialize(), "application/xml;charset=utf-8");
         }
 
+        [Authorize]
         [HttpDelete]
         [Route("location/delete.xml")]
         public IActionResult Delete(float latitude, float longitude)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var session = Session.GetSession(database, User);
+            var user = session.User;
 
             if (user == null)
             {

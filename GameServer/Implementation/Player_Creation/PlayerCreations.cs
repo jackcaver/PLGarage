@@ -4,10 +4,8 @@ using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using System.Collections.Generic;
-using System;
 using System.Linq;
 using GameServer.Models.PlayerData.PlayerCreations;
-using GameServer.Implementation.Common;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
@@ -17,10 +15,9 @@ namespace GameServer.Implementation.Player_Creation
 {
     public class PlayerCreations
     {
-        public static string UpdatePlayerCreation(Database database, Guid SessionID, PlayerCreation PlayerCreation, int id = 0)
+        public static string UpdatePlayerCreation(Database database, SessionData session, PlayerCreation PlayerCreation, int id = 0)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = session.User;
 
             if (user == null)
             {
@@ -39,7 +36,7 @@ namespace GameServer.Implementation.Player_Creation
 
             if (Creation == null && PlayerCreation.player_creation_type == PlayerCreationType.PLANET)
             {
-                return CreatePlayerCreation(database, SessionID, PlayerCreation);
+                return CreatePlayerCreation(database, session, PlayerCreation);
             }
 
             if (Creation == null)
@@ -130,10 +127,9 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string CreatePlayerCreation(Database database, Guid SessionID, PlayerCreation Creation)
+        public static string CreatePlayerCreation(Database database, SessionData session, PlayerCreation Creation)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = session.User;
             
             Stream data = null;
             Stream preview = null;
@@ -290,11 +286,8 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string RemovePlayerCreation(Database database, Guid SessionID, int id)
+        public static string RemovePlayerCreation(Database database, User user, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -319,17 +312,14 @@ namespace GameServer.Implementation.Player_Creation
 
             Creation.Type = PlayerCreationType.DELETED;
 
-            foreach (var item in database.PlayerCreations.Where(match => match.TrackId == id).ToList())
+            foreach (var item in database.PlayerCreations.Where(match => match.TrackId == Creation.PlayerCreationId)
+                         .Select(item => item.PlayerCreationId).ToList())
             {
-                var Photo = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item.PlayerCreationId);
+                var Photo = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item);
                 Photo.TrackId = 4912;
             }
-
-            foreach (var item in database.ActivityLog.Where(match => match.PlayerCreationId == id).ToList())
-            {
-                var Activity = database.ActivityLog.FirstOrDefault(match => match.Id == item.Id);
-                database.ActivityLog.Remove(Activity);
-            }
+        
+            database.ActivityLog.Where(match => match.PlayerCreationId == Creation.PlayerCreationId).ExecuteDelete();
 
             database.SaveChanges();
 
@@ -344,9 +334,8 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string GetPlayerCreation(Database database, Guid SessionID, int id, bool IsCounted, bool download = false)
+        public static string GetPlayerCreation(Database database, SessionData session, int id, bool IsCounted, bool download = false)
         {
-            var session = Session.GetSession(SessionID);
             var Creation = database.PlayerCreations
                 .AsSplitQuery()
                 .Include(x => x.Downloads)
@@ -358,7 +347,7 @@ namespace GameServer.Implementation.Player_Creation
                 .Include(x => x.Views)
                 .Include(x => x.Author)
                 .FirstOrDefault(match => match.PlayerCreationId == id);
-            var User = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var User = session.User;
 
             if (Creation == null)
             {
@@ -577,7 +566,7 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string SearchPlayerCreations(Database database, Guid SessionID, int page, int per_page, SortColumn sort_column, SortOrder sort_order,
+        public static string SearchPlayerCreations(Database database, User user, int page, int per_page, SortColumn sort_column, SortOrder sort_order,
             int limit, Platform platform, Filters filters, string keyword = null, bool TeamPicks = false, 
             bool LuckyDip = false, bool IsMNR = false)
         {
@@ -592,9 +581,6 @@ namespace GameServer.Implementation.Player_Creation
                 .Include(x => x.Views)
                 .Include(x => x.Author)
                 .Where(match => match.Platform == platform && match.IsMNR == IsMNR);
-            var session = Session.GetSession(SessionID);
-            var User = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (filters.username == null && filters.id == null && filters.player_id == null)
                 creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type);
 
@@ -639,7 +625,7 @@ namespace GameServer.Implementation.Player_Creation
             if (TeamPicks)
                 creationQuery = creationQuery.Where(match => match.IsTeamPick);
 
-            if (User != null && !User.ShowCreationsWithoutPreviews)
+            if (user != null && !user.ShowCreationsWithoutPreviews)
                 creationQuery = creationQuery.Where(match => match.HasPreview);
 
             switch (sort_column)
@@ -909,11 +895,10 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string Mine(Database database, Guid SessionID, int page, int per_page, SortColumn sort_column, SortOrder sort_order,
+        public static string Mine(Database database, SessionData session, int page, int per_page, SortColumn sort_column, SortOrder sort_order,
             int limit, Filters filters, string keyword = null, Platform? platformOverride = null) 
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = session.User;
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -929,7 +914,7 @@ namespace GameServer.Implementation.Player_Creation
                 platform = (Platform)platformOverride;
 
             filters.player_id = new string[1] { user.UserId.ToString() };
-            return SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, keyword, false, false, true);
+            return SearchPlayerCreations(database, user, page, per_page, sort_column, sort_order, limit, platform, filters, keyword, false, false, true);
         }
 
         public static string SearchPhotos(Database database, int? track_id, string username, string associated_usernames, int page, int per_page)
@@ -961,15 +946,14 @@ namespace GameServer.Implementation.Player_Creation
             var photos = photosQuery
                 .Skip(pageStart)
                 .Take(per_page)
+                .Select(photo => new Photo
+                {
+                    associated_usernames = photo.AssociatedUsernames,
+                    id = photo.PlayerCreationId,
+                    track_id = photo.TrackId,
+                    username = photo.Author.Username
+                })
                 .ToList();
-
-            var PhotoList = new List<Photo>(photos.Select(photo => new Photo
-            {
-                associated_usernames = photo.AssociatedUsernames,
-                id = photo.PlayerCreationId,
-                track_id = photo.TrackId,
-                username = photo.Author.Username
-            }));
 
             var resp = new Response<List<Photos>>
             {
@@ -981,19 +965,15 @@ namespace GameServer.Implementation.Player_Creation
                         row_start = pageStart,
                         row_end = pageEnd,
                         total_pages = totalPages,
-                        PhotoList = PhotoList
+                        PhotoList = photos
                     }
                 ]
             };
             return resp.Serialize();
         }
 
-        public static string GetTrackProfile(Database database, Guid SessionID, int id)
+        public static string GetTrackProfile(Database database, User requestedBy, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var requestedBy = database.Users
-                .FirstOrDefault(match => match.Username == session.Username);
-
             var Track = database.PlayerCreations
                 .AsSplitQuery()
                 .Include(x => x.Hearts)

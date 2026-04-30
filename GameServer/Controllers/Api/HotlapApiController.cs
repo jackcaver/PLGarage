@@ -1,6 +1,5 @@
 ﻿using GameServer.Implementation.Common;
 using GameServer.Models.Config;
-using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Response;
 using GameServer.Utils;
@@ -13,17 +12,10 @@ using System.Linq;
 namespace GameServer.Controllers.Api
 {
     [ApiController]
-    public class HotlapApiController : Controller
+    public class HotlapApiController(Database database) : Controller
     {
-        private readonly Database database;
-
         private const int HotlapSubGroupId = 700;
-
-        public HotlapApiController(Database database)
-        {
-            this.database = database;
-        }
-
+        
         [HttpGet]
         [Route("/api/hotlap")]
         public IActionResult GetHotlap([FromQuery] int max = 10)

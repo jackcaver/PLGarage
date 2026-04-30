@@ -1,60 +1,51 @@
-﻿using GameServer.Implementation.Player;
+﻿using GameServer.Implementation.Common;
+using GameServer.Implementation.Player;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
 
 namespace GameServer.Controllers.Player
 {
-    public class PlayerCommentsController : Controller
+    public class PlayerCommentsController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public PlayerCommentsController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpGet]
+        [Authorize]
+        [AllowAnonymous]
         [Route("player_comments.xml")]
         public IActionResult GetComments(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerComments.ListComments(database, SessionID, page, per_page, limit,
+            var user = Session.GetUser(database, User);
+            return Content(PlayerComments.ListComments(database, user, page, per_page, limit,
                 sort_column, platform, Request.Query["filters[player_id]"], Request.Query["filters[author_id]"]), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
+        [Authorize]
         [Route("player_comments.xml")]
         public IActionResult Create(PlayerComment player_comment)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerComments.CreateComment(database, SessionID, player_comment), "application/xml;charset=utf-8");
+            var session = Session.GetSession(database, User);
+            return Content(PlayerComments.CreateComment(database, session, player_comment), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
+        [Authorize]
         [Route("player_comments/{id}.xml")]
         public IActionResult Delete(int id)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerComments.RemoveComment(database, SessionID, id), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            return Content(PlayerComments.RemoveComment(database, user, id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
+        [Authorize]
         [Route("player_comment_ratings.xml")]
         public IActionResult Rate(PlayerCommentRating player_comment_rating)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerComments.RateComment(database, SessionID, player_comment_rating), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            return Content(PlayerComments.RateComment(database, user, player_comment_rating), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

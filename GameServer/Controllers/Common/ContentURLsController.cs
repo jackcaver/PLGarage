@@ -1,21 +1,21 @@
-using System;
 using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.Config;
 using GameServer.Models.Response;
+using GameServer.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Common
 {
-    public class ContentURLsController : Controller
+    public class ContentURLsController(Database database) : Controller
     {
+        [Authorize]
+        [AllowAnonymous]
         [Route("content_urls.xml")]
         public IActionResult Get()
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            var session = Session.GetSession(SessionID);
+            var session = Session.GetSession(database, User);
             string protocol = Request.IsHttps ? "https://" : "http://";
             string serverURL = ServerConfig.Instance.ExternalURL.Replace("auto", $"{protocol}{Request.Host.Host}", System.StringComparison.CurrentCultureIgnoreCase);
             var resp = new Response<ContentURLsResponse>

@@ -1,21 +1,15 @@
-﻿using GameServer.Implementation.Player;
+﻿using GameServer.Implementation.Common;
+using GameServer.Implementation.Player;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
 
 namespace GameServer.Controllers.Player
 {
-    public class PlayerProfileController : Controller
+    public class PlayerProfileController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public PlayerProfileController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpGet]
         [Route("player_profile/view.xml")]
         public IActionResult ViewProfile(int player_id, Platform platform)
@@ -25,13 +19,12 @@ namespace GameServer.Controllers.Player
 
         [HttpPut]
         [HttpPost]
+        [Authorize]
         [Route("player_profile.xml")]
         public IActionResult UpdateProfile(PlayerProfile player_profile)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerProfiles.UpdateProfile(database, SessionID, player_profile), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            return Content(PlayerProfiles.UpdateProfile(database, user, player_profile), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

@@ -2,23 +2,19 @@
 using GameServer.Models;
 using GameServer.Utils;
 using System.Collections.Generic;
-using System;
 using GameServer.Models.PlayerData;
 using System.Linq;
 using GameServer.Models.Request;
-using GameServer.Implementation.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player
 {
     public class ActivityLog
     {
-        public static string GetActivityLog(Database database, Guid SessionID, int page, int per_page, ActivityList list = ActivityList.news_feed,
+        public static string GetActivityLog(Database database, User user, int page, int per_page, ActivityList list = ActivityList.news_feed,
             int? player_id = null, int? player_creation_id = null)
         {
             // TODO: Optimise
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Activities = new List<ActivityEvent> { };
 
             if (list == ActivityList.news_feed)
@@ -190,10 +186,8 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string NewsFeedTally(Database database, Guid SessionID)
+        public static string NewsFeedTally(Database database, User user)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var total = 0;
 
             total += database.ActivityLog.Count(match => match.Type == ActivityType.system_event);
@@ -223,11 +217,8 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string CreateEvent(Database database, Guid SessionID, ActivityType topic, int creator_id, PlayerEvent @event, ActivityList list_name)
+        public static string CreateEvent(Database database, User user, ActivityType topic, int creator_id, PlayerEvent @event, ActivityList list_name)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (topic == ActivityType.system_event || user == null || creator_id != user.UserId)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -247,10 +238,10 @@ namespace GameServer.Implementation.Player
                     List = list_name,
                     Topic = @event.type,
                     Description = @event.description,
-                    PlayerId = int.Parse(@event.player_id.Split("\0")[0]),
+                    PlayerId = int.Parse(@event.player_id.TrimEnd('\0')),
                     PlayerCreationId = 0,
                     CreatedAt = TimeUtils.Now,
-                    AllusionId = int.Parse(@event.player_id.Split("\0")[0]),
+                    AllusionId = int.Parse(@event.player_id.TrimEnd('\0')),
                     AllusionType = "Player"
                 });
                 database.SaveChanges();

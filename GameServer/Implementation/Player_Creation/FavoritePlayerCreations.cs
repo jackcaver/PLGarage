@@ -1,11 +1,9 @@
 ﻿using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Response;
 using GameServer.Models;
-using System;
 using GameServer.Utils;
 using System.Linq;
 using System.Collections.Generic;
-using GameServer.Implementation.Common;
 using GameServer.Models.PlayerData;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,10 +11,9 @@ namespace GameServer.Implementation.Player_Creation
 {
     public class FavoritePlayerCreations
     {
-        public static string AddToFavorites(Database database, Guid SessionID, int id)
+        public static string AddToFavorites(Database database, SessionData session, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = session.User;
             var Creation = database.PlayerCreations
                 .Include(x => x.Hearts)
                 .FirstOrDefault(match => match.PlayerCreationId == id);
@@ -76,11 +73,8 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string RemoveFromFavorites(Database database, Guid SessionID, int id)
+        public static string RemoveFromFavorites(Database database, User user, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -114,9 +108,8 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string ListFavorites(Database database, Guid SessionID, string player_id_or_username)
+        public static string ListFavorites(Database database, SessionData session, string player_id_or_username)
         {
-            var session = Session.GetSession(SessionID);
             var user = database.Users.FirstOrDefault(match => match.Username == player_id_or_username || match.UserId.ToString() == player_id_or_username);
 
             if (user == null)

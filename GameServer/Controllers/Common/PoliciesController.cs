@@ -1,40 +1,108 @@
 using System;
 using GameServer.Implementation.Common;
+using GameServer.Models;
+using GameServer.Models.Config;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
+using GameServer.Models.Response;
 using GameServer.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GameServer.Controllers.Common
 {
-    public class PoliciesController : Controller
+    public class PoliciesController(Database database) : Controller
     {
-        private readonly Database database;
+        private const string PSVitaWarning = @"WARNING: This game sends your exact location to the server you're trying to connect to.
+Before continuing please make sure that you could trust the owner of this server
+Your GPS data will be stored and processed by PLGarage for certain features to work
+PLGarage itself does not share that data to third parties, but it is possible for the server owner to use that data to their own advantage.
+PLGarage and it's developers are not reliable for any possible data leaks or blackmailing.";
 
-        public PoliciesController(Database database)
-        {
-            this.database = database;
-        }
-
+        [Authorize]
+        [AllowAnonymous]
         [Route("/policies/view.xml")]
         public IActionResult ViewPolicy(PolicyType policy_type, Platform platform, string username)
         {
-            if (Request.Cookies.ContainsKey("session_id") 
-                && Session.GetSession(Guid.Parse(Request.Cookies["session_id"])).Username != null 
-                && (username == null || (platform == Platform.PSV && username == "X")))
-                username = Session.GetSession(Guid.Parse(Request.Cookies["session_id"])).Username;
+            SessionInfo session = new(0, Guid.Empty);
+            if (Request.Cookies.TryGetValue("session", out string sessionCookie))
+                session = JsonConvert.DeserializeObject<SessionInfo>(sessionCookie);
+            
+            if (username == null || ((platform == Platform.PSV || platform == Platform.PSP) 
+                                     && username == "X" && Session.GetSession(database, User).Username != null))
+                username = Session.GetSession(database, User).Username;
 
-            return Content(Policy.View(database, policy_type, platform, username), "application/xml;charset=utf-8");
+            bool isMNR = false;
+
+            if (platform != Platform.PS3)
+                isMNR = true;
+            else
+                isMNR = false;
+            
+            List<string> whitelist = [];
+            if (ServerConfig.Instance.Whitelist)
+                whitelist = Session.LoadWhitelist();
+            bool is_accepted = false;
+            string text = ServerConfig.Instance.NotWhitelistedText.Replace("%username", username).Replace("%platform", platform.ToString());
+            var user = database.Users.FirstOrDefault(match => match.Username == username);
+
+            if (user != null && username != "ufg")
+                is_accepted = user.PolicyAccepted;
+            if ((user != null || (!ServerConfig.Instance.Whitelist || whitelist.Contains(username))) && username != "ufg")
+            {
+                text = ServerConfig.Instance.EulaText.Replace("%username", username).Replace("%platform", platform.ToString());
+                if (platform == Platform.PSV)
+                    text = text.Insert(0, PSVitaWarning+'\n');
+            }
+
+            if (isMNR)
+                text = text.Replace("<br>", "\n");
+            else
+                text = text.Replace("\n", "<br>");
+
+            var resp = new Response<List<PolicyResponse>>
+            {
+                status = new ResponseStatus { id = 0, message = "Successful completion" },
+                response = [ 
+                    new PolicyResponse { 
+                        id = (int)policy_type, 
+                        is_accepted = is_accepted, 
+                        name = "Online User Agreement", 
+                        text = text 
+                    } 
+                ]
+            };
+            
+            return Content(resp.Serialize(), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
+        [Authorize]
+        [AllowAnonymous]
         [Route("policies/{id}/accept.xml")]
         public IActionResult AcceptPolicy(int id, string username)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Policy.Accept(database, SessionID, id, username.Split("\0")[0]), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+
+            if (user != null && username != "ufg")
+            {
+                user.PolicyAccepted = true;
+                database.SaveChanges();
+            }
+
+            if (user == null && username != "ufg")
+                Response.Cookies.Append("PolicyAccepted", "true");
+
+            var resp = new Response<EmptyResponse>
+            {
+                status = new ResponseStatus { id = 0, message = "Successful completion" },
+                response = new EmptyResponse { }
+            };
+            
+            return Content(resp.Serialize(), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

@@ -8,144 +8,131 @@ using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Player_Creation
 {
-    public class PlayerCreationsController : Controller
+    public class PlayerCreationsController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public PlayerCreationsController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpGet]
+        [Authorize]
+        [AllowAnonymous]
         [Route("player_creations/{id}.xml")]
         public IActionResult Get(int id, bool is_counted)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            var resp = PlayerCreations.GetPlayerCreation(database, SessionID, id, is_counted);
-            return Content(resp, "application/xml;charset=utf-8");
+            var session = Session.GetSession(database, User);
+            return Content(PlayerCreations.GetPlayerCreation(database, session, id, is_counted), "application/xml;charset=utf-8");
         }
 
+        [Authorize]
         [HttpDelete]
         [Route("player_creations/{id}.xml")]
         public IActionResult Delete(int id)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreations.RemovePlayerCreation(database, SessionID, id), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            return Content(PlayerCreations.RemovePlayerCreation(database, user, id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
+        [Authorize]
+        [AllowAnonymous]
         [Route("player_creations/{id}/download.xml")]
         public IActionResult Download(int id, bool is_counted)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(PlayerCreations.GetPlayerCreation(database, SessionID, id, is_counted, true), "application/xml;charset=utf-8");
+            var session = Session.GetSession(database, User);
+            return Content(PlayerCreations.GetPlayerCreation(database, session, id, is_counted, true), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
+        [Authorize]
+        [AllowAnonymous]
         [Route("player_creations/{platform}/surprise_me.xml")]
-        public IActionResult SurpriseMeOnPlatform(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, Filters filters)
+        public IActionResult SurpriseMeOnPlatform(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, [FromQuery]Filters filters)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var user = Session.GetUser(database, User);
 
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_id = Request.Query.Keys.Contains("filters[player_id]") ? Request.Query["filters[player_id]"].ToString().Split(',') : null;
-            PlayerCreationType TypeFilter = PlayerCreationType.TRACK;
-            Enum.TryParse(Request.Query["filters[player_creation_type]"], out TypeFilter);
-            filters.player_creation_type = TypeFilter;
+            if (Enum.TryParse(Request.Query["filters[player_creation_type]"], out PlayerCreationType TypeFilter))
+                filters.player_creation_type = TypeFilter;
 
-            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, null, false, true, true),
+            return Content(PlayerCreations.SearchPlayerCreations(database, user, page, per_page, sort_column, sort_order, limit, platform, filters, null, false, true, true),
                 "application/xml;charset=utf-8");
         }
 
         [HttpGet]
+        [Authorize]
+        [AllowAnonymous]
         [Route("player_creations/surprise_me.xml")]
-        public IActionResult SurpriseMe(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, Filters filters)
+        public IActionResult SurpriseMe(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, [FromQuery]Filters filters)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var session = Session.GetSession(database, User);
 
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_id = Request.Query.Keys.Contains("filters[player_id]") ? Request.Query["filters[player_id]"].ToString().Split(',') : null;
-            PlayerCreationType TypeFilter = PlayerCreationType.TRACK;
-            Enum.TryParse(Request.Query["filters[player_creation_type]"], out TypeFilter);
-            filters.player_creation_type = TypeFilter;
-            if (SessionID != Guid.Empty && platform == Platform.PS2)
-                platform = Session.GetSession(SessionID).Platform;
+            if (Enum.TryParse(Request.Query["filters[player_creation_type]"], out PlayerCreationType TypeFilter))
+                filters.player_creation_type = TypeFilter;
+            if (session.SessionId != Guid.Empty && platform == Platform.PS2)
+                platform = session.Platform;
 
-            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, null, false, true, true),
+            return Content(PlayerCreations.SearchPlayerCreations(database, session.User, page, per_page, sort_column, sort_order, limit, platform, filters, null, false, true, true),
                 "application/xml;charset=utf-8");
         }
 
         [HttpGet]
+        [Authorize]
+        [AllowAnonymous]
         [Route("player_creations/team_picks.xml")]
-        public IActionResult TeamPicks(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, Filters filters)
+        public IActionResult TeamPicks(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, [FromQuery]Filters filters)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var user = Session.GetUser(database, User);
 
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_id = Request.Query.Keys.Contains("filters[player_id]") ? Request.Query["filters[player_id]"].ToString().Split(',') : null;
-            PlayerCreationType TypeFilter = PlayerCreationType.TRACK;
-            Enum.TryParse(Request.Query["filters[player_creation_type]"], out TypeFilter);
-            filters.player_creation_type = TypeFilter;
+            if (Enum.TryParse(Request.Query["filters[player_creation_type]"], out PlayerCreationType TypeFilter))
+                filters.player_creation_type = TypeFilter;
 
-            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, null, true, false, true),
+            return Content(PlayerCreations.SearchPlayerCreations(database, user, page, per_page, sort_column, sort_order, limit, platform, filters, null, true, false, true),
                 "application/xml;charset=utf-8");
         }
 
         [HttpGet]
+        [Authorize]
+        [AllowAnonymous]
         [Route("player_creations/friends_view.xml")]
         [Route("player_creations/friends_and_favorites_view.xml")]
-        public IActionResult FriendsView(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, Filters filters)
+        public IActionResult FriendsView(int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, [FromQuery]Filters filters)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var user = Session.GetUser(database, User);
 
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_id = Request.Query.Keys.Contains("filters[player_id]") ? Request.Query["filters[player_id]"].ToString().Split(',') : null;
-            PlayerCreationType TypeFilter = PlayerCreationType.TRACK;
-            Enum.TryParse(Request.Query["filters[player_creation_type]"], out TypeFilter);
-            filters.player_creation_type = TypeFilter;
+            if (Enum.TryParse(Request.Query["filters[player_creation_type]"], out PlayerCreationType TypeFilter))
+                filters.player_creation_type = TypeFilter;
             filters.username = Request.Query.Keys.Contains("filters[username]") ? Request.Query["filters[username]"].ToString().Split(',') : null;
 
-            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, null, false, false, true),
+            return Content(PlayerCreations.SearchPlayerCreations(database, user, page, per_page, sort_column, sort_order, limit, platform, filters, null, false, false, true),
                 "application/xml;charset=utf-8");
         }
 
         [HttpGet]
+        [Authorize]
+        [AllowAnonymous]
         [Route("player_creations/search.xml")]
         [Route("player_creations.xml")]
         public IActionResult Search(int page, int per_page, SortColumn sort_column, SortOrder sort_order, string search, string search_tags, 
             string username, PlayerCreationType? player_creation_type, bool? is_remixable, bool? ai, bool? auto_reset, int limit, 
-            Platform platform, Filters filters)
+            Platform platform, [FromQuery]Filters filters)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var user = Session.GetUser(database, User);
 
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
             filters.player_id = Request.Query.Keys.Contains("filters[player_id]") ? Request.Query["filters[player_id]"].ToString().Split(',') : null;
-            PlayerCreationType TypeFilter = PlayerCreationType.TRACK;
-            Enum.TryParse(Request.Query["filters[player_creation_type]"], out TypeFilter);
+            Enum.TryParse(Request.Query["filters[player_creation_type]"], out PlayerCreationType TypeFilter);
             if (player_creation_type != null)
-                Enum.TryParse(player_creation_type.ToString(), out TypeFilter);
+                TypeFilter = player_creation_type.Value;
             filters.player_creation_type = TypeFilter;
             filters.tags = search_tags?.Split(',');
             filters.username = username?.Split(',');
@@ -160,52 +147,47 @@ namespace GameServer.Controllers.Player_Creation
             if (Request.Query.Keys.Contains("filters[auto_reset]"))
                 filters.auto_reset = bool.Parse(Request.Query["filters[auto_reset]"].ToString());
 
-            return Content(PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, search, false, false, true),
+            return Content(PlayerCreations.SearchPlayerCreations(database, user, page, per_page, sort_column, sort_order, limit, platform, filters, search, false, false, true),
                 "application/xml;charset=utf-8");
         }
 
         [HttpGet]
+        [Authorize]
         [Route("player_creations/mine.xml")]
-        public IActionResult Mine(int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Filters filters)
+        public IActionResult Mine(int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, [FromQuery]Filters filters)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var session = Session.GetSession(database, User);
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
-            PlayerCreationType TypeFilter = PlayerCreationType.TRACK;
-            Enum.TryParse(Request.Query["filters[player_creation_type]"], out TypeFilter);
-            filters.player_creation_type = TypeFilter;
+            if (Enum.TryParse(Request.Query["filters[player_creation_type]"], out PlayerCreationType TypeFilter))
+                filters.player_creation_type = TypeFilter;
 
-            return Content(PlayerCreations.Mine(database, SessionID, page, per_page, sort_column, sort_order, limit, filters, keyword),
+            return Content(PlayerCreations.Mine(database, session, page, per_page, sort_column, sort_order, limit, filters, keyword),
                 "application/xml;charset=utf-8");
         }
 
         [HttpGet]
+        [Authorize]
         [Route("player_creations/{platform}/mine.xml")]
-        public IActionResult MineOnPlatform(int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Filters filters, Platform platform)
+        public IActionResult MineOnPlatform(int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, [FromQuery]Filters filters, Platform platform)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var session = Session.GetSession(database, User);
             filters.id = Request.Query.Keys.Contains("filters[id]") ? Request.Query["filters[id]"].ToString().Split(',') : null;
-            PlayerCreationType TypeFilter = PlayerCreationType.TRACK;
-            Enum.TryParse(Request.Query["filters[player_creation_type]"], out TypeFilter);
-            filters.player_creation_type = TypeFilter;
+            if (Enum.TryParse(Request.Query["filters[player_creation_type]"], out PlayerCreationType TypeFilter))
+                filters.player_creation_type = TypeFilter;
 
-            return Content(PlayerCreations.Mine(database, SessionID, page, per_page, sort_column, sort_order, limit, filters, keyword, platform),
+            return Content(PlayerCreations.Mine(database, session, page, per_page, sort_column, sort_order, limit, filters, keyword, platform),
                 "application/xml;charset=utf-8");
         }
 
         [HttpPost]
+        [Authorize]
         [Route("player_creations.xml")]
         public IActionResult Create(PlayerCreation player_creation)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var session = Session.GetSession(database, User);
             player_creation.data = Request.Form.Files.GetFile("player_creation[data]");
             player_creation.preview = Request.Form.Files.GetFile("player_creation[preview]");
-            return Content(PlayerCreations.CreatePlayerCreation(database, SessionID, player_creation));
+            return Content(PlayerCreations.CreatePlayerCreation(database, session, player_creation));
         }
 
         [HttpPost]

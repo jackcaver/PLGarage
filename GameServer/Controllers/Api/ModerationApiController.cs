@@ -5,21 +5,14 @@ using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using System.Security.Claims;
+using Newtonsoft.Json;
+using System;
 
 
 namespace GameServer.Controllers.Api
 {
-    public class ModerationApiController : Controller
+    public class ModerationApiController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public ModerationApiController(Database database)
-        {
-            this.database = database;
-        }
-
         #region ModeratorSelf
         [HttpPost]
         [Route("/api/moderation/login")]
@@ -34,27 +27,104 @@ namespace GameServer.Controllers.Api
 
             return Content("ok");
         }
+        
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/refresh_token")]
+        public IActionResult RefreshToken()
+        {
+            var session = Moderation.GetSession(database, User);
+            if (session?.User == null)
+                return NotFound();
+            
+            var result = Moderation.RefreshToken(database, session);
+
+            if (result == null)
+                return Content("error");
+            else
+                Response.Cookies.Append("Token", result);
+
+            return Content("ok");
+        }
 
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/permissions")]
         public IActionResult GetPermissions()
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (int.TryParse(uidString, out int userID))
-                return Content(Moderation.GetPermissions(database, userID));
+            var user = Moderation.GetUser(database, User);
+            if (user != null)
+                return Content(Moderation.GetPermissions(database, user));
             else
                 return NotFound();
         }
+        
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/session")]
+        public IActionResult GetSession()
+        {
+            var session = Moderation.GetSession(database, User);
+            if (session?.User == null)
+                return NotFound();
+            
+            return Content(JsonConvert.SerializeObject(session));
+        }
 
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/sessions")]
+        public IActionResult GetSessions(int page, int per_page)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user != null)
+                return Content(Moderation.GetSessions(database, user.ID, page, per_page));
+            else
+                return NotFound();
+        }
+        
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/sessions/{id}")]
+        public IActionResult RemoveSession(Guid id)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null)
+                return NotFound();
+
+            var result = Moderation.RemoveSession(database, user.ID, id);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/sessions")]
+        public IActionResult RemoveAllSessions()
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null)
+                return NotFound();
+
+            var result = Moderation.RemoveAllSessions(database, user.ID);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        
         [HttpPost]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/set_username")]
         public IActionResult SetUsername(string username)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (int.TryParse(uidString, out int userID))
-                return Content(Moderation.SetUsername(database, userID, username));
+            var user = Moderation.GetUser(database, User);
+            if (user != null)
+                return Content(Moderation.SetUsername(database, user, username));
             else
                 return NotFound();
         }
@@ -64,9 +134,9 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/set_password")]
         public IActionResult SetPassword(string password)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (int.TryParse(uidString, out int userID))
-                return Content(Moderation.SetPassword(database, userID, password));
+            var user = Moderation.GetUser(database, User);
+            if (user != null)
+                return Content(Moderation.SetPassword(database, user, password));
             else
                 return NotFound();
         }
@@ -78,9 +148,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/grief_reports")]
         public IActionResult GetGriefReports(int page, int per_page, string context, int? from)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ViewGriefReports)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ViewGriefReports)
                 return StatusCode(403);
 
             return Content(Moderation.GetGriefReports(database, page, per_page, context, from));
@@ -91,9 +160,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/grief_reports/{id}")]
         public IActionResult GetGriefReport(int id)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ViewGriefReports)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ViewGriefReports)
                 return StatusCode(403);
 
             var report = Moderation.GetGriefReport(database, id);
@@ -109,9 +177,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/grief_reports/{id}/data.xml")]
         public IActionResult GetGriefReportDataFile(int id)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ViewGriefReports)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ViewGriefReports)
                 return StatusCode(403);
 
             var file = UserGeneratedContentUtils.LoadGriefReportData(id, "data.xml");
@@ -127,9 +194,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/grief_reports/{id}/preview.png")]
         public IActionResult GetGriefReportPreview(int id)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ViewGriefReports)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ViewGriefReports)
                 return StatusCode(403);
 
             var file = UserGeneratedContentUtils.LoadGriefReportData(id, "preview.png");
@@ -147,9 +213,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/setStatus")]
         public IActionResult SetModerationStatus(int id, ModerationStatus status)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ChangeCreationStatus)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ChangeCreationStatus)
                 return StatusCode(403);
 
             var result = Moderation.SetModerationStatus(database, id, status);
@@ -165,10 +230,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/player_creations")]
         public IActionResult GetPlayerCreationsWithStatus(int page, int per_page, ModerationStatus status)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID 
-                   && (match.ChangeCreationStatus || match.ResetCreationStats || match.RemovePlayerCreations))))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !(user.ChangeCreationStatus || user.ResetCreationStats || user.RemovePlayerCreations))
                 return StatusCode(403);
 
             return Content(Moderation.GetPlayerCreationsWithStatus(database, page, per_page, status));
@@ -179,9 +242,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/player_creations/{playerCreationID}/stats")]
         public IActionResult ResetCreationStats(int playerCreationID)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ResetCreationStats)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ResetCreationStats)
                 return StatusCode(403);
 
             var result = Moderation.ResetCreationStats(database, playerCreationID);
@@ -197,9 +259,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/player_creations/{playerCreationID}")]
         public IActionResult RemovePlayerCreation(int playerCreationID)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.RemovePlayerCreations)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.RemovePlayerCreations)
                 return StatusCode(403);
 
             var result = Moderation.RemovePlayerCreation(database, playerCreationID);
@@ -217,9 +278,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/setBan")]
         public IActionResult SetBan(int id, bool isBanned)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.BanUsers)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.BanUsers)
                 return StatusCode(403);
 
             var result = Moderation.SetBan(database, id, isBanned);
@@ -235,9 +295,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/setUserSettings")]
         public IActionResult SetUserSettings(int id, bool ShowCreationsWithoutPreviews, bool AllowOppositePlatform)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ChangeUserSettings)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ChangeUserSettings)
                 return StatusCode(403);
 
             var result = Moderation.SetUserSettings(database, id, ShowCreationsWithoutPreviews, AllowOppositePlatform);
@@ -253,9 +312,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/setUserQuota")]
         public IActionResult SetUserQuota(int id, int quota)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ChangeUserQuota)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ChangeUserQuota)
                 return StatusCode(403);
 
             var result = Moderation.SetUserQuota(database, id, quota);
@@ -267,15 +325,31 @@ namespace GameServer.Controllers.Api
             else
                 return Content(result);
         }
+
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/users")]
+        public IActionResult GetUsers(
+            int page, int per_page,
+            bool? PlayedMNR, bool? IsPSNLinked, bool? IsRPCNLinked,
+            bool? IsBanned
+        )
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !(user.BanUsers || user.ChangeUserSettings || user.ChangeUserQuota 
+                                  || user.ResetUserStats || user.RemovePlayerCreations || user.RemoveUsers || user.ManageUserSessions))
+                return StatusCode(403);
+
+            return Content(Moderation.GetUsers(database, page, per_page, PlayedMNR, IsPSNLinked, IsRPCNLinked, IsBanned));
+        }
         
         [HttpDelete]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/users/{id}")]
         public IActionResult RemoveUser(int id)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.RemoveUsers)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.RemoveUsers)
                 return StatusCode(403);
 
             var result = Moderation.RemoveUser(database, id);
@@ -291,10 +365,9 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/users/{id}/stats")]
         public IActionResult ResetUserProfile(int id, bool removeCreations = false)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ResetUserStats 
-                   && (!removeCreations || match.RemovePlayerCreations))))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ResetUserStats 
+                || (removeCreations && !user.RemovePlayerCreations))
                 return StatusCode(403);
 
             var result = Moderation.ResetUserProfile(database, id, removeCreations);
@@ -310,9 +383,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/users/{id}/creations")]
         public IActionResult RemovePlayerCreations(int id)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.RemovePlayerCreations)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.RemovePlayerCreations)
                 return StatusCode(403);
 
             var result = Moderation.RemovePlayerCreations(database, id);
@@ -322,24 +394,56 @@ namespace GameServer.Controllers.Api
             else
                 return Content(result);
         }
-
+        
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/api/moderation/users")]
-        public IActionResult GetUsers(
-            int page, int per_page,
-            bool? PlayedMNR, bool? IsPSNLinked, bool? IsRPCNLinked,
-            bool? IsBanned
-        )
+        [Route("/api/moderation/users/{id}/sessions")]
+        public IActionResult GetUserSessions(int id, int page, int per_page)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID
-                    && (match.BanUsers || match.ChangeUserSettings || match.ChangeUserQuota 
-                        || match.ResetUserStats || match.RemovePlayerCreations || match.RemoveUsers))))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageUserSessions)
                 return StatusCode(403);
 
-            return Content(Moderation.GetUsers(database, page, per_page, PlayedMNR, IsPSNLinked, IsRPCNLinked, IsBanned));
+            var report = Moderation.GetUserSessions(database, id, page, per_page);
+
+            if (report == null)
+                return NotFound();
+            else
+                return Content(report);
+        }
+        
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/users/{id}/{sessionID}")]
+        public IActionResult RemoveUserSession(int id, Guid sessionID)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageUserSessions)
+                return StatusCode(403);
+
+            var report = Moderation.RemoveUserSession(database, id, sessionID);
+
+            if (report == null)
+                return NotFound();
+            else
+                return Content(report);
+        }
+        
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/users/{id}/sessions")]
+        public IActionResult RemoveUserSessions(int id)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageUserSessions)
+                return StatusCode(403);
+
+            var report = Moderation.RemoveAllUserSessions(database, id);
+
+            if (report == null)
+                return NotFound();
+            else
+                return Content(report);
         }
         #endregion
 
@@ -349,9 +453,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/player_complaints")]
         public IActionResult GetPlayerComplaints(int page, int per_page, int? from, int? playerID)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ViewPlayerComplaints)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ViewPlayerComplaints)
                 return StatusCode(403);
 
             return Content(Moderation.GetPlayerComplaints(database, page, per_page, from, playerID));
@@ -362,9 +465,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/player_complaints/{id}")]
         public IActionResult GetPlayerComplaint(int id)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ViewPlayerComplaints)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ViewPlayerComplaints)
                 return StatusCode(403);
 
             var report = Moderation.GetPlayerComplaint(database, id);
@@ -382,9 +484,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/player_creation_complaints")]
         public IActionResult GetPlayerCreationComplaints(int page, int per_page, int? from, int? playerID, int? playerCreationID)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ViewPlayerCreationComplaints)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ViewPlayerCreationComplaints)
                 return StatusCode(403);
 
             return Content(Moderation.GetPlayerCreationComplaints(database, page, per_page, from, playerID, playerCreationID));
@@ -395,9 +496,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/player_creation_complaints/{id}")]
         public IActionResult GetPlayerCreationComplaint(int id)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ViewPlayerCreationComplaints)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ViewPlayerCreationComplaints)
                 return StatusCode(403);
 
             var report = Moderation.GetPlayerCreationComplaint(database, id);
@@ -415,9 +515,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/system_events")]
         public IActionResult GetSystemEvents(int page, int per_page)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageSystemEvents)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageSystemEvents)
                 return StatusCode(403);
 
             return Content(Moderation.GetSystemEvents(database, page, per_page));
@@ -428,9 +527,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/system_events")]
         public IActionResult CreateSystemEvent(string topic, string description, string imageURL)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageSystemEvents)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageSystemEvents)
                 return StatusCode(403);
 
             return Content(Moderation.CreateSystemEvent(database, topic, description, imageURL));
@@ -441,9 +539,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/system_events/{id}")]
         public IActionResult EditSystemEvent(int id, string topic, string description, string imageURL)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageSystemEvents)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageSystemEvents)
                 return StatusCode(403);
 
             var result = Moderation.EditSystemEvent(database, id, topic, description, imageURL);
@@ -459,9 +556,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/system_events/{id}")]
         public IActionResult DeleteSystemEvent(int id)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageSystemEvents)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageSystemEvents)
                 return StatusCode(403);
 
             var result = Moderation.DeleteSystemEvent(database, id);
@@ -479,9 +575,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/announcements")]
         public IActionResult GetAnnouncements(int page, int per_page, Platform? platform)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ManageAnnouncements)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageAnnouncements)
                 return StatusCode(403);
 
             return Content(Moderation.GetAnnouncements(database, page, per_page, platform));
@@ -492,9 +587,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/announcements")]
         public IActionResult CreateAnnouncement(string languageCode, string subject, string text, Platform platform)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ManageAnnouncements)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageAnnouncements)
                 return StatusCode(403);
 
             return Content(Moderation.CreateAnnouncement(database, languageCode, subject, text, platform));
@@ -505,9 +599,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/announcements/{id}")]
         public IActionResult EditAnnouncement(int id, string languageCode, string subject, string text, Platform platform)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ManageAnnouncements)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageAnnouncements)
                 return StatusCode(403);
 
             var result = Moderation.EditAnnouncement(database, id, languageCode, subject, text, platform);
@@ -523,9 +616,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/announcements/{id}")]
         public IActionResult DeleteAnnouncement(int id)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ManageAnnouncements)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageAnnouncements)
                 return StatusCode(403);
 
             var result = Moderation.DeleteAnnouncement(database, id);
@@ -543,9 +635,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/hotlap")]
         public IActionResult GetHotLap()
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageHotlap)
                 return StatusCode(403);
 
             return Content(Moderation.GetHotLap(database));
@@ -556,9 +647,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/hotlap")]
         public IActionResult SetHotLap(int creation)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageHotlap)
                 return StatusCode(403);
 
             return Content(Moderation.SetHotLap(database, creation));
@@ -569,9 +659,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/hotlap/reset")]
         public IActionResult ResetHotLap()
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageHotlap)
                 return StatusCode(403);
 
             ContentUpdates.GetNewHotLap(database);
@@ -584,9 +673,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/hotlap/until_next")]
         public IActionResult GetNextHotLapReset()
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageHotlap)
                 return StatusCode(403);
 
             return Content(((int)TimeUtils.UntilNextDay.TotalSeconds).ToString());
@@ -597,9 +685,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/hotlap/queue")]
         public IActionResult GetHotLapQueue(int page, int per_page)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageHotlap)
                 return StatusCode(403);
 
             return Content(Moderation.GetHotLapQueue(database, page, per_page));
@@ -610,9 +697,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/hotlap/queue")]
         public IActionResult AddToHotLapQueue(int creation)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageHotlap)
                 return StatusCode(403);
 
             return Content(Moderation.AddToHotLapQueue(database, creation));
@@ -623,9 +709,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/hotlap/queue")]
         public IActionResult RemoveFromHotLapQueue(int? index, int? creation)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageHotlap)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageHotlap)
                 return StatusCode(403);
 
             return Content(Moderation.RemoveFromHotLapQueue(database, index, creation));
@@ -638,9 +723,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/whitelist")]
         public IActionResult GetWhitelist(int page, int per_page)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageWhitelist)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageWhitelist)
                 return StatusCode(403);
 
             return Content(Moderation.GetWhitelist(page, per_page));
@@ -651,9 +735,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/whitelist")]
         public IActionResult AddToWhitelist(string username)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageWhitelist)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageWhitelist)
                 return StatusCode(403);
 
             var result = Moderation.AddToWhitelist(username);
@@ -669,9 +752,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/whitelist")]
         public IActionResult UpdateWhitelist(string oldUsername, string newUsername)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageWhitelist)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageWhitelist)
                 return StatusCode(403);
 
             var result = Moderation.UpdateWhitelist(oldUsername, newUsername);
@@ -687,9 +769,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/whitelist")]
         public IActionResult RemoveFromWhitelist(string username)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                  && database.Moderators.Any(match => match.ID == userID && match.ManageWhitelist)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageWhitelist)
                 return StatusCode(403);
 
             var result = Moderation.RemoveFromWhitelist(username);
@@ -707,9 +788,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/moderators")]
         public IActionResult GetModerators(int page, int per_page)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ManageModerators)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageModerators)
                 return StatusCode(403);
 
             return Content(Moderation.GetModerators(database, page, per_page));
@@ -720,25 +800,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/moderators")]
         public IActionResult CreateModerator(string username, string password, ModeratorPermissions permissions)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID
-                    && match.ManageModerators
-                    && (!permissions.BanUsers || match.BanUsers)
-                    && (!permissions.ChangeCreationStatus || match.ChangeCreationStatus)
-                    && (!permissions.ChangeUserSettings || match.ChangeUserSettings)
-                    && (!permissions.ChangeUserQuota || match.ChangeUserQuota)
-                    && (!permissions.ViewGriefReports || match.ViewGriefReports)
-                    && (!permissions.ViewPlayerComplaints || match.ViewPlayerComplaints)
-                    && (!permissions.ViewPlayerCreationComplaints || match.ViewPlayerCreationComplaints)
-                    && (!permissions.ManageHotlap || match.ManageHotlap)
-                    && (!permissions.ManageAnnouncements || match.ManageAnnouncements)
-                    && (!permissions.ManageWhitelist || match.ManageWhitelist)
-                    && (!permissions.RemovePlayerCreations || match.RemovePlayerCreations)
-                    && (!permissions.ResetCreationStats || match.ResetCreationStats)
-                    && (!permissions.ResetUserStats || match.ResetUserStats)
-                    && (!permissions.RemoveUsers || match.RemoveUsers)
-                    && (!permissions.ManageSystemEvents || match.ManageSystemEvents))))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageModerators || !user.HasPermissions(permissions))
                 return StatusCode(403);
 
             return Content(Moderation.CreateModerator(database, username, password, permissions));
@@ -749,12 +812,62 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/moderators/{id}")]
         public IActionResult GetModerator(int id)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ManageModerators)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageModerators)
                 return StatusCode(403);
 
             var report = Moderation.GetModerator(database, id);
+
+            if (report == null)
+                return NotFound();
+            else
+                return Content(report);
+        }
+        
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/moderators/{id}/sessions")]
+        public IActionResult GetModeratorSessions(int id, int page, int per_page)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageModerators)
+                return StatusCode(403);
+
+            var report = Moderation.GetSessions(database, id, page, per_page);
+
+            if (report == null)
+                return NotFound();
+            else
+                return Content(report);
+        }
+        
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/moderators/{id}/{sessionID}")]
+        public IActionResult RemoveModeratorSession(int id, Guid sessionID)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageModerators)
+                return StatusCode(403);
+
+            var report = Moderation.RemoveSession(database, id, sessionID);
+
+            if (report == null)
+                return NotFound();
+            else
+                return Content(report);
+        }
+        
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/moderators/{id}/sessions")]
+        public IActionResult RemoveModeratorSessions(int id)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageModerators)
+                return StatusCode(403);
+
+            var report = Moderation.RemoveAllSessions(database, id);
 
             if (report == null)
                 return NotFound();
@@ -767,9 +880,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/{id}/set_username")]
         public IActionResult SetUsernameForOtherUser(int id, string username)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ManageModerators)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageModerators)
                 return StatusCode(403);
 
             return Content(Moderation.SetUsername(database, id, username));
@@ -780,9 +892,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/{id}/set_password")]
         public IActionResult SetPasswordForOtherUser(int id, string password)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ManageModerators)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageModerators)
                 return StatusCode(403);
 
             return Content(Moderation.SetPassword(database, id, password));
@@ -793,25 +904,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/{id}/set_permissions")]
         public IActionResult SetPermissions(int id, ModeratorPermissions permissions)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID) && id != userID
-                && database.Moderators.Any(match => match.ID == userID
-                    && match.ManageModerators
-                    && (!permissions.BanUsers || match.BanUsers)
-                    && (!permissions.ChangeCreationStatus || match.ChangeCreationStatus)
-                    && (!permissions.ChangeUserSettings || match.ChangeUserSettings)
-                    && (!permissions.ChangeUserQuota || match.ChangeUserQuota)
-                    && (!permissions.ViewGriefReports || match.ViewGriefReports)
-                    && (!permissions.ViewPlayerComplaints || match.ViewPlayerComplaints)
-                    && (!permissions.ViewPlayerCreationComplaints || match.ViewPlayerCreationComplaints)
-                    && (!permissions.ManageHotlap || match.ManageHotlap)
-                    && (!permissions.ManageAnnouncements || match.ManageAnnouncements)
-                    && (!permissions.ManageWhitelist || match.ManageWhitelist)
-                    && (!permissions.RemovePlayerCreations || match.RemovePlayerCreations)
-                    && (!permissions.ResetCreationStats || match.ResetCreationStats)
-                    && (!permissions.ResetUserStats || match.ResetUserStats)
-                    && (!permissions.RemoveUsers || match.RemoveUsers)
-                    && (!permissions.ManageSystemEvents || match.ManageSystemEvents))))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageModerators || !user.HasPermissions(permissions))
                 return StatusCode(403);
 
             return Content(Moderation.SetPermissions(database, id, permissions));
@@ -822,15 +916,14 @@ namespace GameServer.Controllers.Api
         [Route("/api/moderation/moderators/{id}")]
         public IActionResult DeleteModerator(int id)
         {
-            var uidString = User.FindFirstValue(JWTUtils.UserID);
-            if (!(int.TryParse(uidString, out int userID)
-                && database.Moderators.Any(match => match.ID == userID && match.ManageModerators)))
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageModerators)
                 return StatusCode(403);
 
-            if (userID == id) //why would you want to do this?
+            if (user.ID == id) //why would you want to do this?
                 return Content("error_cannot_remove_yourself");
 
-            var result = Moderation.DeleteModerator(database, id);
+            var result = Moderation.DeleteModerator(database, id, user);
 
             if (result == null)
                 return NotFound();

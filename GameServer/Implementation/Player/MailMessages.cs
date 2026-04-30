@@ -1,11 +1,9 @@
-﻿using GameServer.Implementation.Common;
-using GameServer.Models;
+﻿using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,11 +11,8 @@ namespace GameServer.Implementation.Player
 {
     public class MailMessages
     {
-        public static string GetMessages(Database database, Guid SessionID, int page, int per_page, string[] mail_message_types)
+        public static string GetMessages(Database database, User user, int page, int per_page, string[] mail_message_types)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -90,15 +85,13 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string GetMessage(Database database, Guid SessionID, int id)
+        public static string GetMessage(Database database, User user, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var message = database.MailMessages
                 .Include(x => x.Sender)
                 .FirstOrDefault(match => match.Id == id);
 
-            if (user == null || message.RecipientId != user.UserId || message == null)
+            if (user == null || message == null || message.RecipientId != user.UserId)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -138,11 +131,8 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string CreateMessage(Database database, Guid SessionID, int? reply_to_mail_message_id, MailMessage mail_message)
+        public static string CreateMessage(Database database, User user, int? reply_to_mail_message_id, MailMessage mail_message)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -207,13 +197,11 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string RemoveMessage(Database database, Guid SessionID, int id)
+        public static string RemoveMessage(Database database, User user, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var message = database.MailMessages.FirstOrDefault(match => match.Id == id);
 
-            if (user == null || message.RecipientId != user.UserId || message == null)
+            if (user == null || message == null || message.RecipientId != user.UserId)
             {
                 var errorResp = new Response<EmptyResponse>
                 {

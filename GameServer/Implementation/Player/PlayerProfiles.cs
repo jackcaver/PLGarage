@@ -1,11 +1,9 @@
-﻿using GameServer.Implementation.Common;
-using GameServer.Models;
+﻿using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -35,12 +33,10 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string UpdateProfile(Database database, Guid SessionID, PlayerProfile player_profile)
+        public static string UpdateProfile(Database database, User user, PlayerProfile player_profile)
         {
             int id = -130;
             string message = "The player doesn't exist";
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             if (user != null)
             {
                 id = 0;
@@ -79,9 +75,8 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string GetPlayerInfo(Database database, int id, Guid SessionID)
+        public static string GetPlayerInfo(Database database, int id, SessionData session)
         {
-            var session = Session.GetSession(SessionID);
             var user = database.Users
                 .AsSplitQuery()
                 .Include(u => u.HeartedByProfiles)
@@ -93,7 +88,7 @@ namespace GameServer.Implementation.Player
                 .Include(u => u.PlayerCreations)
                 .Include(u => u.PlayerCreationPoints)
                 .FirstOrDefault(match => match.UserId == id);
-            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var requestedBy = session.User;
 
             if (user == null)
             {
@@ -133,7 +128,7 @@ namespace GameServer.Implementation.Player
                         online_wins_this_week = user.OnlineWinsThisWeek,
                         player_creation_quota = user.Quota,
                         points = user.Points(session.Platform),
-                        presence = user.Presence.ToString(),
+                        presence = user.Presence(database, session.Platform).ToString(),
                         quote = user.Quote != null ? user.Quote.Replace("\0", "") : "",
                         rank = user.Rank,
                         updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
@@ -143,7 +138,7 @@ namespace GameServer.Implementation.Player
                         total_characters = user.TotalCharacters(session.Platform),
                         total_karts = user.TotalKarts(session.Platform),
                         total_player_creations = user.TotalPlayerCreations(session.Platform),
-                        total_tracks = (session != null && session.IsMNR) ? user.TotalMNRTracks(session.Platform) : user.TotalTracks,
+                        total_tracks = session.IsMNR ? user.TotalMNRTracks(session.Platform) : user.TotalTracks,
                         skill_level = user.SkillLevelName(session.Platform),
                         skill_level_id = user.SkillLevelId(session.Platform),
                         skill_level_name = user.SkillLevelName(session.Platform),
@@ -163,10 +158,10 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string GetSkillLevel(Database database, Guid SessionID, int[] id)
+        public static string GetSkillLevel(Database database, SessionData session, int[] id)
         {
-            var session = Session.GetSession(SessionID);
             var users = database.Users
+                    .AsNoTracking()
                     .AsSplitQuery()
                     .Include(u => u.PlayerCreationPoints)
                     .Include(u => u.PlayerExperiencePoints)
@@ -209,12 +204,11 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string IncrementRaceXP(Database database, Guid SessionID, int delta)
+        public static string IncrementRaceXP(Database database, SessionData session, int delta)
         {
             int id = -130;
             string message = "The player doesn't exist";
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = session.User;
 
             if (user != null)
             {

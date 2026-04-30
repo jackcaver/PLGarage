@@ -8,24 +8,24 @@ using System.Linq;
 using NPTicket;
 using Serilog;
 using GameServer.Models.Config;
+using Microsoft.EntityFrameworkCore;
 using System.IO;
 using Newtonsoft.Json;
 using NPTicket.Verification;
 using NPTicket.Verification.Keys;
+using System.Security.Claims;
 
 namespace GameServer.Implementation.Common
 {
     public class Session
     {
-        private static readonly Dictionary<Guid, SessionInfo> Sessions = [];
-
-        public static string Login(Database database, string ip, Platform platform, string ticket, string hmac, string console_id, Guid SessionID)
+        public static string Login(Database database, string ip, Platform platform, string ticket, string hmac, string console_id, bool policyAccepted, out string token)
         {
-            ClearSessions();
             byte[] ticketData = Convert.FromBase64String(ticket.Trim('\n').Trim('\0'));
             List<string> whitelist = [];
             if (ServerConfig.Instance.Whitelist)
                 whitelist = LoadWhitelist();
+            token = null;
 
             Ticket NPTicket;
             try
@@ -92,9 +92,9 @@ namespace GameServer.Implementation.Common
                 database.SaveChanges();
             }
 
-            if (database.Users.Any(match => match.Username == NPTicket.Username) && user == null)
+            var userByUsername = database.Users.FirstOrDefault(match => match.Username == NPTicket.Username);
+            if (userByUsername != null && user == null)
             {
-                var userByUsername = database.Users.FirstOrDefault(match => match.Username == NPTicket.Username);
                 if (IsPSN && userByUsername.PSNID == 0
                     && (userByUsername.RPCNID == 0 || userByUsername.AllowOppositePlatform))
                 {
@@ -126,7 +126,7 @@ namespace GameServer.Implementation.Common
                     Quota = 30,
                     CreatedAt = TimeUtils.Now,
                     UpdatedAt = TimeUtils.Now,
-                    PolicyAccepted = Sessions[SessionID].PolicyAccepted,
+                    PolicyAccepted = policyAccepted,
                 };
                 if (IsPSN)
                     newUser.PSNID = NPTicket.UserId;
@@ -138,13 +138,11 @@ namespace GameServer.Implementation.Common
                 user = database.Users.FirstOrDefault(match => match.Username == NPTicket.Username);
             }
 
-            if (user == null || !Sessions.TryGetValue(SessionID, out SessionInfo session) || user.IsBanned
+            if (user == null || user.IsBanned
                 || (ServerConfig.Instance.Whitelist && !whitelist.Contains(user.Username)))
             {
                 if (user == null)
                     Log.Warning($"Unable find or create user for {NPTicket.Username}");
-                else if (!Sessions.ContainsKey(SessionID))
-                    Log.Warning($"{NPTicket.Username} does not have a session");
 
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -154,23 +152,26 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
 
-            foreach (var Session in Sessions.Where(match => match.Value.Username == user.Username 
-                && match.Key != SessionID && match.Value.Platform == platform))
-            {
-                Sessions.Remove(Session.Key);
-                ServerCommunication.NotifySessionDestroyed(Session.Key);
-            }
+            var sessions = database.Sessions.Where(match => match.UserId == user.UserId && match.Platform == platform);
+            
+            foreach (var id in sessions.Select(s => s.SessionId).ToList())
+                ServerCommunication.NotifySessionDestroyed(id);
 
-            session.Ticket = NPTicket;
-            session.LastPing = TimeUtils.Now;
-            session.Platform = platform;
+            sessions.ExecuteDelete();
+
+            SessionData session = new()
+            {
+                UserId = user.UserId,
+                SessionId = Guid.NewGuid(),
+                Platform = platform,
+                LastPing = TimeUtils.Now,
+                Presence = Presence.ONLINE
+            };
 
             List<string> MNR_IDs = [ "BCUS98167", "BCES00701", "BCES00764", "BCJS30041", "BCAS20105", 
                 "BCKS10122", "NPEA00291", "NPUA80535", "BCET70020", "NPUA70074", "NPEA90062", "NPUA70096", "NPJA90132" ];
 
-            if (platform != Platform.PS3)
-                session.IsMNR = true;
-            if (MNR_IDs.Contains(NPTicket.TitleId))
+            if (MNR_IDs.Contains(NPTicket.TitleId) || platform != Platform.PS3)
                 session.IsMNR = true;
 
             if (session.IsMNR && !user.PlayedMNR)
@@ -192,37 +193,45 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
             
-            ServerCommunication.NotifySessionCreated(SessionID, user.UserId, user.Username, (int)NPTicket.IssuerId, platform);
-            session.RandomSeed = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            database.Sessions.Add(session);
+            database.SaveChanges();
+            token = JWTUtils.GenerateToken(user.UserId, session.SessionId);
+            
+            ServerCommunication.NotifySessionCreated(session.SessionId, user.UserId, user.Username, (int)NPTicket.IssuerId, platform);
 
             var resp = new Response<List<login_data>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [
                     new login_data {
-                        ip_address = ip,
+                        ip_address = ip ?? "127.0.0.1",
                         login_time = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                         platform = platform.ToString(),
                         player_id = user.UserId,
                         player_name = user.Username,
-                        presence = user.Presence.ToString()
+                        presence = user.Presence(database, platform).ToString()
                     }
                 ]
             };
             return resp.Serialize();
         }
 
-        public static string SetPresence(string presence, Guid SessionID)
+        public static string SetPresence(Database database, string presenceString, SessionInfo sessionInfo)
         {
-            Ping(SessionID);
+            Ping(database, sessionInfo);
             int id = -130;
             string message = "The player doesn't exist";
 
-            if (Sessions.TryGetValue(SessionID, out SessionInfo session) && Enum.TryParse(presence, out Presence userPresence))
+            var session = database.Sessions.FirstOrDefault(match => match.UserId == sessionInfo.UserId
+                                                                    && match.SessionId == sessionInfo.SessionId);
+            
+            if (session != null && Enum.TryParse(presenceString, out Presence presence))
             {
                 id = 0;
                 message = "Successful completion";
-                session.Presence = userPresence;
+
+                session.Presence = presence;
+                database.SaveChanges();
             }
 
             var resp = new Response<EmptyResponse>
@@ -233,106 +242,77 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static Presence GetPresence(string Username)
+        public static Presence GetPresence(Database database, string username, Platform platform)
         {
-            ClearSessions();
-            var Session = Sessions.FirstOrDefault(match => match.Value.Username == Username).Value;
-            if (Session == null) 
+            ClearSessions(database);
+            
+            var session = database.Sessions.FirstOrDefault(match => match.Username == username && match.Platform == platform);
+            if (session == null) 
             {
                 return Presence.OFFLINE;
             }
-            return Session.Presence;
+            return session.Presence;
         }
 
-        public static string Ping(Guid SessionID)
+        public static string Ping(Database database, SessionInfo sessionInfo)
         {
-            ClearSessions();
+            ClearSessions(database);
+            int id = -130;
+            string message = "The player doesn't exist";
 
-            if (!Sessions.TryGetValue(SessionID, out SessionInfo session))
+            var session = database.Sessions.FirstOrDefault(match => match.UserId == sessionInfo.UserId
+                                                                    && match.SessionId == sessionInfo.SessionId);
+            
+            if (session != null)
             {
-                var errorResp = new Response<EmptyResponse>
-                {
-                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
-                    response = new EmptyResponse { }
-                };
-                return errorResp.Serialize();
+                id = 0;
+                message = "Successful completion";
+                
+                session.LastPing = TimeUtils.Now;
+                database.SaveChanges();
             }
-
-            session.LastPing = TimeUtils.Now;
-
+            
             var resp = new Response<EmptyResponse>
             {
-                status = new ResponseStatus { id = 0, message = "Successful completion" },
+                status = new ResponseStatus { id = id, message = message },
                 response = new EmptyResponse { }
             };
             return resp.Serialize();
         }
 
-        public static Guid StartSession()
+        private static void ClearSessions(Database database)
         {
-            var sessionID = Guid.NewGuid();
+            var sessions = database.Sessions.Where(match => TimeUtils.Now > match.LastPing.AddHours(1));
             
-            var session = new SessionInfo
-            {
-                LastPing = TimeUtils.Now,
-                Presence = Presence.OFFLINE
-            };
-            
-            var startedAt = TimeUtils.Now;
+            foreach (var id in sessions.Select(s => s.SessionId).ToList())
+                ServerCommunication.NotifySessionDestroyed(id);
 
-            while (!Sessions.TryAdd(sessionID, session))
-            {
-                if ((TimeUtils.Now - startedAt).Milliseconds > 500)
-                {//if it takes too long then something is not right and we should return an error to avoid issues...
-                    Log.Error("Took too long to start a new session");
-                    throw new TimeoutException(); 
-                }
-                
-                sessionID = Guid.NewGuid();
-            }
-            
-            return sessionID;
+            sessions.ExecuteDelete();
         }
 
-        private static void ClearSessions()
+        private static SessionData GetSession(Database database, SessionInfo sessionInfo)
         {
-            foreach (var Session in Sessions.Where(match => match.Value.Authenticated
-                && (TimeUtils.Now > match.Value.LastPing.AddMinutes(60) /*|| TimeUtils.Now > match.Value.ExpiryDate*/)))
-            {
-                Sessions.Remove(Session.Key);
-                ServerCommunication.NotifySessionDestroyed(Session.Key);
-            }
+            Ping(database, sessionInfo);
 
-            foreach (var Session in Sessions.Where(match => !match.Value.Authenticated
-                && TimeUtils.Now > match.Value.LastPing.AddHours(3)))
-            {
-                Sessions.Remove(Session.Key);
-                ServerCommunication.NotifySessionDestroyed(Session.Key);
-            }
-        }
-
-        public static SessionInfo GetSession(Guid SessionID)
-        {
-            Ping(SessionID);
-
-            if (!Sessions.TryGetValue(SessionID, out SessionInfo session))
-            {
-                return new SessionInfo {};
-            }
-
-            return session;
+            var session = database.Sessions
+                .Include(s => s.User)
+                .FirstOrDefault(match => match.SessionId == sessionInfo.SessionId
+                                         && match.UserId == sessionInfo.UserId);
+            
+            if (session == null)
+                return new SessionData();
+            else
+                return session;
         }
         
-        public static bool SessionExists(Guid SessionID) => Sessions.ContainsKey(SessionID);
-
-        public static IEnumerable<SessionInfo> GetSessions() => Sessions.Values;
-
-        public static void AcceptPolicy(Guid SessionID) 
+        public static SessionData GetSession(Database database, ClaimsPrincipal user)
         {
-            ClearSessions();
-            if (!Sessions.TryGetValue(SessionID, out SessionInfo session))
-                return;
-            session.PolicyAccepted = true;
+            return GetSession(database, JWTUtils.GetSessionInfo(user));
+        }
+        
+        public static User GetUser(Database database, ClaimsPrincipal user)
+        {
+            return GetSession(database, user).User;
         }
 
         public static void WriteWhitelist(List<string> whitelist)
@@ -351,26 +331,17 @@ namespace GameServer.Implementation.Common
             return JsonConvert.DeserializeObject<List<string>>(File.ReadAllText("./whitelist.json"));
         }
 
-        public static List<string> UpdateWhitelist(string OldUsername, string NewUsername)
+        public static List<string> UpdateWhitelist(string oldUsername, string newUsername)
         {
             List<string> whitelist = LoadWhitelist();
-            if (!whitelist.Contains(OldUsername))
+            if (!whitelist.Contains(oldUsername))
                 return whitelist;
-            int EntryIndex = whitelist.FindIndex(match => match == OldUsername);
-            if (EntryIndex != -1)
-                whitelist[EntryIndex] = NewUsername;
+            int entryIndex = whitelist.FindIndex(match => match == oldUsername);
+            if (entryIndex != -1)
+                whitelist[entryIndex] = newUsername;
             WriteWhitelist(whitelist);
 
             return whitelist;
-        }
-
-        public static void DestroyAllSessions()
-        {
-            foreach (var sessionID in Sessions.Keys.ToList())
-            {
-                Sessions.Remove(sessionID);
-                ServerCommunication.NotifySessionDestroyed(sessionID);
-            }
         }
     }
 }

@@ -1,21 +1,14 @@
-﻿using GameServer.Implementation.Player_Creation;
+﻿using GameServer.Implementation.Common;
+using GameServer.Implementation.Player_Creation;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
-using System;
 
 namespace GameServer.Controllers.Player_Creation
 {
-    public class PlanetController : Controller
+    public class PlanetController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public PlanetController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpGet]
         [Route("planet.xml")]
         public IActionResult GetPlanet(int player_id, bool is_counted)
@@ -27,12 +20,10 @@ namespace GameServer.Controllers.Player_Creation
         [Route("planet.xml")]
         public IActionResult UpdatePlanet(PlayerCreation planet)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
+            var session = Session.GetSession(database, User);
             planet.player_creation_type = PlayerCreationType.PLANET;
             planet.data = Request.Form.Files.GetFile("planet[data]");
-            return Content(PlayerCreations.UpdatePlayerCreation(database, SessionID, planet), "application/xml;charset=utf-8");
+            return Content(PlayerCreations.UpdatePlayerCreation(database, session, planet), "application/xml;charset=utf-8");
         }
 
         [HttpGet]

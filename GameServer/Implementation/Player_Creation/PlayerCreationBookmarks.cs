@@ -3,21 +3,17 @@ using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Models;
-using System;
 using GameServer.Utils;
 using System.Linq;
 using System.Collections.Generic;
-using GameServer.Implementation.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player_Creation
 {
     public class PlayerCreationBookmarks
     {
-        public static string ListBookmarks(Database database, Guid SessionID, int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Platform platform, Filters filters)
+        public static string ListBookmarks(Database database, User user, int page, int per_page, SortColumn sort_column, SortOrder sort_order, string keyword, int limit, Platform platform, Filters filters)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -28,25 +24,19 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            string idFilter = "";
-            var BookmarkedCreations = database.PlayerCreationBookmarks
+            var bookmarkedCreations = database.PlayerCreationBookmarks
                 .OrderBy(b => b.BookmarkedAt)
-                .Where(match => match.UserId == user.UserId).ToList();
+                .Where(match => match.UserId == user.UserId)
+                .Select(b => b.BookmarkedPlayerCreationId.ToString())
+                .ToList();
 
-            foreach (var bookmark in BookmarkedCreations)
-            {
-                idFilter += $"{bookmark.BookmarkedPlayerCreationId},";
-            }
+            filters.id = bookmarkedCreations.ToArray();
 
-            filters.id = idFilter.Split(',');
-
-            return PlayerCreations.SearchPlayerCreations(database, SessionID, page, per_page, sort_column, sort_order, limit, platform, filters, keyword);
+            return PlayerCreations.SearchPlayerCreations(database, user, page, per_page, sort_column, sort_order, limit, platform, filters, keyword);
         }
 
-        public static string CreateBookmark(Database database, Guid SessionID, int id)
+        public static string CreateBookmark(Database database, User user, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var Creation = database.PlayerCreations
                 .Include(x => x.Bookmarks)
                 .FirstOrDefault(match => match.PlayerCreationId == id);
@@ -90,11 +80,8 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string RemoveBookmark(Database database, Guid SessionID, int id)
+        public static string RemoveBookmark(Database database, User user, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>
@@ -128,11 +115,8 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string Tally(Database database, Guid SessionID)
+        public static string Tally(Database database, User user)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (user == null)
             {
                 var errorResp = new Response<EmptyResponse>

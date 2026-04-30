@@ -6,19 +6,14 @@ using System.Collections.Generic;
 using GameServer.Utils;
 using GameServer.Models.PlayerData;
 using System.Linq;
-using System;
-using GameServer.Implementation.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player_Creation
 {
     public class PlayerCreationComments
     {
-        public static string ListComments(Database database, Guid SessionID, int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, string PlayerCreationIDFilter, string AuthorIDFilter)
+        public static string ListComments(Database database, User requestedBy, int page, int per_page, SortColumn sort_column, SortOrder sort_order, int limit, Platform platform, string PlayerCreationIDFilter, string AuthorIDFilter)
         {
-            var session = Session.GetSession(SessionID);
-            var requestedBy = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             var creationIDs = PlayerCreationIDFilter.Split(',');
 
             var commentsQuery = database.PlayerCreationComments
@@ -31,8 +26,6 @@ namespace GameServer.Implementation.Player_Creation
             if (sort_column == SortColumn.created_at)
                 commentsQuery = commentsQuery.OrderBy(c => c.CreatedAt);
 
-            var CommentsList = new List<player_creation_comment> { };
-
             var total = commentsQuery.Count();
 
             //calculating pages
@@ -43,11 +36,8 @@ namespace GameServer.Implementation.Player_Creation
             if (pageEnd > total)
                 pageEnd = total;
 
-            var comments = commentsQuery.Skip(pageStart).Take(per_page).ToList();
-
-            foreach (var comment in comments)
-            {
-                CommentsList.Add(new player_creation_comment
+            var comments = commentsQuery.Skip(pageStart).Take(per_page)
+                .Select(comment => new player_creation_comment
                 {
                     body = comment.Body,
                     created_at = comment.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
@@ -60,8 +50,7 @@ namespace GameServer.Implementation.Player_Creation
                     rating_down = comment.RatingDown,
                     rating_up = comment.RatingUp,
                     rated_by_me = requestedBy != null ? comment.IsRatedByMe(requestedBy.UserId) : false
-                });
-            }
+                }).ToList();
 
             var resp = new Response<List<player_creation_comments>>
             {
@@ -72,17 +61,16 @@ namespace GameServer.Implementation.Player_Creation
                     row_end = pageEnd,
                     total = total,
                     total_pages = totalPages,
-                    PlayerCreationCommentList = CommentsList
+                    PlayerCreationCommentList = comments
                 } ]
             };
 
             return resp.Serialize();
         }
 
-        public static string CreateComment(Database database, Guid SessionID, PlayerCreationComment player_creation_comment)
+        public static string CreateComment(Database database, SessionData session, PlayerCreationComment player_creation_comment)
         {
-            var session = Session.GetSession(SessionID);
-            var author = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var author = session.User;
 
             if (author == null || !database.PlayerCreations.Any(match => match.PlayerCreationId == player_creation_comment.player_creation_id))
             {
@@ -94,7 +82,7 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            database.PlayerCreationComments.Add(new PlayerCreationCommentData
+            var comment = new PlayerCreationCommentData
             {
                 PlayerId = author.UserId,
                 Body = player_creation_comment.body,
@@ -102,7 +90,8 @@ namespace GameServer.Implementation.Player_Creation
                 UpdatedAt = TimeUtils.Now,
                 Platform = Platform.PS3,
                 PlayerCreationId = player_creation_comment.player_creation_id
-            });
+            };
+            database.PlayerCreationComments.Add(comment);
             database.SaveChanges();
             if (!session.IsMNR)
             {
@@ -116,7 +105,7 @@ namespace GameServer.Implementation.Player_Creation
                     PlayerId = 0,
                     PlayerCreationId = player_creation_comment.player_creation_id,
                     CreatedAt = TimeUtils.Now,
-                    AllusionId = database.PlayerCreationComments.OrderBy(e => e.CreatedAt).LastOrDefault(match => match.PlayerCreationId == player_creation_comment.player_creation_id && match.PlayerId == author.UserId).Id,
+                    AllusionId = comment.Id,
                     AllusionType = "PlayerCreation::Comment"
                 });
                 database.SaveChanges();
@@ -130,10 +119,8 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string DeleteComment(Database database, Guid SessionID, int id)
+        public static string DeleteComment(Database database, User user, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var comment = database.PlayerCreationComments.FirstOrDefault(match => match.Id == id);
 
             if (user == null || comment == null)
@@ -148,17 +135,14 @@ namespace GameServer.Implementation.Player_Creation
 
             var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == comment.PlayerCreationId);
 
-            if (creation != null)
+            if (creation != null && creation.PlayerId != user.UserId && comment.PlayerId != user.UserId)
             {
-                if (creation.PlayerId != user.UserId && comment.PlayerId != user.UserId)
+                var errorResp = new Response<EmptyResponse>
                 {
-                    var errorResp = new Response<EmptyResponse>
-                    {
-                        status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
-                        response = new EmptyResponse { }
-                    };
-                    return errorResp.Serialize();
-                }
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
             }
 
             database.PlayerCreationComments.Remove(comment);
@@ -172,13 +156,9 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string RateComment(Database database, Guid SessionID, PlayerCreationCommentRating player_creation_comment_rating)
+        public static string RateComment(Database database, User user, PlayerCreationCommentRating player_creation_comment_rating)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-            var comment = database.PlayerCreationComments.FirstOrDefault(match => match.Id == player_creation_comment_rating.player_creation_comment_id);
-
-            if (user == null || comment == null)
+            if (user == null || !database.PlayerCreationComments.Any(match => match.Id == player_creation_comment_rating.player_creation_comment_id))
             {
                 var errorResp = new Response<EmptyResponse>
                 {

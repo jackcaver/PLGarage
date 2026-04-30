@@ -11,27 +11,20 @@ using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Common
 {
-    public class GamesController : Controller
+    public class GamesController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public GamesController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpGet]
+        [Authorize]
+        [AllowAnonymous]
         [Route("/resources/single_player_game.create_finish_and_post_stats.xml")]
         public IActionResult GetSinglePlayerXML()
         { //Because for whatever reason MNR: Road Trip Refuses to take my xml with LBPK variables in it -_-
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            var session = Session.GetSession(SessionID);
+            var session = Session.GetSession(database, User);
             string resp;
             if (session.IsMNR && System.IO.File.Exists("GameResources/MNR.single_player_game.create_finish_and_post_stats.xml"))
                 resp = System.IO.File.ReadAllText("GameResources/MNR.single_player_game.create_finish_and_post_stats.xml");
@@ -43,15 +36,12 @@ namespace GameServer.Controllers.Common
         }
 
         [HttpPost]
+        [Authorize]
         [Route("single_player_games/create_finish_and_post_stats.xml")]
         public IActionResult PostSinglePlayerGameStats(Game game, GamePlayer game_player, GamePlayerStats game_player_stats)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            var Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.track_idx);
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var session = Session.GetSession(database, User);
+            var user = session.User;
             string FormScore = Request.Form["game_player_stats[score]"];
             string FormFinishTime = Request.Form["game_player_stats[finish_time]"];
             string FormPoints = Request.Form["game_player_stats[points]"];
@@ -65,11 +55,11 @@ namespace GameServer.Controllers.Common
 
             if (session.IsMNR)
             {
-                Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game_player_stats.track_idx);
                 game.host_player_id = database.Users.FirstOrDefault(match => match.Username == session.Username).UserId;
                 game.track_idx = game_player_stats.track_idx;
             }
             UserGeneratedContentUtils.AddStoryLevel(database, game.track_idx);
+            var Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.track_idx);
 
             if (Track == null || user == null)
             {
@@ -354,7 +344,7 @@ namespace GameServer.Controllers.Common
 
         [HttpGet]
         [Route("/multiplayer_games.xml")]
-        public IActionResult GetGameList(int page, int per_page, Filters filters)
+        public IActionResult GetGameList(int page, int per_page, [FromQuery]Filters filters)
         {
             if (Request.Query.ContainsKey("filters[game_state]"))
             {
@@ -390,104 +380,94 @@ namespace GameServer.Controllers.Common
         }
 
         [HttpPut]
+        [Authorize]
         [Route("/multiplayer_games.xml")]
         public IActionResult CreateGame(Game game)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            var HostIP = HttpContext.Connection.RemoteIpAddress.ToString();
-            return Content(Games.CreateGame(database, SessionID, game, HostIP), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            var HostIP = HttpContext.Connection.RemoteIpAddress?.ToString();
+            return Content(Games.CreateGame(database, user, game, HostIP), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
+        [Authorize]
         [Route("/multiplayer_games/{id}.xml")]
         public IActionResult LaunchGame(int id)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.LaunchGame(database, SessionID, id), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            return Content(Games.LaunchGame(database, user, id), "application/xml;charset=utf-8");
         }
 
+        [Authorize]
         [HttpDelete]
         [Route("/multiplayer_games/{id}.xml")]
         public IActionResult CancelGame(int id)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.CancelGame(database, SessionID, id), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            return Content(Games.CancelGame(database, user, id), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
+        [Authorize]
         [Route("/multiplayer_games/{game_id}/join.xml")]
         public IActionResult JoinGame(int game_id)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.JoinGame(database, SessionID, game_id), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            return Content(Games.JoinGame(database, user, game_id), "application/xml;charset=utf-8");
         }
 
         [HttpDelete]
+        [Authorize]
         [Route("/multiplayer_games/{game_id}/players.xml")]
         public IActionResult RemovePlayer(int game_id)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.RemovePlayer(database, SessionID, game_id), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            return Content(Games.RemovePlayer(database, user, game_id), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
+        [Authorize]
         [Route("/multiplayer_games/{game_id}/disconnect.xml")]
         public IActionResult LeaveGame(int game_id)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.LeaveGame(database, SessionID, game_id), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            return Content(Games.LeaveGame(database, user, game_id), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
+        [Authorize]
         [Route("/multiplayer_games/{game_id}/checkin.xml")]
         public IActionResult PlayerCheckin(int game_id)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.PlayerCheckin(database, SessionID, game_id), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            return Content(Games.PlayerCheckin(database, user, game_id), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
+        [Authorize]
         [Route("/multiplayer_games/{game_id}/forfeit.xml")]
         public IActionResult PlayerForfeit(int game_id)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.PlayerForfeit(database, SessionID, game_id), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            return Content(Games.PlayerForfeit(database, user, game_id), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
+        [Authorize]
         [Route("/multiplayer_games/{game_id}/finish.xml")]
         public IActionResult PlayerFinish(int game_id)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.PlayerFinish(database, SessionID, game_id), "application/xml;charset=utf-8");
+            var user = Session.GetUser(database, User);
+            return Content(Games.PlayerFinish(database, user, game_id), "application/xml;charset=utf-8");
         }
 
         [HttpPut]
+        [Authorize]
         [Route("/multiplayer_games/{game_id}/stats.xml")]
         public IActionResult PlayerPostStats(int game_id, GamePlayerStats stats)
         {
-            Guid SessionID = Guid.Empty;
-            if (Request.Cookies.ContainsKey("session_id"))
-                SessionID = Guid.Parse(Request.Cookies["session_id"]);
-            return Content(Games.PlayerPostStats(database, SessionID, game_id, stats), "application/xml;charset=utf-8");
+            var session = Session.GetSession(database, User);
+            return Content(Games.PlayerPostStats(database, session, game_id, stats), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

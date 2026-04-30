@@ -3,10 +3,8 @@ using GameServer.Models.Response;
 using GameServer.Models;
 using System.Collections.Generic;
 using System.Linq;
-using System;
 using GameServer.Models.Request;
 using GameServer.Utils;
-using GameServer.Implementation.Common;
 using System.Globalization;
 using GameServer.Models.PlayerData;
 using Microsoft.EntityFrameworkCore;
@@ -15,12 +13,11 @@ namespace GameServer.Implementation.Player
 {
     public class ModMile
     {
-        public static string TravelAwards(Database database, Guid SessionID, int per_page, int page)
+        public static string TravelAwards(Database database, SessionData session, int per_page, int page)
         {
-            var session = Session.GetSession(SessionID);
             var user = database.Users
                 .Include(x => x.TravelPointsData)
-                .FirstOrDefault(match => match.Username == session.Username);
+                .FirstOrDefault(match => match.UserId == session.UserId);
 
             int globalPoints = database.TravelPoints.Sum(p => p.Amount);
             int travelPoints = user != null ? user.TravelPoints : 0;
@@ -59,11 +56,8 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string FeaturedCities(Database database, Guid SessionID, int per_page, int page)
+        public static string FeaturedCities(Database database, User user, int per_page, int page)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             var CityList = new List<City>();
             foreach (var city in ModMileConfig.Instance.Cities)
             {
@@ -98,11 +92,8 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string POIList(Database database, Guid SessionID, int per_page, int page, int city_id)
+        public static string POIList(Database database, User user, int per_page, int page, int city_id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (!ModMileConfig.Instance.Cities.ContainsKey(city_id))
             {
                 var errorResp = new Response<EmptyResponse>
@@ -147,11 +138,8 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string POIShow(Database database, Guid SessionID, int id)
+        public static string POIShow(Database database, User user, int id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
-
             if (!ModMileConfig.Instance.PointsOfInterest.ContainsKey(id))
             {
                 var errorResp = new Response<EmptyResponse>
@@ -195,12 +183,11 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string CheckinStatus(Database database, Guid SessionID, int id)
+        public static string CheckinStatus(Database database, SessionData session, int id)
         {
-            var session = Session.GetSession(SessionID);
             var user = database.Users
                 .Include(x => x.POIVisits)
-                .FirstOrDefault(match => match.Username == session.Username);
+                .FirstOrDefault(match => match.UserId == session.UserId);
 
             if (!ModMileConfig.Instance.PointsOfInterest.ContainsKey(id))
             {
@@ -245,12 +232,11 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string CheckinCreate(Database database, Guid SessionID, float latitude, float longitude)
+        public static string CheckinCreate(Database database, SessionData session, float latitude, float longitude)
         {
-            var session = Session.GetSession(SessionID);
             var user = database.Users
                 .Include(x => x.TravelPointsData)
-                .FirstOrDefault(match => match.Username == session.Username);
+                .FirstOrDefault(match => match.UserId == session.UserId);
 
             if (user == null)
             {
@@ -475,10 +461,8 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string LeaderboardPlayers(Database database, Guid SessionID, int page, int per_page, Timespan timespan, SortColumn sort_column, SortOrder sort_order, string username)
+        public static string LeaderboardPlayers(Database database, User user, int page, int per_page, Timespan timespan, SortColumn sort_column, SortOrder sort_order, string username)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var players = database.Users
                 .AsSplitQuery()
                 .Include(x => x.TravelPointsData)

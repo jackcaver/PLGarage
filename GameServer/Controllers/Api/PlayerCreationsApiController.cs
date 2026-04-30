@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using GameServer.Models.PlayerData;
+﻿using System.Linq;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -8,15 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Controllers.Api
 {
-    public class PlayerCreationsApiController : Controller
+    public class PlayerCreationsApiController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public PlayerCreationsApiController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpGet]
         [Route("/api/creationcount")]
         public IActionResult GetCreationCount()

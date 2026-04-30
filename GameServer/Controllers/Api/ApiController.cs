@@ -14,15 +14,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Controllers.Api
 {
-    public class ApiController : Controller
+    public class ApiController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public ApiController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpGet]
         [Route("api/GetInstanceName")]
         public IActionResult GetInstanceName()

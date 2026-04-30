@@ -1,12 +1,10 @@
-﻿using GameServer.Implementation.Common;
-using GameServer.Models;
+﻿using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -15,10 +13,9 @@ namespace GameServer.Implementation.Player_Creation
 {
     public class PlayerCreationRatings
     {
-        public static string View(Database database, Guid SessionID, int player_creation_id, int player_id)
+        public static string View(Database database, SessionData session, int player_creation_id, int player_id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = session.User;
 
             if (user == null)
             {
@@ -59,20 +56,13 @@ namespace GameServer.Implementation.Player_Creation
             if (pageEnd > total)
                 pageEnd = total;
 
-            var ratings = ratingsQuery.Skip(pageStart).Take(per_page).ToList();
-
-            var ratingsList = new List<player_creation_rating>();
-
-            foreach (var rating in ratings)
+            var ratings = ratingsQuery.Skip(pageStart).Take(per_page).Select(rating => new player_creation_rating
             {
-                ratingsList.Add(new player_creation_rating
-                {
-                    comments = rating.Comment,
-                    rating = rating.Rating.ToString("0.0", CultureInfo.InvariantCulture),
-                    player_id = rating.PlayerId.ToString(),
-                    username = rating.Username
-                });
-            }
+                comments = rating.Comment,
+                rating = rating.Rating.ToString("0.0", CultureInfo.InvariantCulture),
+                player_id = rating.PlayerId.ToString(),
+                username = rating.Username
+            }).ToList();
 
             var resp = new Response<List<player_creation_ratings>>
             {
@@ -85,17 +75,16 @@ namespace GameServer.Implementation.Player_Creation
                         row_start = pageStart,
                         total = total,
                         total_pages = totalPages,
-                        PlayerCreationRatingList = ratingsList,
+                        PlayerCreationRatingList = ratings,
                     }
                 ]
             };
             return resp.Serialize();
         }
 
-        public static string Create(Database database, Guid SessionID, PlayerCreationRating player_creation_rating)
+        public static string Create(Database database, SessionData session, PlayerCreationRating player_creation_rating)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
+            var user = session.User;
             var Creation = database.PlayerCreations
                 .Include(x => x.Author)
                 .FirstOrDefault(match => match.PlayerCreationId == player_creation_rating.player_creation_id);
@@ -184,10 +173,8 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string Clear(Database database, Guid SessionID, int player_creation_id)
+        public static string Clear(Database database, User user, int player_creation_id)
         {
-            var session = Session.GetSession(SessionID);
-            var user = database.Users.FirstOrDefault(match => match.Username == session.Username);
             var rating = database.PlayerCreationRatings.FirstOrDefault(match => match.PlayerId == user.UserId && match.PlayerCreationId == player_creation_id);
 
             if (user == null || rating == null)

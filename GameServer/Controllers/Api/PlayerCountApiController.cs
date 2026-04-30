@@ -1,19 +1,11 @@
 ﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using GameServer.Implementation.Common;
 using GameServer.Utils;
 
 namespace GameServer.Controllers.Api
 {
-    public class PlayerCountApiController : Controller
+    public class PlayerCountApiController(Database database) : Controller
     {
-        private readonly Database database;
-
-        public PlayerCountApiController(Database database)
-        {
-            this.database = database;
-        }
-
         [HttpGet]
         [Route("/api/playercounts")]
         public IActionResult GetPlayerCount()
@@ -25,12 +17,8 @@ namespace GameServer.Controllers.Api
         [Route("/api/playercounts/sessioncount")]
         public IActionResult GetSessionCount(bool? isMnr = null)
         {
-            return Content($"{Session.GetSessions()
-                .Where(x =>
-                    (isMnr != null ? x.IsMNR == isMnr : true) &&
-                    x.Authenticated &&
-                    x.LastPing.AddMinutes(1) > TimeUtils.Now)
-                .Count()}");
+            return Content($"{database.Sessions.Count(x => (isMnr == null || x.IsMNR == isMnr) &&
+                                                      x.LastPing.AddMinutes(1) > TimeUtils.Now)}");
         }
 
         protected override void Dispose(bool disposing)

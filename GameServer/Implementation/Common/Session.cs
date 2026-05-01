@@ -246,7 +246,10 @@ namespace GameServer.Implementation.Common
         {
             ClearSessions(database);
             
-            var session = database.Sessions.FirstOrDefault(match => match.Username == username && match.Platform == platform);
+            var session = database.Sessions
+                .AsNoTracking()
+                .Include(s => s.User)
+                .FirstOrDefault(match => match.Username == username && match.Platform == platform);
             if (session == null) 
             {
                 return Presence.OFFLINE;

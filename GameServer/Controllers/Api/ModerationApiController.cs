@@ -718,14 +718,14 @@ namespace GameServer.Controllers.Api
 
         [HttpDelete]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/api/moderation/hotlap/{rank}")]
-        public IActionResult RemoveHotLapScoreByRank(int rank)
+        [Route("/api/moderation/hotlap/score/{scoreId}")]
+        public IActionResult RemoveHotLapScoreById(int scoreId)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.ManageHotlap)
                 return StatusCode(403);
 
-            var result = Moderation.RemoveHotLapScoreByRank(database, rank);
+            var result = Moderation.RemoveHotLapScoreById(database, scoreId);
 
             if (result == null)
                 return NotFound();
@@ -737,14 +737,14 @@ namespace GameServer.Controllers.Api
         #region ScoreManagement
         [HttpDelete]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/api/moderation/score/{trackId}/{rank}")]
-        public IActionResult RemoveScoreByRank(int trackId, int rank, [FromQuery] Platform? platform = null, [FromQuery] string sortBy = "time")
+        [Route("/api/moderation/score/{scoreId}")]
+        public IActionResult RemoveScoreById(int scoreId)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.RemoveScores)
                 return StatusCode(403);
 
-            var result = Moderation.RemoveScoreByRank(database, trackId, rank, platform, sortBy);
+            var result = Moderation.RemoveScoreById(database, scoreId);
 
             if (result == null)
                 return NotFound();
@@ -754,7 +754,7 @@ namespace GameServer.Controllers.Api
 
         [HttpDelete]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/api/moderation/score/{trackId}")]
+        [Route("/api/moderation/scores/{trackId}")]
         public IActionResult RemoveAllScoresForTrack(int trackId)
         {
             var user = Moderation.GetUser(database, User);
@@ -771,7 +771,7 @@ namespace GameServer.Controllers.Api
 
         [HttpDelete]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
-        [Route("/api/moderation/score/player/{playerId}")]
+        [Route("/api/moderation/scores/player/{playerId}")]
         public IActionResult RemoveAllScoresForPlayer(int playerId)
         {
             var user = Moderation.GetUser(database, User);

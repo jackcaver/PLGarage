@@ -1049,21 +1049,17 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
 
-        public static string RemoveHotLapScoreByRank(Database database, int rank)
+        public static string RemoveHotLapScoreById(Database database, int scoreId)
         {
             HotLapData hotlap = ContentUpdates.ReadHotlapData();
             if (hotlap == null)
                 return "error_no_hotlap_file";
 
-            var q = database.Scores
-                .Where(s => s.IsMNR
+            var score = database.Scores
+                .FirstOrDefault(s => s.Id == scoreId
+                    && s.IsMNR
                     && s.SubGroupId == 700
-                    && s.SubKeyId == hotlap.TrackId)
-                .OrderBy(s => s.BestLapTime)
-                .ThenBy(s => s.UpdatedAt)
-                .ThenBy(s => s.Id);
-
-            var score = q.Skip(rank - 1).Take(1).FirstOrDefault();
+                    && s.SubKeyId == hotlap.TrackId);
 
             if (score == null)
                 return null;
@@ -1076,68 +1072,11 @@ namespace GameServer.Implementation.Common
         #endregion
 
         #region ScoreManagement
-        public static string RemoveScoreByRank(Database database, int trackId, int rank, Platform? platform, string sortBy = "time")
+        public static string RemoveScoreById(Database database, int scoreId)
         {
-            var track = database.PlayerCreations.FirstOrDefault(c => c.PlayerCreationId == trackId);
-            if (track == null)
-                return null;
-
-            var baseQ = database.Scores
-                .Where(s => s.SubKeyId == trackId);
-
-            var mnrQ = baseQ
-                .Where(s => s.IsMNR)
-                .Where(s => s.SubGroupId == 703);
-
-            IQueryable<Score> q;
-
-            if (mnrQ.Any())
-            {
-                q = mnrQ;
-
-                if (platform == null)
-                {
-                    platform = q
-                        .GroupBy(s => s.Platform)
-                        .OrderByDescending(g => g.Count())
-                        .Select(g => (Platform?)g.Key)
-                        .FirstOrDefault();
-                }
-
-                if (platform != null)
-                    q = q.Where(s => s.Platform == platform.Value);
-
-                q = q.OrderBy(s => s.BestLapTime)
-                     .ThenBy(s => s.UpdatedAt)
-                     .ThenBy(s => s.Id);
-            }
-            else
-            {
-                q = baseQ
-                    .Where(s => !s.IsMNR)
-                    .Where(s => s.SubGroupId == 701);
-
-                if (platform == null)
-                {
-                    platform = q
-                        .GroupBy(s => s.Platform)
-                        .OrderByDescending(g => g.Count())
-                        .Select(g => (Platform?)g.Key)
-                        .FirstOrDefault();
-                }
-
-                if (platform != null)
-                    q = q.Where(s => s.Platform == platform.Value);
-
-                q = q.OrderBy(s => s.FinishTime)
-                     .ThenBy(s => s.UpdatedAt)
-                     .ThenBy(s => s.Id);
-            }
-
-            if (sortBy == "score")
-                q = q.OrderByDescending(s => s.Points).ThenBy(s => s.Id);
-
-            var score = q.Skip(rank - 1).Take(1).FirstOrDefault();
+            var score = database.Scores
+                .FirstOrDefault(s => s.Id == scoreId
+                    && (s.SubGroupId == 703 || s.SubGroupId == 701));
 
             if (score == null)
                 return null;

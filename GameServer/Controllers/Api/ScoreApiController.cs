@@ -119,6 +119,7 @@ namespace GameServer.Controllers.Api
             var rows = q.Skip(skip).Take(perPage)
                 .Select(s => new
                 {
+                    s.Id,
                     s.PlayerId,
                     Username = s.User.Username,
                     s.Points,
@@ -135,6 +136,7 @@ namespace GameServer.Controllers.Api
                 result.Add(new ScoreEntryDto
                 {
                     rank = skip + i + 1,
+                    scoreId = r.Id,
                     playerId = r.PlayerId,
                     playerUsername = r.Username,
                     score = r.Points,

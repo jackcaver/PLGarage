@@ -19,7 +19,7 @@ namespace GameServer.Controllers.Api
         public IActionResult Leaderboard(
             [FromQuery] int trackId,
             [FromQuery] Platform? platform = null,
-            [FromQuery] string sortBy = "time",
+            [FromQuery] string sortBy = null,
             [FromQuery] int page = 1,
             [FromQuery] int perPage = 10)
         {
@@ -75,9 +75,7 @@ namespace GameServer.Controllers.Api
                 if (platform != null)
                     q = q.Where(s => s.Platform == platform.Value);
 
-                q = q.OrderBy(s => s.BestLapTime)
-                     .ThenBy(s => s.UpdatedAt)
-                     .ThenBy(s => s.Id);
+                sortBy ??= "bestLapTime";
             }
             else
             {
@@ -97,13 +95,16 @@ namespace GameServer.Controllers.Api
                 if (platform != null)
                     q = q.Where(s => s.Platform == platform.Value);
 
-                q = q.OrderBy(s => s.FinishTime)
-                     .ThenBy(s => s.UpdatedAt)
-                     .ThenBy(s => s.Id);
+                sortBy ??= "finishTime";
             }
 
             if (sortBy == "score")
                 q = q.OrderByDescending(s => s.Points).ThenBy(s => s.Id);
+            else if (sortBy == "finishTime")
+                q = q.OrderBy(s => s.FinishTime).ThenBy(s => s.UpdatedAt).ThenBy(s => s.Id);
+            else if (sortBy == "bestLapTime")
+                q = q.OrderBy(s => s.BestLapTime).ThenBy(s => s.UpdatedAt).ThenBy(s => s.Id);
+            
 
             dto.platform = platform?.ToString();
             dto.total = q.Count();

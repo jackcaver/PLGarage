@@ -1,4 +1,4 @@
-﻿﻿using GameServer.Models.PlayerData;
+﻿using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -177,7 +177,7 @@ namespace GameServer.Controllers.Api
                 result.Add(new ScoreEntryDto
                 {
                     rank = skip + i + 1,
-                    scoreId = r.Id,
+                    id = r.Id,
                     playerId = r.PlayerId,
                     playerUsername = r.Username,
                     score = r.Points,

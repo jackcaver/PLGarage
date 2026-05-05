@@ -23,7 +23,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
     public class ScoreEntryDto
     {
         public int rank { get; set; }
-        public int scoreId { get; set; }
+        public int id { get; set; }
         public int playerId { get; set; }
         public string playerUsername { get; set; }
         public float score { get; set; }

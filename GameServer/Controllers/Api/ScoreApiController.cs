@@ -1,4 +1,4 @@
-﻿using GameServer.Models.PlayerData;
+﻿﻿using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +20,7 @@ namespace GameServer.Controllers.Api
             [FromQuery] int trackId,
             [FromQuery] Platform? platform = null,
             [FromQuery] string sortBy = null,
+            [FromQuery] bool? mnr = null,
             [FromQuery] int page = 1,
             [FromQuery] int perPage = 10)
         {
@@ -59,7 +60,45 @@ namespace GameServer.Controllers.Api
 
             IQueryable<Score> q;
 
-            if (mnrQ.Any())
+            if (mnr == true)
+            {
+                q = mnrQ;
+
+                if (platform == null)
+                {
+                    platform = q
+                        .GroupBy(s => s.Platform)
+                        .OrderByDescending(g => g.Count())
+                        .Select(g => (Platform?)g.Key)
+                        .FirstOrDefault();
+                }
+
+                if (platform != null)
+                    q = q.Where(s => s.Platform == platform.Value);
+
+                sortBy ??= "bestLapTime";
+            }
+            else if (mnr == false)
+            {
+                q = baseQ
+                    .Where(s => !s.IsMNR)
+                    .Where(s => s.SubGroupId == RaceGroup);
+
+                if (platform == null)
+                {
+                    platform = q
+                        .GroupBy(s => s.Platform)
+                        .OrderByDescending(g => g.Count())
+                        .Select(g => (Platform?)g.Key)
+                        .FirstOrDefault();
+                }
+
+                if (platform != null)
+                    q = q.Where(s => s.Platform == platform.Value);
+
+                sortBy ??= "finishTime";
+            }
+            else if (mnrQ.Any())
             {
                 q = mnrQ;
 
@@ -104,7 +143,8 @@ namespace GameServer.Controllers.Api
                 q = q.OrderBy(s => s.FinishTime).ThenBy(s => s.UpdatedAt).ThenBy(s => s.Id);
             else if (sortBy == "bestLapTime")
                 q = q.OrderBy(s => s.BestLapTime).ThenBy(s => s.UpdatedAt).ThenBy(s => s.Id);
-            
+            else if (sortBy == "id")
+                q = q.OrderBy(s => s.Id);
 
             dto.platform = platform?.ToString();
             dto.total = q.Count();

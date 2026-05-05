@@ -57,7 +57,7 @@ namespace GameServer.Controllers.Api
                 .Where(s => s.IsMNR)
                 .Where(s => s.SubGroupId == TimeTrialGroup);
 
-            IQueryable<Models.PlayerData.Score> q;
+            IQueryable<Score> q;
 
             if (mnrQ.Any())
             {
@@ -121,7 +121,7 @@ namespace GameServer.Controllers.Api
                 {
                     s.Id,
                     s.PlayerId,
-                    Username = s.User.Username,
+                    s.User.Username,
                     s.Points,
                     s.BestLapTime,
                     s.FinishTime,

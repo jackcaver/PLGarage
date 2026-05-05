@@ -34,6 +34,7 @@ namespace GameServer.Models.Response
     public class HotlapTimeDto
     {
         public int rank { get; set; }
+        public int scoreId { get; set; }
         public int playerId { get; set; }
         public string playerUsername { get; set; }
         public float bestLapTime { get; set; }

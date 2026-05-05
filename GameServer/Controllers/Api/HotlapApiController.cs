@@ -64,7 +64,13 @@ namespace GameServer.Controllers.Api
                 .ThenBy(s => s.UpdatedAt)
                 .ThenBy(s => s.Id)
                 .Take(limit)
-                .Select(s => new { s.PlayerId, Username = s.User.Username, s.BestLapTime, s.UpdatedAt})
+                .Select(s => new { 
+                    s.PlayerId, 
+                    s.Id,
+                    s.User.Username, 
+                    s.BestLapTime, 
+                    s.UpdatedAt
+                })
                 .ToList();
 
             var result = new List<HotlapTimeDto>(rows.Count);
@@ -74,6 +80,7 @@ namespace GameServer.Controllers.Api
                 result.Add(new HotlapTimeDto
                 {
                     rank = i + 1,
+                    scoreId = r.Id,
                     playerId = r.PlayerId,
                     playerUsername = r.Username,
                     bestLapTime = r.BestLapTime,

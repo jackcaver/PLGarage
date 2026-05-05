@@ -14,6 +14,7 @@
         public bool RemovePlayerCreations { get; set; }
         public bool ManageAnnouncements { get; set; }
         public bool ManageHotlap { get; set; }
+        public bool RemoveScores { get; set; }
         public bool ManageSystemEvents { get; set; }
         public bool ManageWhitelist { get; set; }
         public bool ViewGriefReports { get; set; }

@@ -147,6 +147,14 @@ namespace GameServer.Utils
                 return null;
         }
 
+        public static void RemoveGhostCarData(GameType gameType, Platform platform, int track_id, int player_id)
+        {
+            string directory = $"UGC/GhostCarData/{gameType}/{platform}/{track_id}/{player_id}/";
+            
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+        }
+
         public static string CalculateGhostCarDataMD5(Stream data)
         {
             string hash = BitConverter.ToString(MD5.Create().ComputeHash(data)).Replace("-", "").ToLower();

@@ -1,15 +1,16 @@
 ﻿using GameServer.Models;
 using GameServer.Models.Config;
+using GameServer.Models.GameBrowser;
 using GameServer.Models.Moderation;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace GameServer.Implementation.Common
@@ -1047,8 +1048,148 @@ namespace GameServer.Implementation.Common
 
             return "ok";
         }
+
+        public static string RemoveHotLapScoreByRank(Database database, int rank)
+        {
+            HotLapData hotlap = ContentUpdates.ReadHotlapData();
+            if (hotlap == null)
+                return "error_no_hotlap_file";
+
+            var q = database.Scores
+                .Where(s => s.IsMNR
+                    && s.SubGroupId == 700
+                    && s.SubKeyId == hotlap.TrackId)
+                .OrderBy(s => s.BestLapTime)
+                .ThenBy(s => s.UpdatedAt)
+                .ThenBy(s => s.Id);
+
+            var score = q.Skip(rank - 1).Take(1).FirstOrDefault();
+
+            if (score == null)
+                return null;
+
+            database.Scores.Remove(score);
+            database.SaveChanges();
+
+            return "ok";
+        }
         #endregion
-        
+
+        #region ScoreManagement
+        public static string RemoveScoreByRank(Database database, int trackId, int rank, Platform? platform, string sortBy = "time")
+        {
+            var track = database.PlayerCreations.FirstOrDefault(c => c.PlayerCreationId == trackId);
+            if (track == null)
+                return null;
+
+            var baseQ = database.Scores
+                .Where(s => s.SubKeyId == trackId);
+
+            var mnrQ = baseQ
+                .Where(s => s.IsMNR)
+                .Where(s => s.SubGroupId == 703);
+
+            IQueryable<Score> q;
+
+            if (mnrQ.Any())
+            {
+                q = mnrQ;
+
+                if (platform == null)
+                {
+                    platform = q
+                        .GroupBy(s => s.Platform)
+                        .OrderByDescending(g => g.Count())
+                        .Select(g => (Platform?)g.Key)
+                        .FirstOrDefault();
+                }
+
+                if (platform != null)
+                    q = q.Where(s => s.Platform == platform.Value);
+
+                q = q.OrderBy(s => s.BestLapTime)
+                     .ThenBy(s => s.UpdatedAt)
+                     .ThenBy(s => s.Id);
+            }
+            else
+            {
+                q = baseQ
+                    .Where(s => !s.IsMNR)
+                    .Where(s => s.SubGroupId == 701);
+
+                if (platform == null)
+                {
+                    platform = q
+                        .GroupBy(s => s.Platform)
+                        .OrderByDescending(g => g.Count())
+                        .Select(g => (Platform?)g.Key)
+                        .FirstOrDefault();
+                }
+
+                if (platform != null)
+                    q = q.Where(s => s.Platform == platform.Value);
+
+                q = q.OrderBy(s => s.FinishTime)
+                     .ThenBy(s => s.UpdatedAt)
+                     .ThenBy(s => s.Id);
+            }
+
+            if (sortBy == "score")
+                q = q.OrderByDescending(s => s.Points).ThenBy(s => s.Id);
+
+            var score = q.Skip(rank - 1).Take(1).FirstOrDefault();
+
+            if (score == null)
+                return null;
+
+            if (score.IsMNR)
+                UserGeneratedContentUtils.RemoveGhostCarData((GameType)(score.SubGroupId + 10), score.Platform, score.SubKeyId, score.PlayerId);
+
+            database.Scores.Remove(score);
+            database.SaveChanges();
+
+            return "ok";
+        }
+
+        public static string RemoveAllScoresForTrack(Database database, int trackId)
+        {
+            var scores = database.Scores
+                .Where(s => s.SubKeyId == trackId
+                    && (s.SubGroupId == 703 || s.SubGroupId == 701))
+                .ToList();
+
+            if (!scores.Any())
+                return null;
+
+            foreach (var score in scores.Where(s => s.IsMNR))
+                UserGeneratedContentUtils.RemoveGhostCarData((GameType)(score.SubGroupId + 10), score.Platform, score.SubKeyId, score.PlayerId);
+
+            database.Scores.RemoveRange(scores);
+            database.SaveChanges();
+
+            return "ok";
+        }
+
+        public static string RemoveAllScoresForPlayer(Database database, int playerId)
+        {
+            var scores = database.Scores
+                .Where(s => s.PlayerId == playerId
+                    && (s.SubGroupId == 703 || s.SubGroupId == 701))
+                .ToList();
+
+            if (!scores.Any())
+                return null;
+
+            foreach (var score in scores.Where(s => s.IsMNR))
+                UserGeneratedContentUtils.RemoveGhostCarData((GameType)(score.SubGroupId + 10), score.Platform, score.SubKeyId, score.PlayerId);
+
+            database.Scores.RemoveRange(scores);
+            database.SaveChanges();
+
+            return "ok";
+        }
+        #endregion
+
         #region Whitelist
         public static string GetWhitelist(int page, int per_page)
         {
@@ -1167,7 +1308,8 @@ namespace GameServer.Implementation.Common
                 ManageWhitelist = true,
                 ResetCreationStats = true,
                 ResetUserStats = true,
-                RemoveUsers = true
+                RemoveUsers = true,
+                RemoveScores = true
             });
         }
 
@@ -1239,7 +1381,8 @@ namespace GameServer.Implementation.Common
             moderator.RemovePlayerCreations = permissions.RemovePlayerCreations;
             moderator.ResetCreationStats = permissions.ResetCreationStats;
             moderator.ResetUserStats = permissions.ResetUserStats;
-            moderator.RemoveUsers = permissions.ResetUserStats;
+            moderator.RemoveUsers = permissions.RemoveUsers;
+            moderator.RemoveScores = permissions.RemoveScores;
             database.SaveChanges();
 
             return "ok";

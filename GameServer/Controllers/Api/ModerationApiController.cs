@@ -715,6 +715,76 @@ namespace GameServer.Controllers.Api
 
             return Content(Moderation.RemoveFromHotLapQueue(database, index, creation));
         }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/hotlap/score/{scoreId}")]
+        public IActionResult RemoveHotLapScoreById(int scoreId)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageHotlap)
+                return StatusCode(403);
+
+            var result = Moderation.RemoveHotLapScoreById(database, scoreId);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        #endregion
+
+        #region ScoreManagement
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/score/{scoreId}")]
+        public IActionResult RemoveScoreById(int scoreId)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.RemoveScores)
+                return StatusCode(403);
+
+            var result = Moderation.RemoveScoreById(database, scoreId);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/scores/{trackId}")]
+        public IActionResult RemoveAllScoresForTrack(int trackId)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.RemoveScores)
+                return StatusCode(403);
+
+            var result = Moderation.RemoveAllScoresForTrack(database, trackId);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/scores/player/{playerId}")]
+        public IActionResult RemoveAllScoresForPlayer(int playerId)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.RemoveScores)
+                return StatusCode(403);
+
+            var result = Moderation.RemoveAllScoresForPlayer(database, playerId);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
         #endregion
 
         #region Whitelist

@@ -67,6 +67,37 @@ namespace GameServer.Controllers.Api
             });
         }
 
+        [HttpGet]
+        [Route("/api/creation")]
+        public IActionResult GetCreationsById(int id)
+        {
+            var creations = database.PlayerCreations
+                .AsNoTracking()
+                .Where(x => x.PlayerCreationId == id)
+                .Select(x => new
+                {
+                    x.PlayerCreationId,
+                    x.Author.Username,
+                    x.Type,
+                    x.Platform,
+                    x.IsMNR,
+                    x.CreatedAt
+                })
+                .ToList();
+
+            if (creations.Count == 0)
+                return NotFound(new { error = "error_creation_not_found"});
+
+            return Json(creations.Select(x => new
+            {
+                x.PlayerCreationId,
+                x.Username,
+                Type = x.Type.ToString(),
+                Platform = x.Platform.ToString(),
+                x.IsMNR,
+                x.CreatedAt
+            }));
+        }
         protected override void Dispose(bool disposing)
         {
             database.Dispose();

@@ -310,6 +310,14 @@ namespace GameServer.Implementation.Common
                 return null;
 
             creation.ModerationStatus = status;
+
+            if (status == ModerationStatus.BANNED || status == ModerationStatus.ILLEGAL)
+            {
+                var hotlap = ContentUpdates.ReadHotlapData();
+                if (hotlap != null && hotlap.TrackId == id)
+                    ContentUpdates.GetNewHotLap(database);
+            }
+
             database.SaveChanges();
 
             return "ok";
@@ -412,6 +420,10 @@ namespace GameServer.Implementation.Common
                 var Photo = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item.PlayerCreationId);
                 Photo.TrackId = 4912;
             }
+
+            var hotlap = ContentUpdates.ReadHotlapData();
+                if (hotlap != null && hotlap.TrackId == playerCreationID)
+                    ContentUpdates.GetNewHotLap(database);
 
             database.ActivityLog.Where(match => match.PlayerCreationId == Creation.PlayerCreationId).ExecuteDelete();
 

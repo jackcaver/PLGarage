@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Globalization;
+using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -89,9 +90,15 @@ namespace GameServer.Controllers.Api
                     x.Platform,
                     x.IsMNR,
                     x.CreatedAt,
+                    pointsAllTime = x.Points.Sum(p => p.Amount),
+                    pointsThisWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount),
+                    pointsLastWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.LastWeekStart && p.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount),
                     downloadsAllTime = x.Downloads.Count,
                     downloadsThisWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.ThisWeekStart),
                     downloadsLastWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.LastWeekStart && d.DownloadedAt < TimeUtils.ThisWeekStart),
+                    viewsAllTime = x.Views.Count,
+                    viewsThisWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
+                    viewsLastWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
                         ? x.Scores.Where(s => s.SubGroupId != 700).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
                         : null,
@@ -121,11 +128,23 @@ namespace GameServer.Controllers.Api
                 Platform = x.Platform.ToString(),
                 x.IsMNR,
                 x.CreatedAt,
+                points = new
+                {
+                    all_time = x.pointsAllTime,
+                    this_week = x.pointsThisWeek,
+                    last_week = x.pointsLastWeek
+                },
                 downloads = new
                 {
                     all_time = x.downloadsAllTime,
                     this_week = x.downloadsThisWeek,
                     last_week = x.downloadsLastWeek
+                },
+                views = new
+                {
+                    all_time = x.viewsAllTime,
+                    this_week = x.viewsThisWeek,
+                    last_week = x.viewsLastWeek
                 },
                 records = x.Type == PlayerCreationType.TRACK
                     ? x.IsMNR
@@ -179,9 +198,15 @@ namespace GameServer.Controllers.Api
                     x.Platform,
                     x.IsMNR,
                     x.CreatedAt,
+                    pointsAllTime = x.Points.Sum(p => p.Amount),
+                    pointsThisWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount),
+                    pointsLastWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.LastWeekStart && p.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount),
                     downloadsAllTime = x.Downloads.Count,
                     downloadsThisWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.ThisWeekStart),
                     downloadsLastWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.LastWeekStart && d.DownloadedAt < TimeUtils.ThisWeekStart),
+                    viewsAllTime = x.Views.Count,
+                    viewsThisWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
+                    viewsLastWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
                         ? x.Scores.Where(s => s.SubGroupId != 700).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
                         : null,
@@ -211,11 +236,23 @@ namespace GameServer.Controllers.Api
                 Platform = x.Platform.ToString(),
                 x.IsMNR,
                 x.CreatedAt,
+                points = new
+                {
+                    all_time = x.pointsAllTime,
+                    this_week = x.pointsThisWeek,
+                    last_week = x.pointsLastWeek
+                },
                 downloads = new
                 {
                     all_time = x.downloadsAllTime,
                     this_week = x.downloadsThisWeek,
                     last_week = x.downloadsLastWeek
+                },
+                views = new
+                {
+                    all_time = x.viewsAllTime,
+                    this_week = x.viewsThisWeek,
+                    last_week = x.viewsLastWeek
                 },
                 records = x.Type == PlayerCreationType.TRACK
                     ? x.IsMNR
@@ -252,9 +289,15 @@ namespace GameServer.Controllers.Api
                     x.Platform,
                     x.IsMNR,
                     x.CreatedAt,
+                    pointsAllTime = x.Points.Sum(p => p.Amount),
+                    pointsThisWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount),
+                    pointsLastWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.LastWeekStart && p.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount),
                     downloadsAllTime = x.Downloads.Count,
                     downloadsThisWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.ThisWeekStart),
                     downloadsLastWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.LastWeekStart && d.DownloadedAt < TimeUtils.ThisWeekStart),
+                    viewsAllTime = x.Views.Count,
+                    viewsThisWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
+                    viewsLastWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
                         ? x.Scores.Where(s => s.SubGroupId != 700).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
                         : null,
@@ -284,11 +327,23 @@ namespace GameServer.Controllers.Api
                 Platform = x.Platform.ToString(),
                 x.IsMNR,
                 x.CreatedAt,
+                points = new
+                {
+                    all_time = x.pointsAllTime,
+                    this_week = x.pointsThisWeek,
+                    last_week = x.pointsLastWeek
+                },
                 downloads = new
                 {
                     all_time = x.downloadsAllTime,
                     this_week = x.downloadsThisWeek,
                     last_week = x.downloadsLastWeek
+                },
+                views = new
+                {
+                    all_time = x.viewsAllTime,
+                    this_week = x.viewsThisWeek,
+                    last_week = x.viewsLastWeek
                 },
                 records = x.Type == PlayerCreationType.TRACK
                     ? x.IsMNR
@@ -320,9 +375,15 @@ namespace GameServer.Controllers.Api
                     x.Platform,
                     x.IsMNR,
                     x.CreatedAt,
+                    pointsAllTime = x.Points.Sum(p => p.Amount),
+                    pointsThisWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount),
+                    pointsLastWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.LastWeekStart && p.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount),
                     downloadsAllTime = x.Downloads.Count,
                     downloadsThisWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.ThisWeekStart),
                     downloadsLastWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.LastWeekStart && d.DownloadedAt < TimeUtils.ThisWeekStart),
+                    viewsAllTime = x.Views.Count,
+                    viewsThisWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
+                    viewsLastWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
                         ? x.Scores.Where(s => s.SubGroupId != 700).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
                         : null,
@@ -352,11 +413,23 @@ namespace GameServer.Controllers.Api
                 Platform = x.Platform.ToString(),
                 x.IsMNR,
                 x.CreatedAt,
+                points = new
+                {
+                    all_time = x.pointsAllTime,
+                    this_week = x.pointsThisWeek,
+                    last_week = x.pointsLastWeek
+                },
                 downloads = new
                 {
                     all_time = x.downloadsAllTime,
                     this_week = x.downloadsThisWeek,
                     last_week = x.downloadsLastWeek
+                },
+                views = new
+                {
+                    all_time = x.viewsAllTime,
+                    this_week = x.viewsThisWeek,
+                    last_week = x.viewsLastWeek
                 },
                 records = x.Type == PlayerCreationType.TRACK
                     ? x.IsMNR
@@ -413,6 +486,146 @@ namespace GameServer.Controllers.Api
 
                 return Json(comments);
             }
+        }
+
+        [HttpGet]
+        [Route("/api/topmods")]
+        public IActionResult GetTopMods(
+            [FromQuery] Platform platform = Platform.PS3)
+        {
+            return JsonTopCreations(PlayerCreationType.CHARACTER, platform);
+        }
+
+        [HttpGet]
+        [Route("/api/topkarts")]
+        public IActionResult GetTopKarts(
+            [FromQuery] Platform platform = Platform.PS3)
+        {
+            return JsonTopCreations(PlayerCreationType.KART, platform);
+        }
+
+        [HttpGet]
+        [Route("/api/toptracks")]
+        public IActionResult GetTopTracks([FromQuery] Platform platform = Platform.PS3)
+        {
+            return JsonTopCreations(PlayerCreationType.TRACK, platform);
+        }
+
+        private IActionResult JsonTopCreations(
+            PlayerCreationType playerCreationType,
+            Platform platform)
+        {
+            var query = database.PlayerCreations
+                .AsNoTracking()
+                .Where(x => x.Platform == platform
+                    && x.IsMNR
+                    && x.Type == playerCreationType
+                    && x.Type != PlayerCreationType.DELETED
+                    && x.Type != PlayerCreationType.STORY
+                    && x.ModerationStatus != ModerationStatus.BANNED
+                    && x.ModerationStatus != ModerationStatus.ILLEGAL);
+
+            query = query.OrderByDescending(x => x.PointsToday);
+
+            var total = query.Count();
+
+            var creations = query
+                .Select(x => new
+                {
+                    id = x.PlayerCreationId,
+                    x.Name,
+                    x.Description,
+                    x.Type,
+                    creatorUsername = x.Author.Username,
+                    platform = x.Platform.ToString(),
+                    isMnr = x.IsMNR,
+                    x.Tags,
+                    x.CreatedAt,
+                    x.UpdatedAt,
+                    pointsToday = x.PointsToday,
+                    points = x.PointsAmount,
+                    pointsThisWeek = x.PointsThisWeek,
+                    pointsLastWeek = x.PointsLastWeek,
+                    downloads = x.DownloadsCount,
+                    downloadsThisWeek = x.DownloadsThisWeek,
+                    downloadsLastWeek = x.DownloadsLastWeek,
+                    views = x.ViewsCount,
+                    viewsThisWeek = x.ViewsThisWeek,
+                    viewsLastWeek = x.ViewsLastWeek,
+                    hearts = x.HeartsCount,
+                    racesStarted = x.RacesStartedCount,
+                    longestDrift = x.LongestDrift,
+                    longestHangTime = x.LongestHangTime,
+                    recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
+                        ? x.Scores.Where(s => s.SubGroupId != 700).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
+                        : null,
+                    recordScore = x.Type == PlayerCreationType.TRACK && !x.IsMNR
+                        ? x.Scores.Max(s => (float?)s.Points)
+                        : null,
+                    recordFinishTime = x.Type == PlayerCreationType.TRACK && !x.IsMNR
+                        ? x.Scores.Max(s => (float?)s.FinishTime)
+                        : null,
+                    ratingValue = x.Ratings.Count != 0 ? (float?)x.Ratings.Average(r => r.Rating) : 0
+                })
+                .ToList();
+
+            return Json(new
+            {
+                total,
+                player_creation_type = playerCreationType.ToString(),
+                platform = platform.ToString(),
+                results = creations.Select(x => new
+                {
+                    x.id,
+                    x.Name,
+                    x.Description,
+                    Type = x.Type.ToString(),
+                    x.creatorUsername,
+                    x.platform,
+                    x.isMnr,
+                    x.Tags,
+                    x.CreatedAt,
+                    x.UpdatedAt,
+                    x.hearts,
+                    x.racesStarted,
+                    x.longestDrift,
+                    x.longestHangTime,
+                    points = new
+                    {
+                        today = x.pointsToday,
+                        all_time = x.points,
+                        this_week = x.pointsThisWeek,
+                        last_week = x.pointsLastWeek
+                    },
+                    downloads = new
+                    {
+                        all_time = x.downloads,
+                        this_week = x.downloadsThisWeek,
+                        last_week = x.downloadsLastWeek
+                    },
+                    views = new
+                    {
+                        all_time = x.views,
+                        this_week = x.viewsThisWeek,
+                        last_week = x.viewsLastWeek
+                    },
+                    records = x.Type == PlayerCreationType.TRACK
+                        ? x.isMnr
+                            ? (object)new
+                            {
+                                bestLapTime = x.recordBestLapTime,
+                                x.longestDrift,
+                                x.longestHangTime
+                            }
+                            : new
+                            {
+                                score = x.recordScore,
+                                finishTime = x.recordFinishTime
+                            }
+                        : null,
+                    rating = (x.ratingValue ?? 0).ToString("0.0", CultureInfo.InvariantCulture)
+                })
+            });
         }
 
         protected override void Dispose(bool disposing)

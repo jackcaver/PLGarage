@@ -511,6 +511,73 @@ namespace GameServer.Controllers.Api
             return JsonTopCreations(PlayerCreationType.TRACK, platform);
         }
 
+        [HttpGet]
+        [Route("/api/mosthearted")]
+        public IActionResult GetMostHeartedTracks([FromQuery] Platform platform = Platform.PS3)
+        {
+            var query = database.PlayerCreations
+                .AsNoTracking()
+                .Where(x => x.Platform == platform
+                    && !x.IsMNR
+                    && x.Type == PlayerCreationType.TRACK
+                    && x.Type != PlayerCreationType.DELETED
+                    && x.Type != PlayerCreationType.STORY
+                    && x.ModerationStatus != ModerationStatus.BANNED
+                    && x.ModerationStatus != ModerationStatus.ILLEGAL)
+                .OrderByDescending(x => x.HeartsCount)
+                .ThenByDescending(x => x.CreatedAt);
+
+            var total = query.Count();
+
+            var creations = query
+                .Select(x => new
+                {
+                    id = x.PlayerCreationId,
+                    x.Name,
+                    x.Description,
+                    x.Type,
+                    creatorUsername = x.Author.Username,
+                    platform = x.Platform.ToString(),
+                    x.Tags,
+                    x.CreatedAt,
+                    x.UpdatedAt,
+                    hearts = x.HeartsCount,
+                    rating = x.RatingUp,
+                    racesStarted = x.RacesStartedCount,
+                    recordScore = x.Scores.Max(s => (float?)s.Points),
+                    recordFinishTime = x.Scores.Max(s => (float?)s.FinishTime),
+                })
+                .ToList();
+
+            return Json(new
+            {
+                total,
+                player_creation_type = PlayerCreationType.TRACK.ToString(),
+                platform = platform.ToString(),
+                results = creations.Select(x => new
+                {
+                    x.id,
+                    x.Name,
+                    x.Description,
+                    Type = x.Type.ToString(),
+                    x.creatorUsername,
+                    x.platform,
+                    x.Tags,
+                    x.CreatedAt,
+                    x.UpdatedAt,
+                    x.hearts,
+                    x.rating,
+                    x.racesStarted,
+                    records = new
+                    {
+                        score = x.recordScore,
+                        finishTime = x.recordFinishTime
+                    }
+                })
+            });
+        }
+                
+
         private IActionResult JsonTopCreations(
             PlayerCreationType playerCreationType,
             Platform platform)

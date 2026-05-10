@@ -434,6 +434,112 @@ namespace GameServer.Implementation.Common
 
             return "ok";
         }
+
+        public static string RemovePlayerCreationComment(Database database, int playerCreationID, int commentID)
+        {
+            var creation = database.PlayerCreations
+                .AsNoTracking()
+                .FirstOrDefault(match => match.PlayerCreationId == playerCreationID);
+
+            if (creation == null)
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -620, message = "No player creation exists for the given ID" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+
+            if (creation.IsMNR)
+            {
+                var mnrComment = database.PlayerCreationRatings
+                    .FirstOrDefault(match => match.Id == commentID && match.PlayerCreationId == playerCreationID);
+
+                if (mnrComment == null || string.IsNullOrEmpty(mnrComment.Comment))
+                {
+                    var errorResp = new Response<EmptyResponse>
+                    {
+                        status = new ResponseStatus { id = -630, message = "No player creation comment exists for the given ID" },
+                        response = new EmptyResponse { }
+                    };
+                    return errorResp.Serialize();
+                }
+
+                database.PlayerCreationRatings
+                    .Where(match => match.Id == commentID && match.PlayerCreationId == playerCreationID && !string.IsNullOrEmpty(match.Comment))
+                    .ExecuteDelete();
+
+                return "ok";
+            }
+
+            var comment = database.PlayerCreationComments
+                .FirstOrDefault(match => match.Id == commentID && match.PlayerCreationId == playerCreationID);
+
+            if (comment == null)
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -630, message = "No player creation comment exists for the given ID" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+
+            database.PlayerCreationCommentRatings
+                .Where(match => match.PlayerCreationCommentId == commentID)
+                .ExecuteDelete();
+
+            database.PlayerCreationComments.Remove(comment);
+            database.SaveChanges();
+
+            return "ok";
+        }
+
+        public static string RemoveAllPlayerCreationComments(Database database, int playerCreationID)
+        {
+            var creation = database.PlayerCreations
+                .AsNoTracking()
+                .FirstOrDefault(match => match.PlayerCreationId == playerCreationID);
+
+            if (creation == null)
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -620, message = "No player creation exists for the given ID" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+
+            if (creation.IsMNR)
+            {
+                database.PlayerCreationRatings
+                    .Where(match => match.PlayerCreationId == playerCreationID &&
+                                    !string.IsNullOrEmpty(match.Comment))
+                    .ExecuteDelete();
+
+                return "ok";
+            }
+
+            var commentIds = database.PlayerCreationComments
+                .Where(match => match.PlayerCreationId == playerCreationID)
+                .Select(match => match.Id)
+                .ToList();
+
+            if (commentIds.Count > 0)
+            {
+                database.PlayerCreationCommentRatings
+                    .Where(match => commentIds.Contains(match.PlayerCreationCommentId))
+                    .ExecuteDelete();
+            }
+
+            database.PlayerCreationComments
+                .Where(match => match.PlayerCreationId == playerCreationID)
+                .ExecuteDelete();
+
+            return "ok";
+        }
         #endregion
 
         #region UserManagement
@@ -717,6 +823,48 @@ namespace GameServer.Implementation.Common
 
             sessions.ExecuteDelete();
             
+            return "ok";
+        }
+
+        public static string RemoveProfileComments(Database database, int targetUserId)
+        {
+            if (!database.Users.Any(u => u.UserId == targetUserId))
+                return null;
+
+            var commentIds = database.PlayerComments
+                .Where(x => x.PlayerId == targetUserId)
+                .Select(x => x.Id)
+                .ToList();
+
+            if (commentIds.Count > 0)
+            {
+                database.PlayerCommentRatings.Where(x => commentIds.Contains(x.PlayerCommentId)).ExecuteDelete();
+            }
+
+            database.PlayerComments.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
+
+            return "ok";
+        }
+
+        public static string RemoveProfileComment(Database database, int commentId)
+        {
+            var comment = database.PlayerComments.FirstOrDefault(x => x.Id == commentId);
+
+            if (comment == null)
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -640, message = "No profile comment exists for the given ID" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+
+            database.PlayerCommentRatings.Where(x => x.PlayerCommentId == commentId).ExecuteDelete();
+
+            database.PlayerComments.Remove(comment);
+            database.SaveChanges();
+
             return "ok";
         }
         #endregion
@@ -1232,6 +1380,8 @@ namespace GameServer.Implementation.Common
                 ManageSystemEvents = permissions.ManageSystemEvents,
                 ManageWhitelist = permissions.ManageWhitelist,
                 RemovePlayerCreations = permissions.RemovePlayerCreations,
+                RemovePlayerCreationComments = permissions.RemovePlayerCreationComments,
+                RemoveProfileComments = permissions.RemoveProfileComments,
                 ResetCreationStats = permissions.ResetCreationStats,
                 ResetUserStats = permissions.ResetUserStats,
                 RemoveUsers = permissions.RemoveUsers
@@ -1260,6 +1410,8 @@ namespace GameServer.Implementation.Common
                 ViewPlayerComplaints = true,
                 ViewPlayerCreationComplaints = true,
                 RemovePlayerCreations = true,
+                RemovePlayerCreationComments = true,
+                RemoveProfileComments = true,
                 ManageWhitelist = true,
                 ResetCreationStats = true,
                 ResetUserStats = true,
@@ -1334,6 +1486,8 @@ namespace GameServer.Implementation.Common
             moderator.ManageSystemEvents = permissions.ManageSystemEvents;
             moderator.ManageWhitelist = permissions.ManageWhitelist;
             moderator.RemovePlayerCreations = permissions.RemovePlayerCreations;
+            moderator.RemovePlayerCreationComments = permissions.RemovePlayerCreationComments;
+            moderator.RemoveProfileComments = permissions.RemoveProfileComments;
             moderator.ResetCreationStats = permissions.ResetCreationStats;
             moderator.ResetUserStats = permissions.ResetUserStats;
             moderator.RemoveUsers = permissions.RemoveUsers;

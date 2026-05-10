@@ -21,6 +21,8 @@ namespace GameServer.Models.PlayerData
         public bool ChangeCreationStatus { get; set; }
         public bool ResetCreationStats { get; set; }
         public bool RemovePlayerCreations { get; set; }
+        public bool RemovePlayerCreationComments { get; set; }
+        public bool RemoveProfileComments { get; set; }
         public bool ManageAnnouncements { get; set; }
         public bool ManageHotlap { get; set; }
         public bool RemoveScores { get; set; }
@@ -44,6 +46,8 @@ namespace GameServer.Models.PlayerData
                    && (!permissions.ManageAnnouncements || ManageAnnouncements)
                    && (!permissions.ManageWhitelist || ManageWhitelist)
                    && (!permissions.RemovePlayerCreations || RemovePlayerCreations)
+                   && (!permissions.RemovePlayerCreationComments || RemovePlayerCreationComments)
+                   && (!permissions.RemoveProfileComments || RemoveProfileComments)
                    && (!permissions.ResetCreationStats || ResetCreationStats)
                    && (!permissions.ResetUserStats || ResetUserStats)
                    && (!permissions.RemoveUsers || RemoveUsers)
@@ -69,6 +73,8 @@ namespace GameServer.Models.PlayerData
                 ManageSystemEvents = ManageSystemEvents,
                 ManageWhitelist = ManageWhitelist,
                 RemovePlayerCreations = RemovePlayerCreations,
+                RemovePlayerCreationComments = RemovePlayerCreationComments,
+                RemoveProfileComments = RemoveProfileComments,
                 ResetCreationStats = ResetCreationStats,
                 ResetUserStats = ResetUserStats,
                 RemoveUsers = RemoveUsers,

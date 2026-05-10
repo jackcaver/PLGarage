@@ -21,6 +21,27 @@ namespace GameServer.Controllers.Api
                                                       x.LastPing.AddMinutes(1) > TimeUtils.Now)}");
         }
 
+        [HttpGet]
+        [Route("/api/playercounts/presence")]
+        public IActionResult GetPlayersPresence(bool? isMnr = null)
+        {
+            var playersPresence = database.Sessions
+                .Where(x => (isMnr == null || x.IsMNR == isMnr) &&
+                            x.LastPing.AddMinutes(1) > TimeUtils.Now)
+                .Select(x => new
+                {
+                    x.UserId,
+                    x.Username,
+                    Presence = x.Presence.ToString(),
+                    Platform = x.Platform.ToString(),
+                    x.IsMNR
+                })
+                .OrderBy(x => x.Username)
+                .ToList();
+
+            return Json(playersPresence);
+        }
+
         protected override void Dispose(bool disposing)
         {
             database.Dispose();

@@ -530,6 +530,7 @@ namespace GameServer.Controllers.Api
             var total = query.Count();
 
             var creations = query
+                .Take(5)
                 .Select(x => new
                 {
                     id = x.PlayerCreationId,
@@ -549,34 +550,27 @@ namespace GameServer.Controllers.Api
                 })
                 .ToList();
 
-            return Json(new
+            return Json(creations.Select(x => new
             {
-                total,
-                player_creation_type = PlayerCreationType.TRACK.ToString(),
-                platform = platform.ToString(),
-                results = creations.Select(x => new
+                x.id,
+                x.Name,
+                x.Description,
+                Type = x.Type.ToString(),
+                x.creatorUsername,
+                x.platform,
+                x.Tags,
+                x.CreatedAt,
+                x.UpdatedAt,
+                x.hearts,
+                x.rating,
+                x.racesStarted,
+                records = new
                 {
-                    x.id,
-                    x.Name,
-                    x.Description,
-                    Type = x.Type.ToString(),
-                    x.creatorUsername,
-                    x.platform,
-                    x.Tags,
-                    x.CreatedAt,
-                    x.UpdatedAt,
-                    x.hearts,
-                    x.rating,
-                    x.racesStarted,
-                    records = new
-                    {
-                        score = x.recordScore,
-                        finishTime = x.recordFinishTime
-                    }
-                })
-            });
-        }
-                
+                    score = x.recordScore,
+                    finishTime = x.recordFinishTime
+                }
+            }));
+        }   
 
         private IActionResult JsonTopCreations(
             PlayerCreationType playerCreationType,
@@ -636,63 +630,57 @@ namespace GameServer.Controllers.Api
                 })
                 .ToList();
 
-            return Json(new
+            return Json(creations.Select(x => new
             {
-                total,
-                player_creation_type = playerCreationType.ToString(),
-                platform = platform.ToString(),
-                results = creations.Select(x => new
+                x.id,
+                x.Name,
+                x.Description,
+                Type = x.Type.ToString(),
+                x.creatorUsername,
+                x.platform,
+                x.isMnr,
+                x.Tags,
+                x.CreatedAt,
+                x.UpdatedAt,
+                x.hearts,
+                x.racesStarted,
+                x.longestDrift,
+                x.longestHangTime,
+                points = new
                 {
-                    x.id,
-                    x.Name,
-                    x.Description,
-                    Type = x.Type.ToString(),
-                    x.creatorUsername,
-                    x.platform,
-                    x.isMnr,
-                    x.Tags,
-                    x.CreatedAt,
-                    x.UpdatedAt,
-                    x.hearts,
-                    x.racesStarted,
-                    x.longestDrift,
-                    x.longestHangTime,
-                    points = new
-                    {
-                        today = x.pointsToday,
-                        all_time = x.points,
-                        this_week = x.pointsThisWeek,
-                        last_week = x.pointsLastWeek
-                    },
-                    downloads = new
-                    {
-                        all_time = x.downloads,
-                        this_week = x.downloadsThisWeek,
-                        last_week = x.downloadsLastWeek
-                    },
-                    views = new
-                    {
-                        all_time = x.views,
-                        this_week = x.viewsThisWeek,
-                        last_week = x.viewsLastWeek
-                    },
-                    records = x.Type == PlayerCreationType.TRACK
-                        ? x.isMnr
-                            ? (object)new
-                            {
-                                bestLapTime = x.recordBestLapTime,
-                                x.longestDrift,
-                                x.longestHangTime
-                            }
-                            : new
-                            {
-                                score = x.recordScore,
-                                finishTime = x.recordFinishTime
-                            }
-                        : null,
-                    rating = (x.ratingValue ?? 0).ToString("0.0", CultureInfo.InvariantCulture)
-                })
-            });
+                    today = x.pointsToday,
+                    all_time = x.points,
+                    this_week = x.pointsThisWeek,
+                    last_week = x.pointsLastWeek
+                },
+                downloads = new
+                {
+                    all_time = x.downloads,
+                    this_week = x.downloadsThisWeek,
+                    last_week = x.downloadsLastWeek
+                },
+                views = new
+                {
+                    all_time = x.views,
+                    this_week = x.viewsThisWeek,
+                    last_week = x.viewsLastWeek
+                },
+                records = x.Type == PlayerCreationType.TRACK
+                    ? x.isMnr
+                        ? (object)new
+                        {
+                            bestLapTime = x.recordBestLapTime,
+                            x.longestDrift,
+                            x.longestHangTime
+                        }
+                        : new
+                        {
+                            score = x.recordScore,
+                            finishTime = x.recordFinishTime
+                        }
+                    : null,
+                rating = (x.ratingValue ?? 0).ToString("0.0", CultureInfo.InvariantCulture)
+            }));
         }
 
         protected override void Dispose(bool disposing)

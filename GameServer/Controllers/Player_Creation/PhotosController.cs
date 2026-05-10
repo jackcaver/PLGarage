@@ -28,9 +28,10 @@ namespace GameServer.Controllers.Player_Creation
         [HttpPost]
         [Authorize]
         [Route("photos/create.xml")]
-        public IActionResult Create(PlayerCreation photo)
+        public IActionResult Create([FromForm]PlayerCreation photo)
         {
             var session = Session.GetSession(database, User);
+            photo.data = Request.Form.Files.GetFile("photo[data]");
             return Content(PlayerCreations.CreatePlayerCreation(database, session, photo));
         }
 

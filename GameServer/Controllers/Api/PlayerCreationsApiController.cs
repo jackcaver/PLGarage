@@ -568,7 +568,48 @@ namespace GameServer.Controllers.Api
                     finishTime = x.recordFinishTime
                 }
             }));
-        }   
+        }
+
+        [HttpGet]
+        [Route("/api/teampicks")]
+        public IActionResult GetTeamPicks(int page = 1, int pageSize = 10)
+        {
+            var query = database.PlayerCreations
+                .AsNoTracking()
+                .Where(x => x.IsTeamPick
+                    && x.Type != PlayerCreationType.DELETED
+                    && x.Type != PlayerCreationType.STORY
+                    && x.ModerationStatus != ModerationStatus.BANNED
+                    && x.ModerationStatus != ModerationStatus.ILLEGAL)
+                .OrderByDescending(x => x.UpdatedAt);
+
+            var total = query.Count();
+
+            var creations = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new
+                {
+                    id = x.PlayerCreationId,
+                    x.Name,
+                    x.Description,
+                    Type = x.Type.ToString(),
+                    creatorUsername = x.Author.Username,
+                    platform = x.Platform.ToString(),
+                    isMnr = x.IsMNR,
+                    x.Tags,
+                    x.CreatedAt,
+                    x.UpdatedAt,
+                    hearts = x.HeartsCount,
+                })
+                .ToList();
+
+            return Json(new
+            {
+                total,
+                creations
+            });
+        }
 
         private IActionResult JsonTopCreations(
             PlayerCreationType playerCreationType,
@@ -680,47 +721,6 @@ namespace GameServer.Controllers.Api
                     : null,
                 rating = (x.ratingValue ?? 0).ToString("0.0", CultureInfo.InvariantCulture)
             }));
-        }
-
-        [HttpGet]
-        [Route("/api/teampicks")]
-        public IActionResult GetTeamPicks(int page = 1, int pageSize = 10)
-        {
-            var query = database.PlayerCreations
-                .AsNoTracking()
-                .Where(x => x.IsTeamPick
-                    && x.Type != PlayerCreationType.DELETED
-                    && x.Type != PlayerCreationType.STORY
-                    && x.ModerationStatus != ModerationStatus.BANNED
-                    && x.ModerationStatus != ModerationStatus.ILLEGAL)
-                .OrderByDescending(x => x.UpdatedAt);
-
-            var total = query.Count();
-
-            var creations = query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(x => new
-                {
-                    id = x.PlayerCreationId,
-                    x.Name,
-                    x.Description,
-                    Type = x.Type.ToString(),
-                    creatorUsername = x.Author.Username,
-                    platform = x.Platform.ToString(),
-                    isMnr = x.IsMNR,
-                    x.Tags,
-                    x.CreatedAt,
-                    x.UpdatedAt,
-                    hearts = x.HeartsCount,
-                })
-                .ToList();
-
-            return Json(new
-            {
-                total,
-                creations
-            });
         }
 
         protected override void Dispose(bool disposing)

@@ -919,6 +919,54 @@ namespace GameServer.Controllers.Api
                 return Content(result);
         }
         #endregion
+
+        #region TeamPicksManagement
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/team_picks/{creationID}")]
+        public IActionResult AddToTeamPicks(int creationID)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageTeamPicks)
+                return StatusCode(403);
+
+            var result = Moderation.AddToTeamPicks(database, creationID);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/team_picks/{creationID}")]
+        public IActionResult RemoveFromTeamPicks(int creationID)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageTeamPicks)
+                return StatusCode(403);
+
+            var result = Moderation.RemoveFromTeamPicks(database, creationID);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/team_picks")]
+        public IActionResult ClearTeamPicks()
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageTeamPicks)
+                return StatusCode(403);
+
+            return Content(Moderation.ClearTeamPicks(database));
+        }
+        #endregion
         
         #region ModeratorManagement
         [HttpGet]

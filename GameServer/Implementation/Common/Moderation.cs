@@ -1356,6 +1356,58 @@ namespace GameServer.Implementation.Common
         }
         #endregion
 
+        #region TeamPicksManagement
+        public static string AddToTeamPicks(Database database, int creationID)
+        {
+            var creation = database.PlayerCreations.FirstOrDefault(x => x.PlayerCreationId == creationID);
+
+            if (creation == null)
+                return "error_creation_not_found";
+
+            if (creation.Type == PlayerCreationType.DELETED || creation.Type == PlayerCreationType.STORY)
+                return "error_invalid_creation_type";
+
+            if (creation.ModerationStatus == ModerationStatus.BANNED || creation.ModerationStatus == ModerationStatus.ILLEGAL)
+                return "error_creation_banned_or_illegal";
+
+            if (creation.IsTeamPick)
+                return "error_already_team_pick";
+
+            creation.IsTeamPick = true;
+            creation.UpdatedAt = TimeUtils.Now;
+            database.SaveChanges();
+
+            return "ok";
+        }
+
+        public static string RemoveFromTeamPicks(Database database, int creationID)
+        {
+            var creation = database.PlayerCreations.FirstOrDefault(x => x.PlayerCreationId == creationID);
+
+            if (creation == null)
+                return "error_creation_not_found";
+
+            if (!creation.IsTeamPick)
+                return "error_not_team_pick";
+
+            creation.IsTeamPick = false;
+            creation.UpdatedAt = TimeUtils.Now;
+            database.SaveChanges();
+
+            return "ok";
+        }
+
+        public static string ClearTeamPicks(Database database)
+        {
+            database.PlayerCreations
+                .Where(x => x.IsTeamPick)
+                .ExecuteUpdate(setter => setter.SetProperty(x => x.IsTeamPick, false)
+                                              .SetProperty(x => x.UpdatedAt, TimeUtils.Now));
+
+            return "ok";
+        }
+        #endregion
+
         #region ModeratorManagement
         public static string CreateModerator(Database database, string username, string password, ModeratorPermissions permissions)
         {
@@ -1379,6 +1431,7 @@ namespace GameServer.Implementation.Common
                 ManageAnnouncements = permissions.ManageAnnouncements,
                 ManageSystemEvents = permissions.ManageSystemEvents,
                 ManageWhitelist = permissions.ManageWhitelist,
+                ManageTeamPicks = permissions.ManageTeamPicks,
                 RemovePlayerCreations = permissions.RemovePlayerCreations,
                 RemovePlayerCreationComments = permissions.RemovePlayerCreationComments,
                 RemoveProfileComments = permissions.RemoveProfileComments,
@@ -1406,6 +1459,7 @@ namespace GameServer.Implementation.Common
                 ManageAnnouncements = true,
                 ManageSystemEvents = true,
                 ManageHotlap = true,
+                ManageTeamPicks = true,
                 ViewGriefReports = true,
                 ViewPlayerComplaints = true,
                 ViewPlayerCreationComplaints = true,
@@ -1485,6 +1539,7 @@ namespace GameServer.Implementation.Common
             moderator.ManageHotlap = permissions.ManageHotlap;
             moderator.ManageSystemEvents = permissions.ManageSystemEvents;
             moderator.ManageWhitelist = permissions.ManageWhitelist;
+            moderator.ManageTeamPicks = permissions.ManageTeamPicks;
             moderator.RemovePlayerCreations = permissions.RemovePlayerCreations;
             moderator.RemovePlayerCreationComments = permissions.RemovePlayerCreationComments;
             moderator.RemoveProfileComments = permissions.RemoveProfileComments;

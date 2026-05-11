@@ -19,6 +19,7 @@
         public bool RemoveScores { get; set; }
         public bool ManageSystemEvents { get; set; }
         public bool ManageWhitelist { get; set; }
+        public bool ManageTeamPicks { get; set; }        
         public bool ViewGriefReports { get; set; }
         public bool ViewPlayerComplaints { get; set; }
         public bool ViewPlayerCreationComplaints { get; set; }

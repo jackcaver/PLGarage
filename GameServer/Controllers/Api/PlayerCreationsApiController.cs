@@ -490,16 +490,14 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/topmods")]
-        public IActionResult GetTopMods(
-            [FromQuery] Platform platform = Platform.PS3)
+        public IActionResult GetTopMods([FromQuery] Platform platform = Platform.PS3)
         {
             return JsonTopCreations(PlayerCreationType.CHARACTER, platform);
         }
 
         [HttpGet]
         [Route("/api/topkarts")]
-        public IActionResult GetTopKarts(
-            [FromQuery] Platform platform = Platform.PS3)
+        public IActionResult GetTopKarts([FromQuery] Platform platform = Platform.PS3)
         {
             return JsonTopCreations(PlayerCreationType.KART, platform);
         }
@@ -591,6 +589,7 @@ namespace GameServer.Controllers.Api
             var total = query.Count();
 
             var creations = query
+                .Take(5)
                 .Select(x => new
                 {
                     id = x.PlayerCreationId,
@@ -681,6 +680,47 @@ namespace GameServer.Controllers.Api
                     : null,
                 rating = (x.ratingValue ?? 0).ToString("0.0", CultureInfo.InvariantCulture)
             }));
+        }
+
+        [HttpGet]
+        [Route("/api/teampicks")]
+        public IActionResult GetTeamPicks(int page = 1, int pageSize = 10)
+        {
+            var query = database.PlayerCreations
+                .AsNoTracking()
+                .Where(x => x.IsTeamPick
+                    && x.Type != PlayerCreationType.DELETED
+                    && x.Type != PlayerCreationType.STORY
+                    && x.ModerationStatus != ModerationStatus.BANNED
+                    && x.ModerationStatus != ModerationStatus.ILLEGAL)
+                .OrderByDescending(x => x.UpdatedAt);
+
+            var total = query.Count();
+
+            var creations = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new
+                {
+                    id = x.PlayerCreationId,
+                    x.Name,
+                    x.Description,
+                    Type = x.Type.ToString(),
+                    creatorUsername = x.Author.Username,
+                    platform = x.Platform.ToString(),
+                    isMnr = x.IsMNR,
+                    x.Tags,
+                    x.CreatedAt,
+                    x.UpdatedAt,
+                    hearts = x.HeartsCount,
+                })
+                .ToList();
+
+            return Json(new
+            {
+                total,
+                creations
+            });
         }
 
         protected override void Dispose(bool disposing)

@@ -486,10 +486,6 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
 
-            database.PlayerCreationCommentRatings
-                .Where(match => match.PlayerCreationCommentId == commentID)
-                .ExecuteDelete();
-
             database.PlayerCreationComments.Remove(comment);
             database.SaveChanges();
 
@@ -526,13 +522,6 @@ namespace GameServer.Implementation.Common
                 .Where(match => match.PlayerCreationId == playerCreationID)
                 .Select(match => match.Id)
                 .ToList();
-
-            if (commentIds.Count > 0)
-            {
-                database.PlayerCreationCommentRatings
-                    .Where(match => commentIds.Contains(match.PlayerCreationCommentId))
-                    .ExecuteDelete();
-            }
 
             database.PlayerCreationComments
                 .Where(match => match.PlayerCreationId == playerCreationID)
@@ -831,16 +820,6 @@ namespace GameServer.Implementation.Common
             if (!database.Users.Any(u => u.UserId == targetUserId))
                 return null;
 
-            var commentIds = database.PlayerComments
-                .Where(x => x.PlayerId == targetUserId)
-                .Select(x => x.Id)
-                .ToList();
-
-            if (commentIds.Count > 0)
-            {
-                database.PlayerCommentRatings.Where(x => commentIds.Contains(x.PlayerCommentId)).ExecuteDelete();
-            }
-
             database.PlayerComments.Where(x => x.PlayerId == targetUserId).ExecuteDelete();
 
             return "ok";
@@ -859,8 +838,6 @@ namespace GameServer.Implementation.Common
                 };
                 return errorResp.Serialize();
             }
-
-            database.PlayerCommentRatings.Where(x => x.PlayerCommentId == commentId).ExecuteDelete();
 
             database.PlayerComments.Remove(comment);
             database.SaveChanges();
@@ -1364,7 +1341,7 @@ namespace GameServer.Implementation.Common
             if (creation == null)
                 return "error_creation_not_found";
 
-            if (creation.Type == PlayerCreationType.DELETED || creation.Type == PlayerCreationType.STORY)
+            if (creation.Type == PlayerCreationType.DELETED || creation.Type == PlayerCreationType.STORY || creation.Type == PlayerCreationType.ITEM)
                 return "error_invalid_creation_type";
 
             if (creation.ModerationStatus == ModerationStatus.BANNED || creation.ModerationStatus == ModerationStatus.ILLEGAL)

@@ -190,6 +190,174 @@ namespace GameServer.Controllers.Api
             return result;
         }
 
+        [HttpGet("/api/leaderboards/creations")]
+        public IActionResult CreationLeaderboard(
+            [FromQuery] PlayerCreationType? type = null,
+            [FromQuery] string sortBy = "xp",
+            [FromQuery] Platform platform = Platform.PS3,
+            [FromQuery] int page = 1,
+            [FromQuery] int perPage = 10)
+        {
+            if (page < 1) page = 1;
+            if (perPage < 1) perPage = 10;
+            if (perPage > 10) perPage = 10;
+
+            var filtered = database.PlayerCreations
+                .AsNoTracking()
+                .Where(c => c.IsMNR && c.Platform == platform && c.Type != PlayerCreationType.DELETED);
+
+            if (type.HasValue)
+                filtered = filtered.Where(c => c.Type == type.Value);
+
+            var projected = filtered.Select(c => new
+            {
+                c.PlayerCreationId,
+                c.Name,
+                c.Type,
+                c.PlayerId,
+                c.Author.Username,
+                Xp = c.Points.Sum(p => (int?)p.Amount) ?? 0,
+                Downloads = c.Hearts.Count(),
+                Views = c.Views.Count()
+            });
+
+            var sort = (sortBy ?? "xp").ToLowerInvariant();
+
+            var orderedQuery = sort switch
+            {
+                "downloads" => projected.OrderByDescending(c => c.Downloads),
+                "views" => projected.OrderByDescending(c => c.Views),
+                _ => projected.OrderByDescending(c => c.Xp)
+            };
+
+            var skip = (page - 1) * perPage;
+            var rows = orderedQuery
+                .ThenBy(c => c.PlayerCreationId)
+                .Skip(skip)
+                .Take(perPage)
+                .ToList();
+
+            var results = rows.Select((c, idx) => new
+            {
+                rank = skip + idx + 1,
+                creationId = c.PlayerCreationId,
+                name = c.Name,
+                type = c.Type.ToString(),
+                creatorId = c.PlayerId,
+                creatorUsername = c.Username,
+                xp = c.Xp,
+                downloads = c.Downloads,
+                views = c.Views
+            });
+
+            return Ok(new
+            {
+                platform = platform.ToString(),
+                type = type?.ToString(),
+                sortBy = sort,
+                total = filtered.Count(),
+                results
+            });
+        }
+
+        [HttpGet("/api/leaderboards/players")]
+        public IActionResult PlayerLeaderboard(
+            [FromQuery] string sortBy = "totalXp",
+            [FromQuery] int page = 1,
+            [FromQuery] int perPage = 10)
+        {
+            if (page < 1) page = 1;
+            if (perPage < 1) perPage = 10;
+            if (perPage > 10) perPage = 10;
+
+            var filtered = database.Users
+                .AsNoTracking()
+                .Where(u => u.PlayedMNR && !u.IsBanned);
+
+            var projected = filtered
+                .Select(u => new
+                {
+                    u.UserId,
+                    u.Username,
+                    Races = u.RacesStarted.Count(),
+                    Wins = u.RacesFinished.Count(r => r.IsWinner),
+                    u.LongestWinStreak,
+                    CurrentStreak = u.WinStreak,
+                    Airtime = u.LongestHangTime,
+                    Drift = u.LongestDrift,
+                    RaceXp = u.PlayerExperiencePoints.Sum(p => (int?)p.Amount) ?? 0,
+                    CreationXp = u.PlayerCreationPoints.Sum(p => (int?)p.Amount) ?? 0,
+                    PointsCount = u.PlayerPoints.Count(),
+                    PointsAverage = u.PlayerPoints.Average(p => (float?)p.Amount) ?? 0
+                })
+                .Select(u => new
+                {
+                    u.UserId,
+                    u.Username,
+                    u.Races,
+                    u.Wins,
+                    u.LongestWinStreak,
+                    u.CurrentStreak,
+                    u.Airtime,
+                    u.Drift,
+                    u.RaceXp,
+                    u.CreationXp,
+                    u.PointsCount,
+                    u.PointsAverage,
+                    SkillRating = u.PointsCount < 10
+                        ? 1500
+                        : u.PointsAverage < 0
+                            ? 0
+                            : u.PointsAverage > 3000
+                                ? 3000
+                                : (int)u.PointsAverage
+                });
+
+            var sort = (sortBy ?? "totalXp").ToLowerInvariant();
+
+            var orderedQuery = sort switch
+            {
+                "onlineRaces" => projected.OrderByDescending(u => u.Races),
+                "onlineWins" => projected.OrderByDescending(u => u.Wins),
+                "longestWinStreak" => projected.OrderByDescending(u => u.LongestWinStreak),
+                "longestHangTime" => projected.OrderByDescending(u => u.Airtime),
+                "longestDrift" => projected.OrderByDescending(u => u.Drift),
+                "skillRating" => projected.OrderByDescending(u => u.SkillRating),
+                _ => projected.OrderByDescending(u => u.RaceXp + u.CreationXp)
+            };
+
+            var skip = (page - 1) * perPage;
+            var rows = orderedQuery
+                .ThenBy(u => u.UserId)
+                .Skip(skip)
+                .Take(perPage)
+                .ToList();
+
+            IEnumerable<object> results = rows.Select((u, i) => new
+            {
+                rank = skip + i + 1,
+                playerId = u.UserId,
+                username = u.Username,
+                totalXp = u.RaceXp + u.CreationXp,
+                raceXp = u.RaceXp,
+                creationXp = u.CreationXp,
+                onlineRaces = u.Races,
+                onlineWins = u.Wins,
+                longestWinStreak = u.LongestWinStreak,
+                currentStreak = u.CurrentStreak,
+                longestHangTime = u.Airtime,
+                longestDrift = u.Drift,
+                skillRating = u.SkillRating
+            });
+
+            return Ok(new
+            {
+                sortBy = sort,
+                total = filtered.Count(),
+                results
+            });
+        }
+
         protected override void Dispose(bool disposing)
         {
             database.Dispose();

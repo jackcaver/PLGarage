@@ -24,8 +24,10 @@ namespace GameServer.Controllers.Api
                     x.UserId,
                     x.Username,
                     x.Quote,
-                    starRating = x.PlayerRatings.Count > 0 ? (float)x.PlayerRatings.Average(r => r.Rating) : 0,
+                    x.StarRating,
                     onlineRaces = x.RacesStarted.Count,
+                    onlineFinished = x.OnlineFinished,
+                    onlineForfeits = x.OnlineForfeit,
                     onlineWins = x.RacesFinished.Count(r => r.IsWinner),
                     skillLevelIdPS3 = x.PlayerExperiencePoints.Where(p => p.Platform == Platform.PS3)
                         .Sum(p => p.Amount) + x.PlayerCreationPoints.Where(p => p.Platform == Platform.PS3)
@@ -34,6 +36,10 @@ namespace GameServer.Controllers.Api
                         .Sum(p => p.Amount) + x.PlayerCreationPoints.Where(p => p.Platform == Platform.PSV)
                         .Sum(p => p.Amount),
                     skillRating = x.Points(Platform.PS3),
+                    x.WinStreak,
+                    x.LongestWinStreak,
+                    x.LongestDrift,
+                    x.LongestHangTime,
                     x.IsBanned,
                     x.CreatedAt,
                     creationTypes = x.PlayerCreations
@@ -45,6 +51,12 @@ namespace GameServer.Controllers.Api
 
             if (player == null)
                 return NotFound(new { error = "error_player_not_found"});
+
+            var user = database.Users
+                .AsNoTracking()
+                .FirstOrDefault(x => x.Username == username);
+
+            var presence = user?.Presence(database, Platform.PS3).ToString();
 
             var creationsCount = new
             {
@@ -70,16 +82,23 @@ namespace GameServer.Controllers.Api
                 player.UserId,
                 player.Username,
                 player.Quote,
-                starRating = player.starRating.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture),
+                player.StarRating,
                 player.onlineRaces,
+                player.onlineFinished,
+                player.onlineForfeits,
                 player.onlineWins,
                 skillLevels = new Dictionary<string, object>
                 {
                     ["PS3"] = new { skillLevelPS3.Id, skillLevelPS3.Name },
                     ["PSV"] = new { skillLevelPSV.Id, skillLevelPSV.Name },
                 },
-                player.IsBanned,
                 player.skillRating,
+                player.WinStreak,
+                player.LongestWinStreak,
+                player.LongestDrift,
+                player.LongestHangTime,
+                presence,
+                player.IsBanned,
                 player.CreatedAt,
                 creationsCount
             });

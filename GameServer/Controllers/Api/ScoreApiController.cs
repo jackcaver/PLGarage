@@ -250,12 +250,14 @@ namespace GameServer.Controllers.Api
                 views = c.Views
             });
 
+            var totalResults = filtered.Count();
             return Ok(new
             {
                 platform = platform.ToString(),
                 type = type?.ToString(),
                 sortBy = sort,
-                total = filtered.Count(),
+                total = totalResults,
+                totalResults,
                 results
             });
         }
@@ -350,10 +352,12 @@ namespace GameServer.Controllers.Api
                 skillRating = u.SkillRating
             });
 
+            var totalResults = filtered.Count();
             return Ok(new
             {
                 sortBy = sort,
-                total = filtered.Count(),
+                total = totalResults,
+                totalResults,
                 results
             });
         }

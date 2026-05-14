@@ -224,42 +224,45 @@ namespace GameServer.Controllers.Api
             if (creations.Count == 0)
                 return NotFound(new { error = "error_creation_not_found"});
 
-            return Json(creations.Select(x => new
-            {
-                x.PlayerCreationId,
-                x.Name,
-                x.Description,
-                rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
-                creatorUsername = x.Username,
-                Type = x.Type.ToString(),
-                x.Tags,
-                Platform = x.Platform.ToString(),
-                x.IsMNR,
-                x.CreatedAt,
-                points = new
+            return Json(new {
+                totalResults,
+                creations = creations.Select(x => new
                 {
-                    all_time = x.pointsAllTime,
-                    this_week = x.pointsThisWeek,
-                    last_week = x.pointsLastWeek
-                },
-                downloads = new
-                {
-                    all_time = x.downloadsAllTime,
-                    this_week = x.downloadsThisWeek,
-                    last_week = x.downloadsLastWeek
-                },
-                views = new
-                {
-                    all_time = x.viewsAllTime,
-                    this_week = x.viewsThisWeek,
-                    last_week = x.viewsLastWeek
-                },
-                records = x.Type == PlayerCreationType.TRACK
-                    ? x.IsMNR
-                        ? (object)new { bestLapTime = x.recordBestLapTime, longestDrift = x.recordLongestDrift, longestHangTime = x.recordLongestHangTime }
-                        : new { score = x.recordScore, finishTime = x.recordFinishTime }
-                    : null
-            }));
+                    x.PlayerCreationId,
+                    x.Name,
+                    x.Description,
+                    rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
+                    creatorUsername = x.Username,
+                    Type = x.Type.ToString(),
+                    x.Tags,
+                    Platform = x.Platform.ToString(),
+                    x.IsMNR,
+                    x.CreatedAt,
+                    points = new
+                    {
+                        all_time = x.pointsAllTime,
+                        this_week = x.pointsThisWeek,
+                        last_week = x.pointsLastWeek
+                    },
+                    downloads = new
+                    {
+                        all_time = x.downloadsAllTime,
+                        this_week = x.downloadsThisWeek,
+                        last_week = x.downloadsLastWeek
+                    },
+                    views = new
+                    {
+                        all_time = x.viewsAllTime,
+                        this_week = x.viewsThisWeek,
+                        last_week = x.viewsLastWeek
+                    },
+                    records = x.Type == PlayerCreationType.TRACK
+                        ? x.IsMNR
+                            ? (object)new { bestLapTime = x.recordBestLapTime, longestDrift = x.recordLongestDrift, longestHangTime = x.recordLongestHangTime }
+                            : new { score = x.recordScore, finishTime = x.recordFinishTime }
+                        : null
+                })
+            });
         }
 
         [HttpGet]
@@ -357,12 +360,16 @@ namespace GameServer.Controllers.Api
         [Route("/api/creations/{username}")]
         public IActionResult GetCreationsByUsername(string username)
         {
-            var creations = database.PlayerCreations
+            var q = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.Author.Username == username
                 && x.Type != PlayerCreationType.DELETED
                 && x.ModerationStatus != ModerationStatus.BANNED
-                && x.ModerationStatus != ModerationStatus.ILLEGAL)
+                && x.ModerationStatus != ModerationStatus.ILLEGAL);
+
+            var totalResults = q.Count();
+
+            var creations = q
                 .Select(x => new
                 {
                     x.PlayerCreationId,
@@ -401,42 +408,45 @@ namespace GameServer.Controllers.Api
             if (creations.Count == 0)
                 return NotFound(new { error = "error_player_not_found"});
 
-            return Json(creations.Select(x => new
-            {
-                x.PlayerCreationId,
-                x.Name,
-                x.Description,
-                rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
-                creatorUsername = x.Username,
-                Type = x.Type.ToString(),
-                x.Tags,
-                Platform = x.Platform.ToString(),
-                x.IsMNR,
-                x.CreatedAt,
-                points = new
+            return Json(new {
+                totalResults,
+                creations = creations.Select(x => new
                 {
-                    all_time = x.pointsAllTime,
-                    this_week = x.pointsThisWeek,
-                    last_week = x.pointsLastWeek
-                },
-                downloads = new
-                {
-                    all_time = x.downloadsAllTime,
-                    this_week = x.downloadsThisWeek,
-                    last_week = x.downloadsLastWeek
-                },
-                views = new
-                {
-                    all_time = x.viewsAllTime,
-                    this_week = x.viewsThisWeek,
-                    last_week = x.viewsLastWeek
-                },
-                records = x.Type == PlayerCreationType.TRACK
-                    ? x.IsMNR
-                        ? (object)new { bestLapTime = x.recordBestLapTime, longestDrift = x.recordLongestDrift, longestHangTime = x.recordLongestHangTime }
-                        : new { score = x.recordScore, finishTime = x.recordFinishTime }
-                    : null
-            }));
+                    x.PlayerCreationId,
+                    x.Name,
+                    x.Description,
+                    rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
+                    creatorUsername = x.Username,
+                    Type = x.Type.ToString(),
+                    x.Tags,
+                    Platform = x.Platform.ToString(),
+                    x.IsMNR,
+                    x.CreatedAt,
+                    points = new
+                    {
+                        all_time = x.pointsAllTime,
+                        this_week = x.pointsThisWeek,
+                        last_week = x.pointsLastWeek
+                    },
+                    downloads = new
+                    {
+                        all_time = x.downloadsAllTime,
+                        this_week = x.downloadsThisWeek,
+                        last_week = x.downloadsLastWeek
+                    },
+                    views = new
+                    {
+                        all_time = x.viewsAllTime,
+                        this_week = x.viewsThisWeek,
+                        last_week = x.viewsLastWeek
+                    },
+                    records = x.Type == PlayerCreationType.TRACK
+                        ? x.IsMNR
+                            ? (object)new { bestLapTime = x.recordBestLapTime, longestDrift = x.recordLongestDrift, longestHangTime = x.recordLongestHangTime }
+                            : new { score = x.recordScore, finishTime = x.recordFinishTime }
+                        : null
+                })
+            });
         }
 
         [HttpGet]
@@ -583,7 +593,7 @@ namespace GameServer.Controllers.Api
                     && x.ModerationStatus != ModerationStatus.ILLEGAL)
                 .OrderByDescending(x => x.UpdatedAt);
 
-            var total = query.Count();
+            var totalResults = query.Count();
 
             var creations = query
                 .Skip((page - 1) * pageSize)
@@ -606,7 +616,7 @@ namespace GameServer.Controllers.Api
 
             return Json(new
             {
-                total,
+                totalResults,
                 creations
             });
         }

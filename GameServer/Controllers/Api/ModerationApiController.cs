@@ -583,7 +583,7 @@ namespace GameServer.Controllers.Api
         public IActionResult GetPlayerCreationComplaintPreview(int id)
         {
             var user = Moderation.GetUser(database, User);
-            if (user == null || !user.ViewGriefReports)
+            if (user == null || !user.ViewPlayerCreationComplaints)
                 return StatusCode(403);
 
             var file = storage.LoadPlayerCreationComplaintPreview(id);

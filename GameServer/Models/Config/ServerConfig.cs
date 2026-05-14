@@ -55,6 +55,7 @@ namespace GameServer.Models.Config
         public string InstanceName = "PLGarage";
         public string ServerCommunicationKey = "";
         public string JWTSigningKey = "CHANGEMEPLEASE!!!!!!!!!!!!!!!!!!!";
+        public MigratableStorageConfig Storage = new();
 
         private static ServerConfig GetFromFile()
         {

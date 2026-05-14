@@ -18,7 +18,7 @@ namespace GameServer.Implementation.Common
     public class Moderation
     {
         #region Game
-        public static string GriefReport(Database database, User user, GriefReport grief_report)
+        public static string GriefReport(Database database, IUGCStorage storage, User user, GriefReport grief_report)
         {
             if (user == null)
             {
@@ -41,7 +41,7 @@ namespace GameServer.Implementation.Common
             });
             database.SaveChanges();
 
-            UserGeneratedContentUtils.SaveGriefReportData(database.GriefReports.Count(),
+            storage.SaveGriefReportData(database.GriefReports.Count(),
                 grief_report.data.OpenReadStream(),
                 grief_report.preview.OpenReadStream());
             var resp = new Response<EmptyResponse>
@@ -83,7 +83,7 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static string PlayerCreationComplaints(Database database, User user, PlayerCreationComplaint player_creation_complaint)
+        public static string PlayerCreationComplaints(Database database, IUGCStorage storage, User user, PlayerCreationComplaint player_creation_complaint)
         {
             var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == player_creation_complaint.player_creation_id);
 
@@ -108,7 +108,7 @@ namespace GameServer.Implementation.Common
             database.SaveChanges();
 
             if (player_creation_complaint.preview != null)
-                UserGeneratedContentUtils.SavePlayerCreationComplaintPreview(database.PlayerCreationComplaints.Count(),
+                storage.SavePlayerCreationComplaintPreview(database.PlayerCreationComplaints.Count(),
                     player_creation_complaint.preview.OpenReadStream());
             var resp = new Response<EmptyResponse>
             {
@@ -391,7 +391,7 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
         
-        public static string RemovePlayerCreation(Database database, int playerCreationID)
+        public static string RemovePlayerCreation(Database database, IUGCStorage storage, int playerCreationID)
         {
             var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == playerCreationID);
 
@@ -418,7 +418,7 @@ namespace GameServer.Implementation.Common
             database.SaveChanges();
 
             if (ServerConfig.Instance.DeleteCreationData)
-                UserGeneratedContentUtils.RemovePlayerCreation(playerCreationID);
+                storage.RemovePlayerCreation(playerCreationID);
 
             return "ok";
         }
@@ -468,7 +468,7 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
 
-        public static string ResetUserProfile(Database database, int targetUserId, bool removeCreations)
+        public static string ResetUserProfile(Database database, IUGCStorage storage, int targetUserId, bool removeCreations)
         {
             if (!database.Users.Any(u => u.UserId == targetUserId))
                 return null;
@@ -531,7 +531,7 @@ namespace GameServer.Implementation.Common
                     database.SaveChanges();
 
                     if (ServerConfig.Instance.DeleteCreationData)
-                        UserGeneratedContentUtils.RemovePlayerCreation(creationId);
+                        storage.RemovePlayerCreation(creationId);
                 }
             }
             else
@@ -554,7 +554,7 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
         
-        public static string RemovePlayerCreations(Database database, int targetUserId)
+        public static string RemovePlayerCreations(Database database, IUGCStorage storage, int targetUserId)
         {
             if (!database.Users.Any(u => u.UserId == targetUserId))
                 return null;
@@ -586,7 +586,7 @@ namespace GameServer.Implementation.Common
                 database.SaveChanges();
         
                 if (ServerConfig.Instance.DeleteCreationData)
-                    UserGeneratedContentUtils.RemovePlayerCreation(creationId);
+                    storage.RemovePlayerCreation(creationId);
             }
         
             database.SaveChanges();
@@ -1076,7 +1076,7 @@ namespace GameServer.Implementation.Common
         #endregion
 
         #region ScoreManagement
-        public static string RemoveScoreById(Database database, int scoreId)
+        public static string RemoveScoreById(Database database, IUGCStorage storage, int scoreId)
         {
             var score = database.Scores
                 .FirstOrDefault(s => s.Id == scoreId
@@ -1086,7 +1086,7 @@ namespace GameServer.Implementation.Common
                 return null;
 
             if (score.IsMNR)
-                UserGeneratedContentUtils.RemoveGhostCarData((GameType)(score.SubGroupId + 10), score.Platform, score.SubKeyId, score.PlayerId);
+                storage.RemoveGhostCarData((GameType)(score.SubGroupId + 10), score.Platform, score.SubKeyId, score.PlayerId);
 
             database.Scores.Remove(score);
             database.SaveChanges();
@@ -1094,7 +1094,7 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
 
-        public static string RemoveAllScoresForTrack(Database database, int trackId)
+        public static string RemoveAllScoresForTrack(Database database, IUGCStorage storage, int trackId)
         {
             var scores = database.Scores
                 .Where(s => s.SubKeyId == trackId
@@ -1105,7 +1105,7 @@ namespace GameServer.Implementation.Common
                 return null;
 
             foreach (var score in scores.Where(s => s.IsMNR))
-                UserGeneratedContentUtils.RemoveGhostCarData((GameType)(score.SubGroupId + 10), score.Platform, score.SubKeyId, score.PlayerId);
+                storage.RemoveGhostCarData((GameType)(score.SubGroupId + 10), score.Platform, score.SubKeyId, score.PlayerId);
 
             database.Scores.RemoveRange(scores);
             database.SaveChanges();
@@ -1113,7 +1113,7 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
 
-        public static string RemoveAllScoresForPlayer(Database database, int playerId)
+        public static string RemoveAllScoresForPlayer(Database database, IUGCStorage storage, int playerId)
         {
             var scores = database.Scores
                 .Where(s => s.PlayerId == playerId
@@ -1124,7 +1124,7 @@ namespace GameServer.Implementation.Common
                 return null;
 
             foreach (var score in scores.Where(s => s.IsMNR))
-                UserGeneratedContentUtils.RemoveGhostCarData((GameType)(score.SubGroupId + 10), score.Platform, score.SubKeyId, score.PlayerId);
+                storage.RemoveGhostCarData((GameType)(score.SubGroupId + 10), score.Platform, score.SubKeyId, score.PlayerId);
 
             database.Scores.RemoveRange(scores);
             database.SaveChanges();

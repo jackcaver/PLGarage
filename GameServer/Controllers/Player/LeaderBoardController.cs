@@ -5,12 +5,13 @@ using GameServer.Models.Request;
 using GameServer.Models.PlayerData;
 using GameServer.Implementation.Player;
 using GameServer.Implementation.Common;
+using GameServer.Models;
 using GameServer.Models.GameBrowser;
 using Microsoft.AspNetCore.Authorization;
 
 namespace GameServer.Controllers.Player
 {
-    public class LeaderBoardController(Database database) : Controller
+    public class LeaderBoardController(Database database, IUGCStorage storage) : Controller
     {
         [HttpGet]
         [Authorize]
@@ -95,11 +96,11 @@ namespace GameServer.Controllers.Player
         [Route("ghost_car_data/{gameType}/{platform}/{track_id}/{player_id}/data.bin")]
         public IActionResult GetGhostCarDataOnPlatform(GameType gameType, Platform platform, int track_id, int player_id)
         {
-            var data = UserGeneratedContentUtils.LoadGhostCarData(gameType, Platform.PSV, track_id, player_id);
-            Response.Headers.Append("ETag", $"\"{UserGeneratedContentUtils.CalculateGhostCarDataMD5(gameType, Platform.PSV, track_id, player_id)}\"");
-            Response.Headers.Append("Accept-Ranges", "bytes");
+            var data = storage.LoadGhostCarData(gameType, platform, track_id, player_id);
             if (data == null)
                 return NotFound();
+            Response.Headers.Append("ETag", $"\"{UserGeneratedContentUtils.CalculateMD5(data)}\"");
+            Response.Headers.Append("Accept-Ranges", "bytes");
             return File(data, "application/octet-stream");
         }
 
@@ -107,11 +108,11 @@ namespace GameServer.Controllers.Player
         [Route("ghost_car_data/{gameType}/{track_id}/{player_id}/data.bin")]
         public IActionResult GetGhostCarData(GameType gameType, int track_id, int player_id)
         {
-            var data = UserGeneratedContentUtils.LoadGhostCarData(gameType, Platform.PS3, track_id, player_id);
-            Response.Headers.Append("ETag", $"\"{UserGeneratedContentUtils.CalculateGhostCarDataMD5(gameType, Platform.PS3, track_id, player_id)}\"");
-            Response.Headers.Append("Accept-Ranges", "bytes");
+            var data = storage.LoadGhostCarData(gameType, Platform.PS3, track_id, player_id);
             if (data == null)
                 return NotFound();
+            Response.Headers.Append("ETag", $"\"{UserGeneratedContentUtils.CalculateMD5(data)}\"");
+            Response.Headers.Append("Accept-Ranges", "bytes");
             return File(data, "application/octet-stream");
         }
 

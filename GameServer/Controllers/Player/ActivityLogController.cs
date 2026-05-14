@@ -1,6 +1,7 @@
 using GameServer.Implementation.Common;
 using System;
 using GameServer.Implementation.Player;
+using GameServer.Models;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Utils;
@@ -9,13 +10,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Player
 {
-    public class ActivityLogController(Database database) : Controller
+    public class ActivityLogController(Database database, IUGCStorage storage) : Controller
     {
         [HttpGet]
         [Route("announcements/{file}.png")]
         public IActionResult GetImage(Guid file)
         {
-            var image = UserGeneratedContentUtils.LoadAnnouncementImage($"{file}.png");
+            var image = storage.LoadAnnouncementImage($"{file}.png");
             if (image == null)
                 return NotFound();
             return File(image, "image/png");

@@ -21,11 +21,14 @@ namespace GameServer.Models.PlayerData
         public bool ChangeCreationStatus { get; set; }
         public bool ResetCreationStats { get; set; }
         public bool RemovePlayerCreations { get; set; }
+        public bool RemovePlayerCreationComments { get; set; }
+        public bool RemoveProfileComments { get; set; }
         public bool ManageAnnouncements { get; set; }
         public bool ManageHotlap { get; set; }
         public bool RemoveScores { get; set; }
         public bool ManageSystemEvents { get; set; }
         public bool ManageWhitelist { get; set; }
+        public bool ManageTeamPicks { get; set; }
         public bool ViewGriefReports { get; set; }
         public bool ViewPlayerComplaints { get; set; }
         public bool ViewPlayerCreationComplaints { get; set; }
@@ -43,7 +46,10 @@ namespace GameServer.Models.PlayerData
                    && (!permissions.RemoveScores || RemoveScores)
                    && (!permissions.ManageAnnouncements || ManageAnnouncements)
                    && (!permissions.ManageWhitelist || ManageWhitelist)
+                   && (!permissions.ManageTeamPicks || ManageTeamPicks)
                    && (!permissions.RemovePlayerCreations || RemovePlayerCreations)
+                   && (!permissions.RemovePlayerCreationComments || RemovePlayerCreationComments)
+                   && (!permissions.RemoveProfileComments || RemoveProfileComments)
                    && (!permissions.ResetCreationStats || ResetCreationStats)
                    && (!permissions.ResetUserStats || ResetUserStats)
                    && (!permissions.RemoveUsers || RemoveUsers)
@@ -68,7 +74,10 @@ namespace GameServer.Models.PlayerData
                 RemoveScores = RemoveScores,
                 ManageSystemEvents = ManageSystemEvents,
                 ManageWhitelist = ManageWhitelist,
+                ManageTeamPicks = ManageTeamPicks,
                 RemovePlayerCreations = RemovePlayerCreations,
+                RemovePlayerCreationComments = RemovePlayerCreationComments,
+                RemoveProfileComments = RemoveProfileComments,
                 ResetCreationStats = ResetCreationStats,
                 ResetUserStats = ResetUserStats,
                 RemoveUsers = RemoveUsers,

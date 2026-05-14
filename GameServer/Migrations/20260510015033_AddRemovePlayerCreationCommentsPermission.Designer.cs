@@ -4,6 +4,7 @@ using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GameServer.Migrations
 {
     [DbContext(typeof(Database))]
-    partial class DatabaseModelSnapshot : ModelSnapshot
+    [Migration("20260510015033_AddRemovePlayerCreationCommentsPermission")]
+    partial class AddRemovePlayerCreationCommentsPermission
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -273,9 +276,6 @@ namespace GameServer.Migrations
                     b.Property<bool>("ManageSystemEvents")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<bool>("ManageTeamPicks")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<bool>("ManageUserSessions")
                         .HasColumnType("tinyint(1)");
 
@@ -289,9 +289,6 @@ namespace GameServer.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("RemovePlayerCreations")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("RemoveProfileComments")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("RemoveScores")

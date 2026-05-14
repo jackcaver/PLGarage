@@ -271,6 +271,40 @@ namespace GameServer.Controllers.Api
             else
                 return Content(result);
         }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/player_creations/{playerCreationID}/comment/{id}")]
+        public IActionResult RemovePlayerCreationComment(int playerCreationID, int id)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.RemovePlayerCreationComments)
+                return StatusCode(403);
+
+            var result = Moderation.RemovePlayerCreationComment(database, playerCreationID, id);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/player_creations/{playerCreationID}/comments")]
+        public IActionResult RemoveAllPlayerCreationComments(int playerCreationID)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.RemovePlayerCreationComments)
+                return StatusCode(403);
+
+            var result = Moderation.RemoveAllPlayerCreationComments(database, playerCreationID);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
         #endregion
 
         #region UserManagement
@@ -446,6 +480,40 @@ namespace GameServer.Controllers.Api
             else
                 return Content(report);
         }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/users/{id}/profile_comments")]
+        public IActionResult RemoveProfileComments(int id)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.RemoveProfileComments)
+                return StatusCode(403);
+
+            var result = Moderation.RemoveProfileComments(database, id);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/users/profile_comments/{commentId}")]
+        public IActionResult RemoveProfileComment(int commentId)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.RemoveProfileComments)
+                return StatusCode(403);
+
+            var result = Moderation.RemoveProfileComment(database, commentId);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
         #endregion
 
         #region PlayerComplaints
@@ -515,7 +583,7 @@ namespace GameServer.Controllers.Api
         public IActionResult GetPlayerCreationComplaintPreview(int id)
         {
             var user = Moderation.GetUser(database, User);
-            if (user == null || !user.ViewGriefReports)
+            if (user == null || !user.ViewPlayerCreationComplaints)
                 return StatusCode(403);
 
             var file = storage.LoadPlayerCreationComplaintPreview(id);
@@ -867,6 +935,54 @@ namespace GameServer.Controllers.Api
                 return NotFound();
             else
                 return Content(result);
+        }
+        #endregion
+
+        #region TeamPicksManagement
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/team_picks/{creationID}")]
+        public IActionResult AddToTeamPicks(int creationID)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageTeamPicks)
+                return StatusCode(403);
+
+            var result = Moderation.AddToTeamPicks(database, creationID);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/team_picks/{creationID}")]
+        public IActionResult RemoveFromTeamPicks(int creationID)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageTeamPicks)
+                return StatusCode(403);
+
+            var result = Moderation.RemoveFromTeamPicks(database, creationID);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/team_picks")]
+        public IActionResult ClearTeamPicks()
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageTeamPicks)
+                return StatusCode(403);
+
+            return Content(Moderation.ClearTeamPicks(database));
         }
         #endregion
         

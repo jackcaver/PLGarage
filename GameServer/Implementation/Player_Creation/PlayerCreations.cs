@@ -15,7 +15,7 @@ namespace GameServer.Implementation.Player_Creation
 {
     public class PlayerCreations
     {
-        public static string UpdatePlayerCreation(Database database, SessionData session, PlayerCreation PlayerCreation, int id = 0)
+        public static string UpdatePlayerCreation(Database database, IUGCStorage storage, SessionData session, PlayerCreation PlayerCreation, int id = 0)
         {
             var user = session.User;
 
@@ -36,7 +36,7 @@ namespace GameServer.Implementation.Player_Creation
 
             if (Creation == null && PlayerCreation.player_creation_type == PlayerCreationType.PLANET)
             {
-                return CreatePlayerCreation(database, session, PlayerCreation);
+                return CreatePlayerCreation(database, storage, session, PlayerCreation);
             }
 
             if (Creation == null)
@@ -103,11 +103,11 @@ namespace GameServer.Implementation.Player_Creation
             database.SaveChanges();
 
             if (PlayerCreation.player_creation_type != PlayerCreationType.PLANET)
-                UserGeneratedContentUtils.SavePlayerCreation(Creation.PlayerCreationId,
+                storage.SavePlayerCreation(Creation.PlayerCreationId,
                    PlayerCreation.data.OpenReadStream(),
                    PlayerCreation.preview.OpenReadStream());
             else
-                UserGeneratedContentUtils.SavePlayerCreation(Creation.PlayerCreationId, PlayerCreation.data.OpenReadStream());
+                storage.SavePlayerCreation(Creation.PlayerCreationId, PlayerCreation.data.OpenReadStream());
 
             if (PlayerCreation.player_creation_type == PlayerCreationType.PLANET)
             {
@@ -127,7 +127,7 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string CreatePlayerCreation(Database database, SessionData session, PlayerCreation Creation)
+        public static string CreatePlayerCreation(Database database, IUGCStorage storage, SessionData session, PlayerCreation Creation)
         {
             var user = session.User;
             
@@ -262,11 +262,11 @@ namespace GameServer.Implementation.Player_Creation
 
 
             if (Creation.player_creation_type == PlayerCreationType.PHOTO)
-                UserGeneratedContentUtils.SavePlayerPhoto(id, data);
+                storage.SavePlayerPhoto(id, data);
             else if (Creation.player_creation_type == PlayerCreationType.PLANET)
-                UserGeneratedContentUtils.SavePlayerCreation(id, data);
+                storage.SavePlayerCreation(id, data);
             else
-                UserGeneratedContentUtils.SavePlayerCreation(id, data, preview);
+                storage.SavePlayerCreation(id, data, preview);
 
             if (Creation.player_creation_type == PlayerCreationType.PLANET)
             {
@@ -286,7 +286,7 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string RemovePlayerCreation(Database database, User user, int id)
+        public static string RemovePlayerCreation(Database database, IUGCStorage storage, User user, int id)
         {
             if (user == null)
             {
@@ -324,7 +324,7 @@ namespace GameServer.Implementation.Player_Creation
             database.SaveChanges();
 
             if (ServerConfig.Instance.DeleteCreationData)
-                UserGeneratedContentUtils.RemovePlayerCreation(id);
+                storage.RemovePlayerCreation(id);
 
             var resp = new Response<EmptyResponse>
             {
@@ -334,7 +334,7 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string GetPlayerCreation(Database database, SessionData session, int id, bool IsCounted, bool download = false)
+        public static string GetPlayerCreation(Database database, IUGCStorage storage, SessionData session, int id, bool IsCounted, bool download = false)
         {
             var Creation = database.PlayerCreations
                 .AsSplitQuery()
@@ -477,7 +477,7 @@ namespace GameServer.Implementation.Player_Creation
                         created_at = Creation.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                         description = Creation.Description,
                         difficulty = Creation.Difficulty.ToString(),
-                        dlc_keys = Creation.DLCKeys != null ? Creation.DLCKeys : "",
+                        dlc_keys = Creation.DLCKeys ?? "",
                         downloads = Creation.DownloadsCount,
                         downloads_last_week = Creation.DownloadsLastWeek,
                         downloads_this_week = Creation.DownloadsThisWeek,
@@ -519,10 +519,10 @@ namespace GameServer.Implementation.Player_Creation
                         views_this_week = Creation.ViewsThisWeek,
                         votes = Creation.Votes,
                         weapon_set = Creation.WeaponSet,
-                        data_md5 = download ? UserGeneratedContentUtils.CalculateMD5(id, "data.bin") : null,
-                        data_size = download ? UserGeneratedContentUtils.CalculateSize(id, "data.bin").ToString() : null,
-                        preview_md5 = download ? UserGeneratedContentUtils.CalculateMD5(id, "preview_image.png") : null,
-                        preview_size = download ? UserGeneratedContentUtils.CalculateSize(id, "preview_image.png").ToString() : null,
+                        data_md5 = download ? storage.CalculateMD5(id, "data.bin") : null,
+                        data_size = download ? storage.CalculateSize(id, "data.bin").ToString() : null,
+                        preview_md5 = download ? storage.CalculateMD5(id, "preview_image.png") : null,
+                        preview_size = download ? storage.CalculateSize(id, "preview_image.png").ToString() : null,
                         //MNR
                         // TODO: Remove some DB queries here and use one to many links in EF model
                         points = Creation.PointsAmount,

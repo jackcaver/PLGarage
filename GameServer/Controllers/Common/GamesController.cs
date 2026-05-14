@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Common
 {
-    public class GamesController(Database database) : Controller
+    public class GamesController(Database database, IUGCStorage storage) : Controller
     {
         [HttpGet]
         [Authorize]
@@ -265,7 +265,7 @@ namespace GameServer.Controllers.Common
             {
                 game_player_stats.ghost_car_data.OpenReadStream().CopyTo(GhostData);
                 GhostData.Position = 0;
-                GhostDataMD5 = UserGeneratedContentUtils.CalculateGhostCarDataMD5(GhostData);
+                GhostDataMD5 = UserGeneratedContentUtils.CalculateMD5(GhostData);
                 GhostData.Position = 0;
             }
             bool SaveGhost = false;
@@ -323,7 +323,7 @@ namespace GameServer.Controllers.Common
             if (session.IsMNR && SaveGhost)
             {
                 GhostData.Position = 0;
-                UserGeneratedContentUtils.SaveGhostCarData(game.game_type, session.Platform,
+                storage.SaveGhostCarData(game.game_type, session.Platform,
                     game_player_stats.track_idx, database.Users.FirstOrDefault(match => match.Username == session.Username).UserId,
                     GhostData);
             }

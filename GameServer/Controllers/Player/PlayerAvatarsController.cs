@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Player
 {
-    public class PlayerAvatarsController(Database database) : Controller
+    public class PlayerAvatarsController(Database database, IUGCStorage storage) : Controller
     {
         [HttpPut]
         [HttpPost]
@@ -24,7 +24,7 @@ namespace GameServer.Controllers.Player
             var user = session.User;
 
             if (user != null)
-                UserGeneratedContentUtils.SaveAvatar(user.UserId, player_avatar, session.IsMNR);
+                storage.SavePlayerAvatar(user.UserId, player_avatar, session.IsMNR);
             
             var resp = new Response<EmptyResponse>
             {
@@ -43,7 +43,7 @@ namespace GameServer.Controllers.Player
         public IActionResult GetData(int id, string file)
         {
             if (!AcceptedTypes.Contains(file)) return NotFound();
-            var avatar = UserGeneratedContentUtils.LoadPlayerAvatar(id, file.ToLower());
+            var avatar = storage.LoadPlayerAvatar(id, file.ToLower());
             if (avatar == null)
                 return NotFound();
             Response.Headers.Append("ETag", $"\"{UserGeneratedContentUtils.CalculateMD5(avatar)}\"");
@@ -57,7 +57,7 @@ namespace GameServer.Controllers.Player
         public IActionResult GetMNRData(int id, string file)
         {
             if (!AcceptedTypes.Contains(file)) return NotFound();
-            var avatar = UserGeneratedContentUtils.LoadPlayerAvatar(id, file.ToLower(), true);
+            var avatar = storage.LoadPlayerAvatar(id, file.ToLower(), true);
             if (avatar == null)
                 return NotFound();
             Response.Headers.Append("ETag", $"\"{UserGeneratedContentUtils.CalculateMD5(avatar)}\"");

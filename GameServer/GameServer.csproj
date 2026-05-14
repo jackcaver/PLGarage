@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="4.0.23" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="EntityFrameworkCore.Projectables" Version="6.0.4" />
     <PackageReference Include="EntityFrameworkCore.Projectables.Abstractions" Version="6.0.4" />

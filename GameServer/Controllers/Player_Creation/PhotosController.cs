@@ -1,5 +1,6 @@
 ﻿using GameServer.Implementation.Common;
 using GameServer.Implementation.Player_Creation;
+using GameServer.Models;
 using GameServer.Models.Request;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Player_Creation
 {
-    public class PhotosController(Database database) : Controller
+    public class PhotosController(Database database, IUGCStorage storage) : Controller
     {
         [HttpGet]
         [Route("photos/search.xml")]
@@ -22,7 +23,7 @@ namespace GameServer.Controllers.Player_Creation
         public IActionResult Delete(int id)
         {
             var user = Session.GetUser(database, User);
-            return Content(PlayerCreations.RemovePlayerCreation(database, user, id), "application/xml;charset=utf-8");
+            return Content(PlayerCreations.RemovePlayerCreation(database, storage, user, id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -32,7 +33,7 @@ namespace GameServer.Controllers.Player_Creation
         {
             var session = Session.GetSession(database, User);
             photo.data = Request.Form.Files.GetFile("photo[data]");
-            return Content(PlayerCreations.CreatePlayerCreation(database, session, photo));
+            return Content(PlayerCreations.CreatePlayerCreation(database, storage, session, photo));
         }
 
         protected override void Dispose(bool disposing)

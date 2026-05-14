@@ -1,4 +1,5 @@
 ﻿using GameServer.Implementation.Common;
+using GameServer.Models;
 using GameServer.Models.Moderation;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
@@ -11,7 +12,7 @@ using System;
 
 namespace GameServer.Controllers.Api
 {
-    public class ModerationApiController(Database database) : Controller
+    public class ModerationApiController(Database database, IUGCStorage storage) : Controller
     {
         #region ModeratorSelf
         [HttpPost]
@@ -181,7 +182,7 @@ namespace GameServer.Controllers.Api
             if (user == null || !user.ViewGriefReports)
                 return StatusCode(403);
 
-            var file = UserGeneratedContentUtils.LoadGriefReportData(id, "data.xml");
+            var file = storage.LoadGriefReportData(id, "data.xml");
 
             if (file != null)
                 return File(file, "application/xml;charset=utf-8");
@@ -198,7 +199,7 @@ namespace GameServer.Controllers.Api
             if (user == null || !user.ViewGriefReports)
                 return StatusCode(403);
 
-            var file = UserGeneratedContentUtils.LoadGriefReportData(id, "preview.png");
+            var file = storage.LoadGriefReportData(id, "preview.png");
 
             if (file != null)
                 return File(file, "image/png");
@@ -263,7 +264,7 @@ namespace GameServer.Controllers.Api
             if (user == null || !user.RemovePlayerCreations)
                 return StatusCode(403);
 
-            var result = Moderation.RemovePlayerCreation(database, playerCreationID);
+            var result = Moderation.RemovePlayerCreation(database, storage, playerCreationID);
 
             if (result == null)
                 return NotFound();
@@ -404,7 +405,7 @@ namespace GameServer.Controllers.Api
                 || (removeCreations && !user.RemovePlayerCreations))
                 return StatusCode(403);
 
-            var result = Moderation.ResetUserProfile(database, id, removeCreations);
+            var result = Moderation.ResetUserProfile(database, storage, id, removeCreations);
 
             if (result == null)
                 return NotFound();
@@ -421,7 +422,7 @@ namespace GameServer.Controllers.Api
             if (user == null || !user.RemovePlayerCreations)
                 return StatusCode(403);
 
-            var result = Moderation.RemovePlayerCreations(database, id);
+            var result = Moderation.RemovePlayerCreations(database, storage, id);
 
             if (result == null)
                 return NotFound();
@@ -574,6 +575,23 @@ namespace GameServer.Controllers.Api
                 return NotFound();
             else
                 return Content(report);
+        }
+        
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/player_creation_complaints/{id}/preview.png")]
+        public IActionResult GetPlayerCreationComplaintPreview(int id)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ViewGriefReports)
+                return StatusCode(403);
+
+            var file = storage.LoadPlayerCreationComplaintPreview(id);
+
+            if (file != null)
+                return File(file, "image/png");
+            else
+                return NotFound();
         }
         #endregion
 
@@ -812,7 +830,7 @@ namespace GameServer.Controllers.Api
             if (user == null || !user.RemoveScores)
                 return StatusCode(403);
 
-            var result = Moderation.RemoveScoreById(database, scoreId);
+            var result = Moderation.RemoveScoreById(database, storage, scoreId);
 
             if (result == null)
                 return NotFound();
@@ -829,7 +847,7 @@ namespace GameServer.Controllers.Api
             if (user == null || !user.RemoveScores)
                 return StatusCode(403);
 
-            var result = Moderation.RemoveAllScoresForTrack(database, trackId);
+            var result = Moderation.RemoveAllScoresForTrack(database, storage, trackId);
 
             if (result == null)
                 return NotFound();
@@ -846,7 +864,7 @@ namespace GameServer.Controllers.Api
             if (user == null || !user.RemoveScores)
                 return StatusCode(403);
 
-            var result = Moderation.RemoveAllScoresForPlayer(database, playerId);
+            var result = Moderation.RemoveAllScoresForPlayer(database, storage, playerId);
 
             if (result == null)
                 return NotFound();

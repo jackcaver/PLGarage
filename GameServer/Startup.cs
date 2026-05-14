@@ -1,4 +1,5 @@
 using GameServer.Implementation.Common;
+using GameServer.Models;
 using GameServer.Models.Config;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -56,11 +57,21 @@ namespace GameServer
                     .Build());
             services.AddDbContext<Database>();
             services.AddHostedService<DailyTickService>();
+
+            IUGCStorage storage = UserGeneratedContentUtils.GetStorage(ServerConfig.Instance.Storage.Type);
+            
+            storage.Initialize();
+
+            services.AddSingleton(storage);
+            
+            if (ServerConfig.Instance.Storage.Migrate)
+                services.AddHostedService<StorageMigrationService>();
+            
             if (ServerConfig.Instance.EnableRateLimiting)
                 services.AddRateLimiter(options => {  // TODO: Tweak
                     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
                     {
-                        var partitionKey = ctx.Connection.RemoteIpAddress.ToString();
+                        var partitionKey = ctx.Connection.RemoteIpAddress?.ToString();
 
                         return RateLimitPartition.GetConcurrencyLimiter(partitionKey: partitionKey, _ => new ConcurrencyLimiterOptions
                         {

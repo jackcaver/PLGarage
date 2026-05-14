@@ -1,8 +1,9 @@
-﻿using GameServer.Models;
-using GameServer.Models.GameBrowser;
+﻿using GameServer.Implementation.Storage;
+using GameServer.Models;
+using GameServer.Models.Config;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
-using GameServer.Models.Request;
+using Microsoft.AspNetCore.Http;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Processing;
@@ -17,163 +18,27 @@ namespace GameServer.Utils
 {
     public class UserGeneratedContentUtils
     {
-        public static void SaveAvatar(int UserId, PlayerAvatar avatar, bool IsMNR) 
+        public static IUGCStorage GetStorage(StorageType type)
         {
-            if (!Directory.Exists($"UGC/PlayerAvatars/{UserId}/"))
-                Directory.CreateDirectory($"UGC/PlayerAvatars/{UserId}/");
-
-            if (!Directory.Exists($"UGC/PlayerAvatars/{UserId}/MNR/") && IsMNR)
-                Directory.CreateDirectory($"UGC/PlayerAvatars/{UserId}/MNR/");
-
-            var stream = avatar.avatar.OpenReadStream();
-
-            if (!CheckImage(stream, 256, 256))
-                return;
-
-            FileStream file;
-
-            if (!IsMNR)
-                file = File.Create($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type.ToString().ToLower()}.png");
-            else
-                file = File.Create($"UGC/PlayerAvatars/{UserId}/MNR/{avatar.player_avatar_type.ToString().ToLower()}.png");
-            
-            stream.CopyTo(file);
-            file.Close();
-
-            if (!IsMNR)
-                file = File.Create($"UGC/PlayerAvatars/{UserId}/{avatar.player_avatar_type.ToString().ToLower()}_128x128.png");
-            else
-                file = File.Create($"UGC/PlayerAvatars/{UserId}/MNR/{avatar.player_avatar_type.ToString().ToLower()}_128x128.png");
-            using (var rs = Resize(stream, 128, 128))
-                rs.CopyTo(file);
-            file.Close();
-
-            stream.Close();
-        }
-
-        public static void SaveGriefReportData(int id, Stream data, Stream preview)
-        {
-            if (!Directory.Exists($"UGC/GriefReports/{id}"))
+            switch (type)
             {
-                Directory.CreateDirectory($"UGC/GriefReports/{id}/");
+                default:
+                    throw new NotImplementedException($"Storage type {type} is not implemented");
+                    
+                case StorageType.Local:
+                    return new LocalStorage();
+                
+                case StorageType.S3:
+                    return new S3Storage();
             }
-            FileStream previewFile = File.Create($"UGC/GriefReports/{id}/preview.png");
-            preview.CopyTo(previewFile);
-            previewFile.Close();
-            FileStream dataFile = File.Create($"UGC/GriefReports/{id}/data.xml");
-            data.CopyTo(dataFile);
-            dataFile.Close();
-            data.Close();
-            preview.Close();
         }
 
-        public static void SavePlayerCreationComplaintPreview(int id, Stream preview)
+        public static string GetCDNURL(HttpRequest request)
         {
-            if (!Directory.Exists($"UGC/PlayerCreationComplaints/{id}"))
-            {
-                Directory.CreateDirectory($"UGC/PlayerCreationComplaints/{id}/");
-            }
-            FileStream previewFile = File.Create($"UGC/PlayerCreationComplaints/{id}/preview.png");
-            preview.CopyTo(previewFile);
-            previewFile.Close();
-            preview.Close();
+            string protocol = request.IsHttps ? "https://" : "http://";
+            return ServerConfig.Instance.ExternalURL.Replace("auto", $"{protocol}{request.Host.Host}", StringComparison.CurrentCultureIgnoreCase).TrimEnd('/');
         }
-
-        public static void SavePlayerCreation(int id, Stream data, Stream preview)
-        {
-            if (!Directory.Exists($"UGC/PlayerCreations/{id}/"))
-                Directory.CreateDirectory($"UGC/PlayerCreations/{id}/");
-
-            using (var dataFile = File.Create($"UGC/PlayerCreations/{id}/data.bin"))
-                data.CopyTo(dataFile);
-            data.Close();
-
-            using (var previewFile = File.Create($"UGC/PlayerCreations/{id}/preview_image.png"))
-                preview.CopyTo(previewFile);
-            using (var previewFile128 = File.Create($"UGC/PlayerCreations/{id}/preview_image_128x128.png"))
-            {
-                using (var rs = Resize(preview, 128, 128))
-                    rs.CopyTo(previewFile128);
-            }
-            using (var previewFile64 = File.Create($"UGC/PlayerCreations/{id}/preview_image_64x64.png"))
-            {
-                using (var rs = Resize(preview, 64, 64))
-                    rs.CopyTo(previewFile64);
-            }
-            preview.Close();
-        }
-
-        public static void SavePlayerCreation(int id, Stream data)
-        {
-            if (!Directory.Exists($"UGC/PlayerCreations/{id}/"))
-            {
-                Directory.CreateDirectory($"UGC/PlayerCreations/{id}/");
-            }
-            FileStream dataFile = File.Create($"UGC/PlayerCreations/{id}/data.bin");
-            data.CopyTo(dataFile);
-            dataFile.Close();
-            data.Close();
-        }
-
-        public static void SavePlayerPhoto(int id, Stream data)
-        {
-            if (!Directory.Exists($"UGC/PlayerCreations/{id}/"))
-            {
-                Directory.CreateDirectory($"UGC/PlayerCreations/{id}/");
-            }
-            FileStream dataFile = File.Create($"UGC/PlayerCreations/{id}/data.jpg");
-            data.CopyTo(dataFile);
-            dataFile.Close();
-            data.Close();
-        }
-
-        public static void SaveGhostCarData(GameType gameType, Platform platform, int track_id, int player_id, Stream data)
-        {
-            if (!Directory.Exists($"UGC/GhostCarData/{gameType}/{platform}/{track_id}/{player_id}/"))
-            {
-                Directory.CreateDirectory($"UGC/GhostCarData/{gameType}/{platform}/{track_id}/{player_id}/");
-            }
-            FileStream dataFile = File.Create($"UGC/GhostCarData/{gameType}/{platform}/{track_id}/{player_id}/data.bin");
-            data.CopyTo(dataFile);
-            dataFile.Close();
-            data.Close();
-        }
-
-        public static FileStream LoadGhostCarData(GameType gameType, Platform platform, int track_id, int player_id)
-        {
-            if (File.Exists($"UGC/GhostCarData/{gameType}/{platform}/{track_id}/{player_id}/data.bin"))
-                return File.OpenRead($"UGC/GhostCarData/{gameType}/{platform}/{track_id}/{player_id}/data.bin");
-            else
-                return null;
-        }
-
-        public static void RemoveGhostCarData(GameType gameType, Platform platform, int track_id, int player_id)
-        {
-            string directory = $"UGC/GhostCarData/{gameType}/{platform}/{track_id}/{player_id}/";
-            
-            if (Directory.Exists(directory))
-                Directory.Delete(directory, true);
-        }
-
-        public static string CalculateGhostCarDataMD5(Stream data)
-        {
-            string hash = BitConverter.ToString(MD5.Create().ComputeHash(data)).Replace("-", "").ToLower();
-            return hash;
-        }
-
-        public static string CalculateGhostCarDataMD5(GameType gameType, Platform platform, int track_id, int player_id)
-        {
-            FileStream fileStream;
-            if (File.Exists($"UGC/GhostCarData/{gameType}/{platform}/{track_id}/{player_id}/data.bin"))
-                fileStream = File.OpenRead($"UGC/GhostCarData/{gameType}/{platform}/{track_id}/{player_id}/data.bin");
-            else
-                return "";
-
-            string hash = BitConverter.ToString(MD5.Create().ComputeHash(fileStream)).Replace("-", "").ToLower();
-            fileStream.Close();
-            return hash;
-        }
-
+        
         public static Stream Resize(byte[] image, int width, int height)
         {
             Image Image = Image.Load(image);
@@ -197,101 +62,6 @@ namespace GameServer.Utils
             return Resize(bytes, width, height);
         }
 
-        public static Stream LoadPlayerCreation(int id, string file)
-        {
-            if (File.Exists($"UGC/PlayerCreations/{id}/{file}"))
-                return File.OpenRead($"UGC/PlayerCreations/{id}/{file}");
-            else if (file.Contains("_128x128") && !File.Exists($"UGC/PlayerCreations/{id}/{file}")
-                && File.Exists($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}"))
-            {
-                var newFile = File.Create($"UGC/PlayerCreations/{id}/{file}");
-                var original = File.OpenRead($"UGC/PlayerCreations/{id}/{file.Replace("_128x128", "")}");
-                var rs = Resize(original, 128, 128);
-                rs.CopyTo(newFile);
-                rs.Position = 0;
-                newFile.Close();
-                original.Close();
-                return rs;
-            }
-            else if (file.Contains("_64x64") && !File.Exists($"UGC/PlayerCreations/{id}/{file}")
-                && File.Exists($"UGC/PlayerCreations/{id}/{file.Replace("_64x64", "")}"))
-            {
-                var newFile = File.Create($"UGC/PlayerCreations/{id}/{file}");
-                var original = File.OpenRead($"UGC/PlayerCreations/{id}/{file.Replace("_64x64", "")}");
-                var rs = Resize(original, 64, 64);
-                rs.CopyTo(newFile);
-                rs.Position = 0;
-                newFile.Close();
-                original.Close();
-                return rs;
-            }
-            else
-                return null;
-        }
-
-        public static Stream LoadPlayerAvatar(int id, string file, bool IsMNR = false)
-        {
-            if (File.Exists($"UGC/PlayerAvatars/{id}/{file}") && !IsMNR)
-                return File.OpenRead($"UGC/PlayerAvatars/{id}/{file}");
-            else if (file.Contains("_128x128") && !File.Exists($"UGC/PlayerAvatars/{id}/{file}")
-                && File.Exists($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}") && !IsMNR)
-            {
-                var newFile = File.Create($"UGC/PlayerAvatars/{id}/{file}");
-                var original = File.OpenRead($"UGC/PlayerAvatars/{id}/{file.Replace("_128x128", "")}");
-                var rs = Resize(original, 128, 128);
-                rs.CopyTo(newFile);
-                rs.Position = 0;
-                newFile.Close();
-                original.Close();
-                return rs;
-            }
-            else if (File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file}") && IsMNR)
-                return File.OpenRead($"UGC/PlayerAvatars/{id}/MNR/{file}");
-            else if (file.Contains("_128x128") && !File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file}")
-                && File.Exists($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}") && IsMNR)
-            {
-                var newFile = File.Create($"UGC/PlayerAvatars/{id}/MNR/{file}");
-                var original = File.OpenRead($"UGC/PlayerAvatars/{id}/MNR/{file.Replace("_128x128", "")}");
-                var rs = Resize(original, 128, 128);
-                rs.CopyTo(newFile);
-                rs.Position = 0;
-                newFile.Close();
-                original.Close();
-                return rs;
-            }
-            else
-                return null;
-        }
-
-        public static FileStream LoadAnnouncementImage(string file)
-        {
-            if (File.Exists($"UGC/Announcements/{file}"))
-                return File.OpenRead($"UGC/Announcements/{file}");
-            else
-                return null;
-        }
-
-        public static FileStream LoadGriefReportData(int id, string file)
-        {
-            if (File.Exists($"UGC/GriefReports/{id}/{file}"))
-                return File.OpenRead($"UGC/GriefReports/{id}/{file}");
-            else
-                return null;
-        }
-
-        public static string CalculateMD5(int id, string file)
-        {
-            FileStream fileStream;
-            if (File.Exists($"UGC/PlayerCreations/{id}/{file}"))
-                fileStream = File.OpenRead($"UGC/PlayerCreations/{id}/{file}");
-            else
-                return "";
-
-            string hash = BitConverter.ToString(MD5.HashData(fileStream)).Replace("-", "").ToLower();
-            fileStream.Close();
-            return hash;
-        }
-
         public static string CalculateMD5(Stream stream)
         {
             string hash = BitConverter.ToString(MD5.HashData(stream)).Replace("-", "").ToLower();
@@ -301,23 +71,8 @@ namespace GameServer.Utils
 
         public static string CalculateMD5(string data)
         {
-            string hash = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(data))).Replace("-", "").ToLower();
-            return hash;
-        }
-
-        public static long CalculateSize(int id, string file)
-        {
-            FileStream fileStream = File.OpenRead($"UGC/PlayerCreations/{id}/{file}");
-            long size = fileStream.Length;
-            fileStream.Close();
-            return size;
-        }
-
-        public static void RemovePlayerCreation(int id)
-        {
-            if (!Directory.Exists($"UGC/PlayerCreations/{id}/"))
-                return;
-            Directory.Delete($"UGC/PlayerCreations/{id}/", true);
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(data));
+            return CalculateMD5(stream);
         }
 
         private static readonly Dictionary<int, StoryLevelData> StoryLevels = new()

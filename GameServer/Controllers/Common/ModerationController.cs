@@ -1,4 +1,5 @@
 using GameServer.Implementation.Common;
+using GameServer.Models;
 using GameServer.Models.Request;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -6,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Common
 {
-    public class ModerationController(Database database) : Controller
+    public class ModerationController(Database database, IUGCStorage storage) : Controller
     {
         [HttpPost]
         [Authorize]
@@ -16,7 +17,7 @@ namespace GameServer.Controllers.Common
             var user = Session.GetUser(database, User);
             grief_report.data = Request.Form.Files.GetFile("grief_report[data]");
             grief_report.preview = Request.Form.Files.GetFile("grief_report[preview]");
-            return Content(Moderation.GriefReport(database, user, grief_report), "application/xml;charset=utf-8");
+            return Content(Moderation.GriefReport(database, storage, user, grief_report), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -35,7 +36,7 @@ namespace GameServer.Controllers.Common
         {
             var user = Session.GetUser(database, User);
             player_creation_complaint.preview = Request.Form.Files.GetFile("player_creation_complaint[preview]");
-            return Content(Moderation.PlayerCreationComplaints(database, user, player_creation_complaint), "application/xml;charset=utf-8");
+            return Content(Moderation.PlayerCreationComplaints(database, storage, user, player_creation_complaint), "application/xml;charset=utf-8");
         }
 
         protected override void Dispose(bool disposing)

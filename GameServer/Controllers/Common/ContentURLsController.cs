@@ -1,6 +1,5 @@
 using GameServer.Implementation.Common;
 using GameServer.Models;
-using GameServer.Models.Config;
 using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -16,8 +15,7 @@ namespace GameServer.Controllers.Common
         public IActionResult Get()
         {
             var session = Session.GetSession(database, User);
-            string protocol = Request.IsHttps ? "https://" : "http://";
-            string serverURL = ServerConfig.Instance.ExternalURL.Replace("auto", $"{protocol}{Request.Host.Host}", System.StringComparison.CurrentCultureIgnoreCase);
+            string serverURL = UserGeneratedContentUtils.GetCDNURL(Request);
             var resp = new Response<ContentURLsResponse>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },

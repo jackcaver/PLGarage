@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GameServer.Implementation.Common;
 using GameServer.Implementation.Player_Creation;
+using GameServer.Models;
 using GameServer.Models.Config;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
@@ -14,7 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameServer.Controllers.Player_Creation
 {
-    public class PlayerCreationsController(Database database) : Controller
+    public class PlayerCreationsController(Database database, IUGCStorage storage) : Controller
     {
         [HttpGet]
         [Authorize]
@@ -23,7 +24,7 @@ namespace GameServer.Controllers.Player_Creation
         public IActionResult Get(int id, bool is_counted)
         {
             var session = Session.GetSession(database, User);
-            return Content(PlayerCreations.GetPlayerCreation(database, session, id, is_counted), "application/xml;charset=utf-8");
+            return Content(PlayerCreations.GetPlayerCreation(database, storage, session, id, is_counted), "application/xml;charset=utf-8");
         }
 
         [Authorize]
@@ -32,7 +33,7 @@ namespace GameServer.Controllers.Player_Creation
         public IActionResult Delete(int id)
         {
             var user = Session.GetUser(database, User);
-            return Content(PlayerCreations.RemovePlayerCreation(database, user, id), "application/xml;charset=utf-8");
+            return Content(PlayerCreations.RemovePlayerCreation(database, storage, user, id), "application/xml;charset=utf-8");
         }
 
         [HttpPost]
@@ -42,7 +43,7 @@ namespace GameServer.Controllers.Player_Creation
         public IActionResult Download(int id, bool is_counted)
         {
             var session = Session.GetSession(database, User);
-            return Content(PlayerCreations.GetPlayerCreation(database, session, id, is_counted, true), "application/xml;charset=utf-8");
+            return Content(PlayerCreations.GetPlayerCreation(database, storage, session, id, is_counted, true), "application/xml;charset=utf-8");
         }
 
         [HttpGet]
@@ -187,7 +188,7 @@ namespace GameServer.Controllers.Player_Creation
             var session = Session.GetSession(database, User);
             player_creation.data = Request.Form.Files.GetFile("player_creation[data]");
             player_creation.preview = Request.Form.Files.GetFile("player_creation[preview]");
-            return Content(PlayerCreations.CreatePlayerCreation(database, session, player_creation));
+            return Content(PlayerCreations.CreatePlayerCreation(database, storage, session, player_creation));
         }
 
         [HttpPost]
@@ -208,7 +209,7 @@ namespace GameServer.Controllers.Player_Creation
         public IActionResult GetData(int id, string file)
         {
             if (!AcceptedTypes.Contains(file)) return NotFound();
-            var data = UserGeneratedContentUtils.LoadPlayerCreation(id, file);
+            var data = storage.LoadPlayerCreation(id, file);
             
             if (data == null && ServerConfig.Instance.EnablePlaceholderImage)
             {

@@ -180,7 +180,7 @@ namespace GameServer.Controllers.Api
                 q = q.Where(x => x.IsMNR == isMnr.Value);
             }
 
-            var totalResults = q.Count();
+            var total = q.Count();
 
             var creations = q
                 .OrderByDescending(x => x.CreatedAt)
@@ -225,7 +225,7 @@ namespace GameServer.Controllers.Api
                 return NotFound(new { error = "error_creation_not_found"});
 
             return Json(new {
-                totalResults,
+                total,
                 creations = creations.Select(x => new
                 {
                     x.PlayerCreationId,
@@ -367,7 +367,7 @@ namespace GameServer.Controllers.Api
                 && x.ModerationStatus != ModerationStatus.BANNED
                 && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
-            var totalResults = q.Count();
+            var total = q.Count();
 
             var creations = q
                 .Select(x => new
@@ -409,7 +409,7 @@ namespace GameServer.Controllers.Api
                 return NotFound(new { error = "error_player_not_found"});
 
             return Json(new {
-                totalResults,
+                total,
                 creations = creations.Select(x => new
                 {
                     x.PlayerCreationId,
@@ -593,7 +593,7 @@ namespace GameServer.Controllers.Api
                     && x.ModerationStatus != ModerationStatus.ILLEGAL)
                 .OrderByDescending(x => x.UpdatedAt);
 
-            var totalResults = query.Count();
+            var total = query.Count();
 
             var creations = query
                 .Skip((page - 1) * pageSize)
@@ -616,7 +616,7 @@ namespace GameServer.Controllers.Api
 
             return Json(new
             {
-                totalResults,
+                total,
                 creations
             });
         }

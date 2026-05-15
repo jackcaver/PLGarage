@@ -156,7 +156,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("api/creations/search")]
-        public IActionResult SearchCreations(string query, PlayerCreationType? type, bool? isMnr, int page = 1, int pageSize = 10)
+        public IActionResult SearchCreations(string query, PlayerCreationType? type, bool? isMnr, int page = 1, int perPage = 10)
         {
             var q = database.PlayerCreations
                 .AsNoTracking()
@@ -180,12 +180,12 @@ namespace GameServer.Controllers.Api
                 q = q.Where(x => x.IsMNR == isMnr.Value);
             }
 
-            var totalResults = q.Count();
+            var total = q.Count();
 
             var creations = q
                 .OrderByDescending(x => x.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
                 .Select(x => new
                 {
                     x.PlayerCreationId,
@@ -224,42 +224,45 @@ namespace GameServer.Controllers.Api
             if (creations.Count == 0)
                 return NotFound(new { error = "error_creation_not_found"});
 
-            return Json(creations.Select(x => new
-            {
-                x.PlayerCreationId,
-                x.Name,
-                x.Description,
-                rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
-                creatorUsername = x.Username,
-                Type = x.Type.ToString(),
-                x.Tags,
-                Platform = x.Platform.ToString(),
-                x.IsMNR,
-                x.CreatedAt,
-                points = new
+            return Json(new {
+                total,
+                creations = creations.Select(x => new
                 {
-                    all_time = x.pointsAllTime,
-                    this_week = x.pointsThisWeek,
-                    last_week = x.pointsLastWeek
-                },
-                downloads = new
-                {
-                    all_time = x.downloadsAllTime,
-                    this_week = x.downloadsThisWeek,
-                    last_week = x.downloadsLastWeek
-                },
-                views = new
-                {
-                    all_time = x.viewsAllTime,
-                    this_week = x.viewsThisWeek,
-                    last_week = x.viewsLastWeek
-                },
-                records = x.Type == PlayerCreationType.TRACK
-                    ? x.IsMNR
-                        ? (object)new { bestLapTime = x.recordBestLapTime, longestDrift = x.recordLongestDrift, longestHangTime = x.recordLongestHangTime }
-                        : new { score = x.recordScore, finishTime = x.recordFinishTime }
-                    : null
-            }));
+                    x.PlayerCreationId,
+                    x.Name,
+                    x.Description,
+                    rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
+                    creatorUsername = x.Username,
+                    Type = x.Type.ToString(),
+                    x.Tags,
+                    Platform = x.Platform.ToString(),
+                    x.IsMNR,
+                    x.CreatedAt,
+                    points = new
+                    {
+                        all_time = x.pointsAllTime,
+                        this_week = x.pointsThisWeek,
+                        last_week = x.pointsLastWeek
+                    },
+                    downloads = new
+                    {
+                        all_time = x.downloadsAllTime,
+                        this_week = x.downloadsThisWeek,
+                        last_week = x.downloadsLastWeek
+                    },
+                    views = new
+                    {
+                        all_time = x.viewsAllTime,
+                        this_week = x.viewsThisWeek,
+                        last_week = x.viewsLastWeek
+                    },
+                    records = x.Type == PlayerCreationType.TRACK
+                        ? x.IsMNR
+                            ? (object)new { bestLapTime = x.recordBestLapTime, longestDrift = x.recordLongestDrift, longestHangTime = x.recordLongestHangTime }
+                            : new { score = x.recordScore, finishTime = x.recordFinishTime }
+                        : null
+                })
+            });
         }
 
         [HttpGet]
@@ -357,12 +360,16 @@ namespace GameServer.Controllers.Api
         [Route("/api/creations/{username}")]
         public IActionResult GetCreationsByUsername(string username)
         {
-            var creations = database.PlayerCreations
+            var q = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.Author.Username == username
                 && x.Type != PlayerCreationType.DELETED
                 && x.ModerationStatus != ModerationStatus.BANNED
-                && x.ModerationStatus != ModerationStatus.ILLEGAL)
+                && x.ModerationStatus != ModerationStatus.ILLEGAL);
+
+            var total = q.Count();
+
+            var creations = q
                 .Select(x => new
                 {
                     x.PlayerCreationId,
@@ -401,48 +408,55 @@ namespace GameServer.Controllers.Api
             if (creations.Count == 0)
                 return NotFound(new { error = "error_player_not_found"});
 
-            return Json(creations.Select(x => new
-            {
-                x.PlayerCreationId,
-                x.Name,
-                x.Description,
-                rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
-                creatorUsername = x.Username,
-                Type = x.Type.ToString(),
-                x.Tags,
-                Platform = x.Platform.ToString(),
-                x.IsMNR,
-                x.CreatedAt,
-                points = new
+            return Json(new {
+                total,
+                creations = creations.Select(x => new
                 {
-                    all_time = x.pointsAllTime,
-                    this_week = x.pointsThisWeek,
-                    last_week = x.pointsLastWeek
-                },
-                downloads = new
-                {
-                    all_time = x.downloadsAllTime,
-                    this_week = x.downloadsThisWeek,
-                    last_week = x.downloadsLastWeek
-                },
-                views = new
-                {
-                    all_time = x.viewsAllTime,
-                    this_week = x.viewsThisWeek,
-                    last_week = x.viewsLastWeek
-                },
-                records = x.Type == PlayerCreationType.TRACK
-                    ? x.IsMNR
-                        ? (object)new { bestLapTime = x.recordBestLapTime, longestDrift = x.recordLongestDrift, longestHangTime = x.recordLongestHangTime }
-                        : new { score = x.recordScore, finishTime = x.recordFinishTime }
-                    : null
-            }));
+                    x.PlayerCreationId,
+                    x.Name,
+                    x.Description,
+                    rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
+                    creatorUsername = x.Username,
+                    Type = x.Type.ToString(),
+                    x.Tags,
+                    Platform = x.Platform.ToString(),
+                    x.IsMNR,
+                    x.CreatedAt,
+                    points = new
+                    {
+                        all_time = x.pointsAllTime,
+                        this_week = x.pointsThisWeek,
+                        last_week = x.pointsLastWeek
+                    },
+                    downloads = new
+                    {
+                        all_time = x.downloadsAllTime,
+                        this_week = x.downloadsThisWeek,
+                        last_week = x.downloadsLastWeek
+                    },
+                    views = new
+                    {
+                        all_time = x.viewsAllTime,
+                        this_week = x.viewsThisWeek,
+                        last_week = x.viewsLastWeek
+                    },
+                    records = x.Type == PlayerCreationType.TRACK
+                        ? x.IsMNR
+                            ? (object)new { bestLapTime = x.recordBestLapTime, longestDrift = x.recordLongestDrift, longestHangTime = x.recordLongestHangTime }
+                            : new { score = x.recordScore, finishTime = x.recordFinishTime }
+                        : null
+                })
+            });
         }
 
         [HttpGet]
         [Route("/api/creation/{id}/comments")]
-        public IActionResult GetCreationComments(int id)
+        public IActionResult GetCreationComments(int id, int page = 1, int perPage = 10)
         {
+            if (page < 1) page = 1;
+            if (perPage < 1) perPage = 10;
+            if (perPage > 50) perPage = 50;
+
             var creation = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.PlayerCreationId == id)
@@ -454,10 +468,15 @@ namespace GameServer.Controllers.Api
 
             if (creation.IsMNR)
             {
-                var mnrComments = database.PlayerCreationRatings
+                var baseQuery = database.PlayerCreationRatings
                     .AsNoTracking()
-                    .Where(x => x.PlayerCreationId == id && x.Comment != null && x.Comment != "")
+                    .Where(x => x.PlayerCreationId == id && x.Comment != null && x.Comment != "");
+
+                var total = baseQuery.Count();
+                var comments = baseQuery
                     .OrderBy(x => x.RatedAt)
+                    .Skip((page - 1) * perPage)
+                    .Take(perPage)
                     .Select(x => new
                     {
                         x.Id,
@@ -467,14 +486,19 @@ namespace GameServer.Controllers.Api
                     })
                     .ToList();
 
-                return Json(mnrComments);
+                return Json(new { total, comments });
             }
             else
             {
-                var comments = database.PlayerCreationComments
+                var baseQuery = database.PlayerCreationComments
                     .AsNoTracking()
-                    .Where(x => x.PlayerCreationId == id)
+                    .Where(x => x.PlayerCreationId == id);
+
+                var total = baseQuery.Count();
+                var comments = baseQuery
                     .OrderBy(x => x.CreatedAt)
+                    .Skip((page - 1) * perPage)
+                    .Take(perPage)
                     .Select(x => new
                     {
                         x.Id,
@@ -484,7 +508,7 @@ namespace GameServer.Controllers.Api
                     })
                     .ToList();
 
-                return Json(comments);
+                return Json(new { total, comments });
             }
         }
 
@@ -572,7 +596,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/teampicks")]
-        public IActionResult GetTeamPicks(int page = 1, int pageSize = 10)
+        public IActionResult GetTeamPicks(int page = 1, int perPage = 10)
         {
             var query = database.PlayerCreations
                 .AsNoTracking()
@@ -586,8 +610,8 @@ namespace GameServer.Controllers.Api
             var total = query.Count();
 
             var creations = query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
                 .Select(x => new
                 {
                     id = x.PlayerCreationId,

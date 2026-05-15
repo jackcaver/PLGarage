@@ -156,7 +156,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("api/creations/search")]
-        public IActionResult SearchCreations(string query, PlayerCreationType? type, bool? isMnr, int page = 1, int pageSize = 10)
+        public IActionResult SearchCreations(string query, PlayerCreationType? type, bool? isMnr, int page = 1, int perPage = 10)
         {
             var q = database.PlayerCreations
                 .AsNoTracking()
@@ -184,8 +184,8 @@ namespace GameServer.Controllers.Api
 
             var creations = q
                 .OrderByDescending(x => x.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
                 .Select(x => new
                 {
                     x.PlayerCreationId,
@@ -451,8 +451,12 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/creation/{id}/comments")]
-        public IActionResult GetCreationComments(int id)
+        public IActionResult GetCreationComments(int id, int page = 1, int perPage = 10)
         {
+            if (page < 1) page = 1;
+            if (perPage < 1) perPage = 10;
+            if (perPage > 50) perPage = 50;
+
             var creation = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.PlayerCreationId == id)
@@ -464,10 +468,15 @@ namespace GameServer.Controllers.Api
 
             if (creation.IsMNR)
             {
-                var mnrComments = database.PlayerCreationRatings
+                var baseQuery = database.PlayerCreationRatings
                     .AsNoTracking()
-                    .Where(x => x.PlayerCreationId == id && x.Comment != null && x.Comment != "")
+                    .Where(x => x.PlayerCreationId == id && x.Comment != null && x.Comment != "");
+
+                var total = baseQuery.Count();
+                var comments = baseQuery
                     .OrderBy(x => x.RatedAt)
+                    .Skip((page - 1) * perPage)
+                    .Take(perPage)
                     .Select(x => new
                     {
                         x.Id,
@@ -477,14 +486,19 @@ namespace GameServer.Controllers.Api
                     })
                     .ToList();
 
-                return Json(mnrComments);
+                return Json(new { total, comments });
             }
             else
             {
-                var comments = database.PlayerCreationComments
+                var baseQuery = database.PlayerCreationComments
                     .AsNoTracking()
-                    .Where(x => x.PlayerCreationId == id)
+                    .Where(x => x.PlayerCreationId == id);
+
+                var total = baseQuery.Count();
+                var comments = baseQuery
                     .OrderBy(x => x.CreatedAt)
+                    .Skip((page - 1) * perPage)
+                    .Take(perPage)
                     .Select(x => new
                     {
                         x.Id,
@@ -494,7 +508,7 @@ namespace GameServer.Controllers.Api
                     })
                     .ToList();
 
-                return Json(comments);
+                return Json(new { total, comments });
             }
         }
 
@@ -582,7 +596,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/teampicks")]
-        public IActionResult GetTeamPicks(int page = 1, int pageSize = 10)
+        public IActionResult GetTeamPicks(int page = 1, int perPage = 10)
         {
             var query = database.PlayerCreations
                 .AsNoTracking()
@@ -596,8 +610,8 @@ namespace GameServer.Controllers.Api
             var total = query.Count();
 
             var creations = query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
                 .Select(x => new
                 {
                     id = x.PlayerCreationId,

@@ -106,8 +106,12 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/player/{username}/comments")]
-        public IActionResult GetPlayerComments(string username)
+        public IActionResult GetPlayerComments(string username, int page = 1, int perPage = 10)
         {
+            if (page < 1) page = 1;
+            if (perPage < 1) perPage = 10;
+            if (perPage > 10) perPage = 10;
+
             var player = database.Users
                 .AsNoTracking()
                 .FirstOrDefault(x => x.Username == username);
@@ -115,10 +119,16 @@ namespace GameServer.Controllers.Api
             if (player == null)
                 return NotFound(new { error = "error_player_not_found"});
 
-            var comments = database.PlayerComments
+            var query = database.PlayerComments
                 .AsNoTracking()
                 .Where(c => c.PlayerId == player.UserId)
-                .OrderByDescending(c => c.CreatedAt)
+                .OrderByDescending(c => c.CreatedAt);
+
+            var total = query.Count();
+
+            var comments = query
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
                 .Select(c => new
                 {
                     c.Id,
@@ -128,13 +138,17 @@ namespace GameServer.Controllers.Api
                 })
                 .ToList();
 
-            return Json(comments);
+            return Json(new { total, comments });
         }
 
         [HttpGet]
         [Route("/api/player/{username}/hearted")]
-        public IActionResult GetPlayerHearted(string username, bool? isMnr = null)
+        public IActionResult GetPlayerHearted(string username, bool? isMnr = null, int page = 1, int perPage = 10)
         {
+            if (page < 1) page = 1;
+            if (perPage < 1) perPage = 10;
+            if (perPage > 10) perPage = 10;
+
             var player = database.Users
                 .AsNoTracking()
                 .FirstOrDefault(x => x.Username == username);
@@ -142,11 +156,17 @@ namespace GameServer.Controllers.Api
             if (player == null)
                 return NotFound(new { error = "error_player_not_found" });
 
-            var hearted = database.HeartedProfiles
+            var query = database.HeartedProfiles
                 .AsNoTracking()
                 .Where(x => x.UserId == player.UserId)
                 .Where(x => isMnr == true ? x.IsMNR : !x.IsMNR)
-                .OrderByDescending(x => x.HeartedAt)
+                .OrderByDescending(x => x.HeartedAt);
+
+            var total = query.Count();
+
+            var hearted = query
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
                 .Select(x => new
                 {
                     x.HeartedUser.Username,
@@ -154,7 +174,7 @@ namespace GameServer.Controllers.Api
                 })
                 .ToList();
 
-            return Json(hearted);
+            return Json(new { total, hearted });
         }
 
         protected override void Dispose(bool disposing)

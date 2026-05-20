@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using GameServer.Models.Config;
@@ -13,12 +14,20 @@ namespace GameServer.Controllers.Api
     {
 
         [HttpGet]
-        [Route("/api/player/{username}")]
-        public IActionResult GetPlayer(string username)
+        [Route("/api/player")]
+        public IActionResult GetPlayer(int? id = null, string username = null)
         {
-            var player = database.Users
-                .AsNoTracking()
-                .Where(x => x.Username == username)
+            if (id == null && username == null)
+                return BadRequest(new { error = "error_missing_username_or_id" });
+
+            var query = database.Users.AsNoTracking();
+
+            if (id != null)
+                query = query.Where(x => x.UserId == id);
+            else
+                query = query.Where(x => x.Username == username);
+
+            var player = query
                 .Select(x => new
                 {
                     x.UserId,
@@ -54,7 +63,7 @@ namespace GameServer.Controllers.Api
 
             var user = database.Users
                 .AsNoTracking()
-                .FirstOrDefault(x => x.Username == username);
+                .FirstOrDefault(x => x.UserId == player.UserId);
 
             var presence = user?.Presence(database, Platform.PS3).ToString();
 

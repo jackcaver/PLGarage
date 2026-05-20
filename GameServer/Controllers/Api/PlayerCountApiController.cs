@@ -23,11 +23,22 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/playercounts/presence")]
-        public IActionResult GetPlayersPresence(bool? isMnr = null)
+        public IActionResult GetPlayersPresence(bool? isMnr = null, int page = 1, int perPage = 10)
         {
-            var playersPresence = database.Sessions
+            if (page < 1) page = 1;
+            if (perPage < 1) perPage = 10;
+            if (perPage > 10) perPage = 10;
+
+            var query = database.Sessions
                 .Where(x => (isMnr == null || x.IsMNR == isMnr) &&
                             x.LastPing.AddMinutes(1) > TimeUtils.Now)
+                .OrderBy(x => x.Username);
+
+            var total = query.Count();
+
+            var playersPresence = query
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
                 .Select(x => new
                 {
                     x.UserId,
@@ -36,10 +47,9 @@ namespace GameServer.Controllers.Api
                     Platform = x.Platform.ToString(),
                     x.IsMNR
                 })
-                .OrderBy(x => x.Username)
                 .ToList();
 
-            return Json(playersPresence);
+            return Json(new { total, playersPresence });
         }
 
         protected override void Dispose(bool disposing)

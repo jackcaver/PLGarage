@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource name="privacy_setting.update">
+  <request method="PUT" url="privacy_setting.xml" login_required="true">
+    <param name="privacy_settings[profile_acl]" type="integer" required="true"/>
+    <param name="privacy_settings[player_creation_acl]" type="integer" required="true"/>
+  </request>
+  <response name="response" type="anchor"/>
+</resource>

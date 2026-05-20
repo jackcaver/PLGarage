@@ -36,7 +36,7 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public int rank { get; set; }
         [XmlAttribute]
-        public int points { get; set; }
+        public string points { get; set; }
         [XmlAttribute]
         public int online_races { get; set; }
         [XmlAttribute]

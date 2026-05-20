@@ -44,6 +44,18 @@ namespace GameServer.Controllers.Player
         [HttpGet]
         [Authorize]
         [AllowAnonymous]
+        [Route("leaderboards/player_stats.xml")]
+        public IActionResult PlayerStats(LeaderboardType type, GameType game_type, Platform? platform, int player_id)
+        {
+            var session = Session.GetSession(database, User);
+            if (platform == null)
+                platform = session.Platform;
+            return Content(LeaderBoards.PlayerStats(database, session, type, game_type, platform.Value, player_id), "application/xml;charset=utf-8");
+        }
+        
+        [HttpGet]
+        [Authorize]
+        [AllowAnonymous]
         [Route("sub_leaderboards/view.xml")]
         public IActionResult View(int sub_group_id, int sub_key_id, LeaderboardType type, Platform platform, int page, int per_page,
             int column_page, int cols_per_page, SortColumn sort_column, SortOrder sort_order, int? num_above_below, int limit, int playgroup_size, 

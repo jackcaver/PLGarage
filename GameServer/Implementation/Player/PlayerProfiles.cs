@@ -127,7 +127,7 @@ namespace GameServer.Implementation.Player
                         online_wins_last_week = user.OnlineWinsLastWeek,
                         online_wins_this_week = user.OnlineWinsThisWeek,
                         player_creation_quota = user.Quota,
-                        points = user.Points(session.Platform),
+                        points = user.Points(session.Platform).ToString("0.0", CultureInfo.InvariantCulture),
                         presence = user.Presence(database, session.Platform).ToString(),
                         quote = user.Quote != null ? user.Quote.Replace("\0", "") : "",
                         rank = user.Rank,

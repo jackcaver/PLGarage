@@ -42,7 +42,7 @@ namespace GameServer.Models.PlayerData
         public List<PlayerPoint> PlayerPoints { get; set; }
 
         [Projectable]
-        public int Points(Platform platform) => PlayerPoints.Count >= 10 ? int.Clamp((int)PlayerPoints.Where(match => match.Platform == platform).Average(p => p.Amount), 0, 3000) : 1500;
+        public float Points(Platform platform) => PlayerPoints.Count >= 10 ? float.Clamp((float)PlayerPoints.Where(match => match.Platform == platform).Average(p => p.Amount), 0, 3000) : 1500;
 
         public List<RaceStarted> RacesStarted { get; set; }
         public List<RaceFinished> RacesFinished { get; set; }
@@ -73,6 +73,8 @@ namespace GameServer.Models.PlayerData
         public bool IsBanned { get; set; }
         public bool ShowCreationsWithoutPreviews { get; set; }
         public bool AllowOppositePlatform { get; set; }
+        public PrivacyType ProfilePrivacy { get; set; } = PrivacyType.AllowAll;
+        public PrivacyType PlayerCreationsPrivacy { get; set; } = PrivacyType.AllowAll;
 
         //MNR
         public float LongestHangTime { get; set; }

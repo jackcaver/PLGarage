@@ -28,6 +28,8 @@ namespace GameServer.Utils
         public DbSet<ActivityEvent> ActivityLog { get; set; }
         public DbSet<RaceStarted> OnlineRacesStarted { get; set; }
         public DbSet<RaceFinished> OnlineRacesFinished { get; set; }
+        public DbSet<Buddy> Buddies { get; set; }
+        public DbSet<BlockedUser> BlockedUsers { get; set; }
         //MNR
         public DbSet<PlayerRatingData> PlayerRatings { get; set; }
         public DbSet<PlayerCreationPoint> PlayerCreationPoints { get; set; }
@@ -37,6 +39,7 @@ namespace GameServer.Utils
         public DbSet<PlayerComplaintData> PlayerComplaints { get; set; }
         public DbSet<PlayerCreationComplaintData> PlayerCreationComplaints { get; set; }
         public DbSet<AnnouncementData> Announcements { get; set; }
+        public DbSet<Analytics> Analytics { get; set; }
         //MNR: Road Trip
         public DbSet<TravelPoint> TravelPoints { get; set; }
         public DbSet<POIVisit> POIVisits { get; set; }

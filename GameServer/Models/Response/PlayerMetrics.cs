@@ -12,9 +12,22 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public int player_id { get; set; }
         [XmlAttribute]
-        public int points { get; set; }
+        public string points { get; set; }
         [XmlAttribute]
         public string volatility { get; set; }
+        //MNR
+        [XmlAttribute]
+        public string created_at { get; set; }
+        [XmlAttribute]
+        public string data { get; set; }
+        [XmlAttribute]
+        public string id { get; set; }
+        [XmlAttribute]
+        public string player_metric_type { get; set; }
+        [XmlAttribute]
+        public string updated_at { get; set; }
+        [XmlAttribute]
+        public string username { get; set; }
     }
 
     public class player_metrics

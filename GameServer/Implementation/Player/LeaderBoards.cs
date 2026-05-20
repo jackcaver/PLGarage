@@ -888,5 +888,157 @@ namespace GameServer.Implementation.Player
             };
             return resp.Serialize();
         }
+        
+        public static string PlayerStats(Database database, SessionData session, LeaderboardType type, GameType game_type, Platform platform, int player_id)
+        {
+            var user = database.Users
+                .AsNoTracking()
+                .AsSplitQuery()
+                .Include(x => x.PlayerPoints)
+                .Include(x => x.RacesStarted)
+                .Include(x => x.RacesFinished)
+                .Include(x => x.PlayerCreationPoints)
+                .Include(x => x.PlayerExperiencePoints)
+                .FirstOrDefault(match => match.UserId == player_id && match.PlayedMNR);
+            
+            var score = database.Scores
+                .AsNoTracking()
+                .AsSplitQuery()
+                .Include(s => s.User)
+                .ThenInclude(u => u.PlayerExperiencePoints)
+                .Include(s => s.User)
+                .ThenInclude(u => u.PlayerCreationPoints)
+                .FirstOrDefault(match => match.IsMNR && match.PlayerId == player_id && match.SubGroupId == (int)game_type-10);
+
+            if (user == null || (game_type == GameType.ONLINE_HOT_SEAT_RACE && score == null))
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse() { }
+                };
+                return errorResp.Serialize();
+            }
+            
+            var playerStats = new LeaderboardPlayer();
+            
+            if (score != null || ((game_type == GameType.OVERALL_CREATORS || game_type == GameType.CHARACTER_CREATORS
+                || game_type == GameType.TRACK_CREATORS || game_type == GameType.KART_CREATORS
+                || game_type == GameType.OVERALL || game_type == GameType.OVERALL_RACE) && user != null))
+            {
+                if (game_type == GameType.OVERALL_CREATORS || game_type == GameType.CHARACTER_CREATORS
+                    || game_type == GameType.TRACK_CREATORS || game_type == GameType.KART_CREATORS || game_type == GameType.OVERALL)
+                {
+                    playerStats.created_at = user.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
+                    playerStats.id = user.UserId;
+                    playerStats.player_id = user.UserId;
+                    playerStats.updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
+                    playerStats.username = user.Username;
+                    playerStats.rank = user.GetRank(game_type, type, platform, SortColumn.points);
+                    playerStats.skill_level_id = user.SkillLevelId(platform);
+                    playerStats.skill_level_name = user.SkillLevelName(platform);
+
+                    switch(game_type)
+                    {
+                        case GameType.OVERALL:
+                            if (type == LeaderboardType.LIFETIME)
+                                playerStats.points = user.TotalXP(platform);
+                            if (type == LeaderboardType.WEEKLY)
+                                playerStats.points = user.TotalXPThisWeek(platform);
+                            if (type == LeaderboardType.LAST_WEEK)
+                                playerStats.points = user.TotalXPLastWeek(platform);
+                            break;
+
+                        case GameType.OVERALL_CREATORS:
+                            if (type == LeaderboardType.LIFETIME)
+                                playerStats.points = user.CreatorPoints(platform);
+                            if (type == LeaderboardType.WEEKLY)
+                                playerStats.points = user.CreatorPointsThisWeek(platform);
+                            if (type == LeaderboardType.LAST_WEEK)
+                                playerStats.points = user.CreatorPointsLastWeek(platform);
+                            break;
+
+                        case GameType.KART_CREATORS:
+                            if (type == LeaderboardType.LIFETIME)
+                                playerStats.points = user.CreatorPoints(platform, PlayerCreationType.KART);
+                            if (type == LeaderboardType.WEEKLY)
+                                playerStats.points = user.CreatorPointsThisWeek(platform, PlayerCreationType.KART);
+                            if (type == LeaderboardType.LAST_WEEK)
+                                playerStats.points = user.CreatorPointsLastWeek(platform, PlayerCreationType.KART);
+                            break;
+
+                        case GameType.TRACK_CREATORS:
+                            if (type == LeaderboardType.LIFETIME)
+                                playerStats.points = user.CreatorPoints(platform, PlayerCreationType.TRACK);
+                            if (type == LeaderboardType.WEEKLY)
+                                playerStats.points = user.CreatorPointsThisWeek(platform, PlayerCreationType.TRACK);
+                            if (type == LeaderboardType.LAST_WEEK)
+                                playerStats.points = user.CreatorPointsLastWeek(platform, PlayerCreationType.TRACK);
+                            break;
+
+                        case GameType.CHARACTER_CREATORS:
+                            if (type == LeaderboardType.LIFETIME)
+                                playerStats.points = user.CreatorPoints(platform, PlayerCreationType.CHARACTER);
+                            if (type == LeaderboardType.WEEKLY)
+                                playerStats.points = user.CreatorPointsThisWeek(platform, PlayerCreationType.CHARACTER);
+                            if (type == LeaderboardType.LAST_WEEK)
+                                playerStats.points = user.CreatorPointsLastWeek(platform, PlayerCreationType.CHARACTER);
+                            break;
+                    }
+                }
+                if (game_type == GameType.OVERALL_RACE)
+                {
+                    playerStats.created_at = user.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
+                    playerStats.experience_points = user.ExperiencePoints(platform);
+                    playerStats.id = user.UserId;
+                    playerStats.longest_drift = user.LongestDrift;
+                    playerStats.longest_hang_time = user.LongestHangTime;
+                    playerStats.longest_win_streak = user.LongestWinStreak;
+                    playerStats.online_disconnected = user.OnlineDisconnected;
+                    playerStats.online_finished = user.OnlineFinished;
+                    playerStats.online_forfeit = user.OnlineForfeit;
+                    playerStats.online_quits = user.OnlineQuits;
+                    playerStats.online_races = user.OnlineRaces;
+                    playerStats.online_wins = user.OnlineWins;
+                    playerStats.player_id = user.UserId;
+                    playerStats.points = user.Points(platform);
+                    playerStats.updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
+                    playerStats.username = user.Username;
+                    playerStats.win_streak = user.WinStreak;
+                    playerStats.rank = user.GetRank(game_type, type, platform, SortColumn.experience_points);
+                    playerStats.skill_level_id = user.SkillLevelId(platform);
+                    playerStats.skill_level_name = user.SkillLevelName(platform);
+                    playerStats.character_idx = user.CharacterIdx;
+                    playerStats.kart_idx = user.KartIdx;
+                }
+                if (game_type == GameType.ONLINE_HOT_SEAT_RACE)
+                {
+                    playerStats.best_lap_time = score.BestLapTime;
+                    playerStats.character_idx = score.CharacterIdx;
+                    playerStats.created_at = score.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
+                    playerStats.ghost_car_data_md5 = score.GhostCarDataMD5;
+                    playerStats.id = score.Id;
+                    playerStats.kart_idx = score.KartIdx;
+                    playerStats.player_id = score.PlayerId;
+                    playerStats.points = score.Points;
+                    playerStats.track_idx = score.SubKeyId;
+                    playerStats.updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
+                    playerStats.username = score.Username;
+                    playerStats.rank = score.GetRank(SortColumn.best_lap_time);
+                    playerStats.skill_level_id = user.SkillLevelId(platform);
+                    playerStats.skill_level_name = user.SkillLevelName(platform);
+                }
+            }
+            
+            var resp = new Response<LeaderboardPlayerStatsResponse>
+            {
+                status = new ResponseStatus { id = 0, message = "Successful completion" },
+                response = new LeaderboardPlayerStatsResponse()
+                {
+                    player_stats = playerStats
+                }
+            };
+            return resp.Serialize();
+        }
     }
 }

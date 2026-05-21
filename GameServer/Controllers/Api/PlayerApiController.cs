@@ -187,6 +187,40 @@ namespace GameServer.Controllers.Api
             return Json(new { total, hearted });
         }
 
+    [HttpGet]
+    [Route("/api/recentplayers/")]
+    public IActionResult GetRecentPlayers(bool? isMnr = null, int page = 1, int perPage = 10)
+    {
+        if (page < 1) page = 1;
+        if (perPage < 1) perPage = 10;
+        if (perPage > 10) perPage = 10;
+
+        var query = database.Users.AsNoTracking();
+
+        if (isMnr.HasValue)
+        {
+            query = query.Where(u => u.PlayedMNR == isMnr.Value);
+        }
+
+        query = query.Where(u => !u.IsBanned)
+                     .OrderByDescending(u => u.CreatedAt);
+
+        var total = query.Count();
+
+        var recentPlayers = query
+            .Skip((page - 1) * perPage)
+            .Take(perPage)
+            .Select(u => new
+            {
+                u.UserId,
+                u.Username,
+                u.CreatedAt
+            })
+            .ToList();
+
+        return Json(new { total, recentPlayers });
+    }
+
         protected override void Dispose(bool disposing)
         {
             database.Dispose();

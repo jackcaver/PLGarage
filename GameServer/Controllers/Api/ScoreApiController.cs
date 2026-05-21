@@ -323,17 +323,18 @@ namespace GameServer.Controllers.Api
                                 : (int)u.PointsAverage
                 });
 
-            var sort = (sortBy ?? "totalXp").ToLowerInvariant();
+            var sort = sortBy ?? "totalxp";
 
             var orderedQuery = sort switch
             {
-                "onlineRaces" => projected.OrderByDescending(u => u.Races),
-                "onlineWins" => projected.OrderByDescending(u => u.Wins),
-                "longestWinStreak" => projected.OrderByDescending(u => u.LongestWinStreak),
-                "longestHangTime" => projected.OrderByDescending(u => u.Airtime),
-                "longestDrift" => projected.OrderByDescending(u => u.Drift),
+                "onlineraces" => projected.OrderByDescending(u => u.Races),
+                "onlinewins" => projected.OrderByDescending(u => u.Wins),
+                "longestwinstreak" => projected.OrderByDescending(u => u.LongestWinStreak),
+                "currentstreak" => projected.OrderByDescending(u => u.CurrentStreak),
+                "longesthangtime" => projected.OrderByDescending(u => u.Airtime),
+                "longestdrift" => projected.OrderByDescending(u => u.Drift),
                 "modmiles" => projected.OrderByDescending(u => u.ModMiles),
-                "skillRating" => projected.OrderByDescending(u => u.SkillRating),
+                "skillrating" => projected.OrderByDescending(u => u.SkillRating),
                 _ => projected.OrderByDescending(u => u.RaceXp + u.CreationXp)
             };
 

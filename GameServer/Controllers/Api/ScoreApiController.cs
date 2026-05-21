@@ -32,7 +32,10 @@ namespace GameServer.Controllers.Api
                 .AsNoTracking()
                 .Include(c => c.Author)
                 .Include(c => c.Ratings)
-                .FirstOrDefault(c => c.PlayerCreationId == trackId);
+                .FirstOrDefault(c => c.PlayerCreationId == trackId
+                    && c.Type != PlayerCreationType.DELETED
+                    && c.ModerationStatus != ModerationStatus.BANNED
+                    && c.ModerationStatus != ModerationStatus.ILLEGAL);
 
             if (track == null)
                 return NotFound(new { error = "error_creation_not_found", trackId });
@@ -204,7 +207,11 @@ namespace GameServer.Controllers.Api
 
             var filtered = database.PlayerCreations
                 .AsNoTracking()
-                .Where(c => c.IsMNR && c.Platform == platform && c.Type != PlayerCreationType.DELETED);
+                .Where(c => c.IsMNR 
+                        && c.Platform == platform 
+                        && c.Type != PlayerCreationType.DELETED
+                        && c.ModerationStatus != ModerationStatus.BANNED
+                        && c.ModerationStatus != ModerationStatus.ILLEGAL);
 
             if (type.HasValue)
                 filtered = filtered.Where(c => c.Type == type.Value);
@@ -286,6 +293,7 @@ namespace GameServer.Controllers.Api
                     CurrentStreak = u.WinStreak,
                     Airtime = u.LongestHangTime,
                     Drift = u.LongestDrift,
+                    u.ModMiles,
                     RaceXp = u.PlayerExperiencePoints.Sum(p => (int?)p.Amount) ?? 0,
                     CreationXp = u.PlayerCreationPoints.Sum(p => (int?)p.Amount) ?? 0,
                     PointsCount = u.PlayerPoints.Count(),
@@ -301,6 +309,7 @@ namespace GameServer.Controllers.Api
                     u.CurrentStreak,
                     u.Airtime,
                     u.Drift,
+                    u.ModMiles,
                     u.RaceXp,
                     u.CreationXp,
                     u.PointsCount,
@@ -314,16 +323,18 @@ namespace GameServer.Controllers.Api
                                 : (int)u.PointsAverage
                 });
 
-            var sort = (sortBy ?? "totalXp").ToLowerInvariant();
+            var sort = sortBy ?? "totalxp";
 
             var orderedQuery = sort switch
             {
-                "onlineRaces" => projected.OrderByDescending(u => u.Races),
-                "onlineWins" => projected.OrderByDescending(u => u.Wins),
-                "longestWinStreak" => projected.OrderByDescending(u => u.LongestWinStreak),
-                "longestHangTime" => projected.OrderByDescending(u => u.Airtime),
-                "longestDrift" => projected.OrderByDescending(u => u.Drift),
-                "skillRating" => projected.OrderByDescending(u => u.SkillRating),
+                "onlineraces" => projected.OrderByDescending(u => u.Races),
+                "onlinewins" => projected.OrderByDescending(u => u.Wins),
+                "longestwinstreak" => projected.OrderByDescending(u => u.LongestWinStreak),
+                "currentstreak" => projected.OrderByDescending(u => u.CurrentStreak),
+                "longesthangtime" => projected.OrderByDescending(u => u.Airtime),
+                "longestdrift" => projected.OrderByDescending(u => u.Drift),
+                "modmiles" => projected.OrderByDescending(u => u.ModMiles),
+                "skillrating" => projected.OrderByDescending(u => u.SkillRating),
                 _ => projected.OrderByDescending(u => u.RaceXp + u.CreationXp)
             };
 
@@ -348,6 +359,7 @@ namespace GameServer.Controllers.Api
                 currentStreak = u.CurrentStreak,
                 longestHangTime = u.Airtime,
                 longestDrift = u.Drift,
+                modMiles = u.ModMiles,
                 skillRating = u.SkillRating
             });
 

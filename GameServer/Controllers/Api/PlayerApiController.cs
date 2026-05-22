@@ -188,7 +188,7 @@ namespace GameServer.Controllers.Api
         }
 
     [HttpGet]
-    [Route("/api/recentplayers/")]
+    [Route("/api/players/recent")]
     public IActionResult GetRecentPlayers(bool? isMnr = null, int page = 1, int perPage = 10)
     {
         if (page < 1) page = 1;

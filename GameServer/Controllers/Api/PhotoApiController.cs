@@ -17,7 +17,10 @@ namespace GameServer.Controllers.Api
             var photo = database.PlayerCreations
                 .AsNoTracking()
                 .Include(c => c.Author)
-                .FirstOrDefault(c => c.Type == PlayerCreationType.PHOTO && c.PlayerCreationId == id);
+                .FirstOrDefault(c => c.Type == PlayerCreationType.PHOTO 
+                && c.PlayerCreationId == id
+                && c.ModerationStatus != ModerationStatus.BANNED
+                && c.ModerationStatus != ModerationStatus.ILLEGAL);
 
             if (photo == null)
                 return NotFound(new { error = "error_photo_not_found" });
@@ -42,7 +45,10 @@ namespace GameServer.Controllers.Api
 
             var query = database.PlayerCreations
                 .AsNoTracking()
-                .Where(c => c.Type == PlayerCreationType.PHOTO && c.Author.Username == username)
+                .Where(c => c.Type == PlayerCreationType.PHOTO 
+                && c.Author.Username == username
+                && c.ModerationStatus != ModerationStatus.BANNED
+                && c.ModerationStatus != ModerationStatus.ILLEGAL)
                 .OrderByDescending(p => p.CreatedAt);
 
             var total = query.Count();
@@ -75,7 +81,10 @@ namespace GameServer.Controllers.Api
 
             var query = database.PlayerCreations
                 .AsNoTracking()
-                .Where(c => c.Type == PlayerCreationType.PHOTO && c.TrackId == trackId)
+                .Where(c => c.Type == PlayerCreationType.PHOTO 
+                && c.TrackId == trackId
+                && c.ModerationStatus != ModerationStatus.BANNED
+                && c.ModerationStatus != ModerationStatus.ILLEGAL)
                 .OrderByDescending(p => p.CreatedAt);
 
             var total = query.Count();
@@ -108,7 +117,9 @@ namespace GameServer.Controllers.Api
 
             var query = database.PlayerCreations
                 .AsNoTracking()
-                .Where(c => c.Type == PlayerCreationType.PHOTO)
+                .Where(c => c.Type == PlayerCreationType.PHOTO
+                && c.ModerationStatus != ModerationStatus.BANNED
+                && c.ModerationStatus != ModerationStatus.ILLEGAL)
                 .OrderByDescending(p => p.CreatedAt);
 
             var total = query.Count();

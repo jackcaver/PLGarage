@@ -17,7 +17,10 @@ namespace GameServer.Controllers.Api
             var q = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.Type != PlayerCreationType.DELETED 
-                && x.Type != PlayerCreationType.STORY);
+                && x.Type != PlayerCreationType.STORY
+                && x.Type != PlayerCreationType.PLANET
+                && x.ModerationStatus != ModerationStatus.BANNED
+                && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
             var total = q.Count();
 
@@ -162,6 +165,8 @@ namespace GameServer.Controllers.Api
                 .AsNoTracking()
                 .Where(x => x.Type != PlayerCreationType.DELETED 
                 && x.Type != PlayerCreationType.STORY
+                && x.Type != PlayerCreationType.PHOTO
+                && x.Type != PlayerCreationType.PLANET
                 && x.ModerationStatus != ModerationStatus.BANNED
                 && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
@@ -275,6 +280,8 @@ namespace GameServer.Controllers.Api
                 .AsNoTracking()
                 .Where(x => x.Type != PlayerCreationType.DELETED 
                 && x.Type != PlayerCreationType.STORY
+                && x.Type != PlayerCreationType.PHOTO
+                && x.Type != PlayerCreationType.PLANET
                 && x.ModerationStatus != ModerationStatus.BANNED
                 && x.ModerationStatus != ModerationStatus.ILLEGAL
                 && (!isMnr.HasValue || x.IsMNR == isMnr.Value))

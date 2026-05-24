@@ -195,7 +195,8 @@ namespace GameServer.Controllers.Api
         if (perPage < 1) perPage = 10;
         if (perPage > 10) perPage = 10;
 
-        var query = database.Users.AsNoTracking();
+        var query = database.Users.AsNoTracking()
+            .Where(u => u.IsBanned == false);
 
         if (isMnr.HasValue)
         {

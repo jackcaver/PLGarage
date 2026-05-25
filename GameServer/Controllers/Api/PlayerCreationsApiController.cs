@@ -103,7 +103,7 @@ namespace GameServer.Controllers.Api
                     viewsThisWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
                     viewsLastWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
-                        ? x.Scores.Where(s => s.SubGroupId != 700).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
+                        ? x.Scores.Where(s => s.SubGroupId == 703).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
                         : null,
                     recordScore = x.Type == PlayerCreationType.TRACK && !x.IsMNR
                         ? x.Scores.Max(s => (float?)s.Points)
@@ -213,7 +213,7 @@ namespace GameServer.Controllers.Api
                     viewsThisWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
                     viewsLastWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
-                        ? x.Scores.Where(s => s.SubGroupId != 700).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
+                        ? x.Scores.Where(s => s.SubGroupId == 703).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
                         : null,
                     recordScore = x.Type == PlayerCreationType.TRACK && !x.IsMNR
                         ? x.Scores.Max(s => (float?)s.Points)
@@ -309,7 +309,7 @@ namespace GameServer.Controllers.Api
                     viewsThisWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
                     viewsLastWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
-                        ? x.Scores.Where(s => s.SubGroupId != 700).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
+                        ? x.Scores.Where(s => s.SubGroupId == 703).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
                         : null,
                     recordScore = x.Type == PlayerCreationType.TRACK && !x.IsMNR
                         ? x.Scores.Max(s => (float?)s.Points)
@@ -399,7 +399,7 @@ namespace GameServer.Controllers.Api
                     viewsThisWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
                     viewsLastWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
-                        ? x.Scores.Where(s => s.SubGroupId != 700).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
+                        ? x.Scores.Where(s => s.SubGroupId == 703).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
                         : null,
                     recordScore = x.Type == PlayerCreationType.TRACK && !x.IsMNR
                         ? x.Scores.Max(s => (float?)s.Points)
@@ -689,7 +689,7 @@ namespace GameServer.Controllers.Api
                     longestDrift = x.LongestDrift,
                     longestHangTime = x.LongestHangTime,
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
-                        ? x.Scores.Where(s => s.SubGroupId != 700).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
+                        ? x.Scores.Where(s => s.SubGroupId == 703).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
                         : null,
                     recordScore = x.Type == PlayerCreationType.TRACK && !x.IsMNR
                         ? x.Scores.Max(s => (float?)s.Points)

@@ -373,6 +373,8 @@ skill_levels.json
 hotlap.json
 eula.txt
 mod_explorer.json
+bannedConsoleIds.json
+bannedIPs.json
 # User Generated Content
 /GameServer/UGC/
 /GameServer/placeholder.png

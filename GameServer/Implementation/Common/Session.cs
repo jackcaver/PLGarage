@@ -13,20 +13,26 @@ using System.IO;
 using Newtonsoft.Json;
 using NPTicket.Verification;
 using NPTicket.Verification.Keys;
+using System.Net;
+using System.Net.Sockets;
 using System.Security.Claims;
 
 namespace GameServer.Implementation.Common
 {
     public class Session
     {
-        public static string Login(Database database, string ip, Platform platform, string ticket, string hmac, string console_id, bool policyAccepted, out string token)
+        public static string Login(Database database, IPAddress ip, Platform platform, string ticket, string hmac, string console_id, bool policyAccepted, out string token)
         {
+            token = null;
+            
             byte[] ticketData = Convert.FromBase64String(ticket.Trim('\n').Trim('\0'));
             List<string> whitelist = [];
             if (ServerConfig.Instance.Whitelist)
                 whitelist = LoadWhitelist();
-            token = null;
 
+            List<IPAddress> bannedIPs = LoadBannedIPs();
+            List<string> bannedConsoles = LoadBannedConsoleIds();
+            
             Ticket NPTicket;
             try
             {
@@ -74,7 +80,29 @@ namespace GameServer.Implementation.Common
                 };
                 return errorResp.Serialize();
             }
-
+            
+            if (bannedIPs.Contains(ip))
+            {
+                Log.Warning($"{NPTicket.Username} tried to login from a banned IP");
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+            
+            if (bannedConsoles.Contains(console_id))
+            {
+                Log.Warning($"{NPTicket.Username} tried to login from a console");
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+            
             User user;
 
             if (IsPSN)
@@ -204,7 +232,7 @@ namespace GameServer.Implementation.Common
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [
                     new login_data {
-                        ip_address = ip ?? "127.0.0.1",
+                        ip_address = ip != null ? ip.ToString() : "127.0.0.1",
                         login_time = TimeUtils.Now.ToString("yyyy-MM-ddThh:mm:sszzz"),
                         platform = platform.ToString(),
                         player_id = user.UserId,
@@ -345,6 +373,46 @@ namespace GameServer.Implementation.Common
             WriteWhitelist(whitelist);
 
             return whitelist;
+        }
+        
+        public static void WriteBannedIPs(List<IPAddress> bannedIPs)
+        {
+            List<string> ipStrings = bannedIPs.Select(ip => ip.ToString()).ToList();
+            File.WriteAllText("./bannedIPs.json", JsonConvert.SerializeObject(ipStrings));
+        }
+        
+        public static List<IPAddress> LoadBannedIPs()
+        {
+            List<IPAddress> bannedIPs;
+            if (!File.Exists("./bannedIPs.json"))
+            {
+                bannedIPs = [];
+                WriteBannedIPs([]);
+                return bannedIPs;
+            }
+            var ipStrings = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText("./bannedIPs.json"));
+            bannedIPs = ipStrings.Select(ip => IPAddress.TryParse(ip, out var parsedIp) ? parsedIp : null).ToList();
+
+            foreach (var ip in bannedIPs.Where(match => match is { AddressFamily: AddressFamily.InterNetwork }).ToList())  //🩼
+                bannedIPs.Add(IPAddress.Parse($"::ffff:{ip}"));
+            
+            return bannedIPs;
+        }
+        
+        public static void WriteBannedConsoleIds(List<string> whitelist)
+        {
+            File.WriteAllText("./bannedConsoleIds.json", JsonConvert.SerializeObject(whitelist));
+        }
+        
+        public static List<string> LoadBannedConsoleIds()
+        {
+            if (!File.Exists("./bannedConsoles.json"))
+            {
+                List<string> whitelist = [];
+                WriteBannedConsoleIds(whitelist);
+                return whitelist;
+            }
+            return JsonConvert.DeserializeObject<List<string>>(File.ReadAllText("./bannedConsoles.json"));
         }
     }
 }

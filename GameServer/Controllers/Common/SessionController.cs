@@ -17,7 +17,7 @@ namespace GameServer.Controllers.Common
             bool policyAccepted = Request.Cookies.TryGetValue("PolicyAccepted", out string policyAcceptedCookie)
                 && bool.TryParse(policyAcceptedCookie.ToLower(), out bool accepted) && accepted;
 
-            var result = Session.Login(database, HttpContext.Connection.RemoteIpAddress?.ToString(),
+            var result = Session.Login(database, HttpContext.Connection.RemoteIpAddress,
                 platform, ticket, hmac, console_id, policyAccepted, out string token);
             
             if (token != null)

@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
 
 namespace GameServer.Implementation.Common
@@ -538,6 +539,22 @@ namespace GameServer.Implementation.Common
 
             if (user == null)
                 return null;
+
+            if (isBanned && Session.TryGetLastConnection(id, out var consoleId))
+            {
+                RemoveAllUserSessions(database, id);
+
+                if (!string.IsNullOrWhiteSpace(consoleId))
+                {
+                    var bannedConsoleIds = Session.LoadBannedConsoleIds();
+
+                    if (!bannedConsoleIds.Contains(consoleId))
+                    {
+                        bannedConsoleIds.Add(consoleId);
+                        Session.WriteBannedConsoleIds(bannedConsoleIds);
+                    }
+                }
+            }
 
             user.IsBanned = isBanned;
             database.SaveChanges();
@@ -1333,6 +1350,112 @@ namespace GameServer.Implementation.Common
         }
         #endregion
 
+        #region IPManagement
+        public static string GetBannedIPs(int page, int perPage)
+        {
+            var bannedIPs = Session.LoadBannedIPs();
+
+            if (bannedIPs == null)
+                return "[]";
+
+            var pageStart = PageCalculator.GetPageStart(page, perPage);
+            
+            var bannedIPsPage = bannedIPs.Skip(pageStart).Take(perPage).ToList();
+            
+            return JsonConvert.SerializeObject(new ModerationPageResponse<string>
+            {
+                Total = bannedIPs.Count,
+                Page = bannedIPsPage.Select(ip => ip?.ToString()).Where(ip => ip != null).ToList()
+            });
+        }
+
+        public static string AddBannedIP(IPAddress ip)
+        {
+            var bannedIPs = Session.LoadBannedIPs();
+
+            if (bannedIPs == null || ip == null)
+                return null;
+
+            if (bannedIPs.Any(match => Equals(match, ip)))
+                return "error_already_exists";
+
+            bannedIPs.Add(ip);
+            Session.WriteBannedIPs(bannedIPs);
+
+            return "ok";
+        }
+
+        public static string RemoveBannedIP(IPAddress ip)
+        {
+            var bannedIPs = Session.LoadBannedIPs();
+
+            if (bannedIPs == null || ip == null)
+                return null;
+
+            var removed = bannedIPs.RemoveAll(match => Equals(match, ip)) > 0;
+
+            if (!removed)
+                return null;
+
+            Session.WriteBannedIPs(bannedIPs);
+
+            return "ok";
+        }
+        #endregion
+
+        #region ConsoleIdManagement
+        public static string GetBannedConsoleIds(int page, int perPage)
+        {
+            var bannedConsoleIds = Session.LoadBannedConsoleIds();
+
+            if (bannedConsoleIds == null)
+                return "[]";
+
+            var pageStart = PageCalculator.GetPageStart(page, perPage);
+            
+            var bannedConsoleIdsPage = bannedConsoleIds.Skip(pageStart).Take(perPage).ToList();
+            
+            return JsonConvert.SerializeObject(new ModerationPageResponse<string>
+            {
+                Total = bannedConsoleIds.Count,
+                Page = bannedConsoleIdsPage
+            });
+        }
+
+        public static string AddBannedConsoleId(string consoleId)
+        {
+            var bannedConsoleIds = Session.LoadBannedConsoleIds();
+
+            if (bannedConsoleIds == null || string.IsNullOrEmpty(consoleId))
+                return null;
+
+            if (bannedConsoleIds.Contains(consoleId))
+                return "error_already_exists";
+
+            bannedConsoleIds.Add(consoleId);
+            Session.WriteBannedConsoleIds(bannedConsoleIds);
+
+            return "ok";
+        }
+
+        public static string RemoveBannedConsoleId(string consoleId)
+        {
+            var bannedConsoleIds = Session.LoadBannedConsoleIds();
+
+            if (bannedConsoleIds == null || string.IsNullOrEmpty(consoleId))
+                return null;
+
+            var removed = bannedConsoleIds.RemoveAll(match => match == consoleId) > 0;
+
+            if (!removed)
+                return null;
+
+            Session.WriteBannedConsoleIds(bannedConsoleIds);
+
+            return "ok";
+        }
+        #endregion
+
         #region TeamPicksManagement
         public static string AddToTeamPicks(Database database, int creationID)
         {
@@ -1408,7 +1531,10 @@ namespace GameServer.Implementation.Common
                 ManageAnnouncements = permissions.ManageAnnouncements,
                 ManageSystemEvents = permissions.ManageSystemEvents,
                 ManageWhitelist = permissions.ManageWhitelist,
+                ManageIpAddresses = permissions.ManageIpAddresses,
+                ManageConsoleIDs = permissions.ManageConsoleIDs,
                 ManageTeamPicks = permissions.ManageTeamPicks,
+                ManageUserSessions = permissions.ManageUserSessions,
                 RemovePlayerCreations = permissions.RemovePlayerCreations,
                 RemovePlayerCreationComments = permissions.RemovePlayerCreationComments,
                 RemoveProfileComments = permissions.RemoveProfileComments,
@@ -1447,7 +1573,10 @@ namespace GameServer.Implementation.Common
                 ResetCreationStats = true,
                 ResetUserStats = true,
                 RemoveUsers = true,
-                RemoveScores = true
+                RemoveScores = true,
+                ManageUserSessions = true,
+                ManageIpAddresses = true,
+                ManageConsoleIDs = true
             });
         }
 
@@ -1517,6 +1646,9 @@ namespace GameServer.Implementation.Common
             moderator.ManageSystemEvents = permissions.ManageSystemEvents;
             moderator.ManageWhitelist = permissions.ManageWhitelist;
             moderator.ManageTeamPicks = permissions.ManageTeamPicks;
+            moderator.ManageUserSessions = permissions.ManageUserSessions;
+            moderator.ManageIpAddresses = permissions.ManageIpAddresses;
+            moderator.ManageConsoleIDs = permissions.ManageConsoleIDs;
             moderator.RemovePlayerCreations = permissions.RemovePlayerCreations;
             moderator.RemovePlayerCreationComments = permissions.RemovePlayerCreationComments;
             moderator.RemoveProfileComments = permissions.RemoveProfileComments;

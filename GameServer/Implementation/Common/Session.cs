@@ -16,11 +16,31 @@ using NPTicket.Verification.Keys;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Claims;
+using System.Collections.Concurrent;
 
 namespace GameServer.Implementation.Common
 {
     public class Session
     {
+        private static readonly ConcurrentDictionary<int, string> LastConnectionByUserId = new();
+
+        private static void RememberUserConnection(int userId, string consoleId)
+        {
+            LastConnectionByUserId[userId] = consoleId;
+        }
+
+        public static bool TryGetLastConnection(int userId, out string consoleId)
+        {
+            if (LastConnectionByUserId.TryGetValue(userId, out var cid))
+            {
+                consoleId = cid;
+                return true;
+            }
+
+            consoleId = null;
+            return false;
+        }
+
         public static string Login(Database database, IPAddress ip, Platform platform, string ticket, string hmac, string console_id, bool policyAccepted, out string token)
         {
             token = null;
@@ -94,7 +114,7 @@ namespace GameServer.Implementation.Common
             
             if (bannedConsoles.Contains(console_id))
             {
-                Log.Warning($"{NPTicket.Username} tried to login from a console");
+                Log.Warning($"{NPTicket.Username} tried to login from a banned console");
                 var errorResp = new Response<EmptyResponse>
                 {
                     status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
@@ -179,6 +199,8 @@ namespace GameServer.Implementation.Common
                 };
                 return errorResp.Serialize();
             }
+
+            RememberUserConnection(user.UserId, console_id);
 
             var sessions = database.Sessions.Where(match => match.UserId == user.UserId && match.Platform == platform);
             
@@ -406,13 +428,13 @@ namespace GameServer.Implementation.Common
         
         public static List<string> LoadBannedConsoleIds()
         {
-            if (!File.Exists("./bannedConsoles.json"))
+            if (!File.Exists("./bannedConsoleIds.json"))
             {
                 List<string> whitelist = [];
                 WriteBannedConsoleIds(whitelist);
                 return whitelist;
             }
-            return JsonConvert.DeserializeObject<List<string>>(File.ReadAllText("./bannedConsoles.json"));
+            return JsonConvert.DeserializeObject<List<string>>(File.ReadAllText("./bannedConsoleIds.json"));
         }
     }
 }

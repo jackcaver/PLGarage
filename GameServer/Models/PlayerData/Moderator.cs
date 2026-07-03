@@ -28,6 +28,8 @@ namespace GameServer.Models.PlayerData
         public bool RemoveScores { get; set; }
         public bool ManageSystemEvents { get; set; }
         public bool ManageWhitelist { get; set; }
+        public bool ManageIpAddresses { get; set; }
+        public bool ManageConsoleIDs { get; set; }
         public bool ManageTeamPicks { get; set; }
         public bool ViewGriefReports { get; set; }
         public bool ViewPlayerComplaints { get; set; }
@@ -46,6 +48,8 @@ namespace GameServer.Models.PlayerData
                    && (!permissions.RemoveScores || RemoveScores)
                    && (!permissions.ManageAnnouncements || ManageAnnouncements)
                    && (!permissions.ManageWhitelist || ManageWhitelist)
+                   && (!permissions.ManageIpAddresses || ManageIpAddresses)
+                   && (!permissions.ManageConsoleIDs || ManageConsoleIDs)
                    && (!permissions.ManageTeamPicks || ManageTeamPicks)
                    && (!permissions.RemovePlayerCreations || RemovePlayerCreations)
                    && (!permissions.RemovePlayerCreationComments || RemovePlayerCreationComments)
@@ -81,7 +85,9 @@ namespace GameServer.Models.PlayerData
                 ResetCreationStats = ResetCreationStats,
                 ResetUserStats = ResetUserStats,
                 RemoveUsers = RemoveUsers,
-                ManageUserSessions = ManageUserSessions
+                ManageUserSessions = ManageUserSessions,
+                ManageIpAddresses = ManageIpAddresses,
+                ManageConsoleIDs = ManageConsoleIDs
             };
         }
         

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
+using System.Net;
 
 
 namespace GameServer.Controllers.Api
@@ -931,6 +932,108 @@ namespace GameServer.Controllers.Api
 
             var result = Moderation.RemoveFromWhitelist(username);
             
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        #endregion
+
+        #region IPManagement
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/banned_ips")]
+        public IActionResult GetBannedIPs(int page, int per_page)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageIpAddresses)
+                return StatusCode(403);
+
+            return Content(Moderation.GetBannedIPs(page, per_page));
+        }
+
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/banned_ips")]
+        public IActionResult AddBannedIP(string ip)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageIpAddresses)
+                return StatusCode(403);
+
+            if (!IPAddress.TryParse(ip, out var parsedIp))
+                return BadRequest();
+
+            var result = Moderation.AddBannedIP(parsedIp);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/banned_ips")]
+        public IActionResult RemoveBannedIP(string ip)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageIpAddresses)
+                return StatusCode(403);
+
+            if (!IPAddress.TryParse(ip, out var parsedIp))
+                return BadRequest();
+
+            var result = Moderation.RemoveBannedIP(parsedIp);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+        #endregion
+
+        #region ConsoleIdManagement
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/banned_console_ids")]
+        public IActionResult GetBannedConsoleIds(int page, int per_page)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageConsoleIDs)
+                return StatusCode(403);
+
+            return Content(Moderation.GetBannedConsoleIds(page, per_page));
+        }
+
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/banned_console_ids")]
+        public IActionResult AddBannedConsoleId(string consoleId)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageConsoleIDs)
+                return StatusCode(403);
+
+            var result = Moderation.AddBannedConsoleId(consoleId);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/banned_console_ids")]
+        public IActionResult RemoveBannedConsoleId(string consoleId)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageConsoleIDs)
+                return StatusCode(403);
+
+            var result = Moderation.RemoveBannedConsoleId(consoleId);
+
             if (result == null)
                 return NotFound();
             else

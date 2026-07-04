@@ -94,7 +94,7 @@ namespace GameServer.Implementation.Common
             
             if (bannedConsoles.Contains(console_id))
             {
-                Log.Warning($"{NPTicket.Username} tried to login from a console");
+                Log.Warning($"{NPTicket.Username} tried to login from a banned console");
                 var errorResp = new Response<EmptyResponse>
                 {
                     status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
@@ -406,13 +406,13 @@ namespace GameServer.Implementation.Common
         
         public static List<string> LoadBannedConsoleIds()
         {
-            if (!File.Exists("./bannedConsoles.json"))
+            if (!File.Exists("./bannedConsoleIds.json"))
             {
                 List<string> whitelist = [];
                 WriteBannedConsoleIds(whitelist);
                 return whitelist;
             }
-            return JsonConvert.DeserializeObject<List<string>>(File.ReadAllText("./bannedConsoles.json"));
+            return JsonConvert.DeserializeObject<List<string>>(File.ReadAllText("./bannedConsoleIds.json"));
         }
     }
 }

@@ -28,8 +28,8 @@ namespace GameServer.Models.PlayerData
         public bool RemoveScores { get; set; }
         public bool ManageSystemEvents { get; set; }
         public bool ManageWhitelist { get; set; }
-        public bool ManageIpAddresses { get; set; }
-        public bool ManageConsoleIDs { get; set; }
+        public bool ManageBannedIPs { get; set; }
+        public bool ManageBannedConsoleIDs { get; set; }
         public bool ManageTeamPicks { get; set; }
         public bool ViewGriefReports { get; set; }
         public bool ViewPlayerComplaints { get; set; }
@@ -48,8 +48,8 @@ namespace GameServer.Models.PlayerData
                    && (!permissions.RemoveScores || RemoveScores)
                    && (!permissions.ManageAnnouncements || ManageAnnouncements)
                    && (!permissions.ManageWhitelist || ManageWhitelist)
-                   && (!permissions.ManageIpAddresses || ManageIpAddresses)
-                   && (!permissions.ManageConsoleIDs || ManageConsoleIDs)
+                   && (!permissions.ManageBannedIPs || ManageBannedIPs)
+                   && (!permissions.ManageBannedConsoleIDs || ManageBannedConsoleIDs)
                    && (!permissions.ManageTeamPicks || ManageTeamPicks)
                    && (!permissions.RemovePlayerCreations || RemovePlayerCreations)
                    && (!permissions.RemovePlayerCreationComments || RemovePlayerCreationComments)
@@ -86,8 +86,8 @@ namespace GameServer.Models.PlayerData
                 ResetUserStats = ResetUserStats,
                 RemoveUsers = RemoveUsers,
                 ManageUserSessions = ManageUserSessions,
-                ManageIpAddresses = ManageIpAddresses,
-                ManageConsoleIDs = ManageConsoleIDs
+                ManageBannedIPs = ManageBannedIPs,
+                ManageBannedConsoleIDs = ManageBannedConsoleIDs
             };
         }
         

@@ -540,21 +540,8 @@ namespace GameServer.Implementation.Common
             if (user == null)
                 return null;
 
-            if (isBanned && Session.TryGetLastConnection(id, out var consoleId))
-            {
+            if (isBanned)
                 RemoveAllUserSessions(database, id);
-
-                if (!string.IsNullOrWhiteSpace(consoleId))
-                {
-                    var bannedConsoleIds = Session.LoadBannedConsoleIds();
-
-                    if (!bannedConsoleIds.Contains(consoleId))
-                    {
-                        bannedConsoleIds.Add(consoleId);
-                        Session.WriteBannedConsoleIds(bannedConsoleIds);
-                    }
-                }
-            }
 
             user.IsBanned = isBanned;
             database.SaveChanges();
@@ -1531,8 +1518,8 @@ namespace GameServer.Implementation.Common
                 ManageAnnouncements = permissions.ManageAnnouncements,
                 ManageSystemEvents = permissions.ManageSystemEvents,
                 ManageWhitelist = permissions.ManageWhitelist,
-                ManageIpAddresses = permissions.ManageIpAddresses,
-                ManageConsoleIDs = permissions.ManageConsoleIDs,
+                ManageBannedIPs = permissions.ManageBannedIPs,
+                ManageBannedConsoleIDs = permissions.ManageBannedConsoleIDs,
                 ManageTeamPicks = permissions.ManageTeamPicks,
                 ManageUserSessions = permissions.ManageUserSessions,
                 RemovePlayerCreations = permissions.RemovePlayerCreations,
@@ -1575,8 +1562,8 @@ namespace GameServer.Implementation.Common
                 RemoveUsers = true,
                 RemoveScores = true,
                 ManageUserSessions = true,
-                ManageIpAddresses = true,
-                ManageConsoleIDs = true
+                ManageBannedIPs = true,
+                ManageBannedConsoleIDs = true
             });
         }
 
@@ -1647,8 +1634,8 @@ namespace GameServer.Implementation.Common
             moderator.ManageWhitelist = permissions.ManageWhitelist;
             moderator.ManageTeamPicks = permissions.ManageTeamPicks;
             moderator.ManageUserSessions = permissions.ManageUserSessions;
-            moderator.ManageIpAddresses = permissions.ManageIpAddresses;
-            moderator.ManageConsoleIDs = permissions.ManageConsoleIDs;
+            moderator.ManageBannedIPs = permissions.ManageBannedIPs;
+            moderator.ManageBannedConsoleIDs = permissions.ManageBannedConsoleIDs;
             moderator.RemovePlayerCreations = permissions.RemovePlayerCreations;
             moderator.RemovePlayerCreationComments = permissions.RemovePlayerCreationComments;
             moderator.RemoveProfileComments = permissions.RemoveProfileComments;

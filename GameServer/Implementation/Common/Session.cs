@@ -22,25 +22,6 @@ namespace GameServer.Implementation.Common
 {
     public class Session
     {
-        private static readonly ConcurrentDictionary<int, string> LastConnectionByUserId = new();
-
-        private static void RememberUserConnection(int userId, string consoleId)
-        {
-            LastConnectionByUserId[userId] = consoleId;
-        }
-
-        public static bool TryGetLastConnection(int userId, out string consoleId)
-        {
-            if (LastConnectionByUserId.TryGetValue(userId, out var cid))
-            {
-                consoleId = cid;
-                return true;
-            }
-
-            consoleId = null;
-            return false;
-        }
-
         public static string Login(Database database, IPAddress ip, Platform platform, string ticket, string hmac, string console_id, bool policyAccepted, out string token)
         {
             token = null;
@@ -199,8 +180,6 @@ namespace GameServer.Implementation.Common
                 };
                 return errorResp.Serialize();
             }
-
-            RememberUserConnection(user.UserId, console_id);
 
             var sessions = database.Sessions.Where(match => match.UserId == user.UserId && match.Platform == platform);
             

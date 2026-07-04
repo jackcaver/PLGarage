@@ -337,13 +337,13 @@ namespace GameServer.Migrations
                     b.Property<bool>("ManageAnnouncements")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<bool>("ManageConsoleIDs")
+                    b.Property<bool>("ManageBannedConsoleIDs")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("ManageHotlap")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<bool>("ManageIpAddresses")
+                    b.Property<bool>("ManageBannedIPs")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("ManageModerators")

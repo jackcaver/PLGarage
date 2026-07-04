@@ -946,7 +946,7 @@ namespace GameServer.Controllers.Api
         public IActionResult GetBannedIPs(int page, int per_page)
         {
             var user = Moderation.GetUser(database, User);
-            if (user == null || !user.ManageIpAddresses)
+            if (user == null || !user.ManageBannedIPs)
                 return StatusCode(403);
 
             return Content(Moderation.GetBannedIPs(page, per_page));
@@ -958,7 +958,7 @@ namespace GameServer.Controllers.Api
         public IActionResult AddBannedIP(string ip)
         {
             var user = Moderation.GetUser(database, User);
-            if (user == null || !user.ManageIpAddresses)
+            if (user == null || !user.ManageBannedIPs)
                 return StatusCode(403);
 
             if (!IPAddress.TryParse(ip, out var parsedIp))
@@ -978,7 +978,7 @@ namespace GameServer.Controllers.Api
         public IActionResult RemoveBannedIP(string ip)
         {
             var user = Moderation.GetUser(database, User);
-            if (user == null || !user.ManageIpAddresses)
+            if (user == null || !user.ManageBannedIPs)
                 return StatusCode(403);
 
             if (!IPAddress.TryParse(ip, out var parsedIp))
@@ -1000,7 +1000,7 @@ namespace GameServer.Controllers.Api
         public IActionResult GetBannedConsoleIds(int page, int per_page)
         {
             var user = Moderation.GetUser(database, User);
-            if (user == null || !user.ManageConsoleIDs)
+            if (user == null || !user.ManageBannedConsoleIDs)
                 return StatusCode(403);
 
             return Content(Moderation.GetBannedConsoleIds(page, per_page));
@@ -1012,7 +1012,7 @@ namespace GameServer.Controllers.Api
         public IActionResult AddBannedConsoleId(string consoleId)
         {
             var user = Moderation.GetUser(database, User);
-            if (user == null || !user.ManageConsoleIDs)
+            if (user == null || !user.ManageBannedConsoleIDs)
                 return StatusCode(403);
 
             var result = Moderation.AddBannedConsoleId(consoleId);
@@ -1029,7 +1029,7 @@ namespace GameServer.Controllers.Api
         public IActionResult RemoveBannedConsoleId(string consoleId)
         {
             var user = Moderation.GetUser(database, User);
-            if (user == null || !user.ManageConsoleIDs)
+            if (user == null || !user.ManageBannedConsoleIDs)
                 return StatusCode(403);
 
             var result = Moderation.RemoveBannedConsoleId(consoleId);

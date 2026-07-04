@@ -10,69 +10,33 @@ namespace GameServer.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<int>(
-                name: "ProfilePrivacy",
-                table: "Users",
-                type: "int",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "int",
-                oldDefaultValue: 2);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "PlayerCreationsPrivacy",
-                table: "Users",
-                type: "int",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "int",
-                oldDefaultValue: 2);
-
             migrationBuilder.AddColumn<bool>(
-                name: "ManageConsoleIDs",
+                name: "ManageBannedConsoleIDs",
                 table: "Moderators",
                 type: "tinyint(1)",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
-                name: "ManageIpAddresses",
+                name: "ManageBannedIPs",
                 table: "Moderators",
                 type: "tinyint(1)",
                 nullable: false,
                 defaultValue: false);
 
-            migrationBuilder.Sql("UPDATE Moderators SET ManageIpAddresses = BanUsers, ManageConsoleIDs = BanUsers;");
+            migrationBuilder.Sql("UPDATE Moderators SET ManageBannedIPs = BanUsers, ManageBannedConsoleIDs = BanUsers;");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "ManageConsoleIDs",
+                name: "ManageBannedConsoleIDs",
                 table: "Moderators");
 
             migrationBuilder.DropColumn(
-                name: "ManageIpAddresses",
+                name: "ManageBannedIPs",
                 table: "Moderators");
-
-            migrationBuilder.AlterColumn<int>(
-                name: "ProfilePrivacy",
-                table: "Users",
-                type: "int",
-                nullable: false,
-                defaultValue: 2,
-                oldClrType: typeof(int),
-                oldType: "int");
-
-            migrationBuilder.AlterColumn<int>(
-                name: "PlayerCreationsPrivacy",
-                table: "Users",
-                type: "int",
-                nullable: false,
-                defaultValue: 2,
-                oldClrType: typeof(int),
-                oldType: "int");
         }
     }
 }

@@ -1388,13 +1388,15 @@ namespace GameServer.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<int>("PlayerCreationsPrivacy")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasDefaultValue(2);
 
                     b.Property<bool>("PolicyAccepted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<int>("ProfilePrivacy")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasDefaultValue(2);
 
                     b.Property<int>("Quota")
                         .HasColumnType("int");

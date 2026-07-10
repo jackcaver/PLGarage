@@ -515,6 +515,23 @@ namespace GameServer.Controllers.Api
             else
                 return Content(result);
         }
+
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/users/{id}/avatar")]
+        public IActionResult RemoveProfileAvatars(int id, bool isMNR = false)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.RemoveProfileAvatars)
+                return StatusCode(403);
+
+            var result = Moderation.RemoveProfileAvatars(database, storage, id, isMNR);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
         #endregion
 
         #region PlayerComplaints
@@ -1033,6 +1050,23 @@ namespace GameServer.Controllers.Api
                 return StatusCode(403);
 
             var result = Moderation.RemoveBannedConsoleId(consoleId);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
+
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/banned_console_ids/player/{userId}")]
+        public IActionResult AddConsoleIdByPlayerSession(int userId)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageBannedConsoleIDs)
+                return StatusCode(403);
+
+            var result = Moderation.AddConsoleIdByPlayerSession(database, userId);
 
             if (result == null)
                 return NotFound();

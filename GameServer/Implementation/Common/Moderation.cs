@@ -848,6 +848,19 @@ namespace GameServer.Implementation.Common
 
             return "ok";
         }
+
+        public static string RemoveProfileAvatars(Database database, IUGCStorage storage, int targetUserId, bool isMNR = false)
+        {
+            if (!database.Users.Any(u => u.UserId == targetUserId))
+                return null;
+
+            var user = database.Users.First(u => u.UserId == targetUserId);
+
+            if (ServerConfig.Instance.DeleteCreationData)
+                storage.RemoveProfileAvatars(targetUserId, isMNR);
+
+            return "ok";
+        }
         #endregion
 
         #region PlayerComplaints
@@ -1441,6 +1454,18 @@ namespace GameServer.Implementation.Common
 
             return "ok";
         }
+        public static string AddConsoleIdByPlayerSession(Database database, int userId)
+        {
+            var session = database.Sessions.FirstOrDefault(match => match.UserId == userId);
+
+            if (session == null)
+                return "no_active_session";
+
+            if (!Session.TryGetLastConnectionIdentity(userId, out var consoleId))
+                return "no_console_id_found";
+
+            return AddBannedConsoleId(consoleId);
+        }
         #endregion
 
         #region TeamPicksManagement
@@ -1525,6 +1550,7 @@ namespace GameServer.Implementation.Common
                 RemovePlayerCreations = permissions.RemovePlayerCreations,
                 RemovePlayerCreationComments = permissions.RemovePlayerCreationComments,
                 RemoveProfileComments = permissions.RemoveProfileComments,
+                RemoveProfileAvatars = permissions.RemoveProfileAvatars,
                 ResetCreationStats = permissions.ResetCreationStats,
                 ResetUserStats = permissions.ResetUserStats,
                 RemoveUsers = permissions.RemoveUsers
@@ -1563,7 +1589,8 @@ namespace GameServer.Implementation.Common
                 RemoveScores = true,
                 ManageUserSessions = true,
                 ManageBannedIPs = true,
-                ManageBannedConsoleIDs = true
+                ManageBannedConsoleIDs = true,
+                RemoveProfileAvatars = true
             });
         }
 

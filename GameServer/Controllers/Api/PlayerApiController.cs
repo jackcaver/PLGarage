@@ -44,6 +44,9 @@ namespace GameServer.Controllers.Api
                     skillLevelIdPSV = x.PlayerExperiencePoints.Where(p => p.Platform == Platform.PSV)
                         .Sum(p => p.Amount) + x.PlayerCreationPoints.Where(p => p.Platform == Platform.PSV)
                         .Sum(p => p.Amount),
+                    skillLevelIdPSP = x.PlayerExperiencePoints.Where(p => p.Platform == Platform.PSP)
+                        .Sum(p => p.Amount) + x.PlayerCreationPoints.Where(p => p.Platform == Platform.PSP)
+                        .Sum(p => p.Amount),
                     skillRating = x.Points(Platform.PS3),
                     x.WinStreak,
                     x.LongestWinStreak,
@@ -86,6 +89,7 @@ namespace GameServer.Controllers.Api
 
             var skillLevelPS3 = SkillConfig.Instance.GetSkillLevel(player.skillLevelIdPS3);
             var skillLevelPSV = SkillConfig.Instance.GetSkillLevel(player.skillLevelIdPSV);
+            var skillLevelPSP = SkillConfig.Instance.GetSkillLevel(player.skillLevelIdPSP);
 
             return Json(new
             {
@@ -102,6 +106,7 @@ namespace GameServer.Controllers.Api
                 {
                     ["PS3"] = new { skillLevelPS3.Id, skillLevelPS3.Name },
                     ["PSV"] = new { skillLevelPSV.Id, skillLevelPSV.Name },
+                    ["PSP"] = new { skillLevelPSP.Id, skillLevelPSP.Name }
                 },
                 player.skillRating,
                 player.WinStreak,

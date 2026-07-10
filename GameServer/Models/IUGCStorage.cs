@@ -28,5 +28,6 @@ namespace GameServer.Models
         public long CalculateSize(int id, string file);
         public void RemovePlayerCreation(int id);
         public void RemoveGhostCarData(GameType gameType, Platform platform, int trackId, int playerId);
+        public void RemoveProfileAvatars(int id, bool isMNR = false);
     }
 }

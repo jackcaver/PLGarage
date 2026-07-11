@@ -287,6 +287,16 @@ namespace GameServer.Implementation.Storage
             if (Directory.Exists(directory))
                 Directory.Delete(directory, true);
         }
+
+        public void RemoveProfileAvatars(int id, bool isMNR = false)
+        {
+            var dir = $"{Config.StoragePath}/PlayerAvatars/{id}/";
+            var mnrDir = $"{Config.StoragePath}/PlayerAvatars/{id}/MNR/";
+            if (Directory.Exists(dir) && !isMNR)
+                Directory.Delete(dir, true);
+            else if (Directory.Exists(mnrDir) && isMNR)
+                Directory.Delete(mnrDir, true);
+        }
         
         public void Dispose()
         {

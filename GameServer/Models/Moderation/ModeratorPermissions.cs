@@ -14,6 +14,7 @@
         public bool RemovePlayerCreations { get; set; }
         public bool RemovePlayerCreationComments { get; set; }
         public bool RemoveProfileComments { get; set; }
+        public bool RemoveProfileAvatars { get; set; }
         public bool ManageAnnouncements { get; set; }
         public bool ManageHotlap { get; set; }
         public bool RemoveScores { get; set; }

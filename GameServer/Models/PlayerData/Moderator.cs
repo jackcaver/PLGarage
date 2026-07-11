@@ -23,6 +23,7 @@ namespace GameServer.Models.PlayerData
         public bool RemovePlayerCreations { get; set; }
         public bool RemovePlayerCreationComments { get; set; }
         public bool RemoveProfileComments { get; set; }
+        public bool RemoveProfileAvatars { get; set; }
         public bool ManageAnnouncements { get; set; }
         public bool ManageHotlap { get; set; }
         public bool RemoveScores { get; set; }
@@ -58,7 +59,8 @@ namespace GameServer.Models.PlayerData
                    && (!permissions.ResetUserStats || ResetUserStats)
                    && (!permissions.RemoveUsers || RemoveUsers)
                    && (!permissions.ManageSystemEvents || ManageSystemEvents)
-                   && (!permissions.ManageUserSessions || ManageUserSessions);
+                   && (!permissions.ManageUserSessions || ManageUserSessions)
+                   && (!permissions.RemoveProfileAvatars || RemoveProfileAvatars);
         }
 
         public ModeratorPermissions GetPermissions()
@@ -87,7 +89,8 @@ namespace GameServer.Models.PlayerData
                 RemoveUsers = RemoveUsers,
                 ManageUserSessions = ManageUserSessions,
                 ManageBannedIPs = ManageBannedIPs,
-                ManageBannedConsoleIDs = ManageBannedConsoleIDs
+                ManageBannedConsoleIDs = ManageBannedConsoleIDs,
+                RemoveProfileAvatars = RemoveProfileAvatars
             };
         }
         

@@ -432,6 +432,41 @@ namespace GameServer.Implementation.Storage
             }
             catch (AmazonS3Exception) { }
         }
+
+        public void RemoveProfileAvatars(int id, bool isMNR = false)
+        {
+            List<string> keys;
+
+            if (isMNR)
+            {
+                keys = new List<string>()
+                {
+                    $"player_avatars/MNR/{id}/primary.png",
+                    $"player_avatars/MNR/{id}/primary_128x128.png",
+                    $"player_avatars/MNR/{id}/secondary.png",
+                    $"player_avatars/MNR/{id}/secondary_128x128.png",
+                };
+            }
+            else
+            {
+                keys = new List<string>()
+                {
+                    $"player_avatars/{id}/primary.png",
+                    $"player_avatars/{id}/primary_128x128.png",
+                    $"player_avatars/{id}/frowny.png",
+                    $"player_avatars/{id}/smiley.png"
+                };
+            }
+
+            foreach (var key in keys)
+            {
+                try
+                {
+                    S3Client.DeleteObjectAsync(Config.BucketName, key).Wait();
+                }
+                catch (AmazonS3Exception) { }
+            }
+        }
         
         public void Dispose()
         {

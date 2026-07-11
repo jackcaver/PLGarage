@@ -314,6 +314,8 @@ namespace GameServer.Implementation.Common
 
             if (status == ModerationStatus.BANNED || status == ModerationStatus.ILLEGAL)
             {
+                ResetCreationStats(database, id);
+                
                 var hotlap = ContentUpdates.ReadHotlapData();
                 if (hotlap != null && hotlap.TrackId == id)
                     ContentUpdates.GetNewHotLap(database);

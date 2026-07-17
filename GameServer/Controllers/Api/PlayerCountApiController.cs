@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using GameServer.Implementation.Common;
 using GameServer.Utils;
 
 namespace GameServer.Controllers.Api
@@ -36,11 +37,12 @@ namespace GameServer.Controllers.Api
 
             var total = query.Count();
 
-            var playersPresence = query
+            var sessions = query
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .Select(x => new
                 {
+                    x.SessionId,
                     x.UserId,
                     x.Username,
                     Presence = x.Presence.ToString(),
@@ -49,7 +51,70 @@ namespace GameServer.Controllers.Api
                 })
                 .ToList();
 
-            return Json(new { total, playersPresence });
+            var presence = sessions
+                .Select(x => new
+                {
+                    x.UserId,
+                    x.Username,
+                    x.Presence,
+                    x.Platform,
+                    x.IsMNR,
+                    IsRpcn = Session.TryGetSessionNetwork(x.SessionId, out var isRpcn) && isRpcn
+                })
+                .ToList();
+
+            return Json(new { total, presence });
+        }
+
+        [HttpGet]
+        [Route("/api/playercounts/platform")]
+        public IActionResult GetPlatformCount(bool? isMnr = null)
+        {
+            var query = database.Sessions
+                .Where(x => (isMnr == null || x.IsMNR == isMnr) &&
+                            x.LastPing.AddMinutes(1) > TimeUtils.Now);
+
+            var total = query.Count();
+
+            var platforms = query
+                .GroupBy(x => x.Platform)
+                .Select(g => new
+                {
+                    platform = g.Key.ToString(),
+                    count = g.Count()
+                })
+                .OrderBy(x => x.platform)
+                .ToList();
+
+            return Json(new
+            {
+                total,
+                platforms
+            });
+        }
+
+        [HttpGet]
+        [Route("/api/playercounts/network")]
+        public IActionResult GetNetworkCount(bool? isMnr = null)
+        {
+            var sessions = database.Sessions
+                .Where(x => (isMnr == null || x.IsMNR == isMnr) &&
+                            x.LastPing.AddMinutes(1) > TimeUtils.Now)
+                .Select(x => new
+                {
+                    x.SessionId
+                })
+                .ToList();
+
+            var rpcnSessions = sessions.Count(x => Session.TryGetSessionNetwork(x.SessionId, out var isRpcn) && isRpcn);
+            var psnSessions = sessions.Count(x => Session.TryGetSessionNetwork(x.SessionId, out var isRpcn) && !isRpcn);
+
+            return Json(new
+            {
+                total = sessions.Count,
+                rpcn = rpcnSessions,
+                psn = psnSessions
+            });
         }
 
         protected override void Dispose(bool disposing)

@@ -25,6 +25,7 @@ namespace GameServer.Implementation.Common
         private record ConnectionIdentity(string ConsoleId);
 
         private static readonly ConcurrentDictionary<int, ConnectionIdentity> LastConnectionByUserId = new();
+        private static readonly ConcurrentDictionary<Guid, bool> SessionNetwork = new();
 
         public static string Login(Database database, IPAddress ip, Platform platform, string ticket, string hmac, string console_id, bool policyAccepted, out string token)
         {
@@ -188,7 +189,10 @@ namespace GameServer.Implementation.Common
             var sessions = database.Sessions.Where(match => match.UserId == user.UserId && match.Platform == platform);
             
             foreach (var id in sessions.Select(s => s.SessionId).ToList())
+            {
                 ServerCommunication.NotifySessionDestroyed(id);
+                SessionNetwork.TryRemove(id, out _);
+            }
 
             sessions.ExecuteDelete();
 
@@ -227,6 +231,7 @@ namespace GameServer.Implementation.Common
             }
 
             LastConnectionByUserId[user.UserId] = new ConnectionIdentity(console_id);
+            SessionNetwork[session.SessionId] = IsRPCN;
             
             database.Sessions.Add(session);
             database.SaveChanges();
@@ -323,7 +328,10 @@ namespace GameServer.Implementation.Common
             var sessions = database.Sessions.Where(match => TimeUtils.Now > match.LastPing.AddHours(1));
             
             foreach (var id in sessions.Select(s => s.SessionId).ToList())
+            {
                 ServerCommunication.NotifySessionDestroyed(id);
+                SessionNetwork.TryRemove(id, out _);
+            }
 
             sessions.ExecuteDelete();
         }
@@ -362,6 +370,16 @@ namespace GameServer.Implementation.Common
 
             consoleId = identity.ConsoleId;
             return true;
+        }
+
+        public static bool TryGetSessionNetwork(Guid sessionId, out bool isRpcn)
+        {
+            return SessionNetwork.TryGetValue(sessionId, out isRpcn);
+        }
+
+        public static void RemoveSessionNetwork(Guid sessionId)
+        {
+            SessionNetwork.TryRemove(sessionId, out _);
         }
 
         public static void WriteWhitelist(List<string> whitelist)

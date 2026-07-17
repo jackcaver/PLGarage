@@ -318,8 +318,42 @@ namespace GameServer.Implementation.Player_Creation
                 var Photo = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item);
                 Photo.TrackId = 4912;
             }
+
+            database.PlayerCreationDownloads
+                .Where(x => x.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+
+            database.PlayerCreationViews
+                .Where(x => x.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+
+            database.PlayerCreationRatings
+                .Where(x => x.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+
+            database.PlayerCreationPoints
+                .Where(x => x.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+
+            database.PlayerCreationComments
+                .Where(x => x.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+
+            database.PlayerCreationReviews
+                .Where(x => x.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+            
+            database.HeartedPlayerCreations
+                .Where(h => h.HeartedPlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+            
+            database.PlayerCreationBookmarks
+                .Where(b => b.BookmarkedPlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
         
-            database.ActivityLog.Where(match => match.PlayerCreationId == Creation.PlayerCreationId).ExecuteDelete();
+            database.ActivityLog
+                .Where(match => match.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
 
             database.SaveChanges();
 

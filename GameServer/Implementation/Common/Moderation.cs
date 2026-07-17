@@ -802,6 +802,7 @@ namespace GameServer.Implementation.Common
             database.Sessions.Remove(session);
             database.SaveChanges();
             ServerCommunication.NotifySessionDestroyed(sessionID);
+            Session.RemoveSessionNetwork(sessionID);
             
             return "ok";
         }
@@ -814,7 +815,10 @@ namespace GameServer.Implementation.Common
             var sessions = database.Sessions.Where(match => match.UserId == userID);
             
             foreach (var id in sessions.Select(s => s.SessionId).ToList())
+            {
                 ServerCommunication.NotifySessionDestroyed(id);
+                Session.RemoveSessionNetwork(id);
+            }
 
             sessions.ExecuteDelete();
             

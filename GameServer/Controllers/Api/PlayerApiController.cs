@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using GameServer.Models.Config;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Utils;
@@ -11,6 +10,22 @@ namespace GameServer.Controllers.Api
 {
     public class PlayerApiController(Database database) : Controller
     {
+        [HttpGet]
+        [Route("/api/usernameToId")]
+        public IActionResult GetUserIdFromUsername(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                return BadRequest("error_missing_username");
+
+            var user = database.Users
+                .AsNoTracking()
+                .FirstOrDefault(x => x.Username == username);
+
+            if (user == null)
+                return NotFound("error_player_not_found");
+
+            return Content($"{user.UserId}");
+        }
 
         [HttpGet]
         [Route("/api/player")]
@@ -38,15 +53,21 @@ namespace GameServer.Controllers.Api
                     onlineFinished = x.OnlineFinished,
                     onlineForfeits = x.OnlineForfeit,
                     onlineWins = x.RacesFinished.Count(r => r.IsWinner),
-                    skillLevelIdPS3 = x.PlayerExperiencePoints.Where(p => p.Platform == Platform.PS3)
-                        .Sum(p => p.Amount) + x.PlayerCreationPoints.Where(p => p.Platform == Platform.PS3)
-                        .Sum(p => p.Amount),
-                    skillLevelIdPSV = x.PlayerExperiencePoints.Where(p => p.Platform == Platform.PSV)
-                        .Sum(p => p.Amount) + x.PlayerCreationPoints.Where(p => p.Platform == Platform.PSV)
-                        .Sum(p => p.Amount),
-                    skillLevelIdPSP = x.PlayerExperiencePoints.Where(p => p.Platform == Platform.PSP)
-                        .Sum(p => p.Amount) + x.PlayerCreationPoints.Where(p => p.Platform == Platform.PSP)
-                        .Sum(p => p.Amount),
+                    skillLevelIdPS3 = x.SkillLevelId(Platform.PS3),
+                    skillLevelNamePS3 = x.SkillLevelName(Platform.PS3),
+                    skillLevelIdPSV = x.SkillLevelId(Platform.PSV),
+                    skillLevelNamePSV = x.SkillLevelName(Platform.PSV),
+                    skillLevelIdPSP = x.SkillLevelId(Platform.PSP),
+                    skillLevelNamePSP = x.SkillLevelName(Platform.PSP),
+                    totalXpPS3 = x.TotalXP(Platform.PS3),
+                    creationXpPS3 = x.CreatorPoints(Platform.PS3),
+                    raceXpPS3 = x.ExperiencePoints(Platform.PS3),
+                    totalXpPSV = x.TotalXP(Platform.PSV),
+                    creationXpPSV = x.CreatorPoints(Platform.PSV),
+                    raceXpPSV = x.ExperiencePoints(Platform.PSV),
+                    totalXpPSP = x.TotalXP(Platform.PSP),
+                    creationXpPSP = x.CreatorPoints(Platform.PSP),
+                    raceXpPSP = x.ExperiencePoints(Platform.PSP),
                     skillRating = x.Points(Platform.PS3),
                     x.WinStreak,
                     x.LongestWinStreak,
@@ -71,25 +92,39 @@ namespace GameServer.Controllers.Api
 
             var presence = user?.Presence(database, Platform.PS3).ToString();
 
+            var lbpkTypeValues = new[]
+            {
+                PlayerCreationType.PHOTO,
+                PlayerCreationType.TRACK,
+                PlayerCreationType.ITEM
+            };
+
+            var mnrTypeValues = new[]
+            {
+                PlayerCreationType.CHARACTER,
+                PlayerCreationType.KART,
+                PlayerCreationType.TRACK
+            };
+
             var creationsCount = new
             {
-                lbpk = player.creationTypes
-                    .Where(c => !c.IsMNR)
-                    .GroupBy(c => c.Type)
-                    .ToDictionary(g => g.Key.ToString(), g => g.Count()),
+                lbpk = lbpkTypeValues
+                    .ToDictionary(
+                        t => t.ToString(),
+                        t => player.creationTypes.Count(c => !c.IsMNR && c.Type == t)
+                    ),
                 mnr = player.creationTypes
                     .Where(c => c.IsMNR)
                     .GroupBy(c => c.Platform)
                     .ToDictionary(
                         g => g.Key.ToString(),
-                        g => g.GroupBy(c => c.Type)
-                                .ToDictionary(t => t.Key.ToString(), t => t.Count())
+                        g => mnrTypeValues
+                                .ToDictionary(
+                                    t => t.ToString(),
+                                    t => g.Count(c => c.Type == t)
+                                )
                     )
             };
-
-            var skillLevelPS3 = SkillConfig.Instance.GetSkillLevel(player.skillLevelIdPS3);
-            var skillLevelPSV = SkillConfig.Instance.GetSkillLevel(player.skillLevelIdPSV);
-            var skillLevelPSP = SkillConfig.Instance.GetSkillLevel(player.skillLevelIdPSP);
 
             return Json(new
             {
@@ -104,9 +139,9 @@ namespace GameServer.Controllers.Api
                 player.onlineWins,
                 skillLevels = new Dictionary<string, object>
                 {
-                    ["PS3"] = new { skillLevelPS3.Id, skillLevelPS3.Name },
-                    ["PSV"] = new { skillLevelPSV.Id, skillLevelPSV.Name },
-                    ["PSP"] = new { skillLevelPSP.Id, skillLevelPSP.Name }
+                    ["PS3"] = new { Id = player.skillLevelIdPS3, Name = player.skillLevelNamePS3, xp = player.totalXpPS3, creationPoints = player.creationXpPS3, raceXp = player.raceXpPS3 },
+                    ["PSV"] = new { Id = player.skillLevelIdPSV, Name = player.skillLevelNamePSV, xp = player.totalXpPSV, creationPoints = player.creationXpPSV, raceXp = player.raceXpPSV },
+                    ["PSP"] = new { Id = player.skillLevelIdPSP, Name = player.skillLevelNamePSP, xp = player.totalXpPSP, creationPoints = player.creationXpPSP, raceXp = player.raceXpPSP }
                 },
                 player.skillRating,
                 player.WinStreak,

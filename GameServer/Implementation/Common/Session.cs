@@ -22,10 +22,6 @@ namespace GameServer.Implementation.Common
 {
     public class Session
     {
-        private record ConnectionIdentity(string ConsoleId);
-
-        private static readonly ConcurrentDictionary<int, ConnectionIdentity> LastConnectionByUserId = new();
-
         public static string Login(Database database, IPAddress ip, Platform platform, string ticket, string hmac, string console_id, bool policyAccepted, out string token)
         {
             token = null;
@@ -198,7 +194,10 @@ namespace GameServer.Implementation.Common
                 SessionId = Guid.NewGuid(),
                 Platform = platform,
                 LastPing = TimeUtils.Now,
-                Presence = Presence.ONLINE
+                Presence = Presence.ONLINE,
+                IsRpcn = IsRPCN,
+                ConsoleId = console_id,
+                IpAddress = ip.MapToIPv4()
             };
 
             List<string> MNR_IDs = [ "BCUS98167", "BCES00701", "BCES00764", "BCJS30041", "BCAS20105", 
@@ -225,8 +224,6 @@ namespace GameServer.Implementation.Common
                 };
                 return errorResp.Serialize();
             }
-
-            LastConnectionByUserId[user.UserId] = new ConnectionIdentity(console_id);
             
             database.Sessions.Add(session);
             database.SaveChanges();
@@ -351,17 +348,6 @@ namespace GameServer.Implementation.Common
         public static User GetUser(Database database, ClaimsPrincipal user)
         {
             return GetSession(database, user).User;
-        }
-
-        public static bool TryGetLastConnectionIdentity(int userId, out string consoleId)
-        {
-            consoleId = null;
-
-            if (!LastConnectionByUserId.TryGetValue(userId, out var identity))
-                return false;
-
-            consoleId = identity.ConsoleId;
-            return true;
         }
 
         public static void WriteWhitelist(List<string> whitelist)

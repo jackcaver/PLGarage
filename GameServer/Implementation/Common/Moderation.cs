@@ -1463,10 +1463,10 @@ namespace GameServer.Implementation.Common
             if (session == null)
                 return "no_active_session";
 
-            if (!Session.TryGetLastConnectionIdentity(userId, out var consoleId))
+            if (string.IsNullOrWhiteSpace(session.ConsoleId))
                 return "no_console_id_found";
 
-            return AddBannedConsoleId(consoleId);
+            return AddBannedConsoleId(session.ConsoleId);
         }
         #endregion
 

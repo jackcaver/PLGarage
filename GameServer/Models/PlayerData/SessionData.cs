@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Net;
 
 namespace GameServer.Models.PlayerData
 {
@@ -25,5 +26,8 @@ namespace GameServer.Models.PlayerData
         public DateTime LastPing { get; set; } = TimeUtils.Now;
         public Platform Platform { get; set; }
         public bool IsMNR { get; set; }
+        public bool IsRpcn { get; set; }
+        public string ConsoleId { get; set; }
+        public IPAddress IpAddress { get; set; }
     }
 }

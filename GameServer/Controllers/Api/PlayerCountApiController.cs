@@ -42,12 +42,12 @@ namespace GameServer.Controllers.Api
                 .Take(perPage)
                 .Select(x => new
                 {
-                    x.SessionId,
                     x.UserId,
                     x.Username,
                     Presence = x.Presence.ToString(),
                     Platform = x.Platform.ToString(),
-                    x.IsMNR
+                    x.IsMNR,
+                    x.IsRpcn
                 })
                 .ToList();
 
@@ -59,7 +59,7 @@ namespace GameServer.Controllers.Api
                     x.Presence,
                     x.Platform,
                     x.IsMNR,
-                    IsRpcn = Session.TryGetSessionNetwork(x.SessionId, out var isRpcn) && isRpcn
+                    x.IsRpcn
                 })
                 .ToList();
 
@@ -102,12 +102,12 @@ namespace GameServer.Controllers.Api
                             x.LastPing.AddMinutes(1) > TimeUtils.Now)
                 .Select(x => new
                 {
-                    x.SessionId
+                    x.IsRpcn
                 })
                 .ToList();
 
-            var rpcnSessions = sessions.Count(x => Session.TryGetSessionNetwork(x.SessionId, out var isRpcn) && isRpcn);
-            var psnSessions = sessions.Count(x => Session.TryGetSessionNetwork(x.SessionId, out var isRpcn) && !isRpcn);
+            var rpcnSessions = sessions.Count(x => x.IsRpcn);
+            var psnSessions = sessions.Count(x => !x.IsRpcn);
 
             return Json(new
             {

@@ -802,7 +802,6 @@ namespace GameServer.Implementation.Common
             database.Sessions.Remove(session);
             database.SaveChanges();
             ServerCommunication.NotifySessionDestroyed(sessionID);
-            Session.RemoveSessionNetwork(sessionID);
             
             return "ok";
         }
@@ -815,10 +814,7 @@ namespace GameServer.Implementation.Common
             var sessions = database.Sessions.Where(match => match.UserId == userID);
             
             foreach (var id in sessions.Select(s => s.SessionId).ToList())
-            {
                 ServerCommunication.NotifySessionDestroyed(id);
-                Session.RemoveSessionNetwork(id);
-            }
 
             sessions.ExecuteDelete();
             
@@ -1467,10 +1463,10 @@ namespace GameServer.Implementation.Common
             if (session == null)
                 return "no_active_session";
 
-            if (!Session.TryGetLastConnectionIdentity(userId, out var consoleId))
+            if (string.IsNullOrWhiteSpace(session.ConsoleId))
                 return "no_console_id_found";
 
-            return AddBannedConsoleId(consoleId);
+            return AddBannedConsoleId(session.ConsoleId);
         }
         #endregion
 

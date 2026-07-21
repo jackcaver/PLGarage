@@ -4,6 +4,7 @@ using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GameServer.Migrations
 {
     [DbContext(typeof(Database))]
-    partial class DatabaseModelSnapshot : ModelSnapshot
+    [Migration("20260720233413_AddSessionNetworkInfo")]
+    partial class AddSessionNetworkInfo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -340,10 +343,10 @@ namespace GameServer.Migrations
                     b.Property<bool>("ManageBannedConsoleIDs")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<bool>("ManageHotlap")
+                    b.Property<bool>("ManageBannedIPs")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<bool>("ManageBannedIPs")
+                    b.Property<bool>("ManageHotlap")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("ManageModerators")

@@ -74,9 +74,9 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/creation/{id}")]
-        public IActionResult GetCreationsById(int id)
+        public IActionResult GetCreationById(int id)
         {
-            var creations = database.PlayerCreations
+            var creation = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.PlayerCreationId == id
                 && x.ModerationStatus != ModerationStatus.BANNED
@@ -115,48 +115,48 @@ namespace GameServer.Controllers.Api
                     recordLongestDrift = x.LongestDrift,
                     recordLongestHangTime = x.LongestHangTime
                 })
-                .ToList();
+                .FirstOrDefault();
 
-            if (creations.Count == 0)
+            if (creation == null)
                 return NotFound(new { error = "error_creation_not_found"});
 
-            return Json(creations.Select(x => new
+            return Json(new
             {
-                x.PlayerCreationId,
-                x.Name,
-                x.Description,
-                rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
-                hearts = x.HeartsCount,
-                creatorUsername = x.Username,
-                Type = x.Type.ToString(),
-                x.Tags,
-                Platform = x.Platform.ToString(),
-                x.IsMNR,
-                x.CreatedAt,
+                creation.PlayerCreationId,
+                creation.Name,
+                creation.Description,
+                rating = (creation.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
+                hearts = creation.HeartsCount,
+                creatorUsername = creation.Username,
+                Type = creation.Type.ToString(),
+                creation.Tags,
+                Platform = creation.Platform.ToString(),
+                creation.IsMNR,
+                creation.CreatedAt,
                 points = new
                 {
-                    all_time = x.pointsAllTime,
-                    this_week = x.pointsThisWeek,
-                    last_week = x.pointsLastWeek
+                    all_time = creation.pointsAllTime,
+                    this_week = creation.pointsThisWeek,
+                    last_week = creation.pointsLastWeek
                 },
                 downloads = new
                 {
-                    all_time = x.downloadsAllTime,
-                    this_week = x.downloadsThisWeek,
-                    last_week = x.downloadsLastWeek
+                    all_time = creation.downloadsAllTime,
+                    this_week = creation.downloadsThisWeek,
+                    last_week = creation.downloadsLastWeek
                 },
                 views = new
                 {
-                    all_time = x.viewsAllTime,
-                    this_week = x.viewsThisWeek,
-                    last_week = x.viewsLastWeek
+                    all_time = creation.viewsAllTime,
+                    this_week = creation.viewsThisWeek,
+                    last_week = creation.viewsLastWeek
                 },
-                records = x.Type == PlayerCreationType.TRACK
-                    ? x.IsMNR
-                        ? (object)new { bestLapTime = x.recordBestLapTime, longestDrift = x.recordLongestDrift, longestHangTime = x.recordLongestHangTime }
-                        : new { score = x.recordScore, finishTime = x.recordFinishTime }
+                records = creation.Type == PlayerCreationType.TRACK
+                    ? creation.IsMNR
+                        ? (object)new { bestLapTime = creation.recordBestLapTime, longestDrift = creation.recordLongestDrift, longestHangTime = creation.recordLongestHangTime }
+                        : new { score = creation.recordScore, finishTime = creation.recordFinishTime }
                     : null
-            }));
+            });
         }
 
         [HttpGet]

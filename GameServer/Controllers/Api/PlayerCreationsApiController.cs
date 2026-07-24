@@ -380,7 +380,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/creations/{username}")]
-        public IActionResult GetCreationsByUsername(string username, bool? isMnr, int page = 1, int perPage = 10)
+        public IActionResult GetCreationsByUsername(string username, PlayerCreationType? type, Platform? platform, bool? isMnr, int page = 1, int perPage = 10)
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
@@ -393,6 +393,16 @@ namespace GameServer.Controllers.Api
                 && x.ModerationStatus != ModerationStatus.BANNED
                 && x.ModerationStatus != ModerationStatus.ILLEGAL
                 && (!isMnr.HasValue || x.IsMNR == isMnr.Value));
+
+            if (type.HasValue)
+            {
+                q = q.Where(x => x.Type == type.Value);
+            }
+
+            if (platform.HasValue)
+            {
+                q = q.Where(x => x.Platform == platform.Value);
+            }
 
             var total = q.Count();
 

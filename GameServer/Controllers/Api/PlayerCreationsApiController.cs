@@ -161,8 +161,12 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("api/creations/search")]
-        public IActionResult SearchCreations(string query, PlayerCreationType? type, bool? isMnr, int page = 1, int perPage = 10)
+        public IActionResult SearchCreations(string query, PlayerCreationType? type, Platform? platform, bool? isMnr, int page = 1, int perPage = 10)
         {
+            if (page < 1) page = 1;
+            if (perPage < 1) perPage = 10;
+            if (perPage > 10) perPage = 10;
+
             var q = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.Type != PlayerCreationType.DELETED 
@@ -180,6 +184,11 @@ namespace GameServer.Controllers.Api
             if (type.HasValue)
             {
                 q = q.Where(x => x.Type == type.Value);
+            }
+
+            if (platform.HasValue)
+            {
+                q = q.Where(x => x.Platform == platform.Value);
             }
 
             if (isMnr.HasValue)
@@ -371,18 +380,26 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/creations/{username}")]
-        public IActionResult GetCreationsByUsername(string username)
+        public IActionResult GetCreationsByUsername(string username, bool? isMnr, int page = 1, int perPage = 10)
         {
+            if (page < 1) page = 1;
+            if (perPage < 1) perPage = 10;
+            if (perPage > 10) perPage = 10;
+
             var q = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.Author.Username == username
                 && x.Type != PlayerCreationType.DELETED
                 && x.ModerationStatus != ModerationStatus.BANNED
-                && x.ModerationStatus != ModerationStatus.ILLEGAL);
+                && x.ModerationStatus != ModerationStatus.ILLEGAL
+                && (!isMnr.HasValue || x.IsMNR == isMnr.Value));
 
             var total = q.Count();
 
             var creations = q
+                .OrderByDescending(x => x.CreatedAt)
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
                 .Select(x => new
                 {
                     x.PlayerCreationId,
@@ -470,7 +487,7 @@ namespace GameServer.Controllers.Api
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
-            if (perPage > 50) perPage = 50;
+            if (perPage > 10) perPage = 10;
 
             var creation = database.PlayerCreations
                 .AsNoTracking()

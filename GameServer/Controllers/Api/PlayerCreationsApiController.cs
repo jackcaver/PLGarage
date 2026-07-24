@@ -74,9 +74,9 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/creation/{id}")]
-        public IActionResult GetCreationsById(int id)
+        public IActionResult GetCreationById(int id)
         {
-            var creations = database.PlayerCreations
+            var creation = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.PlayerCreationId == id
                 && x.ModerationStatus != ModerationStatus.BANNED
@@ -115,54 +115,58 @@ namespace GameServer.Controllers.Api
                     recordLongestDrift = x.LongestDrift,
                     recordLongestHangTime = x.LongestHangTime
                 })
-                .ToList();
+                .FirstOrDefault();
 
-            if (creations.Count == 0)
+            if (creation == null)
                 return NotFound(new { error = "error_creation_not_found"});
 
-            return Json(creations.Select(x => new
+            return Json(new
             {
-                x.PlayerCreationId,
-                x.Name,
-                x.Description,
-                rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
-                hearts = x.HeartsCount,
-                creatorUsername = x.Username,
-                Type = x.Type.ToString(),
-                x.Tags,
-                Platform = x.Platform.ToString(),
-                x.IsMNR,
-                x.CreatedAt,
+                creation.PlayerCreationId,
+                creation.Name,
+                creation.Description,
+                rating = (creation.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
+                hearts = creation.HeartsCount,
+                creatorUsername = creation.Username,
+                Type = creation.Type.ToString(),
+                creation.Tags,
+                Platform = creation.Platform.ToString(),
+                creation.IsMNR,
+                creation.CreatedAt,
                 points = new
                 {
-                    all_time = x.pointsAllTime,
-                    this_week = x.pointsThisWeek,
-                    last_week = x.pointsLastWeek
+                    all_time = creation.pointsAllTime,
+                    this_week = creation.pointsThisWeek,
+                    last_week = creation.pointsLastWeek
                 },
                 downloads = new
                 {
-                    all_time = x.downloadsAllTime,
-                    this_week = x.downloadsThisWeek,
-                    last_week = x.downloadsLastWeek
+                    all_time = creation.downloadsAllTime,
+                    this_week = creation.downloadsThisWeek,
+                    last_week = creation.downloadsLastWeek
                 },
                 views = new
                 {
-                    all_time = x.viewsAllTime,
-                    this_week = x.viewsThisWeek,
-                    last_week = x.viewsLastWeek
+                    all_time = creation.viewsAllTime,
+                    this_week = creation.viewsThisWeek,
+                    last_week = creation.viewsLastWeek
                 },
-                records = x.Type == PlayerCreationType.TRACK
-                    ? x.IsMNR
-                        ? (object)new { bestLapTime = x.recordBestLapTime, longestDrift = x.recordLongestDrift, longestHangTime = x.recordLongestHangTime }
-                        : new { score = x.recordScore, finishTime = x.recordFinishTime }
+                records = creation.Type == PlayerCreationType.TRACK
+                    ? creation.IsMNR
+                        ? (object)new { bestLapTime = creation.recordBestLapTime, longestDrift = creation.recordLongestDrift, longestHangTime = creation.recordLongestHangTime }
+                        : new { score = creation.recordScore, finishTime = creation.recordFinishTime }
                     : null
-            }));
+            });
         }
 
         [HttpGet]
         [Route("api/creations/search")]
-        public IActionResult SearchCreations(string query, PlayerCreationType? type, bool? isMnr, int page = 1, int perPage = 10)
+        public IActionResult SearchCreations(string query, PlayerCreationType? type, Platform? platform, bool? isMnr, int page = 1, int perPage = 10)
         {
+            if (page < 1) page = 1;
+            if (perPage < 1) perPage = 10;
+            if (perPage > 10) perPage = 10;
+
             var q = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.Type != PlayerCreationType.DELETED 
@@ -180,6 +184,11 @@ namespace GameServer.Controllers.Api
             if (type.HasValue)
             {
                 q = q.Where(x => x.Type == type.Value);
+            }
+
+            if (platform.HasValue)
+            {
+                q = q.Where(x => x.Platform == platform.Value);
             }
 
             if (isMnr.HasValue)
@@ -371,18 +380,36 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/creations/{username}")]
-        public IActionResult GetCreationsByUsername(string username)
+        public IActionResult GetCreationsByUsername(string username, PlayerCreationType? type, Platform? platform, bool? isMnr, int page = 1, int perPage = 10)
         {
+            if (page < 1) page = 1;
+            if (perPage < 1) perPage = 10;
+            if (perPage > 10) perPage = 10;
+
             var q = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.Author.Username == username
                 && x.Type != PlayerCreationType.DELETED
                 && x.ModerationStatus != ModerationStatus.BANNED
-                && x.ModerationStatus != ModerationStatus.ILLEGAL);
+                && x.ModerationStatus != ModerationStatus.ILLEGAL
+                && (!isMnr.HasValue || x.IsMNR == isMnr.Value));
+
+            if (type.HasValue)
+            {
+                q = q.Where(x => x.Type == type.Value);
+            }
+
+            if (platform.HasValue)
+            {
+                q = q.Where(x => x.Platform == platform.Value);
+            }
 
             var total = q.Count();
 
             var creations = q
+                .OrderByDescending(x => x.CreatedAt)
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
                 .Select(x => new
                 {
                     x.PlayerCreationId,
@@ -470,7 +497,7 @@ namespace GameServer.Controllers.Api
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
-            if (perPage > 50) perPage = 50;
+            if (perPage > 10) perPage = 10;
 
             var creation = database.PlayerCreations
                 .AsNoTracking()

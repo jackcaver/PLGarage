@@ -1478,7 +1478,11 @@ namespace GameServer.Implementation.Common
             if (creation == null)
                 return "error_creation_not_found";
 
-            if (creation.Type == PlayerCreationType.DELETED || creation.Type == PlayerCreationType.STORY || creation.Type == PlayerCreationType.ITEM)
+            if (creation.Type == PlayerCreationType.DELETED 
+                || creation.Type == PlayerCreationType.STORY 
+                || creation.Type == PlayerCreationType.ITEM
+                || creation.Type == PlayerCreationType.PHOTO
+                || creation.Type == PlayerCreationType.PLANET)
                 return "error_invalid_creation_type";
 
             if (creation.ModerationStatus == ModerationStatus.BANNED || creation.ModerationStatus == ModerationStatus.ILLEGAL)

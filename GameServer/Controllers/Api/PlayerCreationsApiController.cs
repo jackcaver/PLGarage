@@ -79,8 +79,8 @@ namespace GameServer.Controllers.Api
             var creation = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.PlayerCreationId == id
-                && x.ModerationStatus != ModerationStatus.BANNED
-                && x.ModerationStatus != ModerationStatus.ILLEGAL)
+                && x.Type != PlayerCreationType.DELETED
+                && x.Type != PlayerCreationType.STORY)
                 .Select(x => new
                 {
                     x.PlayerCreationId,
@@ -93,6 +93,7 @@ namespace GameServer.Controllers.Api
                     x.Tags,
                     x.Platform,
                     x.IsMNR,
+                    x.ModerationStatus,
                     x.CreatedAt,
                     pointsAllTime = x.Points.Sum(p => p.Amount),
                     pointsThisWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount),
@@ -132,6 +133,7 @@ namespace GameServer.Controllers.Api
                 creation.Tags,
                 Platform = creation.Platform.ToString(),
                 creation.IsMNR,
+                creation.ModerationStatus,
                 creation.CreatedAt,
                 points = new
                 {
@@ -390,6 +392,9 @@ namespace GameServer.Controllers.Api
                 .AsNoTracking()
                 .Where(x => x.Author.Username == username
                 && x.Type != PlayerCreationType.DELETED
+                && x.Type != PlayerCreationType.PHOTO
+                && x.Type != PlayerCreationType.PLANET
+                && x.Type != PlayerCreationType.ITEM
                 && x.ModerationStatus != ModerationStatus.BANNED
                 && x.ModerationStatus != ModerationStatus.ILLEGAL
                 && (!isMnr.HasValue || x.IsMNR == isMnr.Value));
@@ -645,6 +650,9 @@ namespace GameServer.Controllers.Api
                 .Where(x => x.IsTeamPick
                     && x.Type != PlayerCreationType.DELETED
                     && x.Type != PlayerCreationType.STORY
+                    && x.Type != PlayerCreationType.PHOTO
+                    && x.Type != PlayerCreationType.PLANET
+                    && x.Type != PlayerCreationType.ITEM
                     && x.ModerationStatus != ModerationStatus.BANNED
                     && x.ModerationStatus != ModerationStatus.ILLEGAL)
                 .OrderByDescending(x => x.UpdatedAt);

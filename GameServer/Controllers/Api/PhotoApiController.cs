@@ -17,9 +17,7 @@ namespace GameServer.Controllers.Api
                 .AsNoTracking()
                 .Include(c => c.Author)
                 .FirstOrDefault(c => c.Type == PlayerCreationType.PHOTO 
-                && c.PlayerCreationId == id
-                && c.ModerationStatus != ModerationStatus.BANNED
-                && c.ModerationStatus != ModerationStatus.ILLEGAL);
+                && c.PlayerCreationId == id);
 
             if (photo == null)
                 return NotFound(new { error = "error_photo_not_found" });
@@ -30,6 +28,7 @@ namespace GameServer.Controllers.Api
                 photo.AssociatedUsernames,
                 photo.TrackId,
                 AuthorUsername = photo.Author.Username,
+                photo.ModerationStatus,
                 photo.CreatedAt
             });
         }

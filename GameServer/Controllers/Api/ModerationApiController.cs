@@ -1240,6 +1240,17 @@ namespace GameServer.Controllers.Api
             return Content(Moderation.SetPassword(database, id, password));
         }
 
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/{username}/id")]
+        public IActionResult GetModeratorId(string username)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ManageModerators)
+                return StatusCode(403);
+            return Content(Moderation.GetModeratorId(database, username));
+        }
+
         [HttpPost]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/{id}/set_permissions")]

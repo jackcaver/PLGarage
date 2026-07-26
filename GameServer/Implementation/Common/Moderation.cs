@@ -1646,6 +1646,16 @@ namespace GameServer.Implementation.Common
             return JsonConvert.SerializeObject(moderator);
         }
 
+        public static string GetModeratorId(Database database, string username)
+        {
+            var moderator = database.Moderators.FirstOrDefault(match => match.Username == username);
+
+            if (moderator == null)
+                return "error_moderator_not_found";
+
+            return moderator.ID.ToString();
+        }
+
         public static string SetPermissions(Database database, int userID, ModeratorPermissions permissions)
         {
             var moderator = database.Moderators.FirstOrDefault(match => match.ID == userID);

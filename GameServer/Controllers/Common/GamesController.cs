@@ -299,10 +299,8 @@ namespace GameServer.Controllers.Common
             }
             else
             {
-                GameType gameType = session.IsMNR ? (GameType)(score.SubGroupId - 10) : (GameType)score.SubGroupId;
-
-                if (session.IsMNR && gameType == GameType.OVERALL && game.track_idx != hotlap.TrackId)
-                    gameType = GameType.BUBBLE_CHASE;
+                if (session.IsMNR && game.game_type == GameType.ONLINE_HOT_SEAT_RACE && game.track_idx != hotlap.TrackId)
+                    game.game_type = GameType.ONLINE_TIME_TRIAL_RACE;
 
                 database.Scores.Add(new Score
                 {
@@ -312,7 +310,7 @@ namespace GameServer.Controllers.Common
                     PlayerId = game.host_player_id,
                     PlaygroupSize = game_player_stats.playgroup_size,
                     Points = game_player_stats.score,
-                    SubGroupId = (int)gameType,
+                    SubGroupId = session.IsMNR ? (int)game.game_type - 10 : (int)game.game_type,
                     SubKeyId = game.track_idx,
                     UpdatedAt = TimeUtils.Now,
                     Latitude = game_player_stats.latitude,

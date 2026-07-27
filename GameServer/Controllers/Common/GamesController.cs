@@ -42,6 +42,7 @@ namespace GameServer.Controllers.Common
         {
             var session = Session.GetSession(database, User);
             var user = session.User;
+            var hotlap = ContentUpdates.ReadHotlapData();
             string FormScore = Request.Form["game_player_stats[score]"];
             string FormFinishTime = Request.Form["game_player_stats[finish_time]"];
             string FormPoints = Request.Form["game_player_stats[points]"];
@@ -298,6 +299,9 @@ namespace GameServer.Controllers.Common
             }
             else
             {
+                if (session.IsMNR && game.game_type == GameType.ONLINE_HOT_SEAT_RACE && game.track_idx != hotlap.TrackId)
+                    game.game_type = GameType.ONLINE_TIME_TRIAL_RACE;
+
                 database.Scores.Add(new Score
                 {
                     CreatedAt = TimeUtils.Now,

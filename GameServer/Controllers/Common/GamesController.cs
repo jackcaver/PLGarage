@@ -42,6 +42,7 @@ namespace GameServer.Controllers.Common
         {
             var session = Session.GetSession(database, User);
             var user = session.User;
+            var hotlap = ContentUpdates.ReadHotlapData();
             string FormScore = Request.Form["game_player_stats[score]"];
             string FormFinishTime = Request.Form["game_player_stats[finish_time]"];
             string FormPoints = Request.Form["game_player_stats[points]"];
@@ -298,6 +299,11 @@ namespace GameServer.Controllers.Common
             }
             else
             {
+                int SubGroupId = session.IsMNR ? (int)game.game_type - 10 : (int)game.game_type;
+                
+                if (session.IsMNR == true && SubGroupId == 700 && game.track_idx != hotlap.TrackId)
+                    SubGroupId = 703;
+
                 database.Scores.Add(new Score
                 {
                     CreatedAt = TimeUtils.Now,
@@ -306,7 +312,7 @@ namespace GameServer.Controllers.Common
                     PlayerId = game.host_player_id,
                     PlaygroupSize = game_player_stats.playgroup_size,
                     Points = game_player_stats.score,
-                    SubGroupId = session.IsMNR ? (int)game.game_type - 10 : (int)game.game_type,
+                    SubGroupId = SubGroupId,
                     SubKeyId = game.track_idx,
                     UpdatedAt = TimeUtils.Now,
                     Latitude = game_player_stats.latitude,

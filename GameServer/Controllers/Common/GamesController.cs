@@ -299,10 +299,10 @@ namespace GameServer.Controllers.Common
             }
             else
             {
-                int SubGroupId = session.IsMNR ? (int)game.game_type - 10 : (int)game.game_type;
-                
-                if (session.IsMNR == true && SubGroupId == 700 && game.track_idx != hotlap.TrackId)
-                    SubGroupId = 703;
+                GameType gameType = session.IsMNR ? (GameType)(score.SubGroupId + 10) : (GameType)score.SubGroupId;
+
+                if (session.IsMNR && gameType == GameType.OVERALL && game.track_idx != hotlap.TrackId)
+                    gameType = GameType.BUBBLE_CHASE;
 
                 database.Scores.Add(new Score
                 {
@@ -312,7 +312,7 @@ namespace GameServer.Controllers.Common
                     PlayerId = game.host_player_id,
                     PlaygroupSize = game_player_stats.playgroup_size,
                     Points = game_player_stats.score,
-                    SubGroupId = SubGroupId,
+                    SubGroupId = (int)gameType,
                     SubKeyId = game.track_idx,
                     UpdatedAt = TimeUtils.Now,
                     Latitude = game_player_stats.latitude,

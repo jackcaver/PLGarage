@@ -299,7 +299,7 @@ namespace GameServer.Controllers.Common
             }
             else
             {
-                GameType gameType = session.IsMNR ? (GameType)(score.SubGroupId + 10) : (GameType)score.SubGroupId;
+                GameType gameType = session.IsMNR ? (GameType)(score.SubGroupId - 10) : (GameType)score.SubGroupId;
 
                 if (session.IsMNR && gameType == GameType.OVERALL && game.track_idx != hotlap.TrackId)
                     gameType = GameType.BUBBLE_CHASE;

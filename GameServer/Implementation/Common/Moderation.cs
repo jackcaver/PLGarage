@@ -856,8 +856,6 @@ namespace GameServer.Implementation.Common
             if (!database.Users.Any(u => u.UserId == targetUserId))
                 return null;
 
-            var user = database.Users.First(u => u.UserId == targetUserId);
-
             if (ServerConfig.Instance.DeleteCreationData)
                 storage.RemoveProfileAvatars(targetUserId, isMNR);
 

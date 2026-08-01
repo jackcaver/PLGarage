@@ -29,7 +29,7 @@ namespace GameServer.Controllers.Common
                     language_code = announcement.LanguageCode,
                     created_at = announcement.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     subject = announcement.Subject,
-                    text = announcement.Text,
+                    text = announcement.Text.Replace("%username", session.Username)
                 }).ToList();
             
             var resp = new Response<List<Announcements>>

@@ -856,8 +856,6 @@ namespace GameServer.Implementation.Common
             if (!database.Users.Any(u => u.UserId == targetUserId))
                 return null;
 
-            var user = database.Users.First(u => u.UserId == targetUserId);
-
             if (ServerConfig.Instance.DeleteCreationData)
                 storage.RemoveProfileAvatars(targetUserId, isMNR);
 
@@ -866,7 +864,7 @@ namespace GameServer.Implementation.Common
         #endregion
 
         #region PlayerComplaints
-        public static string GetPlayerComplaints(Database database, int page, int per_page, int? from, int? playerID)
+        public static string GetPlayerComplaints(Database database, int page, int per_page, int? from, int? playerID, SortOrder? sortOrder)
         {
             if (page <= 0)
                 page = 1;
@@ -880,7 +878,10 @@ namespace GameServer.Implementation.Common
 
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
-            var reports = query.Skip(pageStart).Take(per_page).ToList();
+            var reports = (sortOrder == SortOrder.desc || sortOrder == null ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id))
+                .Skip(pageStart)
+                .Take(per_page)
+                .ToList();
 
             return JsonConvert.SerializeObject(new ModerationPageResponse<PlayerComplaintData>
             {
@@ -901,7 +902,7 @@ namespace GameServer.Implementation.Common
         #endregion
 
         #region PlayerCreationComplaints
-        public static string GetPlayerCreationComplaints(Database database, int page, int per_page, int? from, int? playerID, int? playerCreationID)
+        public static string GetPlayerCreationComplaints(Database database, int page, int per_page, int? from, int? playerID, int? playerCreationID, SortOrder? sortOrder)
         {
             if (page <= 0)
                 page = 1;
@@ -917,7 +918,10 @@ namespace GameServer.Implementation.Common
 
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
-            var reports = query.Skip(pageStart).Take(per_page).ToList();
+            var reports = (sortOrder == SortOrder.desc || sortOrder == null ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id))
+                .Skip(pageStart)
+                .Take(per_page)
+                .ToList();
 
             return JsonConvert.SerializeObject(new ModerationPageResponse<PlayerCreationComplaintData>
             {

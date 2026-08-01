@@ -74,6 +74,8 @@ namespace GameServer.Controllers.Api
                     x.LongestDrift,
                     x.LongestHangTime,
                     x.ModMiles,
+                    x.CharacterIdx,
+                    x.KartIdx,
                     x.IsBanned,
                     x.CreatedAt,
                     creationTypes = x.PlayerCreations
@@ -150,6 +152,8 @@ namespace GameServer.Controllers.Api
                 player.LongestHangTime,
                 presence,
                 player.ModMiles,
+                player.CharacterIdx,
+                player.KartIdx,
                 player.IsBanned,
                 player.CreatedAt,
                 creationsCount

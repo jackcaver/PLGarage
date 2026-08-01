@@ -3,6 +3,7 @@ using GameServer.Models;
 using GameServer.Models.Moderation;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
+using GameServer.Models.Request;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -538,13 +539,13 @@ namespace GameServer.Controllers.Api
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/player_complaints")]
-        public IActionResult GetPlayerComplaints(int page, int per_page, int? from, int? playerID)
+        public IActionResult GetPlayerComplaints(int page, int per_page, int? from, int? playerID, SortOrder? sortOrder)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.ViewPlayerComplaints)
                 return StatusCode(403);
 
-            return Content(Moderation.GetPlayerComplaints(database, page, per_page, from, playerID));
+            return Content(Moderation.GetPlayerComplaints(database, page, per_page, from, playerID, sortOrder ?? SortOrder.desc));
         }
 
         [HttpGet]
@@ -569,13 +570,13 @@ namespace GameServer.Controllers.Api
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/player_creation_complaints")]
-        public IActionResult GetPlayerCreationComplaints(int page, int per_page, int? from, int? playerID, int? playerCreationID)
+        public IActionResult GetPlayerCreationComplaints(int page, int per_page, int? from, int? playerID, int? playerCreationID, SortOrder? sortOrder)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.ViewPlayerCreationComplaints)
                 return StatusCode(403);
 
-            return Content(Moderation.GetPlayerCreationComplaints(database, page, per_page, from, playerID, playerCreationID));
+            return Content(Moderation.GetPlayerCreationComplaints(database, page, per_page, from, playerID, playerCreationID, sortOrder ?? SortOrder.desc));
         }
 
         [HttpGet]

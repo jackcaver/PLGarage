@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
+using GameServer.Models.Request;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -162,7 +163,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/player/{username}/comments")]
-        public IActionResult GetPlayerComments(string username, int page = 1, int perPage = 10)
+        public IActionResult GetPlayerComments(string username, int page = 1, int perPage = 10, SortOrder? sortOrder = null)
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
@@ -177,12 +178,14 @@ namespace GameServer.Controllers.Api
 
             var query = database.PlayerComments
                 .AsNoTracking()
-                .Where(c => c.PlayerId == player.UserId)
-                .OrderByDescending(c => c.CreatedAt);
+                .Where(c => c.PlayerId == player.UserId);
 
             var total = query.Count();
+            var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                ? query.OrderBy(c => c.CreatedAt)
+                : query.OrderByDescending(c => c.CreatedAt);
 
-            var comments = query
+            var comments = orderedQuery
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .Select(c => new
@@ -199,7 +202,8 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/player/{username}/hearted")]
-        public IActionResult GetPlayerHearted(string username, bool? isMnr = null, int page = 1, int perPage = 10)
+        public IActionResult GetPlayerHearted(string username, bool? isMnr = null, 
+            int page = 1, int perPage = 10, SortOrder? sortOrder = null)
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
@@ -215,16 +219,19 @@ namespace GameServer.Controllers.Api
             var query = database.HeartedProfiles
                 .AsNoTracking()
                 .Where(x => x.UserId == player.UserId)
-                .Where(x => isMnr == true ? x.IsMNR : !x.IsMNR)
-                .OrderByDescending(x => x.HeartedAt);
+                .Where(x => isMnr == true ? x.IsMNR : !x.IsMNR);
 
             var total = query.Count();
+            var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                ? query.OrderBy(x => x.HeartedAt)
+                : query.OrderByDescending(x => x.HeartedAt);
 
-            var hearted = query
+            var hearted = orderedQuery
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .Select(x => new
                 {
+                    x.HeartedUserId,
                     x.HeartedUser.Username,
                     x.HeartedAt
                 })
@@ -234,19 +241,18 @@ namespace GameServer.Controllers.Api
         }
 
     [HttpGet]
-    [Route("/api/players/recent")]
-    public IActionResult GetRecentPlayers(bool? isMnr = null, int page = 1, int perPage = 10)
+    [Route("/api/recent/players/")]
+    public IActionResult GetRecentPlayers(int count = 10, bool? playedMnr = null)
     {
-        if (page < 1) page = 1;
-        if (perPage < 1) perPage = 10;
-        if (perPage > 10) perPage = 10;
+        if (count < 1) count = 10;
+        if (count > 10) count = 10;
 
         var query = database.Users.AsNoTracking()
             .Where(u => u.IsBanned == false);
 
-        if (isMnr.HasValue)
+        if (playedMnr.HasValue)
         {
-            query = query.Where(u => u.PlayedMNR == isMnr.Value);
+            query = query.Where(u => u.PlayedMNR == playedMnr.Value);
         }
 
         query = query.Where(u => !u.IsBanned)
@@ -255,8 +261,7 @@ namespace GameServer.Controllers.Api
         var total = query.Count();
 
         var recentPlayers = query
-            .Skip((page - 1) * perPage)
-            .Take(perPage)
+            .Take(count)
             .Select(u => new
             {
                 u.UserId,

@@ -1,5 +1,6 @@
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Utils;
+using GameServer.Models.Request;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -34,8 +35,8 @@ namespace GameServer.Controllers.Api
         }
 
         [HttpGet]
-        [Route("/api/item/username/{username}")]
-        public IActionResult GetItemsByUsername(string username, int page = 1, int perPage = 10)
+        [Route("/api/items/username/{username}")]
+        public IActionResult GetItemsByUsername(string username, int page = 1, int perPage = 10, SortOrder? sortOrder = null)
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
@@ -46,15 +47,17 @@ namespace GameServer.Controllers.Api
                 .Where(c => c.Type == PlayerCreationType.ITEM 
                 && c.Author.Username == username
                 && c.ModerationStatus != ModerationStatus.BANNED
-                && c.ModerationStatus != ModerationStatus.ILLEGAL)
-                .OrderByDescending(p => p.CreatedAt);
+                && c.ModerationStatus != ModerationStatus.ILLEGAL);
 
             var total = query.Count();
+            var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                ? query.OrderBy(p => p.CreatedAt)
+                : query.OrderByDescending(p => p.CreatedAt);
 
             if (total == 0)
                 return NotFound(new { error = "error_items_not_found"});
 
-            var items = query
+            var items = orderedQuery
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .Select(c => new
@@ -68,10 +71,9 @@ namespace GameServer.Controllers.Api
 
             return Json(new { total, items });
         }
-
         [HttpGet]
-        [Route("/api/item/recent")]
-        public IActionResult GetRecentItems(int page = 1, int perPage = 10)
+        [Route("/api/items")]
+        public IActionResult GetItems(int page = 1, int perPage = 10, SortOrder? sortOrder = null)
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
@@ -81,15 +83,18 @@ namespace GameServer.Controllers.Api
                 .AsNoTracking()
                 .Where(c => c.Type == PlayerCreationType.ITEM
                 && c.ModerationStatus != ModerationStatus.BANNED
-                && c.ModerationStatus != ModerationStatus.ILLEGAL)
-                .OrderByDescending(p => p.CreatedAt);
+                && c.ModerationStatus != ModerationStatus.ILLEGAL);
+
+            var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                ? query.OrderBy(p => p.CreatedAt)
+                : query.OrderByDescending(p => p.CreatedAt);
 
             var total = query.Count();
 
             if (total == 0)
                 return NotFound(new { error = "error_items_not_found" });
 
-            var items = query
+            var items = orderedQuery
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .Select(c => new
@@ -97,7 +102,6 @@ namespace GameServer.Controllers.Api
                     c.PlayerCreationId,
                     c.AssociatedUsernames,
                     c.TrackId,
-                    AuthorUsername = c.Author.Username,
                     c.CreatedAt
                 })
                 .ToList();

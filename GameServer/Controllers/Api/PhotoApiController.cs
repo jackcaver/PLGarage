@@ -1,5 +1,6 @@
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Utils;
+using GameServer.Models.Request;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/photos/username/{username}")]
-        public IActionResult GetPhotosByUsername(string username, int page = 1, int perPage = 10)
+        public IActionResult GetPhotosByUsername(string username, int page = 1, int perPage = 10, SortOrder? sortOrder = null)
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
@@ -46,15 +47,18 @@ namespace GameServer.Controllers.Api
                 .Where(c => c.Type == PlayerCreationType.PHOTO 
                 && c.Author.Username == username
                 && c.ModerationStatus != ModerationStatus.BANNED
-                && c.ModerationStatus != ModerationStatus.ILLEGAL)
-                .OrderByDescending(p => p.CreatedAt);
+                && c.ModerationStatus != ModerationStatus.ILLEGAL);
 
             var total = query.Count();
 
             if (total == 0)
                 return NotFound(new { error = "error_photos_not_found"});
 
-            var photos = query
+            var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                ? query.OrderBy(p => p.CreatedAt)
+                : query.OrderByDescending(p => p.CreatedAt);
+
+            var photos = orderedQuery
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .Select(c => new
@@ -71,7 +75,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/photos/track/{trackId}")]
-        public IActionResult GetPhotosByTrackId(int trackId, int page = 1, int perPage = 10)
+        public IActionResult GetPhotosByTrackId(int trackId, int page = 1, int perPage = 10, SortOrder? sortOrder = null)
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
@@ -82,15 +86,18 @@ namespace GameServer.Controllers.Api
                 .Where(c => c.Type == PlayerCreationType.PHOTO 
                 && c.TrackId == trackId
                 && c.ModerationStatus != ModerationStatus.BANNED
-                && c.ModerationStatus != ModerationStatus.ILLEGAL)
-                .OrderByDescending(p => p.CreatedAt);
+                && c.ModerationStatus != ModerationStatus.ILLEGAL);
+
+            var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                ? query.OrderBy(p => p.CreatedAt)
+                : query.OrderByDescending(p => p.CreatedAt);
 
             var total = query.Count();
 
             if (total == 0)
                 return NotFound(new { error = "error_photos_not_found", trackId });
 
-            var photos = query
+            var photos = orderedQuery
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .Select(c => new
@@ -106,8 +113,8 @@ namespace GameServer.Controllers.Api
         }
 
         [HttpGet]
-        [Route("/api/photos/recent")]
-        public IActionResult GetRecentPhotos(int page = 1, int perPage = 10)
+        [Route("/api/photos")]
+        public IActionResult GetPhotos(int page = 1, int perPage = 10, SortOrder? sortOrder = null)
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
@@ -117,15 +124,18 @@ namespace GameServer.Controllers.Api
                 .AsNoTracking()
                 .Where(c => c.Type == PlayerCreationType.PHOTO
                 && c.ModerationStatus != ModerationStatus.BANNED
-                && c.ModerationStatus != ModerationStatus.ILLEGAL)
-                .OrderByDescending(p => p.CreatedAt);
+                && c.ModerationStatus != ModerationStatus.ILLEGAL);
+
+            var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                ? query.OrderBy(p => p.CreatedAt)
+                : query.OrderByDescending(p => p.CreatedAt);
 
             var total = query.Count();
 
             if (total == 0)
                 return NotFound(new { error = "error_photos_not_found" });
 
-            var photos = query
+            var photos = orderedQuery
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .Select(c => new

@@ -268,7 +268,7 @@ namespace GameServer.Implementation.Common
         #endregion
 
         #region GriefReports
-        public static string GetGriefReports(Database database, int page, int per_page, string context, int? from)
+        public static string GetGriefReports(Database database, int page, int per_page, string context, int? from, SortOrder? sortOrder)
         {
             if (page <= 0)
                 page = 1;
@@ -280,13 +280,19 @@ namespace GameServer.Implementation.Common
             if (!string.IsNullOrEmpty(context))
                 query = query.Where(match => match.Context == context);
 
+            var total = query.Count();
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
-            var reports = query.Skip(pageStart).Take(per_page).ToList();
+            var reports = (sortOrder == SortOrder.desc || sortOrder == null
+                    ? query.OrderByDescending(match => match.Id)
+                    : query.OrderBy(match => match.Id))
+                .Skip(pageStart)
+                .Take(per_page)
+                .ToList();
 
             return JsonConvert.SerializeObject(new ModerationPageResponse<GriefReportData>
             {
-                Total = query.Count(),
+                Total = total,
                 Page = reports
             });
         }
@@ -326,7 +332,7 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
 
-        public static string GetPlayerCreationsWithStatus(Database database, int page, int per_page, ModerationStatus status)
+        public static string GetPlayerCreationsWithStatus(Database database, int page, int per_page, ModerationStatus status, SortOrder? sortOrder)
         {
             if (page <= 0)
                 page = 1;
@@ -337,7 +343,10 @@ namespace GameServer.Implementation.Common
 
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
-            var creations = query.Select(creation => new MinimalCreationInfo
+            var creations = (sortOrder == SortOrder.asc
+                ? query.OrderBy(match => match.PlayerCreationId)
+                : query.OrderByDescending(match => match.PlayerCreationId))
+            .Select(creation => new MinimalCreationInfo
             {
                 ID = creation.PlayerCreationId,
                 Name = creation.Name,
@@ -349,7 +358,10 @@ namespace GameServer.Implementation.Common
                 ParentCreationID = creation.ParentCreationId,
                 ModerationStatus = creation.ModerationStatus,
                 IsMNR = creation.IsMNR
-            }).Skip(pageStart).Take(per_page).ToList();
+            })
+            .Skip(pageStart)
+            .Take(per_page)
+            .ToList();
 
             return JsonConvert.SerializeObject(new ModerationPageResponse<MinimalCreationInfo>
             {
@@ -733,7 +745,11 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
 
-        public static string GetUsers(Database database, int page, int per_page, bool? PlayedMNR, bool? IsPSNLinked, bool? IsRPCNLinked, bool? IsBanned)
+        public static string GetUsers(Database database, 
+            int page, int per_page, 
+            bool? PlayedMNR, bool? IsPSNLinked, bool? IsRPCNLinked, 
+            bool? IsBanned, SortOrder? sortOrder
+        )
         {
             if (page <= 0)
                 page = 1;
@@ -755,10 +771,13 @@ namespace GameServer.Implementation.Common
                 query = query.Where(u => u.IsBanned == IsBanned);
 
             var total = query.Count();
+            var orderedQuery = sortOrder == SortOrder.asc
+                ? query.OrderBy(user => user.UserId)
+                : query.OrderByDescending(user => user.UserId);
 
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
-            var users = query.Select(user => new MinimalUserInfo
+            var users = orderedQuery.Select(user => new MinimalUserInfo
             {
                 ID = user.UserId,
                 Username = user.Username,
@@ -878,7 +897,9 @@ namespace GameServer.Implementation.Common
 
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
-            var reports = (sortOrder == SortOrder.desc || sortOrder == null ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id))
+            var reports = (sortOrder == SortOrder.desc || sortOrder == null 
+                    ? query.OrderByDescending(x => x.Id) 
+                    : query.OrderBy(x => x.Id))
                 .Skip(pageStart)
                 .Take(per_page)
                 .ToList();
@@ -942,7 +963,7 @@ namespace GameServer.Implementation.Common
         #endregion
 
         #region SystemEvents
-        public static string GetSystemEvents(Database database, int page, int per_page)
+        public static string GetSystemEvents(Database database, int page, int per_page, SortOrder? sortOrder)
         {
             if (page <= 0)
                 page = 1;
@@ -951,19 +972,26 @@ namespace GameServer.Implementation.Common
 
             var query = database.ActivityLog.Where(match => match.Type == ActivityType.system_event);
 
+            var total = query.Count();
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
-            var events = query.Select(systemEvent => new MinimalSystemEventInfo
-            {
-               CreatedAt = systemEvent.CreatedAt,
-               Topic = systemEvent.Topic,
-               Description = systemEvent.Description,
-               ImageURL = systemEvent.ImageURL
-            }).Skip(pageStart).Take(per_page).ToList();
+            var events = (sortOrder == SortOrder.desc || sortOrder == null
+                    ? query.OrderByDescending(systemEvent => systemEvent.CreatedAt)
+                    : query.OrderBy(systemEvent => systemEvent.CreatedAt))
+                .Select(systemEvent => new MinimalSystemEventInfo
+                {
+                   CreatedAt = systemEvent.CreatedAt,
+                   Topic = systemEvent.Topic,
+                   Description = systemEvent.Description,
+                   ImageURL = systemEvent.ImageURL
+                })
+                .Skip(pageStart)
+                .Take(per_page)
+                .ToList();
 
             return JsonConvert.SerializeObject(new ModerationPageResponse<MinimalSystemEventInfo>
             {
-                Total = query.Count(),
+                Total = total,
                 Page = events
             });
         }
@@ -1015,7 +1043,7 @@ namespace GameServer.Implementation.Common
         #endregion
 
         #region Announcements
-        public static string GetAnnouncements(Database database, int page, int per_page, Platform? platform)
+        public static string GetAnnouncements(Database database, int page, int per_page, Platform? platform, SortOrder? sortOrder)
         {
             if (page <= 0)
                 page = 1;
@@ -1027,13 +1055,19 @@ namespace GameServer.Implementation.Common
             if (platform != null)
                 query = query.Where(match => match.Platform == platform);
 
+            var total = query.Count();
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
-            var announcements = query.Skip(pageStart).Take(per_page).ToList();
+            var announcements = (sortOrder == SortOrder.desc || sortOrder == null
+                    ? query.OrderByDescending(match => match.CreatedAt)
+                    : query.OrderBy(match => match.CreatedAt))
+                .Skip(pageStart)
+                .Take(per_page)
+                .ToList();
 
             return JsonConvert.SerializeObject(new ModerationPageResponse<AnnouncementData>
             {
-                Total = query.Count(),
+                Total = total,
                 Page = announcements
             });
         }
@@ -1213,7 +1247,7 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
 
-        public static string RemoveHotLapScoreById(Database database, int scoreId)
+        public static string RemoveHotLapScore(Database database, int scoreId)
         {
             HotLapData hotlap = ContentUpdates.ReadHotlapData();
             if (hotlap == null)
@@ -1236,7 +1270,7 @@ namespace GameServer.Implementation.Common
         #endregion
 
         #region ScoreManagement
-        public static string RemoveScoreById(Database database, IUGCStorage storage, int scoreId)
+        public static string RemoveScore(Database database, IUGCStorage storage, int scoreId)
         {
             var score = database.Scores
                 .FirstOrDefault(s => s.Id == scoreId
@@ -1620,7 +1654,7 @@ namespace GameServer.Implementation.Common
             return "ok";
         }
 
-        public static string GetModerators(Database database, int page, int per_page)
+        public static string GetModerators(Database database, int page, int per_page, SortOrder? sortOrder)
         {
             if (page <= 0)
                 page = 1;
@@ -1631,7 +1665,12 @@ namespace GameServer.Implementation.Common
 
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
-            var moderators = query.Skip(pageStart).Take(per_page).ToList();
+            var moderators = (sortOrder == SortOrder.desc || sortOrder == null 
+                    ? query.OrderByDescending(x => x.ID) 
+                    : query.OrderBy(x => x.ID))
+                .Skip(pageStart)
+                .Take(per_page)
+                .ToList();
 
             return JsonConvert.SerializeObject(new ModerationPageResponse<Moderator>
             {

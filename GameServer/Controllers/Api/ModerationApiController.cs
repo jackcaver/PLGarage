@@ -149,13 +149,13 @@ namespace GameServer.Controllers.Api
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/grief_reports")]
-        public IActionResult GetGriefReports(int page, int per_page, string context, int? from)
+        public IActionResult GetGriefReports(int page, int per_page, string context, int? from, SortOrder? sortOrder)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.ViewGriefReports)
                 return StatusCode(403);
 
-            return Content(Moderation.GetGriefReports(database, page, per_page, context, from));
+            return Content(Moderation.GetGriefReports(database, page, per_page, context, from, sortOrder ?? SortOrder.desc));
         }
 
         [HttpGet]
@@ -231,13 +231,13 @@ namespace GameServer.Controllers.Api
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/player_creations")]
-        public IActionResult GetPlayerCreationsWithStatus(int page, int per_page, ModerationStatus status)
+        public IActionResult GetPlayerCreationsWithStatus(int page, int per_page, ModerationStatus status, SortOrder? sortOrder)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !(user.ChangeCreationStatus || user.ResetCreationStats || user.RemovePlayerCreations))
                 return StatusCode(403);
 
-            return Content(Moderation.GetPlayerCreationsWithStatus(database, page, per_page, status));
+            return Content(Moderation.GetPlayerCreationsWithStatus(database, page, per_page, status, sortOrder ?? SortOrder.desc));
         }
 
         [HttpDelete]
@@ -369,7 +369,7 @@ namespace GameServer.Controllers.Api
         public IActionResult GetUsers(
             int page, int per_page,
             bool? PlayedMNR, bool? IsPSNLinked, bool? IsRPCNLinked,
-            bool? IsBanned
+            bool? IsBanned, SortOrder? sortOrder
         )
         {
             var user = Moderation.GetUser(database, User);
@@ -377,7 +377,10 @@ namespace GameServer.Controllers.Api
                                   || user.ResetUserStats || user.RemovePlayerCreations || user.RemoveUsers || user.ManageUserSessions))
                 return StatusCode(403);
 
-            return Content(Moderation.GetUsers(database, page, per_page, PlayedMNR, IsPSNLinked, IsRPCNLinked, IsBanned));
+            return Content(Moderation.GetUsers(database, page, per_page, 
+                PlayedMNR, IsPSNLinked, IsRPCNLinked, 
+                IsBanned, sortOrder ?? SortOrder.desc
+            ));
         }
         
         [HttpDelete]
@@ -618,13 +621,13 @@ namespace GameServer.Controllers.Api
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/system_events")]
-        public IActionResult GetSystemEvents(int page, int per_page)
+        public IActionResult GetSystemEvents(int page, int per_page, SortOrder? sortOrder)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.ManageSystemEvents)
                 return StatusCode(403);
 
-            return Content(Moderation.GetSystemEvents(database, page, per_page));
+            return Content(Moderation.GetSystemEvents(database, page, per_page, sortOrder ?? SortOrder.desc));
         }
         
         [HttpPost]
@@ -678,13 +681,13 @@ namespace GameServer.Controllers.Api
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/announcements")]
-        public IActionResult GetAnnouncements(int page, int per_page, Platform? platform)
+        public IActionResult GetAnnouncements(int page, int per_page, Platform? platform, SortOrder? sortOrder)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.ManageAnnouncements)
                 return StatusCode(403);
 
-            return Content(Moderation.GetAnnouncements(database, page, per_page, platform));
+            return Content(Moderation.GetAnnouncements(database, page, per_page, platform, sortOrder ?? SortOrder.desc));
         }
 
         [HttpPost]
@@ -824,13 +827,13 @@ namespace GameServer.Controllers.Api
         [HttpDelete]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/hotlap/score/{scoreId}")]
-        public IActionResult RemoveHotLapScoreById(int scoreId)
+        public IActionResult RemoveHotLapScore(int scoreId)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.ManageHotlap)
                 return StatusCode(403);
 
-            var result = Moderation.RemoveHotLapScoreById(database, scoreId);
+            var result = Moderation.RemoveHotLapScore(database, scoreId);
 
             if (result == null)
                 return NotFound();
@@ -843,13 +846,13 @@ namespace GameServer.Controllers.Api
         [HttpDelete]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/score/{scoreId}")]
-        public IActionResult RemoveScoreById(int scoreId)
+        public IActionResult RemoveScore(int scoreId)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.RemoveScores)
                 return StatusCode(403);
 
-            var result = Moderation.RemoveScoreById(database, storage, scoreId);
+            var result = Moderation.RemoveScore(database, storage, scoreId);
 
             if (result == null)
                 return NotFound();
@@ -1128,13 +1131,13 @@ namespace GameServer.Controllers.Api
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/moderators")]
-        public IActionResult GetModerators(int page, int per_page)
+        public IActionResult GetModerators(int page, int per_page, SortOrder? sortOrder)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.ManageModerators)
                 return StatusCode(403);
 
-            return Content(Moderation.GetModerators(database, page, per_page));
+            return Content(Moderation.GetModerators(database, page, per_page, sortOrder ?? SortOrder.desc));
         }
 
         [HttpPost]

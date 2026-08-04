@@ -3,6 +3,7 @@ using System.Globalization;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Utils;
+using GameServer.Models.Request;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -163,7 +164,11 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("api/creations/search")]
-        public IActionResult SearchCreations(string query, PlayerCreationType? type, Platform? platform, bool? isMnr, int page = 1, int perPage = 10)
+        public IActionResult SearchCreations(string query, 
+            PlayerCreationType? type, 
+            Platform? platform, 
+            bool? isMnr, 
+            int page = 1, int perPage = 10, SortOrder? sortOrder = null)
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
@@ -199,9 +204,11 @@ namespace GameServer.Controllers.Api
             }
 
             var total = q.Count();
+            var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                ? q.OrderBy(x => x.CreatedAt)
+                : q.OrderByDescending(x => x.CreatedAt);
 
-            var creations = q
-                .OrderByDescending(x => x.CreatedAt)
+            var creations = orderedQuery
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .Select(x => new
@@ -286,103 +293,10 @@ namespace GameServer.Controllers.Api
         }
 
         [HttpGet]
-        [Route("/api/creations/recent")]
-        public IActionResult GetRecentCreations(int count = 10, bool? isMnr = null)
-        {
-            if (count > 10) count = 10;
-
-            var creations = database.PlayerCreations
-                .AsNoTracking()
-                .Where(x => x.Type != PlayerCreationType.DELETED 
-                && x.Type != PlayerCreationType.STORY
-                && x.Type != PlayerCreationType.PHOTO
-                && x.Type != PlayerCreationType.PLANET
-                && x.ModerationStatus != ModerationStatus.BANNED
-                && x.ModerationStatus != ModerationStatus.ILLEGAL
-                && (!isMnr.HasValue || x.IsMNR == isMnr.Value))
-                .OrderByDescending(x => x.CreatedAt)
-                .Take(count)
-                .Select(x => new
-                {
-                    x.PlayerCreationId,
-                    x.Name,
-                    x.Description,
-                    rating = x.Ratings.Count != 0 ? (float?)x.Ratings.Average(r => r.Rating) : 0,
-                    x.HeartsCount,
-                    x.Author.Username,
-                    x.Type,
-                    x.Tags,
-                    x.Platform,
-                    x.IsMNR,
-                    x.CreatedAt,
-                    pointsAllTime = x.Points.Sum(p => p.Amount),
-                    pointsThisWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount),
-                    pointsLastWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.LastWeekStart && p.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount),
-                    downloadsAllTime = x.Downloads.Count,
-                    downloadsThisWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.ThisWeekStart),
-                    downloadsLastWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.LastWeekStart && d.DownloadedAt < TimeUtils.ThisWeekStart),
-                    viewsAllTime = x.Views.Count,
-                    viewsThisWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
-                    viewsLastWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
-                    recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
-                        ? x.Scores.Where(s => s.SubGroupId == 703).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
-                        : null,
-                    recordScore = x.Type == PlayerCreationType.TRACK && !x.IsMNR
-                        ? x.Scores.Max(s => (float?)s.Points)
-                        : null,
-                    recordFinishTime = x.Type == PlayerCreationType.TRACK && !x.IsMNR
-                        ? x.Scores.Max(s => (float?)s.FinishTime)
-                        : null,
-                    recordLongestDrift = x.LongestDrift,
-                    recordLongestHangTime = x.LongestHangTime
-                })
-                .ToList();
-
-            if (creations.Count == 0)                
-                return NotFound(new { error = "error_creation_not_found"});
-
-            return Json(creations.Select(x => new
-            {
-                x.PlayerCreationId,
-                x.Name,
-                x.Description,
-                rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
-                hearts = x.HeartsCount,
-                creatorUsername = x.Username,
-                Type = x.Type.ToString(),
-                x.Tags,
-                Platform = x.Platform.ToString(),
-                x.IsMNR,
-                x.CreatedAt,
-                points = new
-                {
-                    all_time = x.pointsAllTime,
-                    this_week = x.pointsThisWeek,
-                    last_week = x.pointsLastWeek
-                },
-                downloads = new
-                {
-                    all_time = x.downloadsAllTime,
-                    this_week = x.downloadsThisWeek,
-                    last_week = x.downloadsLastWeek
-                },
-                views = new
-                {
-                    all_time = x.viewsAllTime,
-                    this_week = x.viewsThisWeek,
-                    last_week = x.viewsLastWeek
-                },
-                records = x.Type == PlayerCreationType.TRACK
-                    ? x.IsMNR
-                        ? (object)new { bestLapTime = x.recordBestLapTime, longestDrift = x.recordLongestDrift, longestHangTime = x.recordLongestHangTime }
-                        : new { score = x.recordScore, finishTime = x.recordFinishTime }
-                    : null
-            }));
-        }
-
-        [HttpGet]
         [Route("/api/creations/{username}")]
-        public IActionResult GetCreationsByUsername(string username, PlayerCreationType? type, Platform? platform, bool? isMnr, int page = 1, int perPage = 10)
+        public IActionResult GetCreationsByUsername(string username, 
+            PlayerCreationType? type, Platform? platform, bool? isMnr, 
+            int page = 1, int perPage = 10, SortOrder? sortOrder = null)
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
@@ -410,9 +324,11 @@ namespace GameServer.Controllers.Api
             }
 
             var total = q.Count();
+            var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                ? q.OrderBy(x => x.CreatedAt)
+                : q.OrderByDescending(x => x.CreatedAt);
 
-            var creations = q
-                .OrderByDescending(x => x.CreatedAt)
+            var creations = orderedQuery
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .Select(x => new
@@ -498,7 +414,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/creation/{id}/comments")]
-        public IActionResult GetCreationComments(int id, int page = 1, int perPage = 10)
+        public IActionResult GetCreationComments(int id, int page = 1, int perPage = 10, SortOrder? sortOrder = null)
         {
             if (page < 1) page = 1;
             if (perPage < 1) perPage = 10;
@@ -520,8 +436,11 @@ namespace GameServer.Controllers.Api
                     .Where(x => x.PlayerCreationId == id && x.Comment != null && x.Comment != "");
 
                 var total = baseQuery.Count();
-                var comments = baseQuery
-                    .OrderBy(x => x.RatedAt)
+                var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                    ? baseQuery.OrderBy(x => x.RatedAt)
+                    : baseQuery.OrderByDescending(x => x.RatedAt);
+
+                var comments = orderedQuery
                     .Skip((page - 1) * perPage)
                     .Take(perPage)
                     .Select(x => new
@@ -542,8 +461,11 @@ namespace GameServer.Controllers.Api
                     .Where(x => x.PlayerCreationId == id);
 
                 var total = baseQuery.Count();
-                var comments = baseQuery
-                    .OrderBy(x => x.CreatedAt)
+                var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                    ? baseQuery.OrderBy(x => x.CreatedAt)
+                    : baseQuery.OrderByDescending(x => x.CreatedAt);
+
+                var comments = orderedQuery
                     .Skip((page - 1) * perPage)
                     .Take(perPage)
                     .Select(x => new
@@ -582,7 +504,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/mosthearted")]
-        public IActionResult GetMostHeartedTracks([FromQuery] Platform platform = Platform.PS3)
+        public IActionResult GetMostHeartedTracks([FromQuery] Platform platform = Platform.PS3, SortOrder? sortOrder = null)
         {
             var query = database.PlayerCreations
                 .AsNoTracking()
@@ -592,13 +514,15 @@ namespace GameServer.Controllers.Api
                     && x.Type != PlayerCreationType.DELETED
                     && x.Type != PlayerCreationType.STORY
                     && x.ModerationStatus != ModerationStatus.BANNED
-                    && x.ModerationStatus != ModerationStatus.ILLEGAL)
-                .OrderByDescending(x => x.HeartsCount)
-                .ThenByDescending(x => x.CreatedAt);
+                    && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
-            var total = query.Count();
+            var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                ? query.OrderBy(x => x.HeartsCount).ThenBy(x => x.CreatedAt)
+                : query.OrderByDescending(x => x.HeartsCount).ThenByDescending(x => x.CreatedAt);
 
-            var creations = query
+            var total = orderedQuery.Count();
+
+            var creations = orderedQuery
                 .Take(5)
                 .Select(x => new
                 {
@@ -643,7 +567,7 @@ namespace GameServer.Controllers.Api
 
         [HttpGet]
         [Route("/api/teampicks")]
-        public IActionResult GetTeamPicks(int page = 1, int perPage = 10)
+        public IActionResult GetTeamPicks(int page = 1, int perPage = 10, SortOrder? sortOrder = null)
         {
             var query = database.PlayerCreations
                 .AsNoTracking()
@@ -654,12 +578,15 @@ namespace GameServer.Controllers.Api
                     && x.Type != PlayerCreationType.PLANET
                     && x.Type != PlayerCreationType.ITEM
                     && x.ModerationStatus != ModerationStatus.BANNED
-                    && x.ModerationStatus != ModerationStatus.ILLEGAL)
-                .OrderByDescending(x => x.UpdatedAt);
+                    && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
-            var total = query.Count();
+            var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
+                ? query.OrderBy(x => x.UpdatedAt)
+                : query.OrderByDescending(x => x.UpdatedAt);
 
-            var creations = query
+            var total = orderedQuery.Count();
+
+            var creations = orderedQuery
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .Select(x => new

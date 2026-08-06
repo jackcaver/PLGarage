@@ -67,6 +67,21 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
 
+            var complaint = database.PlayerComplaints.Any(match =>
+                match.UserId == user.UserId &&
+                match.PlayerId == player_complaint.player_id &&
+                match.Reason == player_complaint.player_complaint_reason);
+
+            if (complaint)
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = 0, message = "The player complaint already exists" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+
             database.PlayerComplaints.Add(new PlayerComplaintData
             {
                 UserId = user.UserId,
@@ -93,6 +108,21 @@ namespace GameServer.Implementation.Common
                 var errorResp = new Response<EmptyResponse>
                 {
                     status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
+
+            var complaint = database.PlayerCreationComplaints.Any(match =>
+                match.UserId == user.UserId &&
+                match.PlayerCreationId == player_creation_complaint.player_creation_id &&
+                match.Reason == player_creation_complaint.player_complaint_reason);
+
+            if (complaint)
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = 0, message = "The player creation complaint already exists" },
                     response = new EmptyResponse { }
                 };
                 return errorResp.Serialize();

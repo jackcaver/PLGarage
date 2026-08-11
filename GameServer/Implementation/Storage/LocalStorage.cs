@@ -259,10 +259,8 @@ namespace GameServer.Implementation.Storage
         {
             using var data = LoadPlayerCreation(id, file);
             var placeholderPath = "./placeholder.png";
-
             if (data != null)
                 return UserGeneratedContentUtils.CalculateMD5(data);
-
             else if (File.Exists(placeholderPath) && file == "preview_image.png")
             {
                 using var placeholder = File.OpenRead(placeholderPath);

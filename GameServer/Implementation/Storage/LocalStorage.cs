@@ -268,8 +268,8 @@ namespace GameServer.Implementation.Storage
                 using var placeholder = File.OpenRead(placeholderPath);
                 return UserGeneratedContentUtils.CalculateMD5(placeholder);
             }
-
-            return "";
+            else
+                return "";
         }
 
         public long CalculateSize(int id, string file)

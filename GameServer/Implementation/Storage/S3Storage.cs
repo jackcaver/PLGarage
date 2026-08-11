@@ -378,6 +378,9 @@ namespace GameServer.Implementation.Storage
             }
             catch (AmazonS3Exception)
             {
+                if (key.Contains("preview_image.png") && !File.Exists($"player_creations/{id}/preview_image.png"))
+                    return UserGeneratedContentUtils.CalculateMD5(File.OpenRead("./placeholder.png"));
+
                 return "";
             }
         }

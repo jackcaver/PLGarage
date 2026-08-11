@@ -260,8 +260,18 @@ namespace GameServer.Implementation.Storage
             using var data = LoadPlayerCreation(id, file);
             if (data != null)
                 return UserGeneratedContentUtils.CalculateMD5(data);
-            else
-                return "";
+
+            if (!File.Exists($"{Config.StoragePath}/PlayerCreations/{id}/preview_image.png"))
+            {
+                var placeholderPath = "./placeholder.png";
+                if (File.Exists(placeholderPath))
+                {
+                    using var placeholder = File.OpenRead(placeholderPath);
+                    return UserGeneratedContentUtils.CalculateMD5(placeholder);
+                }
+            }
+
+            return "";
         }
 
         public long CalculateSize(int id, string file)

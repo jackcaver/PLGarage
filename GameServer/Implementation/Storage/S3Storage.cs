@@ -368,6 +368,7 @@ namespace GameServer.Implementation.Storage
         public string CalculateMD5(int id, string file)
         {
             var key = $"player_creations/{id}/{file}";
+            var placeholderPath = "./placeholder.png";
             
             try
             {
@@ -378,6 +379,12 @@ namespace GameServer.Implementation.Storage
             }
             catch (AmazonS3Exception)
             {
+                if (File.Exists(placeholderPath) && file == "preview_image.png")
+                {
+                    using var placeholder = File.OpenRead(placeholderPath);
+                    return UserGeneratedContentUtils.CalculateMD5(placeholder);
+                }
+
                 return "";
             }
         }

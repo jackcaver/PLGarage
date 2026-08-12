@@ -59,6 +59,14 @@ namespace GameServer.Utils
             modelBuilder.Entity<PlayerCreationData>()
                 .Property(b => b.HasPreview)
                 .HasDefaultValue(true);
+            
+            modelBuilder.Entity<User>()
+                .Property(b => b.PlayerCreationsPrivacy)
+                .HasDefaultValue(PrivacyType.AllowAll);
+            
+            modelBuilder.Entity<User>()
+                .Property(b => b.ProfilePrivacy)
+                .HasDefaultValue(PrivacyType.AllowAll);
 
             base.OnModelCreating(modelBuilder);
         }

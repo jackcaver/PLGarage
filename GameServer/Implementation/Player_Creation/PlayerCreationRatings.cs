@@ -121,7 +121,7 @@ namespace GameServer.Implementation.Player_Creation
                         List = ActivityList.activity_log,
                         Topic = "player_creation_rated_up",
                         Description = "",
-                        PlayerId = 0,
+                        PlayerId = null,
                         PlayerCreationId = Creation.PlayerCreationId,
                         CreatedAt = TimeUtils.Now,
                         AllusionId = Creation.PlayerCreationId,

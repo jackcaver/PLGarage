@@ -73,7 +73,7 @@ namespace GameServer.Implementation.Player
                 mystats.platform = MyStats.Platform.ToString();
                 mystats.player_id = MyStats.PlayerId;
                 mystats.playgroup_size = MyStats.PlaygroupSize;
-                mystats.rank = MyStats.GetRank(sort_column);
+                mystats.rank = MyStats.GetRank(database, sort_column);
                 mystats.score = MyStats.Points;
                 mystats.sub_group_id = MyStats.SubGroupId;
                 mystats.sub_key_id = MyStats.SubKeyId;
@@ -124,7 +124,7 @@ namespace GameServer.Implementation.Player
                 player_id = score.PlayerId,
                 username = score.Username,
                 playgroup_size = score.PlaygroupSize,
-                rank = score.GetRank(sort_column),
+                rank = score.GetRank(database, sort_column),
                 score = score.Points,
                 sub_group_id = score.SubGroupId,
                 sub_key_id = score.SubKeyId,
@@ -238,7 +238,7 @@ namespace GameServer.Implementation.Player
                 player_id = score.PlayerId,
                 username = score.Username,
                 playgroup_size = score.PlaygroupSize,
-                rank = score.GetRank(sort_column),
+                rank = score.GetRank(database, sort_column),
                 score = score.Points,
                 sub_group_id = score.SubGroupId,
                 sub_key_id = score.SubKeyId,
@@ -311,7 +311,7 @@ namespace GameServer.Implementation.Player
                 best_lap_time = score.BestLapTime,
                 character_idx = score.CharacterIdx,
                 kart_idx = score.KartIdx,
-                rank = score.GetRank(sort_column),
+                rank = score.GetRank(database, sort_column),
                 sub_key_id = score.SubKeyId,
                 track_idx = score.SubKeyId,
                 skill_level_id = score.User.SkillLevelId(platform),
@@ -338,7 +338,7 @@ namespace GameServer.Implementation.Player
                 mystats.best_lap_time = MyStats.BestLapTime;
                 mystats.character_idx = MyStats.CharacterIdx;
                 mystats.kart_idx = MyStats.KartIdx;
-                mystats.rank = MyStats.GetRank(sort_column);
+                mystats.rank = MyStats.GetRank(database, sort_column);
                 mystats.sub_key_id = MyStats.SubKeyId;
                 mystats.track_idx = MyStats.SubKeyId;
                 mystats.skill_level_id = MyStats.User.SkillLevelId(platform);
@@ -525,7 +525,7 @@ namespace GameServer.Implementation.Player
                     mystats.player_id = requestedBy.UserId;
                     mystats.updated_at = requestedBy.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
                     mystats.username = requestedBy.Username;
-                    mystats.rank = requestedBy.GetRank(game_type, type, platform, sort_column);
+                    mystats.rank = requestedBy.GetRank(database, game_type, type, platform, sort_column);
                     mystats.skill_level_id = requestedBy.SkillLevelId(platform);
                     mystats.skill_level_name = requestedBy.SkillLevelName(platform);
 
@@ -596,7 +596,7 @@ namespace GameServer.Implementation.Player
                     mystats.updated_at = requestedBy.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
                     mystats.username = requestedBy.Username;
                     mystats.win_streak = requestedBy.WinStreak;
-                    mystats.rank = requestedBy.GetRank(game_type, type, platform, sort_column);
+                    mystats.rank = requestedBy.GetRank(database, game_type, type, platform, sort_column);
                     mystats.skill_level_id = requestedBy.SkillLevelId(platform);
                     mystats.skill_level_name = requestedBy.SkillLevelName(platform);
                     mystats.character_idx = requestedBy.CharacterIdx;
@@ -615,7 +615,7 @@ namespace GameServer.Implementation.Player
                     mystats.track_idx = MyStats.SubKeyId;
                     mystats.updated_at = MyStats.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
                     mystats.username = MyStats.Username;
-                    mystats.rank = MyStats.GetRank(sort_column);
+                    mystats.rank = MyStats.GetRank(database, sort_column);
                     mystats.skill_level_id = requestedBy.SkillLevelId(platform);
                     mystats.skill_level_name = requestedBy.SkillLevelName(platform);
                 }
@@ -659,7 +659,7 @@ namespace GameServer.Implementation.Player
                             updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                             username = user.Username,
                             win_streak = user.WinStreak,
-                            rank = user.GetRank(game_type, type, platform, sort_column),
+                            rank = user.GetRank(database, game_type, type, platform, sort_column),
                             skill_level_id = user.SkillLevelId(platform),
                             skill_level_name = user.SkillLevelName(platform),
                             character_idx = user.CharacterIdx,
@@ -725,7 +725,7 @@ namespace GameServer.Implementation.Player
                             points = points,
                             updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                             username = user.Username,
-                            rank = user.GetRank(game_type, type, platform, sort_column),
+                            rank = user.GetRank(database, game_type, type, platform, sort_column),
                             skill_level_id = user.SkillLevelId(platform),
                             skill_level_name = user.SkillLevelName(platform)
                         });
@@ -750,7 +750,7 @@ namespace GameServer.Implementation.Player
                         track_idx = score.SubKeyId,
                         updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                         username = score.Username,
-                        rank = score.GetRank(sort_column),
+                        rank = score.GetRank(database, sort_column),
                         skill_level_id = score.User.SkillLevelId(platform),
                         skill_level_name = score.User.SkillLevelName(platform)
                     });
@@ -934,7 +934,7 @@ namespace GameServer.Implementation.Player
                     playerStats.player_id = user.UserId;
                     playerStats.updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
                     playerStats.username = user.Username;
-                    playerStats.rank = user.GetRank(game_type, type, platform, SortColumn.points);
+                    playerStats.rank = user.GetRank(database, game_type, type, platform, SortColumn.points);
                     playerStats.skill_level_id = user.SkillLevelId(platform);
                     playerStats.skill_level_name = user.SkillLevelName(platform);
 
@@ -1005,7 +1005,7 @@ namespace GameServer.Implementation.Player
                     playerStats.updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
                     playerStats.username = user.Username;
                     playerStats.win_streak = user.WinStreak;
-                    playerStats.rank = user.GetRank(game_type, type, platform, SortColumn.experience_points);
+                    playerStats.rank = user.GetRank(database, game_type, type, platform, SortColumn.experience_points);
                     playerStats.skill_level_id = user.SkillLevelId(platform);
                     playerStats.skill_level_name = user.SkillLevelName(platform);
                     playerStats.character_idx = user.CharacterIdx;
@@ -1024,7 +1024,7 @@ namespace GameServer.Implementation.Player
                     playerStats.track_idx = score.SubKeyId;
                     playerStats.updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz");
                     playerStats.username = score.Username;
-                    playerStats.rank = score.GetRank(SortColumn.best_lap_time);
+                    playerStats.rank = score.GetRank(database, SortColumn.best_lap_time);
                     playerStats.skill_level_id = user.SkillLevelId(platform);
                     playerStats.skill_level_name = user.SkillLevelName(platform);
                 }

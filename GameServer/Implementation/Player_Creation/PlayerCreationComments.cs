@@ -102,7 +102,7 @@ namespace GameServer.Implementation.Player_Creation
                     List = ActivityList.activity_log,
                     Topic = "player_creation_commented_on",
                     Description = player_creation_comment.body,
-                    PlayerId = 0,
+                    PlayerId = null,
                     PlayerCreationId = player_creation_comment.player_creation_id,
                     CreatedAt = TimeUtils.Now,
                     AllusionId = comment.Id,

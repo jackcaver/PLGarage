@@ -48,7 +48,7 @@ namespace GameServer.Implementation.Player
                         Topic = "player_hearted",
                         Description = "",
                         PlayerId = user.UserId,
-                        PlayerCreationId = 0,
+                        PlayerCreationId = null,
                         CreatedAt = TimeUtils.Now,
                         AllusionId = user.UserId,
                         AllusionType = "Player"

@@ -14,157 +14,143 @@ namespace GameServer.Implementation.Player
         public static string GetActivityLog(Database database, User user, int page, int per_page, ActivityList list = ActivityList.news_feed,
             int? player_id = null, int? player_creation_id = null)
         {
-            // TODO: Optimise
-            var Activities = new List<ActivityEvent> { };
-
-            if (list == ActivityList.news_feed)
-                Activities.AddRange(database.ActivityLog.Where(match => match.Type == ActivityType.system_event).ToList());
+            var query = database.ActivityLog
+                .AsSplitQuery()
+                .AsNoTracking()
+                .Include(e => e.Author)
+                .ThenInclude(u => u.HeartedByProfiles)
+                .Include(e => e.Player)
+                .ThenInclude(u => u.HeartedByProfiles)
+                .Include(e => e.PlayerCreation)
+                .ThenInclude(c => c.Hearts)
+                .Include(e => e.PlayerCreation)
+                .ThenInclude(c => c.Ratings)
+                .Include(e => e.PlayerCreation)
+                .ThenInclude(c => c.RacesStarted)
+                .Where(match => (user == null || ((match.AuthorId == null || !match.Author.IsBlockedByMe(user.UserId)) 
+                            && (match.PlayerId == null || !match.Player.IsBlockedByMe(user.UserId))
+                            && (match.PlayerCreationId == null || !match.PlayerCreation.Author.IsBlockedByMe(user.UserId))))
+                        && (match.List == list || match.List == ActivityList.both));
 
             if (player_id != null)
-            {
-                Activities.AddRange(database.ActivityLog.Where(match => (match.AuthorId == player_id || match.PlayerId == player_id) &&
-                    (match.List == list || match.List == ActivityList.both)).ToList());
-                foreach (var Creation in database.PlayerCreations.Where(match => match.PlayerId == player_id).ToList())
-                {
-                    Activities.AddRange(database.ActivityLog.Where(match => match.PlayerCreationId == Creation.PlayerCreationId &&
-                        match.AuthorId != player_id && match.PlayerId != player_id && (match.List == list || match.List == ActivityList.both)).ToList());
-                }
-            }
+                query = query.Where(match => match.AuthorId == player_id || match.PlayerId == player_id 
+                   || (match.PlayerCreationId != null && match.PlayerCreation.PlayerId == player_id));
 
             if (player_creation_id != null)
-                Activities.AddRange(database.ActivityLog.Where(match => match.PlayerCreationId == player_creation_id &&
-                    (match.List == list || match.List == ActivityList.both)).ToList());
+                query = query.Where(match => match.PlayerCreationId == player_creation_id);
+            
+            if (list == ActivityList.news_feed)
+                query = query.Where(match => (user != null && 
+                        ((match.AuthorId != null && (match.Author.IsHeartedByMe(user.UserId, false) || match.Author.IsBuddyWithMe(user.UserId)))
+                        || (match.PlayerId != null && (match.Player.IsHeartedByMe(user.UserId, false) || match.Player.IsBuddyWithMe(user.UserId)))
+                        || (match.PlayerCreationId != null && (match.PlayerCreation.IsHeartedByMe(user.UserId) 
+                            || match.PlayerCreation.Author.IsHeartedByMe(user.UserId, false) || match.PlayerCreation.Author.IsBuddyWithMe(user.UserId)))))
+                    || match.Type == ActivityType.system_event);
 
-            if (list == ActivityList.news_feed && user != null)
-            {
-                foreach (var Heart in database.HeartedProfiles.Where(match => match.UserId == user.UserId).ToList())
-                {
-                    Activities.AddRange(database.ActivityLog.Where(match => (match.AuthorId == Heart.HeartedUserId || match.PlayerId == Heart.HeartedUserId) &&
-                        (match.List == list || match.List == ActivityList.both)).ToList());
-                    foreach (var Creation in database.PlayerCreations.Where(match => match.PlayerId == Heart.HeartedUserId).ToList())
-                    {
-                        Activities.AddRange(database.ActivityLog.Where(match => match.PlayerCreationId == Creation.PlayerCreationId &&
-                            match.AuthorId != Heart.HeartedUserId && match.PlayerId != Heart.HeartedUserId &&
-                            (match.List == list || match.List == ActivityList.both)).ToList());
-                    }
-                }
-            }
+            query = query.OrderByDescending(e => e.CreatedAt);
 
-            Activities.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
-
+            var total = query.Count();
+            
             //calculating pages
             int pageEnd = PageCalculator.GetPageEnd(page, per_page);
             int pageStart = PageCalculator.GetPageStart(page, per_page);
-            int totalPages = PageCalculator.GetTotalPages(per_page, Activities.Count);
+            int totalPages = PageCalculator.GetTotalPages(per_page, total);
 
-            if (pageEnd > Activities.Count)
-                pageEnd = Activities.Count;
+            if (pageEnd > total)
+                pageEnd = total;
 
-            var activityList = new List<Activity> { };
+            var activityList = new List<Activity>();
 
-            for (int i = pageStart; i < pageEnd; i++)
+            foreach (var activity in query.Skip(pageStart).Take(per_page).ToList())
             {
-                var Activity = Activities[i];
-                var Author = database.Users
-                    .Include(u => u.HeartedByProfiles)
-                    .FirstOrDefault(match => match.UserId == Activity.AuthorId);
-                var Player = database.Users
-                    .Include(u => u.HeartedByProfiles)
-                    .FirstOrDefault(match => match.UserId == Activity.PlayerId);
-                UserGeneratedContentUtils.CheckStoryLevelName(database, Activity.PlayerCreationId);
-                var PlayerCreation = database.PlayerCreations
-                    .AsSplitQuery()
-                    .Include(x => x.Hearts)
-                    .Include(x => x.Ratings)
-                    .Include(x => x.RacesStarted)
-                    .Include(x => x.Author)
-                    .FirstOrDefault(match => match.PlayerCreationId == Activity.PlayerCreationId);
+                switch (activity.Type)
+                {
+                    case ActivityType.system_event:
+                        activityList.Add(new Activity
+                        {
+                            type = "system_activity",
+                            events = [
+                                new Event
+                                {
+                                    topic = activity.Type.ToString(),
+                                    type = activity.Topic,
+                                    creator_id = activity.AuthorId ?? 0,
+                                    creator_username = activity.Author?.Username ?? "",
+                                    details = activity.Description,
+                                    timestamp = activity.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                                    seconds_ago = TimeUtils.SecondsAgo(activity.CreatedAt),
+                                    tags = activity.Tags,
+                                    subject = activity.Subject,
+                                    image_url = activity.ImageURL,
+                                    image_md5 = activity.ImageMD5
+                                }
+                            ]
+                        });
+                        break;
 
-                if (Activity.Type == ActivityType.system_event)
-                {
-                    activityList.Add(new Activity
-                    {
-                        type = "system_activity",
-                        events = [
-                            new Event
-                            {
-                                topic = Activity.Type.ToString(),
-                                type = Activity.Topic,
-                                creator_id = Activity.AuthorId,
-                                creator_username = Author != null ? Author.Username : "",
-                                details = Activity.Description,
-                                timestamp = Activity.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                                seconds_ago = TimeUtils.SecondsAgo(Activity.CreatedAt),
-                                tags = Activity.Tags,
-                                subject = Activity.Subject,
-                                image_url = Activity.ImageURL,
-                                image_md5 = Activity.ImageMD5
-                            }
-                        ]
-                    });
-                }
-                else if (Activity.Type == ActivityType.player_event && Activity.PlayerCreationId == 0 || Activity.Type == ActivityType.trophy_event)
-                {
-                    activityList.Add(new Activity
-                    {
-                        player_hearts = Player != null ? Player.Hearts : 0,
-                        player_id = Activity.PlayerId,
-                        player_username = Player != null ? Player.Username : "",
-                        type = "player_activity",
-                        events = [
-                            new Event
-                            {
-                                topic = Activity.Type.ToString(),
-                                type = Activity.Topic,
-                                details = Activity.Description,
-                                creator_username = Author != null ? Author.Username : "",
-                                creator_id = Activity.AuthorId,
-                                timestamp = Activity.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                                seconds_ago = TimeUtils.SecondsAgo(Activity.CreatedAt),
-                                tags = Activity.Tags,
-                                allusion_type = Activity.AllusionType,
-                                allusion_id = Activity.AllusionId,
-                                player_id = Activity.PlayerId
-                            }
-                        ]
-                    });
-                }
-                else if (Activity.Type == ActivityType.player_creation_event
-                    || Activity.Type == ActivityType.race_event
-                    || Activity.Type == ActivityType.player_event && Activity.PlayerCreationId != 0)
-                {
-                    activityList.Add(new Activity
-                    {
-                        player_creation_id = Activity.PlayerCreationId,
-                        player_creation_hearts = PlayerCreation != null ? PlayerCreation.HeartsCount : 0,
-                        player_creation_rating_up = PlayerCreation != null ? PlayerCreation.RatingUp : 0,
-                        player_creation_rating_down = PlayerCreation != null ? PlayerCreation.RatingDown : 0,
-                        player_creation_races_started = PlayerCreation != null ? PlayerCreation.RacesStartedCount : 0,
-                        player_creation_username = PlayerCreation != null ? PlayerCreation.Author.Username : "",
-                        player_creation_description = PlayerCreation != null ? PlayerCreation.Description : "",
-                        player_creation_name = PlayerCreation != null ? PlayerCreation.Name : "",
-                        player_creation_player_id = PlayerCreation != null ? PlayerCreation.PlayerId : 0,
-                        player_creation_associated_item_ids = PlayerCreation != null ? PlayerCreation.AssociatedItemIds : "",
-                        player_creation_level_mode = PlayerCreation != null ? PlayerCreation.LevelMode : 0,
-                        player_creation_is_team_pick = PlayerCreation != null ? PlayerCreation.IsTeamPick : false,
-                        type = "player_creation_activity",
-                        events = [
-                            new Event
-                            {
-                                topic = Activity.Type.ToString(),
-                                type = Activity.Topic,
-                                details = Activity.Description,
-                                creator_username = Author != null ? Author.Username : "",
-                                creator_id = Activity.AuthorId,
-                                timestamp = Activity.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                                seconds_ago = TimeUtils.SecondsAgo(Activity.CreatedAt),
-                                tags = Activity.Tags,
-                                allusion_type = Activity.AllusionType,
-                                allusion_id = Activity.AllusionId,
-                                player_id = Activity.PlayerId
-                            }
-                        ]
-                    });
+                    case ActivityType.player_event when !activity.PlayerCreationId.HasValue:
+                    case ActivityType.trophy_event:
+                        activityList.Add(new Activity
+                        {
+                            player_hearts = activity.Player?.Hearts ?? 0,
+                            player_id = activity.PlayerId ?? 0,
+                            player_username = activity.Player?.Username ?? "",
+                            type = "player_activity",
+                            events = [
+                                new Event
+                                {
+                                    topic = activity.Type.ToString(),
+                                    type = activity.Topic,
+                                    details = activity.Description,
+                                    creator_username = activity.Author?.Username ?? "",
+                                    creator_id = activity.AuthorId ?? 0,
+                                    timestamp = activity.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                                    seconds_ago = TimeUtils.SecondsAgo(activity.CreatedAt),
+                                    tags = activity.Tags,
+                                    allusion_type = activity.AllusionType,
+                                    allusion_id = activity.AllusionId,
+                                    player_id = activity.PlayerId ?? 0
+                                }
+                            ]
+                        });
+                        break;
+
+                    case ActivityType.player_creation_event:
+                    case ActivityType.race_event:
+                    case ActivityType.player_event when activity.PlayerCreationId.HasValue:
+                        activityList.Add(new Activity
+                        {
+                            player_creation_id = activity.PlayerCreationId ?? 0,
+                            player_creation_hearts = activity.PlayerCreation?.HeartsCount ?? 0,
+                            player_creation_rating_up = activity.PlayerCreation?.RatingUp ?? 0,
+                            player_creation_rating_down = activity.PlayerCreation?.RatingDown ?? 0,
+                            player_creation_races_started = activity.PlayerCreation?.RacesStartedCount ?? 0,
+                            player_creation_username = activity.PlayerCreation?.Author?.Username ?? "",
+                            player_creation_description = activity.PlayerCreation?.Description ?? "",
+                            player_creation_name = activity.PlayerCreation?.Name ?? "",
+                            player_creation_player_id = activity.PlayerCreation?.PlayerId ?? 0,
+                            player_creation_associated_item_ids = activity.PlayerCreation?.AssociatedItemIds ?? "",
+                            player_creation_level_mode = activity.PlayerCreation?.LevelMode ?? 0,
+                            player_creation_is_team_pick = activity.PlayerCreation?.IsTeamPick ?? false,
+                            type = "player_creation_activity",
+                            events = [
+                                new Event
+                                {
+                                    topic = activity.Type.ToString(),
+                                    type = activity.Topic,
+                                    details = activity.Description,
+                                    creator_username = activity.Author?.Username ?? "",
+                                    creator_id = activity.AuthorId ?? 0,
+                                    timestamp = activity.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                                    seconds_ago = TimeUtils.SecondsAgo(activity.CreatedAt),
+                                    tags = activity.Tags,
+                                    allusion_type = activity.AllusionType,
+                                    allusion_id = activity.AllusionId,
+                                    player_id = activity.PlayerId ?? 0
+                                }
+                            ]
+                        });
+                        break;
                 }
             }
 
@@ -174,7 +160,7 @@ namespace GameServer.Implementation.Player
                 response = [
                     new Activities
                     {
-                        total = Activities.Count,
+                        total = total,
                         page = page,
                         row_end = pageEnd,
                         row_start = pageStart,
@@ -188,25 +174,19 @@ namespace GameServer.Implementation.Player
 
         public static string NewsFeedTally(Database database, User user)
         {
-            var total = 0;
-
-            total += database.ActivityLog.Count(match => match.Type == ActivityType.system_event);
-
-            if (user != null)
-            {
-                foreach (var Heart in database.HeartedProfiles.Where(match => match.UserId == user.UserId).ToList())
-                {
-                    total += database.ActivityLog.Count(match => (match.AuthorId == Heart.HeartedUserId 
-                        || match.PlayerId == Heart.HeartedUserId) 
-                        && (match.List == ActivityList.news_feed || match.List == ActivityList.both));
-                    foreach (var Creation in database.PlayerCreations.Where(match => match.PlayerId == Heart.HeartedUserId).ToList())
-                    {
-                        total += database.ActivityLog.Count(match => match.PlayerCreationId == Creation.PlayerCreationId &&
-                            match.AuthorId != Heart.HeartedUserId && match.PlayerId != Heart.HeartedUserId &&
-                            (match.List == ActivityList.news_feed || match.List == ActivityList.both));
-                    }
-                }
-            }
+            var total = database.ActivityLog
+                .AsSplitQuery()
+                .AsNoTracking()
+                .Where(match => (user == null || ((match.AuthorId == null || !match.Author.IsBlockedByMe(user.UserId)) 
+                                    && (match.PlayerId == null || !match.Player.IsBlockedByMe(user.UserId))
+                                    && (match.PlayerCreationId == null || !match.PlayerCreation.Author.IsBlockedByMe(user.UserId))))
+                                && (match.List == ActivityList.news_feed || match.List == ActivityList.both))
+                .Count(match => (user != null && 
+                      ((match.AuthorId != null && (match.Author.IsHeartedByMe(user.UserId, false) || match.Author.IsBuddyWithMe(user.UserId)))
+                       || (match.PlayerId != null && (match.Player.IsHeartedByMe(user.UserId, false) || match.Player.IsBuddyWithMe(user.UserId)))
+                       || (match.PlayerCreationId != null && (match.PlayerCreation.IsHeartedByMe(user.UserId) 
+                           || match.PlayerCreation.Author.IsHeartedByMe(user.UserId, false) || match.PlayerCreation.Author.IsBuddyWithMe(user.UserId)))))
+                      | match.Type == ActivityType.system_event);
 
             var resp = new Response<List<Activities>>
             {
@@ -239,7 +219,7 @@ namespace GameServer.Implementation.Player
                     Topic = @event.type,
                     Description = @event.description,
                     PlayerId = int.Parse(@event.player_id.TrimEnd('\0')),
-                    PlayerCreationId = 0,
+                    PlayerCreationId = null,
                     CreatedAt = TimeUtils.Now,
                     AllusionId = int.Parse(@event.player_id.TrimEnd('\0')),
                     AllusionType = "Player"

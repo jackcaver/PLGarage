@@ -41,9 +41,8 @@ namespace GameServer.Models.PlayerData
         public float Longitude { get; set; }
         public string LocationTag { get; set; }
 
-        public int GetRank(SortColumn sortColumn)
+        public int GetRank(Database database, SortColumn sortColumn)
         {
-            using var database = new Database();
             var scores = database.Scores.Where(match => match.SubKeyId == SubKeyId
                 && match.SubGroupId == SubGroupId
                 && match.Platform == Platform

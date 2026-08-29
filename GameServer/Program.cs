@@ -77,6 +77,8 @@ namespace GameServer
 
             if (ServerConfig.Instance.CreateDefaultModerator)
                 Moderation.CreateDefaultModerator(database);
+            
+            UserGeneratedContentUtils.CheckStoryLevels(database);
 
             database.Dispose();
 

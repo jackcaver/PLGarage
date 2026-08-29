@@ -113,7 +113,7 @@ namespace GameServer.Implementation.Player
                     Topic = "player_authored_comment",
                     Description = player_comment.body,
                     PlayerId = user.UserId,
-                    PlayerCreationId = 0,
+                    PlayerCreationId = null,
                     CreatedAt = TimeUtils.Now,
                     AllusionId = comment.Id,
                     AllusionType = "PlayerComment"

@@ -162,6 +162,15 @@ namespace GameServer.Controllers.Common
                     && match.Platform == session.Platform && match.IsMNR == session.IsMNR);
             }
 
+            if (!database.PlayerCreationUniqueRacers.Any(match => match.PlayerId == user.UserId && match.PlayerCreationId == Track.PlayerCreationId && match.Version == Track.Version))
+            {
+                database.PlayerCreationUniqueRacers.Add(new PlayerCreationUniqueRacer
+                {
+                    PlayerId = user.UserId,
+                    PlayerCreationId = Track.PlayerCreationId,
+                    Version = Track.Version
+                });
+            }
             database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = game.track_idx, StartedAt = TimeUtils.Now });
             Track.RacesFinished++;
             if (game_player_stats.is_winner == 1)
@@ -212,6 +221,20 @@ namespace GameServer.Controllers.Common
 
             if (!session.IsMNR)
             {
+                database.ActivityLog.Add(new ActivityEvent
+                {
+                    AuthorId = user.UserId,
+                    Type = ActivityType.player_creation_event,
+                    List = ActivityList.activity_log,
+                    Topic = "player_creation_played",
+                    Description = "",
+                    PlayerId = null,
+                    PlayerCreationId = Track.PlayerCreationId,
+                    CreatedAt = TimeUtils.Now,
+                    AllusionId = Track.PlayerCreationId,
+                    AllusionType = "PlayerCreation::Track"
+                });
+                
                 var leaderboard = database.Scores.Where(match => match.SubKeyId == game.track_idx 
                     && match.SubGroupId == (int)game.game_type 
                     && match.PlaygroupSize == game_player_stats.playgroup_size 
@@ -234,7 +257,7 @@ namespace GameServer.Controllers.Common
                             List = ActivityList.both,
                             Topic = "player_beat_finish_time",
                             Description = $"{game_player_stats.finish_time}",
-                            PlayerId = 0,
+                            PlayerId = null,
                             PlayerCreationId = Track.PlayerCreationId,
                             CreatedAt = TimeUtils.Now,
                             AllusionId = Track.PlayerCreationId,
@@ -250,7 +273,7 @@ namespace GameServer.Controllers.Common
                             List = ActivityList.both,
                             Topic = "player_beat_score",
                             Description = $"{game_player_stats.score}",
-                            PlayerId = 0,
+                            PlayerId = null,
                             PlayerCreationId = Track.PlayerCreationId,
                             CreatedAt = TimeUtils.Now,
                             AllusionId = Track.PlayerCreationId,

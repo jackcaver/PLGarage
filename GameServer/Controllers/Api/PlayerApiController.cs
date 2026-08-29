@@ -1,3 +1,4 @@
+using GameServer.Implementation.Common;
 using System.Collections.Generic;
 using System.Linq;
 using GameServer.Models.PlayerData;
@@ -89,12 +90,6 @@ namespace GameServer.Controllers.Api
             if (player == null)
                 return NotFound(new { error = "error_player_not_found"});
 
-            var user = database.Users
-                .AsNoTracking()
-                .FirstOrDefault(x => x.UserId == player.UserId);
-
-            var presence = user?.Presence(database, Platform.PS3).ToString();
-
             var lbpkTypeValues = new[]
             {
                 PlayerCreationType.PHOTO,
@@ -151,7 +146,16 @@ namespace GameServer.Controllers.Api
                 player.LongestWinStreak,
                 player.LongestDrift,
                 player.LongestHangTime,
-                presence,
+                presence = new Dictionary<string, object>
+                {
+                    ["LBPK"] = Session.GetPresence(database, player.UserId, Platform.PS3, false).ToString(),
+                    ["MNR"] = new Dictionary<string, string>
+                    { 
+                        ["PS3"] = Session.GetPresence(database, player.UserId, Platform.PS3, true).ToString(),
+                        ["PSV"] = Session.GetPresence(database, player.UserId, Platform.PSV, true).ToString(),
+                        ["PSP"] = Session.GetPresence(database, player.UserId, Platform.PSP, true).ToString()
+                    }
+                },
                 player.ModMiles,
                 player.CharacterIdx,
                 player.KartIdx,

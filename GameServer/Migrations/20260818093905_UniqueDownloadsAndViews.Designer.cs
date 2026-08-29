@@ -4,6 +4,7 @@ using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GameServer.Migrations
 {
     [DbContext(typeof(Database))]
-    partial class DatabaseModelSnapshot : ModelSnapshot
+    [Migration("20260818093905_UniqueDownloadsAndViews")]
+    partial class UniqueDownloadsAndViews
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,7 +39,7 @@ namespace GameServer.Migrations
                     b.Property<string>("AllusionType")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("AuthorId")
+                    b.Property<int>("AuthorId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -54,10 +57,10 @@ namespace GameServer.Migrations
                     b.Property<int>("List")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PlayerCreationId")
+                    b.Property<int>("PlayerCreationId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PlayerId")
+                    b.Property<int>("PlayerId")
                         .HasColumnType("int");
 
                     b.Property<string>("Subject")
@@ -73,12 +76,6 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AuthorId");
-
-                    b.HasIndex("PlayerCreationId");
-
-                    b.HasIndex("PlayerId");
 
                     b.ToTable("ActivityLog");
                 });
@@ -1453,27 +1450,6 @@ namespace GameServer.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("GameServer.Models.PlayerData.ActivityEvent", b =>
-                {
-                    b.HasOne("GameServer.Models.PlayerData.User", "Author")
-                        .WithMany()
-                        .HasForeignKey("AuthorId");
-
-                    b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "PlayerCreation")
-                        .WithMany("ActivityLog")
-                        .HasForeignKey("PlayerCreationId");
-
-                    b.HasOne("GameServer.Models.PlayerData.User", "Player")
-                        .WithMany()
-                        .HasForeignKey("PlayerId");
-
-                    b.Navigation("Author");
-
-                    b.Navigation("Player");
-
-                    b.Navigation("PlayerCreation");
-                });
-
             modelBuilder.Entity("GameServer.Models.PlayerData.Analytics", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.User", "User")
@@ -2036,8 +2012,6 @@ namespace GameServer.Migrations
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", b =>
                 {
-                    b.Navigation("ActivityLog");
-
                     b.Navigation("Bookmarks");
 
                     b.Navigation("Comments");

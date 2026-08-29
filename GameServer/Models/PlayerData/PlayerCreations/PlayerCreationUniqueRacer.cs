@@ -8,6 +8,10 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         [Key]
         public int Id { get; set; }
         public int PlayerId { get; set; }
+        
+        [ForeignKey(nameof(PlayerId))]
+        public User Player { get; set; }
+        
         public int PlayerCreationId { get; set; }
 
         [ForeignKey(nameof(PlayerCreationId))]

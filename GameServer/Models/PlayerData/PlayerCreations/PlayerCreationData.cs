@@ -77,6 +77,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public List<PlayerCreationBookmark> Bookmarks { get; set; }
         public List<PlayerCreationReview> Reviews { get; set; }
         public List<Score> Scores { get; set; }
+        public List<ActivityEvent> ActivityLog { get; set; }
 
         [Projectable]
         public int RacesStartedCount => RacesStarted.Count;
@@ -102,8 +103,6 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public int HeartsThisWeek => Hearts.Count(match => match.HeartedAt >= TimeUtils.ThisWeekStart);
         [Projectable]
         public int HeartsThisMonth => Hearts.Count(match => match.HeartedAt >= TimeUtils.ThisMonthStart);
-        //[Projectable]
-        public int Rank => GetRank();
         [Projectable]
         public int RatingDown => Ratings.Count(match => match.Type == RatingType.BOO);
         [Projectable]
@@ -141,9 +140,8 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         [Projectable]
         public bool IsReviewedByMe(int id) => Reviews.Any(match => match.PlayerId == id);
 
-        public int GetRank()
+        public int GetRank(Database database)
         {
-            using var database = new Database();
             var creations = database.PlayerCreations
                 .Where(match => match.Type == this.Type)
                 .OrderBy(c => c.Points.Sum(p => p.Amount))

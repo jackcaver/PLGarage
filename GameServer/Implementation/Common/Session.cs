@@ -16,7 +16,6 @@ using NPTicket.Verification.Keys;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Claims;
-using System.Collections.Concurrent;
 
 namespace GameServer.Implementation.Common
 {
@@ -145,10 +144,9 @@ namespace GameServer.Implementation.Common
                 }
             }
 
-            if (user == null && (!ServerConfig.Instance.Whitelist || whitelist.Contains(NPTicket.Username)) 
-                && !database.Users.Any(match => match.Username == NPTicket.Username))
+            if (user == null && userByUsername == null && (!ServerConfig.Instance.Whitelist || whitelist.Contains(NPTicket.Username)))
             {
-                var newUser = new User
+                user = new User
                 {
                     UserId = database.Users.Count(match => match.Username != "ufg") + 11,
                     Username = NPTicket.Username,
@@ -158,13 +156,12 @@ namespace GameServer.Implementation.Common
                     PolicyAccepted = policyAccepted,
                 };
                 if (IsPSN)
-                    newUser.PSNID = NPTicket.UserId;
+                    user.PSNID = NPTicket.UserId;
                 else if (IsRPCN)
-                    newUser.RPCNID = NPTicket.UserId;
+                    user.RPCNID = NPTicket.UserId;
                 
-                database.Users.Add(newUser);
+                database.Users.Add(user);
                 database.SaveChanges();
-                user = database.Users.FirstOrDefault(match => match.Username == NPTicket.Username);
             }
 
             if (user == null || user.IsBanned
@@ -181,13 +178,6 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
 
-            var sessions = database.Sessions.Where(match => match.UserId == user.UserId && match.Platform == platform);
-            
-            foreach (var id in sessions.Select(s => s.SessionId).ToList())
-                ServerCommunication.NotifySessionDestroyed(id);
-
-            sessions.ExecuteDelete();
-
             SessionData session = new()
             {
                 UserId = user.UserId,
@@ -197,7 +187,7 @@ namespace GameServer.Implementation.Common
                 Presence = Presence.ONLINE,
                 IsRpcn = IsRPCN,
                 ConsoleId = console_id,
-                IpAddress = ip.MapToIPv4()
+                IpAddress = ip
             };
 
             List<string> MNR_IDs = [ "BCUS98167", "BCES00701", "BCES00764", "BCJS30041", "BCAS20105", 
@@ -225,6 +215,13 @@ namespace GameServer.Implementation.Common
                 return errorResp.Serialize();
             }
             
+            var sessions = database.Sessions.Where(match => match.UserId == user.UserId && match.Platform == platform && match.IsMNR == session.IsMNR);
+            
+            foreach (var id in sessions.Select(s => s.SessionId).ToList())
+                ServerCommunication.NotifySessionDestroyed(id);
+
+            sessions.ExecuteDelete();
+            
             database.Sessions.Add(session);
             database.SaveChanges();
             token = JWTUtils.GenerateToken(user.UserId, session.SessionId);
@@ -241,7 +238,7 @@ namespace GameServer.Implementation.Common
                         platform = platform.ToString(),
                         player_id = user.UserId,
                         player_name = user.Username,
-                        presence = user.Presence(database, platform).ToString()
+                        presence = user.Presence(database, platform, session.IsMNR).ToString()
                     }
                 ]
             };
@@ -274,14 +271,14 @@ namespace GameServer.Implementation.Common
             return resp.Serialize();
         }
 
-        public static Presence GetPresence(Database database, string username, Platform platform)
+        public static Presence GetPresence(Database database, int userId, Platform platform, bool isMNR)
         {
             ClearSessions(database);
             
             var session = database.Sessions
                 .AsNoTracking()
                 .Include(s => s.User)
-                .FirstOrDefault(match => match.Username == username && match.Platform == platform);
+                .FirstOrDefault(match => match.UserId == userId && match.Platform == platform && match.IsMNR == isMNR);
             if (session == null) 
             {
                 return Presence.OFFLINE;

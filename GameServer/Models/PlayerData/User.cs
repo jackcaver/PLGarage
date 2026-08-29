@@ -24,7 +24,7 @@ namespace GameServer.Models.PlayerData
 
         [Projectable]
         public int Hearts => HeartedByProfiles.Count;
-        public Presence Presence(Database database, Platform platform) => Session.GetPresence(database, Username, platform);
+        public Presence Presence(Database database, Platform platform, bool isMNR) => Session.GetPresence(database, UserId, platform, isMNR);
         public int Quota { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
@@ -37,7 +37,7 @@ namespace GameServer.Models.PlayerData
         [Projectable]
         public int TotalTracks => PlayerCreations.Count(match => match.Type == PlayerCreationType.TRACK && !match.IsMNR);
         //[Projectable]
-        public int Rank => GetRank(GameType.OVERALL, LeaderboardType.LIFETIME, Platform.PS3, SortColumn.points);
+        public int Rank(Database database) => GetRank(database, GameType.OVERALL, LeaderboardType.LIFETIME, Platform.PS3, SortColumn.points);
 
         public List<PlayerPoint> PlayerPoints { get; set; }
 
@@ -160,9 +160,20 @@ namespace GameServer.Models.PlayerData
         [Projectable]
         public bool IsHeartedByMe(int id, bool IsMNR) => HeartedByProfiles.Any(match => match.UserId == id && match.IsMNR == IsMNR);
 
-        public int GetRank(GameType game_type, LeaderboardType leaderboardType, Platform platform, SortColumn sort_column)
+        [InverseProperty(nameof(BlockedUser.BlockedPlayer))]
+        public List<BlockedUser> BlockedByUsers { get; set; }
+        
+        [Projectable]
+        public bool IsBlockedByMe(int id) => BlockedByUsers.Any(match => match.UserId == id);
+        
+        [InverseProperty(nameof(Buddy.BuddyUser))]
+        public List<Buddy> BuddiesWithUsers { get; set; }
+        
+        [Projectable]
+        public bool IsBuddyWithMe(int id) => BuddiesWithUsers.Any(match => match.UserId == id);
+
+        public int GetRank(Database database, GameType game_type, LeaderboardType leaderboardType, Platform platform, SortColumn sort_column)
         {
-            using var database = new Database();
             var users = database.Users
                 .AsNoTracking()
                 .AsSplitQuery()

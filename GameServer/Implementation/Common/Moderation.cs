@@ -470,7 +470,41 @@ namespace GameServer.Implementation.Common
                 if (hotlap != null && hotlap.TrackId == playerCreationID)
                     ContentUpdates.GetNewHotLap(database);
 
-            database.ActivityLog.Where(match => match.PlayerCreationId == Creation.PlayerCreationId).ExecuteDelete();
+            database.PlayerCreationDownloads
+                .Where(x => x.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+
+            database.PlayerCreationViews
+                .Where(x => x.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+
+            database.PlayerCreationRatings
+                .Where(x => x.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+
+            database.PlayerCreationPoints
+                .Where(x => x.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+
+            database.PlayerCreationComments
+                .Where(x => x.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+
+            database.PlayerCreationReviews
+                .Where(x => x.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+            
+            database.HeartedPlayerCreations
+                .Where(h => h.HeartedPlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+            
+            database.PlayerCreationBookmarks
+                .Where(b => b.BookmarkedPlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
+        
+            database.ActivityLog
+                .Where(match => match.PlayerCreationId == Creation.PlayerCreationId)
+                .ExecuteDelete();
 
             database.SaveChanges();
 
@@ -664,31 +698,7 @@ namespace GameServer.Implementation.Common
                 .ToList();
 
             if (removeCreations)
-            {
-                foreach (var creationId in creationIds)
-                {
-                    var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == creationId && match.PlayerId == user.UserId);
-
-                    if (Creation == null)
-                        continue;
-
-                    Creation.Type = PlayerCreationType.DELETED;
-
-                    foreach (var item in database.PlayerCreations.Where(match => match.TrackId == creationId)
-                                 .Select(item => item.PlayerCreationId).ToList())
-                    {
-                        var Photo = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item);
-                        Photo.TrackId = 4912;
-                    }
-
-                    database.ActivityLog.Where(match => match.PlayerCreationId == creationId).ExecuteDelete();
-
-                    database.SaveChanges();
-
-                    if (ServerConfig.Instance.DeleteCreationData)
-                        storage.RemovePlayerCreation(creationId);
-                }
-            }
+                RemovePlayerCreations(database, storage, targetUserId);
             else
             {
                 if (creationIds.Count > 0)
@@ -701,7 +711,7 @@ namespace GameServer.Implementation.Common
                     database.PlayerCreationReviews.Where(x => creationIds.Contains(x.PlayerCreationId)).ExecuteDelete();
                     database.HeartedPlayerCreations.Where(h => creationIds.Contains(h.HeartedPlayerCreationId)).ExecuteDelete();
                     database.PlayerCreationBookmarks.Where(b => creationIds.Contains(b.BookmarkedPlayerCreationId)).ExecuteDelete();
-                    database.ActivityLog.Where(match => creationIds.Contains(match.PlayerCreationId)).ExecuteDelete();
+                    database.ActivityLog.Where(match => match.PlayerCreationId.HasValue && creationIds.Contains(match.PlayerCreationId.Value)).ExecuteDelete();
                 }
             }
 
@@ -713,61 +723,26 @@ namespace GameServer.Implementation.Common
         {
             if (!database.Users.Any(u => u.UserId == targetUserId))
                 return null;
-        
-            var user = database.Users.First(u => u.UserId == targetUserId);
             
             var creationIds = database.PlayerCreations.Where(c => c.PlayerId == targetUserId)
                 .Select(c => c.PlayerCreationId)
                 .ToList();
         
             foreach (var creationId in creationIds)
-            {
-                var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == creationId && match.PlayerId == user.UserId);
-        
-                if (Creation == null)
-                    continue;
-        
-                Creation.Type = PlayerCreationType.DELETED;
-        
-                foreach (var item in database.PlayerCreations.Where(match => match.TrackId == creationId)
-                             .Select(item => item.PlayerCreationId).ToList())
-                {
-                    var Photo = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item);
-                    Photo.TrackId = 4912;
-                }
-        
-                database.ActivityLog.Where(match => match.PlayerCreationId == creationId).ExecuteDelete();
-        
-                database.SaveChanges();
-        
-                if (ServerConfig.Instance.DeleteCreationData)
-                    storage.RemovePlayerCreation(creationId);
-            }
+                RemovePlayerCreation(database, storage, creationId);
         
             database.SaveChanges();
             return "ok";
         }
         
-        public static string RemoveUser(Database database, int targetUserId)
+        public static string RemoveUser(Database database, IUGCStorage storage, int targetUserId)
         {
             if (!database.Users.Any(u => u.UserId == targetUserId))
                 return null;
         
             var user = database.Users.First(u => u.UserId == targetUserId);
             
-            var creationIds = database.PlayerCreations.Where(c => c.PlayerId == targetUserId)
-                .Select(c => c.PlayerCreationId)
-                .ToList();
-        
-            
-            foreach (var item in database.PlayerCreations.Where(match => creationIds.Contains(match.TrackId)).ToList())
-            {
-                var Photo = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item.PlayerCreationId);
-                Photo.TrackId = 4912;
-            }
-
-            database.ActivityLog.Where(match => creationIds.Contains(match.PlayerCreationId) 
-                || match.AuthorId == user.UserId || match.PlayerId == user.UserId).ExecuteDelete();
+            ResetUserProfile(database, storage, targetUserId, true);
 
             database.Users.Remove(user);
             
@@ -1035,7 +1010,10 @@ namespace GameServer.Implementation.Common
                 Topic = topic,
                 Description = description,
                 ImageURL = imageURL,
-                List = ActivityList.news_feed
+                List = ActivityList.news_feed,
+                AuthorId = null,
+                PlayerId = null,
+                PlayerCreationId = null
             });
             
             database.SaveChanges();

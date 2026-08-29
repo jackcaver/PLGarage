@@ -114,7 +114,7 @@ namespace GameServer.Implementation.Common
                         message.From = ServerID.ToString();
                         Database database = new();
                         ProcessMessage(database, webSocket, message);
-                        database.Dispose();
+                        await database.DisposeAsync();
                     }
                 }
                 catch (Exception e)
@@ -186,15 +186,46 @@ namespace GameServer.Implementation.Common
                                 foreach (int playerId in info.PlayerIds)
                                 {
                                     User user = database.Users.FirstOrDefault(match => match.UserId == playerId);
-                                    if (user != null && info.IsMNR)
+                                    if (user != null)
                                     {
-                                        var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx && match.PlayerId != user.UserId);
-                                        var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx && match.PlayerId != user.UserId);
-                                        if (character != null)
-                                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = TimeUtils.Now });
-                                        if (kart != null)
-                                            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = TimeUtils.Now });
-                                        database.OnlineRacesStarted.Add(new RaceStarted { PlayerId = user.UserId, StartedAt = TimeUtils.Now });
+                                        if (!database.PlayerCreationUniqueRacers.Any(match => match.PlayerId == user.UserId && match.PlayerCreationId == creation.PlayerCreationId && match.Version == creation.Version))
+                                        {
+                                            database.PlayerCreationUniqueRacers.Add(new PlayerCreationUniqueRacer
+                                            {
+                                                PlayerId = user.UserId,
+                                                PlayerCreationId = creation.PlayerCreationId,
+                                                Version = creation.Version
+                                            });
+                                        }
+
+                                        if (info.IsMNR)
+                                        {
+                                            var character = database.PlayerCreations.FirstOrDefault(match =>
+                                                match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx && match.PlayerId != user.UserId);
+                                            var kart = database.PlayerCreations.FirstOrDefault(match =>
+                                                match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx && match.PlayerId != user.UserId);
+                                            if (character != null)
+                                                database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = TimeUtils.Now });
+                                            if (kart != null)
+                                                database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = TimeUtils.Now });
+                                            database.OnlineRacesStarted.Add(new RaceStarted { PlayerId = user.UserId, StartedAt = TimeUtils.Now });
+                                        }
+                                        else
+                                        {
+                                            database.ActivityLog.Add(new ActivityEvent
+                                            {
+                                                AuthorId = user.UserId,
+                                                Type = ActivityType.player_creation_event,
+                                                List = ActivityList.activity_log,
+                                                Topic = "player_creation_played",
+                                                Description = "",
+                                                PlayerId = null,
+                                                PlayerCreationId = creation.PlayerCreationId,
+                                                CreatedAt = TimeUtils.Now,
+                                                AllusionId = creation.PlayerCreationId,
+                                                AllusionType = "PlayerCreation::Track"
+                                            });
+                                        }
                                     }
                                 }
                                 database.SaveChanges();
@@ -320,7 +351,7 @@ namespace GameServer.Implementation.Common
                                                             List = ActivityList.both,
                                                             Topic = "player_beat_finish_time",
                                                             Description = $"{player.FinishTime}",
-                                                            PlayerId = 0,
+                                                            PlayerId = null,
                                                             PlayerCreationId = creation.PlayerCreationId,
                                                             CreatedAt = TimeUtils.Now,
                                                             AllusionId = creation.PlayerCreationId,
@@ -336,7 +367,7 @@ namespace GameServer.Implementation.Common
                                                             List = ActivityList.both,
                                                             Topic = "player_beat_score",
                                                             Description = $"{player.Points}",
-                                                            PlayerId = 0,
+                                                            PlayerId = null,
                                                             PlayerCreationId = creation.PlayerCreationId,
                                                             CreatedAt = TimeUtils.Now,
                                                             AllusionId = creation.PlayerCreationId,

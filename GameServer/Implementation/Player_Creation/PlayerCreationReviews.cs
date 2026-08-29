@@ -123,6 +123,7 @@ namespace GameServer.Implementation.Player_Creation
                         List = ActivityList.activity_log,
                         Topic = "player_creation_reviewed",
                         Description = content,
+                        PlayerId = null,
                         PlayerCreationId = player_creation_id,
                         CreatedAt = TimeUtils.Now,
                         AllusionId = Review.Id,

@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using GameServer.Implementation.Common;
 using GameServer.Utils;
 
 namespace GameServer.Controllers.Api

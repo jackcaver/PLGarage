@@ -392,7 +392,7 @@ namespace GameServer.Controllers.Api
             if (user == null || !user.RemoveUsers)
                 return StatusCode(403);
 
-            var result = Moderation.RemoveUser(database, id);
+            var result = Moderation.RemoveUser(database, storage, id);
 
             if (result == null)
                 return NotFound();

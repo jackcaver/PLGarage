@@ -145,7 +145,9 @@ namespace GameServer.Implementation.Common
                 .Include(p => p.Downloads)
                 .OrderByDescending(p => p.Downloads.Count)
                 .Where(match => match.Type == PlayerCreationType.TRACK
-                    && match.IsMNR && match.Platform == Platform.PS3
+                    && match.IsMNR
+                    && match.AutoReset
+                    && match.Platform == Platform.PS3
                     && match.ModerationStatus != ModerationStatus.BANNED
                     && match.ModerationStatus != ModerationStatus.ILLEGAL)
                 .Select(p => p.PlayerCreationId);

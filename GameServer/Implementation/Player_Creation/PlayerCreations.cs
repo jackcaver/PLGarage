@@ -161,9 +161,11 @@ namespace GameServer.Implementation.Player_Creation
             }
 
             int quota = database.PlayerCreations.Count(match => match.PlayerId == user.UserId 
-                && match.Type != PlayerCreationType.PHOTO && match.Type != PlayerCreationType.DELETED 
+                && match.Type != PlayerCreationType.PHOTO && match.Type != PlayerCreationType.ITEM
+                && match.Type != PlayerCreationType.DELETED 
                 && match.IsMNR == session.IsMNR && match.Platform == session.Platform);
-            if (quota >= user.Quota && Creation.player_creation_type != PlayerCreationType.PHOTO)
+            if (quota >= user.Quota && Creation.player_creation_type != PlayerCreationType.PHOTO 
+                && Creation.player_creation_type != PlayerCreationType.ITEM)
             {
                 var errorResp = new Response<EmptyResponse>
                 {

@@ -17,13 +17,13 @@ namespace GameServer.Models.PlayerData
         [ForeignKey(nameof(UserId))]
         [JsonIgnore]
         public User User { get; set; }
-
+        public string AuthorUsername => User.Username;
         public int PlayerId { get; set; }
 
         [ForeignKey(nameof(PlayerId))]
         [JsonIgnore]
         public User Player { get; set; }
-
+        public string Username => Player.Username;
         [JsonConverter(typeof(StringEnumConverter))]
         public PlayerComplaintReason Reason { get; set; }
         public string Comments { get; set; }

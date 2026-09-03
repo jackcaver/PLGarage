@@ -308,6 +308,7 @@ namespace GameServer.Implementation.Common
 
             IQueryable<GriefReportData> query = database.GriefReports
                 .AsNoTracking()
+                .Include(r => r.User)
                 .Include(r => r.ModeratorAssignments)
                 .Where(match => from == null || match.UserId == from);
 
@@ -338,7 +339,9 @@ namespace GameServer.Implementation.Common
 
         public static string GetGriefReport(Database database, int id)
         {
-            var report = database.GriefReports.FirstOrDefault(match => match.Id == id);
+            var report = database.GriefReports
+                .Include(r => r.User)
+                .FirstOrDefault(match => match.Id == id);
 
             if (report == null)
                 return null;
@@ -921,6 +924,8 @@ namespace GameServer.Implementation.Common
 
             IQueryable<PlayerComplaintData> query = database.PlayerComplaints
                 .AsNoTracking()
+                .Include(c => c.User)
+                .Include(c => c.Player)
                 .Include(c => c.ModeratorAssignments)
                 .Where(match => from == null || match.UserId == from);
 
@@ -950,7 +955,10 @@ namespace GameServer.Implementation.Common
 
         public static string GetPlayerComplaint(Database database, int id)
         {
-            var complaint = database.PlayerComplaints.FirstOrDefault(match => match.Id == id);
+            var complaint = database.PlayerComplaints
+                .Include(c => c.User)
+                .Include(c => c.Player)
+                .FirstOrDefault(match => match.Id == id);
 
             if (complaint == null)
                 return null;
@@ -982,6 +990,9 @@ namespace GameServer.Implementation.Common
 
             IQueryable<PlayerCreationComplaintData> query = database.PlayerCreationComplaints
                 .AsNoTracking()
+                .Include(c => c.User)
+                .Include(c => c.Player)
+                .Include(c => c.PlayerCreation)
                 .Include(c => c.ModeratorAssignments)
                 .Where(match => from == null || match.UserId == from);
 
@@ -1011,7 +1022,11 @@ namespace GameServer.Implementation.Common
 
         public static string GetPlayerCreationComplaint(Database database, int id)
         {
-            var complaint = database.PlayerCreationComplaints.FirstOrDefault(match => match.Id == id);
+            var complaint = database.PlayerCreationComplaints
+                .Include(c => c.User)
+                .Include(c => c.Player)
+                .Include(c => c.PlayerCreation)
+                .FirstOrDefault(match => match.Id == id);
 
             if (complaint == null)
                 return null;

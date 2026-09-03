@@ -18,18 +18,20 @@ namespace GameServer.Models.PlayerData
         [ForeignKey(nameof(UserId))]
         [JsonIgnore]
         public User User { get; set; }
+        public string AuthorUsername => User.Username;
 
         public int PlayerId { get; set; }
 
         [ForeignKey(nameof(PlayerId))]
         [JsonIgnore]
         public User Player { get; set; }
-
+        public string Username => Player.Username;
         public int PlayerCreationId { get; set; }
 
         [ForeignKey(nameof(PlayerCreationId))]
         [JsonIgnore]
         public PlayerCreationData PlayerCreation { get; set; }
+        public string Name => PlayerCreation.Name;
 
         [JsonConverter(typeof(StringEnumConverter))]
         public PlayerComplaintReason Reason { get; set; }

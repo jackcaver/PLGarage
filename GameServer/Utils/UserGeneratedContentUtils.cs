@@ -58,7 +58,7 @@ namespace GameServer.Utils
         {
             image.Position = 0;
             var bytes = new byte[image.Length];
-            image.Read(bytes);
+            image.ReadExactly(bytes);
             return Resize(bytes, width, height);
         }
 

@@ -144,7 +144,7 @@ namespace GameServer.Implementation.Common
                 .AsSplitQuery()
                 .Include(p => p.Downloads)
                 .OrderByDescending(p => p.Downloads.Count)
-                .Where(match => match.Type == PlayerCreationType.TRACK
+                .Where(match => (match.Type == PlayerCreationType.TRACK || match.Type == PlayerCreationType.STORY)
                     && match.IsMNR && match.Platform == Platform.PS3
                     && match.ModerationStatus != ModerationStatus.BANNED
                     && match.ModerationStatus != ModerationStatus.ILLEGAL)

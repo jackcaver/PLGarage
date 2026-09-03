@@ -46,6 +46,7 @@ namespace GameServer.Utils
         public DbSet<AwardUnlock> AwardUnlocks { get; set; }
         //Moderation
         public DbSet<Moderator> Moderators { get; set; }
+        public DbSet<ModeratorAssignment> ModeratorAssignments { get; set; }
         //System
         public DbSet<SessionData> Sessions { get; set; }
         public DbSet<ModeratorSession> ModeratorSessions { get; set; }

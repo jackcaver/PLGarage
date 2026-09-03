@@ -10,6 +10,7 @@ using GameServer.Utils;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
@@ -298,18 +299,26 @@ namespace GameServer.Implementation.Common
         #endregion
 
         #region GriefReports
-        public static string GetGriefReports(Database database, int page, int per_page, string context, int? from, SortOrder? sortOrder)
+        public static string GetGriefReports(Database database, int page, int per_page, string context, int? from, SortOrder? sortOrder, ReportState? state, List<int> assignedModerators)
         {
             if (page <= 0)
                 page = 1;
             if (per_page <= 0)
                 per_page = 1;
 
-            IQueryable<GriefReportData> query = database.GriefReports.Where(match => from == null || match.UserId == from);
+            IQueryable<GriefReportData> query = database.GriefReports
+                .AsNoTracking()
+                .Include(r => r.ModeratorAssignments)
+                .Where(match => from == null || match.UserId == from);
 
             if (!string.IsNullOrEmpty(context))
                 query = query.Where(match => match.Context == context);
-
+            if (state != null)
+                query = query.Where(match => match.State == state);
+            if (assignedModerators != null)
+                foreach (var moderator in assignedModerators)
+                    query = query.Where(match => match.IsAssigned(moderator));
+            
             var total = query.Count();
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
@@ -335,6 +344,19 @@ namespace GameServer.Implementation.Common
                 return null;
 
             return JsonConvert.SerializeObject(report);
+        }
+        
+        public static string SetGriefReportState(Database database, int id, ReportState state)
+        {
+            var report = database.GriefReports.FirstOrDefault(match => match.Id == id);
+
+            if (report == null)
+                return null;
+
+            report.State = state;
+            database.SaveChanges();
+            
+            return "ok";
         }
         #endregion
 
@@ -369,7 +391,9 @@ namespace GameServer.Implementation.Common
             if (per_page <= 0)
                 per_page = 1;
 
-            var query = database.PlayerCreations.Where(match => match.ModerationStatus == status);
+            var query = database.PlayerCreations
+                .AsNoTracking()
+                .Where(match => match.ModerationStatus == status);
 
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
@@ -761,7 +785,7 @@ namespace GameServer.Implementation.Common
             if (per_page <= 0)
                 per_page = 1;
 
-            var query = database.Users.AsQueryable();
+            var query = database.Users.AsQueryable().AsNoTracking();
 
             if (PlayedMNR != null)
                 query = query.Where(match => match.PlayedMNR == PlayedMNR);
@@ -803,7 +827,7 @@ namespace GameServer.Implementation.Common
         
         public static string GetUserSessions(Database database, int userID, int page, int per_page)
         {
-            var query = database.Sessions.Where(match => match.UserId == userID);
+            var query = database.Sessions.AsNoTracking().Where(match => match.UserId == userID);
             
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
@@ -888,18 +912,26 @@ namespace GameServer.Implementation.Common
         #endregion
 
         #region PlayerComplaints
-        public static string GetPlayerComplaints(Database database, int page, int per_page, int? from, int? playerID, SortOrder? sortOrder)
+        public static string GetPlayerComplaints(Database database, int page, int per_page, int? from, int? playerID, SortOrder? sortOrder, ReportState? state, List<int> assignedModerators)
         {
             if (page <= 0)
                 page = 1;
             if (per_page <= 0)
                 per_page = 1;
 
-            IQueryable<PlayerComplaintData> query = database.PlayerComplaints.Where(match => from == null || match.UserId == from);
+            IQueryable<PlayerComplaintData> query = database.PlayerComplaints
+                .AsNoTracking()
+                .Include(c => c.ModeratorAssignments)
+                .Where(match => from == null || match.UserId == from);
 
             if (playerID != null)
                 query = query.Where(match => match.PlayerId == playerID);
-
+            if (state != null)
+                query = query.Where(match => match.State == state);
+            if (assignedModerators != null)
+                foreach (var moderator in assignedModerators)
+                    query = query.Where(match => match.IsAssigned(moderator));
+            
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
             var reports = (sortOrder == SortOrder.desc || sortOrder == null 
@@ -925,23 +957,44 @@ namespace GameServer.Implementation.Common
 
             return JsonConvert.SerializeObject(complaint);
         }
+        
+        public static string SetPlayerComplaintState(Database database, int id, ReportState state)
+        {
+            var complaint = database.PlayerComplaints.FirstOrDefault(match => match.Id == id);
+
+            if (complaint == null)
+                return null;
+            
+            complaint.State = state;
+            database.SaveChanges();
+
+            return "ok";
+        }
         #endregion
 
         #region PlayerCreationComplaints
-        public static string GetPlayerCreationComplaints(Database database, int page, int per_page, int? from, int? playerID, int? playerCreationID, SortOrder? sortOrder)
+        public static string GetPlayerCreationComplaints(Database database, int page, int per_page, int? from, int? playerID, int? playerCreationID, SortOrder? sortOrder, ReportState? state, List<int> assignedModerators)
         {
             if (page <= 0)
                 page = 1;
             if (per_page <= 0)
                 per_page = 1;
 
-            IQueryable<PlayerCreationComplaintData> query = database.PlayerCreationComplaints.Where(match => from == null || match.UserId == from);
+            IQueryable<PlayerCreationComplaintData> query = database.PlayerCreationComplaints
+                .AsNoTracking()
+                .Include(c => c.ModeratorAssignments)
+                .Where(match => from == null || match.UserId == from);
 
             if (playerID != null)
                 query = query.Where(match => match.PlayerId == playerID);
             if (playerCreationID != null)
                 query = query.Where(match => match.PlayerCreationId == playerCreationID);
-
+            if (state != null)
+                query = query.Where(match => match.State == state);
+            if (assignedModerators != null)
+                foreach (var moderator in assignedModerators)
+                    query = query.Where(match => match.IsAssigned(moderator));
+            
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
             var reports = (sortOrder == SortOrder.desc || sortOrder == null ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id))
@@ -964,6 +1017,19 @@ namespace GameServer.Implementation.Common
                 return null;
 
             return JsonConvert.SerializeObject(complaint);
+        }
+        
+        public static string SetPlayerCreationComplaintState(Database database, int id, ReportState state)
+        {
+            var complaint = database.PlayerCreationComplaints.FirstOrDefault(match => match.Id == id);
+
+            if (complaint == null)
+                return null;
+
+            complaint.State = state;
+            database.SaveChanges();
+
+            return "ok";
         }
         #endregion
 
@@ -1525,7 +1591,7 @@ namespace GameServer.Implementation.Common
                 return "error_creation_not_found";
 
             if (creation.Type == PlayerCreationType.DELETED 
-                || creation.Type == PlayerCreationType.STORY 
+                || !(creation.Type == PlayerCreationType.STORY && creation.IsMNR && creation.Platform == Platform.PS3)
                 || creation.Type == PlayerCreationType.ITEM
                 || creation.Type == PlayerCreationType.PHOTO
                 || creation.Type == PlayerCreationType.PLANET)
@@ -1572,6 +1638,98 @@ namespace GameServer.Implementation.Common
         }
         #endregion
 
+        #region ModeratorAssgnment
+        public static string GetModeratorAssignments(Database database, int page, int per_page, int userId, AssignmentType? type)
+        {
+            if (page <= 0)
+                page = 1;
+            if (per_page <= 0)
+                per_page = 1;
+
+            var query = database.ModeratorAssignments
+                .AsNoTracking()
+                .Where(match => match.UserId == userId);
+            
+            if (type != null)
+                query = query.Where(match => match.Type == type);
+            
+            var pageStart = PageCalculator.GetPageStart(page, per_page);
+
+            var assignments = query.Skip(pageStart).Take(per_page).ToList();
+
+            return JsonConvert.SerializeObject(new ModerationPageResponse<ModeratorAssignment>
+            {
+                Total = query.Count(),
+                Page = assignments
+            });
+        }
+        
+        public static string AssignModerator(Database database, int userId, AssignmentType type, int? griefReportId, int? playerComplaintId, int? playerCreationComplaintId)
+        {
+            if (!database.Moderators.Any(match => match.ID == userId))
+                return "error_moderator_not_found";
+            
+            if (!database.Moderators.Any(match => match.ID == userId && (type == AssignmentType.GriefReport ? match.ViewGriefReports : 
+                                                                          type == AssignmentType.PlayerComplaint ? match.ViewPlayerComplaints : 
+                                                                          match.ViewPlayerCreationComplaints)))
+                return "error_insufficient_permissions";
+            
+            var assignment = new ModeratorAssignment
+            {
+                UserId = userId,
+                Type = type
+            };
+
+            switch (type)
+            {
+                case AssignmentType.GriefReport:
+                    if (griefReportId.HasValue && database.GriefReports.Any(match => match.Id == griefReportId))
+                        assignment.GriefReportId = griefReportId;
+                    else
+                        return "error_report_not_found";
+                    break;
+                
+                case AssignmentType.PlayerComplaint:
+                    if (playerComplaintId.HasValue && database.GriefReports.Any(match => match.Id == playerComplaintId))
+                        assignment.PlayerComplaintId = playerComplaintId;
+                    else
+                        return "error_report_not_found";
+                    break;
+                
+                case AssignmentType.PlayerCreationComplaint:
+                    if (playerCreationComplaintId.HasValue && database.GriefReports.Any(match => match.Id == playerCreationComplaintId))
+                        assignment.PlayerCreationComplaintId = playerCreationComplaintId;
+                    else
+                        return "error_report_not_found";
+                    break;
+                
+                default:
+                    return "error_unknown_type";
+            }
+
+            database.ModeratorAssignments.Add(assignment);
+            database.SaveChanges();
+
+            return "ok";
+        }
+        
+        public static string RemoveAssignment(Database database, Moderator user, int id)
+        {
+            var assignment = database.ModeratorAssignments.FirstOrDefault(match => match.Id == id);
+
+            if (assignment == null)
+                return null;
+
+            if (assignment.UserId != user.ID && !user.ManageModerators)
+                return "error_insufficient_permissions";
+            
+            database.ModeratorAssignments.Remove(assignment);
+            database.SaveChanges();
+            
+            return "ok";
+        }
+        #endregion
+        
         #region ModeratorManagement
         public static string CreateModerator(Database database, string username, string password, ModeratorPermissions permissions)
         {

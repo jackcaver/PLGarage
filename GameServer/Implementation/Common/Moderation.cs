@@ -1210,6 +1210,8 @@ namespace GameServer.Implementation.Common
                 return "error_not_a_track";
             else if (!creation.IsMNR || creation.Platform != Platform.PS3)
                 return "error_wrong_game_or_platform";
+            else if (!creation.AutoReset)
+                return "error_track_no_autoreset";
             else
             {
                 var hotlap = ContentUpdates.ReadHotlapData();
@@ -1271,6 +1273,8 @@ namespace GameServer.Implementation.Common
                 return "error_not_a_track";
             else if (!creation.IsMNR || creation.Platform != Platform.PS3)
                 return "error_wrong_game_or_platform";
+            else if (!creation.AutoReset)
+                return "error_track_no_autoreset";
             else
             {
                 var hotlap = ContentUpdates.ReadHotlapData();

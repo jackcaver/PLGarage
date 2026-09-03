@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Net;
 
 
@@ -149,13 +150,13 @@ namespace GameServer.Controllers.Api
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/grief_reports")]
-        public IActionResult GetGriefReports(int page, int per_page, string context, int? from, SortOrder? sortOrder)
+        public IActionResult GetGriefReports(int page, int per_page, string context, int? from, SortOrder? sortOrder, ReportState? state, [FromQuery]List<int> assignedModerators)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.ViewGriefReports)
                 return StatusCode(403);
-
-            return Content(Moderation.GetGriefReports(database, page, per_page, context, from, sortOrder ?? SortOrder.desc));
+            
+            return Content(Moderation.GetGriefReports(database, page, per_page, context, from, sortOrder ?? SortOrder.desc, state, assignedModerators));
         }
 
         [HttpGet]
@@ -207,6 +208,23 @@ namespace GameServer.Controllers.Api
                 return File(file, "image/png");
             else
                 return NotFound();
+        }
+        
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/grief_reports/{id}/state")]
+        public IActionResult SetGriefReportState(int id, ReportState state)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ViewGriefReports)
+                return StatusCode(403);
+
+            var result = Moderation.SetGriefReportState(database, id, state);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
         }
         #endregion
 
@@ -542,13 +560,13 @@ namespace GameServer.Controllers.Api
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/player_complaints")]
-        public IActionResult GetPlayerComplaints(int page, int per_page, int? from, int? playerID, SortOrder? sortOrder)
+        public IActionResult GetPlayerComplaints(int page, int per_page, int? from, int? playerID, SortOrder? sortOrder, ReportState? state, List<int> assignedModerators)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.ViewPlayerComplaints)
                 return StatusCode(403);
-
-            return Content(Moderation.GetPlayerComplaints(database, page, per_page, from, playerID, sortOrder ?? SortOrder.desc));
+            
+            return Content(Moderation.GetPlayerComplaints(database, page, per_page, from, playerID, sortOrder ?? SortOrder.desc, state, assignedModerators));
         }
 
         [HttpGet]
@@ -567,19 +585,36 @@ namespace GameServer.Controllers.Api
             else
                 return Content(report);
         }
+        
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/player_complaints/{id}/state")]
+        public IActionResult SetPlayerComplaintState(int id, ReportState state)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ViewPlayerComplaints)
+                return StatusCode(403);
+
+            var result = Moderation.SetPlayerComplaintState(database, id, state);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
+        }
         #endregion
 
         #region PlayerCreationComplaints
         [HttpGet]
         [Authorize(Policy = JWTUtils.ModeratorPolicy)]
         [Route("/api/moderation/player_creation_complaints")]
-        public IActionResult GetPlayerCreationComplaints(int page, int per_page, int? from, int? playerID, int? playerCreationID, SortOrder? sortOrder)
+        public IActionResult GetPlayerCreationComplaints(int page, int per_page, int? from, int? playerID, int? playerCreationID, SortOrder? sortOrder, ReportState? state, List<int> assignedModerators)
         {
             var user = Moderation.GetUser(database, User);
             if (user == null || !user.ViewPlayerCreationComplaints)
                 return StatusCode(403);
-
-            return Content(Moderation.GetPlayerCreationComplaints(database, page, per_page, from, playerID, playerCreationID, sortOrder ?? SortOrder.desc));
+            
+            return Content(Moderation.GetPlayerCreationComplaints(database, page, per_page, from, playerID, playerCreationID, sortOrder ?? SortOrder.desc, state, assignedModerators));
         }
 
         [HttpGet]
@@ -614,6 +649,23 @@ namespace GameServer.Controllers.Api
                 return File(file, "image/png");
             else
                 return NotFound();
+        }
+        
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/player_creation_complaints/{id}/state")]
+        public IActionResult SetPlayerCreationComplaintState(int id, ReportState state)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !user.ViewPlayerCreationComplaints)
+                return StatusCode(403);
+
+            var result = Moderation.SetPlayerCreationComplaintState(database, id, state);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
         }
         #endregion
 
@@ -1124,6 +1176,60 @@ namespace GameServer.Controllers.Api
                 return StatusCode(403);
 
             return Content(Moderation.ClearTeamPicks(database));
+        }
+        #endregion
+        
+        #region ModeratorAssgnment
+        [HttpGet]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/assignments")]
+        public IActionResult GetModeratorAssignments(int page, int per_page, int? userId, AssignmentType? type)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !(user.ViewGriefReports || user.ViewPlayerComplaints 
+                                                        || user.ViewPlayerCreationComplaints || user.ManageModerators)
+                             || (userId != null && !user.ManageModerators))
+                return StatusCode(403);
+
+            if (userId == null)
+                userId = user.ID;
+
+            return Content(Moderation.GetModeratorAssignments(database, page, per_page, userId.Value, type));
+        }
+        
+        [HttpPost]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/assignments")]
+        public IActionResult AssignModerator(int? userId, AssignmentType type, int? griefReportId, int? playerComplaintId, int? playerCreationComplaintId)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !(user.ViewGriefReports || user.ViewPlayerComplaints 
+                                                        || user.ViewPlayerCreationComplaints || user.ManageModerators)
+                             || (userId != null && !user.ManageModerators))
+                return StatusCode(403);
+
+            if (userId == null)
+                userId = user.ID;
+
+            return Content(Moderation.AssignModerator(database, userId.Value, type, griefReportId, playerComplaintId, playerCreationComplaintId));
+        }
+        
+        [HttpDelete]
+        [Authorize(Policy = JWTUtils.ModeratorPolicy)]
+        [Route("/api/moderation/assignments/{id}")]
+        public IActionResult RemoveAssignment(int id)
+        {
+            var user = Moderation.GetUser(database, User);
+            if (user == null || !(user.ViewGriefReports || user.ViewPlayerComplaints 
+                                                        || user.ViewPlayerCreationComplaints || user.ManageModerators))
+                return StatusCode(403);
+
+            var result = Moderation.RemoveAssignment(database, user, id);
+
+            if (result == null)
+                return NotFound();
+            else
+                return Content(result);
         }
         #endregion
         

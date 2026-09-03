@@ -140,17 +140,24 @@ namespace GameServer.Implementation.Common
 
             HotLapData hotlap = ReadHotlapData();
 
-            var candidates = database.PlayerCreations
+            var query = database.PlayerCreations
                 .AsSplitQuery()
                 .Include(p => p.Downloads)
+                .Include(p => p.Ratings)
                 .OrderByDescending(p => p.Downloads.Count)
-                .Where(match => match.Type == PlayerCreationType.TRACK
+                .Where(match => (match.Type == PlayerCreationType.TRACK || match.Type == PlayerCreationType.STORY)
                     && match.IsMNR
                     && match.AutoReset
                     && match.Platform == Platform.PS3
                     && match.ModerationStatus != ModerationStatus.BANNED
-                    && match.ModerationStatus != ModerationStatus.ILLEGAL)
+                    && match.ModerationStatus != ModerationStatus.ILLEGAL);
+
+            var candidates = query
+                .Where(match => match.DownloadsCount >= 10 && match.Rating >= 3.5)
                 .Select(p => p.PlayerCreationId);
+
+            if (!candidates.Any())
+                candidates = query.Select(p => p.PlayerCreationId);
 
             if (hotlap == null || hotlap.Queue == null || hotlap.Queue.Count == 0)
             {

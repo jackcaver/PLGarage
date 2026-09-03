@@ -11,5 +11,6 @@ namespace GameServer.Models
         public Platform Platform { get; set; }
         public bool IsMNR { get; set; }
         public int MaxHumans { get; set; }
+        public bool AutoReset { get; set; }
     }
 }

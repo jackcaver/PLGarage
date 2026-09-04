@@ -151,47 +151,47 @@ namespace GameServer.Utils
             { 703, new StoryLevelData { Name = "ENDGAMEBOSS", RaceType = RaceType.BATTLE, ScoreboardMode = 0, Platform = Platform.PS3, IsMNR = false } },
 
             //MNR
-            { 288, new StoryLevelData { Name = "T1_MODCIRCUIT", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 289, new StoryLevelData { Name = "T1_MOUNTAINJUMPS", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 291, new StoryLevelData { Name = "T1_RURALFARM", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 292, new StoryLevelData { Name = "T4_TEMPLEOFTIKI", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 293, new StoryLevelData { Name = "T4_SPEEDJUNGLE", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 294, new StoryLevelData { Name = "T4_MOTOISLANd", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 296, new StoryLevelData { Name = "T3_OCEANCLIFF", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 297, new StoryLevelData { Name = "T4_RUMBLEISLAND", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 298, new StoryLevelData { Name = "T2_DIRECLIFF", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 299, new StoryLevelData { Name = "T1_FLAMINGJUMPS", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 302, new StoryLevelData { Name = "T1_MODFINALE", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 303, new StoryLevelData { Name = "T4_OVERVOLCANO", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 304, new StoryLevelData { Name = "T2_SINKHOLE", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 305, new StoryLevelData { Name = "T3_MARINA", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 306, new StoryLevelData { Name = "T4_RICKETYBRIDGE", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 307, new StoryLevelData { Name = "T3_OLDDISTRICT", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 309, new StoryLevelData { Name = "T1_DRIFTPARADISE", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 310, new StoryLevelData { Name = "T2_UPHEAVAL", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 311, new StoryLevelData { Name = "T1_MODOBAHN", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 312, new StoryLevelData { Name = "T1_SPEEDSPRINGS", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 314, new StoryLevelData { Name = "T3_CRAGGYHILLS", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 315, new StoryLevelData { Name = "T3_VISTAPOINT", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 316, new StoryLevelData { Name = "T3_BOARDWALK", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 331, new StoryLevelData { Name = "T2_MINERSRIFT", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 335, new StoryLevelData { Name = "T1_PARKCIRCUIT", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 336, new StoryLevelData { Name = "T1_VILLAGEJUMPS", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 339, new StoryLevelData { Name = "T2_MARKETRUN", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 341, new StoryLevelData { Name = "T2_SANDSTORM", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 595, new StoryLevelData { Name = "T6_IceBreaker", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 597, new StoryLevelData { Name = "T6_DownhillPeak", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 602, new StoryLevelData { Name = "T6_SnowStormCity", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 626, new StoryLevelData { Name = "T5_TerracedDrop", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 627, new StoryLevelData { Name = "T5_Chinatown", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 628, new StoryLevelData { Name = "T5_GreatWall", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 629, new StoryLevelData { Name = "T5_HiddenForest", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 631, new StoryLevelData { Name = "T5_Fortress", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 633, new StoryLevelData { Name = "T7_GridlockRiver", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 634, new StoryLevelData { Name = "T7_SubwayMayhem", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 635, new StoryLevelData { Name = "T7_TouristTrap", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 636, new StoryLevelData { Name = "T7_SkyscraperHop", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
-            { 637, new StoryLevelData { Name = "T7_HomerunCircuit", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true } },
+            { 288, new StoryLevelData { Name = "T1_MODCIRCUIT", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 289, new StoryLevelData { Name = "T1_MOUNTAINJUMPS", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 291, new StoryLevelData { Name = "T1_RURALFARM", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 292, new StoryLevelData { Name = "T4_TEMPLEOFTIKI", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 293, new StoryLevelData { Name = "T4_SPEEDJUNGLE", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 294, new StoryLevelData { Name = "T4_MOTOISLANd", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 296, new StoryLevelData { Name = "T3_OCEANCLIFF", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 297, new StoryLevelData { Name = "T4_RUMBLEISLAND", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 298, new StoryLevelData { Name = "T2_DIRECLIFF", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 299, new StoryLevelData { Name = "T1_FLAMINGJUMPS", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 302, new StoryLevelData { Name = "T1_MODFINALE", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 303, new StoryLevelData { Name = "T4_OVERVOLCANO", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 304, new StoryLevelData { Name = "T2_SINKHOLE", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 305, new StoryLevelData { Name = "T3_MARINA", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 306, new StoryLevelData { Name = "T4_RICKETYBRIDGE", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 307, new StoryLevelData { Name = "T3_OLDDISTRICT", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 309, new StoryLevelData { Name = "T1_DRIFTPARADISE", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 310, new StoryLevelData { Name = "T2_UPHEAVAL", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 311, new StoryLevelData { Name = "T1_MODOBAHN", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 312, new StoryLevelData { Name = "T1_SPEEDSPRINGS", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 314, new StoryLevelData { Name = "T3_CRAGGYHILLS", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 315, new StoryLevelData { Name = "T3_VISTAPOINT", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 316, new StoryLevelData { Name = "T3_BOARDWALK", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 331, new StoryLevelData { Name = "T2_MINERSRIFT", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 335, new StoryLevelData { Name = "T1_PARKCIRCUIT", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 336, new StoryLevelData { Name = "T1_VILLAGEJUMPS", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 339, new StoryLevelData { Name = "T2_MARKETRUN", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 341, new StoryLevelData { Name = "T2_SANDSTORM", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 595, new StoryLevelData { Name = "T6_IceBreaker", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 597, new StoryLevelData { Name = "T6_DownhillPeak", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 602, new StoryLevelData { Name = "T6_SnowStormCity", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 626, new StoryLevelData { Name = "T5_TerracedDrop", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 627, new StoryLevelData { Name = "T5_Chinatown", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 628, new StoryLevelData { Name = "T5_GreatWall", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 629, new StoryLevelData { Name = "T5_HiddenForest", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 631, new StoryLevelData { Name = "T5_Fortress", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 633, new StoryLevelData { Name = "T7_GridlockRiver", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 634, new StoryLevelData { Name = "T7_SubwayMayhem", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 635, new StoryLevelData { Name = "T7_TouristTrap", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 636, new StoryLevelData { Name = "T7_SkyscraperHop", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 637, new StoryLevelData { Name = "T7_HomerunCircuit", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
 
             //MNR: Road Trip
             { 512, new StoryLevelData { Name = "Tour1Race1", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PSV, IsMNR = true } },
@@ -223,6 +223,9 @@ namespace GameServer.Utils
                 
                 if (creation.MaxHumans != storyLevel.MaxHumans)
                     creation.MaxHumans = storyLevel.MaxHumans;
+
+                if (creation.AutoReset != storyLevel.AutoReset)
+                    creation.AutoReset = storyLevel.AutoReset;
                 
                 database.SaveChanges();
             }
@@ -269,7 +272,8 @@ namespace GameServer.Utils
                     Platform = storyLevel.Platform,
                     RaceType = storyLevel.RaceType,
                     IsMNR = storyLevel.IsMNR,
-                    MaxHumans = storyLevel.MaxHumans
+                    MaxHumans = storyLevel.MaxHumans,
+                    AutoReset = storyLevel.AutoReset
                 });
                 database.SaveChanges();
             }

@@ -18,7 +18,7 @@ namespace GameServer.Models.PlayerData
         [ForeignKey(nameof(UserId))]
         [JsonIgnore]
         public User User { get; set; }
-
+        public string Username => User.Username;
         public string Context { get; set; }
         public string Reason { get; set; }
         public string Comments { get; set; }

@@ -198,6 +198,8 @@ namespace GameServer.Implementation.Common
                                             });
                                         }
 
+                                        database.OnlineRacesStarted.Add(new RaceStarted { PlayerId = user.UserId, StartedAt = TimeUtils.Now });
+                                        
                                         if (info.IsMNR)
                                         {
                                             var character = database.PlayerCreations.FirstOrDefault(match =>
@@ -208,7 +210,6 @@ namespace GameServer.Implementation.Common
                                                 database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = TimeUtils.Now });
                                             if (kart != null)
                                                 database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = TimeUtils.Now });
-                                            database.OnlineRacesStarted.Add(new RaceStarted { PlayerId = user.UserId, StartedAt = TimeUtils.Now });
                                         }
                                         else
                                         {

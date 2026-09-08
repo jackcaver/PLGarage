@@ -27,6 +27,8 @@ namespace GameServer.Implementation.Player
                 .ThenInclude(c => c.Ratings)
                 .Include(e => e.PlayerCreation)
                 .ThenInclude(c => c.RacesStarted)
+                .Include(e => e.PlayerCreation)
+                .ThenInclude(c => c.Author)
                 .Where(match => (user == null || ((match.AuthorId == null || !match.Author.IsBlockedByMe(user.UserId)) 
                             && (match.PlayerId == null || !match.Player.IsBlockedByMe(user.UserId))
                             && (match.PlayerCreationId == null || !match.PlayerCreation.Author.IsBlockedByMe(user.UserId))))

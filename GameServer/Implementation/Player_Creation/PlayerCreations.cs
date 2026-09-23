@@ -1209,8 +1209,9 @@ namespace GameServer.Implementation.Player_Creation
             foreach (int item in id)
             {
                 var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item);
-                if ((creation != null && (creation.ModerationStatus != ModerationStatus.BANNED // broken i think
-                    && creation.ModerationStatus != ModerationStatus.ILLEGAL)))
+                if (creation != null
+                    && creation.ModerationStatus != ModerationStatus.BANNED
+                    && creation.ModerationStatus != ModerationStatus.ILLEGAL)
                 {
                     creations.Add(new PlayerCreationToVerify
                     {

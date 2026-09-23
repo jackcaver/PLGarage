@@ -1209,8 +1209,8 @@ namespace GameServer.Implementation.Player_Creation
             foreach (int item in id)
             {
                 var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item);
-                if (creation != null || (creation != null && (creation.ModerationStatus != ModerationStatus.BANNED
-                    || creation.ModerationStatus != ModerationStatus.ILLEGAL)))
+                if ((creation != null && (creation.ModerationStatus != ModerationStatus.BANNED // broken i think
+                    && creation.ModerationStatus != ModerationStatus.ILLEGAL)))
                 {
                     creations.Add(new PlayerCreationToVerify
                     {
@@ -1224,7 +1224,7 @@ namespace GameServer.Implementation.Player_Creation
                     creations.Add(new PlayerCreationToVerify
                     {
                         id = item,
-                        type = PlayerCreationType.TRACK.ToString(),
+                        type = creation?.Type.ToString() ?? PlayerCreationType.TRACK.ToString(), // does this need to be reported as a track?
                         suggested_action = "ban"
                     });
                 }

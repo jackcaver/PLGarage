@@ -1225,7 +1225,7 @@ namespace GameServer.Implementation.Player_Creation
                     creations.Add(new PlayerCreationToVerify
                     {
                         id = item,
-                        type = creation?.Type.ToString() ?? PlayerCreationType.TRACK.ToString(), // does this need to be reported as a track?
+                        type = nameof(PlayerCreationType.TRACK),
                         suggested_action = "ban"
                     });
                 }

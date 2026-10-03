@@ -226,7 +226,7 @@ namespace GameServer.Implementation.Common
             database.SaveChanges();
             token = JWTUtils.GenerateToken(user.UserId, session.SessionId);
             
-            ServerCommunication.NotifySessionCreated(session.SessionId, user.UserId, user.Username, (int)NPTicket.IssuerId, platform);
+            ServerCommunication.NotifySessionCreated(session.SessionId, user.UserId, NPTicket.Username, (int)NPTicket.IssuerId, platform);
 
             var resp = new Response<List<login_data>>
             {

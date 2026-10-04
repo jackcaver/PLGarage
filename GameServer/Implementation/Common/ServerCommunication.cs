@@ -112,9 +112,8 @@ namespace GameServer.Implementation.Common
                     if (message != null)
                     {
                         message.From = ServerID.ToString();
-                        Database database = new();
+                        await using var database = Database.GetContext();
                         ProcessMessage(database, webSocket, message);
-                        await database.DisposeAsync();
                     }
                 }
                 catch (Exception e)

@@ -10,6 +10,8 @@ using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
 using GameServer.Models.Config;
+using LinqToDB;
+using LinqToDB.EntityFrameworkCore;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -219,8 +221,8 @@ namespace GameServer.Implementation.Player_Creation
                 //MNR
                 IsMNR = session.IsMNR,
                 ParentCreationId = database.PlayerCreations.Any(match => match.PlayerCreationId == Creation.parent_creation_id) || Creation.parent_creation_id < 10000 ? Creation.parent_creation_id : 0,
-                ParentPlayerId = database.Users.Any(match => match.UserId == Creation.parent_player_id) ? Creation.parent_player_id : user.UserId,
-                OriginalPlayerId = database.Users.Any(match => match.UserId == Creation.original_player_id) ? Creation.original_player_id : user.UserId,
+                ParentPlayerId = database.Users.Any(match => match.UserId == Creation.parent_player_id) ? Creation.parent_player_id : 0,
+                OriginalPlayerId = database.Users.Any(match => match.UserId == Creation.original_player_id) ? Creation.original_player_id : 0,
                 BestLapTime = Creation.best_lap_time
             };
             database.PlayerCreations.Add(playerCreation);
@@ -230,7 +232,7 @@ namespace GameServer.Implementation.Player_Creation
             {
                 database.PlayerCreations.Remove(playerCreation); //unfortunately .net ef can't update primary keys...
                 database.SaveChanges();
-                playerCreation.PlayerCreationId += 10000;
+                playerCreation.PlayerCreationId = 10000;
                 database.PlayerCreations.Add(playerCreation);
                 database.SaveChanges();
             }
@@ -373,20 +375,87 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string GetPlayerCreation(Database database, IUGCStorage storage, SessionData session, int id, bool IsCounted, bool download = false)
         {
-            var Creation = database.PlayerCreations
-                .AsSplitQuery()
-                .Include(x => x.Downloads)
-                .Include(x => x.RacesStarted)
-                .Include(x => x.UniqueRacers)
-                .Include(x => x.Hearts)
-                .Include(x => x.Points)
-                .Include(x => x.Ratings)
-                .Include(x => x.Views)
-                .Include(x => x.Author)
-                .FirstOrDefault(match => match.PlayerCreationId == id);
-            var User = session.User;
+            var creation = database.PlayerCreations
+                .Select(creationData => new player_creation
+                {
+                    id = creationData.PlayerCreationId,
+                    ai = creationData.AI,
+                    associated_item_ids = creationData.AssociatedItemIds,
+                    auto_reset = creationData.AutoReset,
+                    battle_friendly_fire = creationData.BattleFriendlyFire,
+                    battle_kill_count = creationData.BattleKillCount,
+                    battle_time_limit = creationData.BattleTimeLimit,
+                    coolness = creationData.Coolness,
+                    created_at = creationData.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    description = creationData.Description,
+                    difficulty = creationData.Difficulty.ToString(),
+                    dlc_keys = creationData.DLCKeys ?? "",
+                    downloads = creationData.Downloads,
+                    downloads_last_week = creationData.DownloadsLastWeek,
+                    downloads_this_week = creationData.DownloadsThisWeek,
+                    first_published = creationData.FirstPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    last_published = creationData.LastPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    hearts = creationData.Hearts,
+                    is_remixable = creationData.IsRemixable,
+                    is_team_pick = creationData.IsTeamPick,
+                    level_mode = creationData.LevelMode,
+                    longest_drift = creationData.LongestDrift,
+                    longest_hang_time = creationData.LongestHangTime,
+                    max_humans = creationData.MaxHumans,
+                    name = creationData.Name,
+                    num_laps = creationData.NumLaps,
+                    num_racers = creationData.NumRacers,
+                    platform = creationData.Platform.ToString(),
+                    player_creation_type = (creationData.Type == PlayerCreationType.STORY ? PlayerCreationType.TRACK : creationData.Type).ToString(),
+                    player_id = creationData.PlayerId,
+                    races_finished = creationData.RacesFinished,
+                    races_started = creationData.RacesStarted,
+                    races_started_this_month = creationData.RacesStartedThisMonth,
+                    races_started_this_week = creationData.RacesStartedThisWeek,
+                    races_won = creationData.RacesWon,
+                    race_type = creationData.RaceType.ToString(),
+                    rank = (int)Sql.Window.RowNumber(f => f.OrderBy(creationData.Points)),
+                    rating_down = creationData.RatingDown,
+                    rating_up = creationData.RatingUp,
+                    scoreboard_mode = creationData.ScoreboardMode,
+                    speed = creationData.Speed.ToString(),
+                    tags = creationData.Tags,
+                    track_theme = creationData.TrackTheme,
+                    unique_racer_count = creationData.UniqueRacers,
+                    updated_at = creationData.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    username = creationData.Author.Username,
+                    user_tags = creationData.UserTags,
+                    version = creationData.Version,
+                    views = creationData.Views,
+                    views_last_week = creationData.ViewsLastWeek,
+                    views_this_week = creationData.ViewsThisWeek,
+                    votes = creationData.Votes,
+                    weapon_set = creationData.WeaponSet,
+                    data_md5 = download ? storage.CalculateMD5(id, "data.bin") : null,
+                    data_size = download ? storage.CalculateSize(id, "data.bin").ToString() : null,
+                    preview_md5 = download ? storage.CalculateMD5(id, "preview_image.png") : null,
+                    preview_size = download ? storage.CalculateSize(id, "preview_image.png").ToString() : null,
+                    //MNR
+                    // TODO: Remove some DB queries here and use one to many links in EF model
+                    points = creationData.Points,
+                    points_last_week = creationData.PointsLastWeek,
+                    points_this_week = creationData.PointsThisWeek,
+                    points_today = creationData.PointsToday,
+                    points_yesterday = creationData.PointsYesterday,
+                    rating = creationData.Rating.ToString("0.0", CultureInfo.InvariantCulture),
+                    star_rating = creationData.StarRating,
+                    original_player_id = creationData.ParentPlayerId != 0 ? creationData.ParentPlayerId.ToString() : "",
+                    parent_creation_id = creationData.ParentCreationId != 0 ? creationData.ParentCreationId.ToString() : "",
+                    parent_player_id = creationData.ParentPlayerId != 0 ? creationData.ParentPlayerId.ToString() : "",
+                    best_lap_time = creationData.BestLapTime,
+                    moderation_status = creationData.ModerationStatus.ToString(),
+                    moderation_status_id = (int)creationData.ModerationStatus,
+                })
+                .ToLinqToDB()
+                .FirstOrDefault(match => match.id == id);
+            var user = session.User;
 
-            if (Creation == null)
+            if (creation == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -396,21 +465,36 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            if (User != null)
+            if (int.TryParse(creation.original_player_id, out int originalPlayerId))
+                creation.original_player_username = database.Users
+                    .Select(u => new { u.UserId, u.Username })
+                    .FirstOrDefault(match => match.UserId == originalPlayerId)?.Username ?? "";
+            
+            if (int.TryParse(creation.parent_player_id, out int parentPlayerId))
+                creation.parent_player_username = database.Users
+                    .Select(u => new { u.UserId, u.Username })
+                    .FirstOrDefault(match => match.UserId == parentPlayerId)?.Username ?? "";
+            
+            if (int.TryParse(creation.parent_creation_id, out int parentCreationId))
+                creation.parent_player_username = database.PlayerCreations
+                    .Select(c => new { c.PlayerCreationId, c.Name })
+                    .FirstOrDefault(match => match.PlayerCreationId == parentCreationId)?.Name ?? "";
+
+            if (user != null)
             {
-                bool isOwner = User.UserId == Creation.PlayerId;
+                bool isOwner = user.UserId == creation.player_id;
 
                 if (IsCounted && !download && !isOwner)
                 {
                     if (!database.PlayerCreationViews
                         .Any(match =>
-                            match.PlayerId == User.UserId &&
-                            match.PlayerCreationId == Creation.PlayerCreationId))
+                            match.PlayerId == user.UserId &&
+                            match.PlayerCreationId == creation.id))
                     {
                         database.PlayerCreationViews.Add(new PlayerCreationView
                         {
-                            PlayerId = User.UserId,
-                            PlayerCreationId = Creation.PlayerCreationId,
+                            PlayerId = user.UserId,
+                            PlayerCreationId = creation.id,
                             ViewedAt = TimeUtils.Now
                         });
 
@@ -422,42 +506,48 @@ namespace GameServer.Implementation.Player_Creation
                 {
                     if (!database.PlayerCreationDownloads
                         .Any(match =>
-                            match.PlayerId == User.UserId &&
-                            match.PlayerCreationId == Creation.PlayerCreationId))
+                            match.PlayerId == user.UserId &&
+                            match.PlayerCreationId == creation.id))
                     {
                         database.PlayerCreationDownloads.Add(new PlayerCreationDownload
                         {
-                            PlayerId = User.UserId,
-                            PlayerCreationId = Creation.PlayerCreationId,
+                            PlayerId = user.UserId,
+                            PlayerCreationId = creation.id,
                             DownloadedAt = TimeUtils.Now
                         });
 
                         if (session.IsMNR)
                         {
-                            database.PlayerCreationPoints.Add(new PlayerCreationPoint
+                            var pointData = database.PlayerCreations
+                                .Select(c => new { c.PlayerCreationId, c.PlayerId, c.Platform, c.Type })
+                                .FirstOrDefault(match => match.PlayerCreationId == creation.id);
+                            if (pointData != null)
                             {
-                                PlayerCreationId = Creation.PlayerCreationId,
-                                PlayerId = Creation.PlayerId,
-                                Platform = Creation.Platform,
-                                Type = Creation.Type,
-                                CreatedAt = TimeUtils.Now,
-                                Amount = 100
-                            });
+                                database.PlayerCreationPoints.Add(new PlayerCreationPoint
+                                {
+                                    PlayerCreationId = pointData.PlayerCreationId,
+                                    PlayerId = pointData.PlayerId,
+                                    Platform = pointData.Platform,
+                                    Type = pointData.Type,
+                                    CreatedAt = TimeUtils.Now,
+                                    Amount = 100
+                                });
+                            }
                         }
 
                         if (!session.IsMNR)
                         {
                             database.ActivityLog.Add(new ActivityEvent
                             {
-                                AuthorId = User.UserId,
+                                AuthorId = user.UserId,
                                 Type = ActivityType.player_creation_event,
                                 List = ActivityList.activity_log,
                                 Topic = "player_creation_downloaded",
                                 Description = "",
                                 PlayerId = null,
-                                PlayerCreationId = Creation.PlayerCreationId,
+                                PlayerCreationId = creation.id,
                                 CreatedAt = TimeUtils.Now,
-                                AllusionId = Creation.PlayerCreationId,
+                                AllusionId = creation.id,
                                 AllusionType = "PlayerCreation::Track"
                             });
                         }
@@ -471,84 +561,7 @@ namespace GameServer.Implementation.Player_Creation
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [
-                    new player_creation
-                    {
-                        id = Creation.PlayerCreationId,
-                        ai = Creation.AI,
-                        associated_item_ids = Creation.AssociatedItemIds,
-                        auto_reset = Creation.AutoReset,
-                        battle_friendly_fire = Creation.BattleFriendlyFire,
-                        battle_kill_count = Creation.BattleKillCount,
-                        battle_time_limit = Creation.BattleTimeLimit,
-                        coolness = Creation.Coolness,
-                        created_at = Creation.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        description = Creation.Description,
-                        difficulty = Creation.Difficulty.ToString(),
-                        dlc_keys = Creation.DLCKeys ?? "",
-                        downloads = Creation.DownloadsCount,
-                        downloads_last_week = Creation.DownloadsLastWeek,
-                        downloads_this_week = Creation.DownloadsThisWeek,
-                        first_published = Creation.FirstPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        last_published = Creation.LastPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        hearts = Creation.HeartsCount,
-                        is_remixable = Creation.IsRemixable,
-                        is_team_pick = Creation.IsTeamPick,
-                        level_mode = Creation.LevelMode,
-                        longest_drift = Creation.LongestDrift,
-                        longest_hang_time = Creation.LongestHangTime,
-                        max_humans = Creation.MaxHumans,
-                        name = Creation.Name,
-                        num_laps = Creation.NumLaps,
-                        num_racers = Creation.NumRacers,
-                        platform = Creation.Platform.ToString(),
-                        player_creation_type = (Creation.Type == PlayerCreationType.STORY ? PlayerCreationType.TRACK : Creation.Type).ToString(),
-                        player_id = Creation.PlayerId,
-                        races_finished = Creation.RacesFinished,
-                        races_started = Creation.RacesStartedCount,
-                        races_started_this_month = Creation.RacesStartedThisMonth,
-                        races_started_this_week = Creation.RacesStartedThisWeek,
-                        races_won = Creation.RacesWon,
-                        race_type = Creation.RaceType.ToString(),
-                        rank = Creation.GetRank(database),
-                        rating_down = Creation.RatingDown,
-                        rating_up = Creation.RatingUp,
-                        scoreboard_mode = Creation.ScoreboardMode,
-                        speed = Creation.Speed.ToString(),
-                        tags = Creation.Tags,
-                        track_theme = Creation.TrackTheme,
-                        unique_racer_count = Creation.UniqueRacerCount,
-                        updated_at = Creation.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        username = Creation.Author.Username,
-                        user_tags = Creation.UserTags,
-                        version = Creation.Version,
-                        views = Creation.ViewsCount,
-                        views_last_week = Creation.ViewsLastWeek,
-                        views_this_week = Creation.ViewsThisWeek,
-                        votes = Creation.Votes,
-                        weapon_set = Creation.WeaponSet,
-                        data_md5 = download ? storage.CalculateMD5(id, "data.bin") : null,
-                        data_size = download ? storage.CalculateSize(id, "data.bin").ToString() : null,
-                        preview_md5 = download ? storage.CalculateMD5(id, "preview_image.png") : null,
-                        preview_size = download ? storage.CalculateSize(id, "preview_image.png").ToString() : null,
-                        //MNR
-                        // TODO: Remove some DB queries here and use one to many links in EF model
-                        points = Creation.PointsAmount,
-                        points_last_week = Creation.PointsLastWeek,
-                        points_this_week = Creation.PointsThisWeek,
-                        points_today = Creation.PointsToday,
-                        points_yesterday = Creation.PointsYesterday,
-                        rating = Creation.Rating.ToString("0.0", CultureInfo.InvariantCulture),
-                        star_rating = Creation.StarRating,
-                        original_player_id = Creation.OriginalPlayerId,
-                        original_player_username = database.Users.Any(match => match.UserId == Creation.OriginalPlayerId) ? database.Users.FirstOrDefault(match => match.UserId == Creation.OriginalPlayerId).Username : "",
-                        parent_creation_id = Creation.ParentCreationId != 0 ? Creation.ParentCreationId.ToString() : "",
-                        parent_creation_name = database.PlayerCreations.Any(match => match.PlayerCreationId == Creation.ParentCreationId) ? database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Creation.ParentCreationId).Name : "",
-                        parent_player_id = Creation.ParentPlayerId != 0 ? Creation.ParentPlayerId.ToString() : "",
-                        parent_player_username = database.Users.Any(match => match.UserId == Creation.ParentPlayerId) ? database.Users.FirstOrDefault(match => match.UserId == Creation.ParentPlayerId).Username : "",
-                        best_lap_time = Creation.BestLapTime,
-                        moderation_status = Creation.ModerationStatus.ToString(),
-                        moderation_status_id = (int)Creation.ModerationStatus,
-                    }
+                    creation
                 ]
             };
             return resp.Serialize();
@@ -556,19 +569,19 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string PlayerCreationsFriendsPublished(Database database, string usernameFilter, PlayerCreationType type)
         {
-            var Creations = new List<PlayerCreationData> { };
+            bool friendsPublished = false;
 
             if (usernameFilter != null)
             {
                 var usernames = usernameFilter.Split(',');
-                Creations.AddRange(database.PlayerCreations.Where(match => usernames.Contains(match.Username) 
-                                                                    && match.Type == type).ToList());
+                friendsPublished = database.PlayerCreations.Any(match => usernames.Contains(match.Username) 
+                                                                          && match.Type == type);
             }
 
             var resp = new Response<List<player_creations>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = [new player_creations { friends_published = Creations.Count != 0 }]
+                response = [new player_creations { friends_published = friendsPublished }]
             };
             return resp.Serialize();
         }
@@ -579,15 +592,6 @@ namespace GameServer.Implementation.Player_Creation
         {
             IQueryable<PlayerCreationData> creationQuery = database.PlayerCreations     // TODO: Is it an issue someone might be able to fudge the entire database out like this?
                 .AsNoTracking()
-                .AsSplitQuery()
-                .Include(x => x.Downloads)
-                .Include(x => x.RacesStarted)
-                .Include(x => x.UniqueRacers)
-                .Include(x => x.Hearts)
-                .Include(x => x.Points)
-                .Include(x => x.Ratings)
-                .Include(x => x.Views)
-                .Include(x => x.Author)
                 .Where(match => match.Platform == platform && match.IsMNR == IsMNR);
             if (filters.username == null && filters.id == null && filters.player_id == null)
                 creationQuery = creationQuery.Where(match => match.Type == filters.player_creation_type);
@@ -658,8 +662,8 @@ namespace GameServer.Implementation.Player_Creation
                 case SortColumn.races_started:
                     creationQuery =
                         sort_order == SortOrder.asc ? 
-                            creationQuery.OrderBy(match => match.RacesStartedCount) : 
-                            creationQuery.OrderByDescending(match => match.RacesStartedCount);
+                            creationQuery.OrderBy(match => match.RacesStarted) : 
+                            creationQuery.OrderByDescending(match => match.RacesStarted);
                     break;
                 case SortColumn.races_started_this_week:
                     creationQuery =
@@ -698,8 +702,8 @@ namespace GameServer.Implementation.Player_Creation
                 case SortColumn.hearts:
                     creationQuery =
                         sort_order == SortOrder.asc ? 
-                            creationQuery.OrderBy(match => match.HeartsCount) : 
-                            creationQuery.OrderByDescending(match => match.HeartsCount);
+                            creationQuery.OrderBy(match => match.Hearts) : 
+                            creationQuery.OrderByDescending(match => match.Hearts);
                     break;
                 case SortColumn.hearts_this_week:
                     creationQuery =
@@ -726,8 +730,8 @@ namespace GameServer.Implementation.Player_Creation
                 case SortColumn.points:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.PointsAmount) :
-                            creationQuery.OrderByDescending(match => match.PointsAmount);
+                            creationQuery.OrderBy(match => match.Points) :
+                            creationQuery.OrderByDescending(match => match.Points);
                     break;
                 case SortColumn.points_today:
                     creationQuery =
@@ -758,8 +762,8 @@ namespace GameServer.Implementation.Player_Creation
                 case SortColumn.downloads:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.DownloadsCount) :
-                            creationQuery.OrderByDescending(match => match.DownloadsCount);
+                            creationQuery.OrderBy(match => match.Downloads) :
+                            creationQuery.OrderByDescending(match => match.Downloads);
                     break;
                 case SortColumn.downloads_this_week:
                     creationQuery =
@@ -778,8 +782,8 @@ namespace GameServer.Implementation.Player_Creation
                 case SortColumn.views:
                     creationQuery =
                         sort_order == SortOrder.asc ?
-                            creationQuery.OrderBy(match => match.ViewsCount) :
-                            creationQuery.OrderByDescending(match => match.ViewsCount);
+                            creationQuery.OrderBy(match => match.Views) :
+                            creationQuery.OrderByDescending(match => match.Views);
                     break;
                 case SortColumn.views_this_week:
                     creationQuery =
@@ -813,12 +817,7 @@ namespace GameServer.Implementation.Player_Creation
                 pageStart = pageEnd;
 
             var creations = creationQuery
-                .Skip(pageStart)
-                .Take(per_page)
-                .ToList();
-
-            var playerCreationsList = new List<player_creation>(
-                creations.Select(creation => new player_creation
+                .Select(creation => new player_creation
                 {
                     id = creation.PlayerCreationId,
                     ai = creation.AI,
@@ -832,12 +831,12 @@ namespace GameServer.Implementation.Player_Creation
                     description = creation.Description,
                     difficulty = creation.Difficulty.ToString(),
                     dlc_keys = creation.DLCKeys,
-                    downloads = creation.DownloadsCount,
+                    downloads = creation.Downloads,
                     downloads_last_week = creation.DownloadsLastWeek,
                     downloads_this_week = creation.DownloadsThisWeek,
                     first_published = creation.FirstPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     last_published = creation.LastPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    hearts = creation.HeartsCount,
+                    hearts = creation.Hearts,
                     is_remixable = creation.IsRemixable,
                     is_team_pick = creation.IsTeamPick,
                     level_mode = creation.LevelMode,
@@ -851,30 +850,75 @@ namespace GameServer.Implementation.Player_Creation
                     player_creation_type = (creation.Type == PlayerCreationType.STORY ? PlayerCreationType.TRACK : creation.Type).ToString(),
                     player_id = creation.PlayerId,
                     races_finished = creation.RacesFinished,
-                    races_started = creation.RacesStartedCount,
+                    races_started = creation.RacesStarted,
                     races_started_this_month = creation.RacesStartedThisMonth,
                     races_started_this_week = creation.RacesStartedThisWeek,
                     races_won = creation.RacesWon,
                     race_type = creation.RaceType.ToString(),
-                    rank = creation.GetRank(database),
+                    rank = (int)Sql.Window.RowNumber(f => 
+                        sort_column == SortColumn.coolness ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.Coolness) : f.OrderByDesc(creation.Coolness)) :
+                        sort_column == SortColumn.created_at ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.CreatedAt) : f.OrderByDesc(creation.CreatedAt)) :
+                        sort_column == SortColumn.races_started ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.RacesStarted) : f.OrderByDesc(creation.RacesStarted)) :
+                        sort_column == SortColumn.races_started_this_week ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.RacesStartedThisWeek) : f.OrderByDesc(creation.RacesStartedThisWeek)) :
+                        sort_column == SortColumn.races_started_this_month ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.RacesStartedThisMonth) : f.OrderByDesc(creation.RacesStartedThisMonth)) :
+                        sort_column == SortColumn.rating_up ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.RatingUp) : f.OrderByDesc(creation.RatingUp)) :
+                        sort_column == SortColumn.rating_up_this_week ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.RatingUpThisWeek) : f.OrderByDesc(creation.RatingUpThisWeek)) :
+                        sort_column == SortColumn.rating_up_this_month ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.RatingUpThisMonth) : f.OrderByDesc(creation.RatingUpThisMonth)) :
+                        sort_column == SortColumn.hearts ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.Hearts) : f.OrderByDesc(creation.Hearts)) :
+                        sort_column == SortColumn.hearts_this_week ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.HeartsThisWeek) : f.OrderByDesc(creation.HeartsThisWeek)) :
+                        sort_column == SortColumn.hearts_this_month ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.HeartsThisMonth) : f.OrderByDesc(creation.HeartsThisMonth)) :
+                        sort_column == SortColumn.rating ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.Rating) : f.OrderByDesc(creation.Rating)) :
+                        sort_column == SortColumn.downloads ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.Downloads) : f.OrderByDesc(creation.Downloads)) :
+                        sort_column == SortColumn.downloads_last_week ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.DownloadsLastWeek) : f.OrderByDesc(creation.DownloadsLastWeek)) :
+                        sort_column == SortColumn.downloads_this_week ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.DownloadsThisWeek) : f.OrderByDesc(creation.DownloadsThisWeek)) :
+                        sort_column == SortColumn.views ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.Views) : f.OrderByDesc(creation.Views)) :
+                        sort_column == SortColumn.views_last_week ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.ViewsLastWeek) : f.OrderByDesc(creation.ViewsLastWeek)) :
+                        sort_column == SortColumn.views_this_week ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.ViewsThisWeek) : f.OrderByDesc(creation.ViewsThisWeek)) :
+                        sort_column == SortColumn.points_yesterday ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.PointsYesterday) : f.OrderByDesc(creation.PointsYesterday)) :
+                        sort_column == SortColumn.points_today ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.PointsToday) : f.OrderByDesc(creation.PointsToday)) :
+                        sort_column == SortColumn.points_this_week ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.PointsThisWeek) : f.OrderByDesc(creation.PointsThisWeek)) :
+                        sort_column == SortColumn.points_last_week ? 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.PointsLastWeek) : f.OrderByDesc(creation.PointsLastWeek)) : 
+                            (sort_order == SortOrder.asc ? f.OrderBy(creation.Points) : f.OrderByDesc(creation.Points))),
                     rating_down = creation.RatingDown,
                     rating_up = creation.RatingUp,
                     scoreboard_mode = creation.ScoreboardMode,
                     speed = creation.Speed.ToString(),
                     tags = creation.Tags,
                     track_theme = creation.TrackTheme,
-                    unique_racer_count = creation.UniqueRacerCount,
+                    unique_racer_count = creation.UniqueRacers,
                     updated_at = creation.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    username = creation.Author.Username,
+                    username = creation.Username,
                     user_tags = creation.UserTags,
                     version = creation.Version,
-                    views = creation.ViewsCount,
+                    views = creation.Views,
                     views_last_week = creation.ViewsLastWeek,
                     views_this_week = creation.ViewsThisWeek,
                     votes = creation.Votes,
                     weapon_set = creation.WeaponSet,
                     //MNR
-                    points = creation.PointsAmount,
+                    points = creation.Points,
                     points_last_week = creation.PointsLastWeek,
                     points_this_week = creation.PointsThisWeek,
                     points_today = creation.PointsToday,
@@ -883,7 +927,11 @@ namespace GameServer.Implementation.Player_Creation
                     star_rating = creation.StarRating,
                     moderation_status = creation.ModerationStatus.ToString(),
                     moderation_status_id = (int)creation.ModerationStatus
-                }));
+                })
+                .Skip(pageStart)
+                .Take(per_page)
+                .ToLinqToDB()
+                .ToList();
 
             var resp = new Response<List<player_creations>>
             {
@@ -896,7 +944,7 @@ namespace GameServer.Implementation.Player_Creation
                         row_start = pageStart,
                         total = total,
                         total_pages = totalPages,
-                        PlayerCreationsList = playerCreationsList
+                        PlayerCreationsList = creations
                     }
                 ]
             };
@@ -927,9 +975,10 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string SearchPhotos(Database database, int? track_id, string username, string associated_usernames, int page, int per_page)
         {
-            IQueryable<PlayerCreationData> photosQuery = database.PlayerCreations
-                                                            .Include(x => x.Author)
-                                                            .Where(match => match.Type == PlayerCreationType.PHOTO);
+            var photosQuery = database.PlayerCreations
+                .Include(x => x.Author)
+                .Where(match => match.Type == PlayerCreationType.PHOTO && match.ModerationStatus != ModerationStatus.ILLEGAL 
+                                                                       && match.ModerationStatus != ModerationStatus.BANNED);
 
             if (associated_usernames != null)
                 photosQuery = photosQuery.Where(match => match.AssociatedUsernames.Contains(associated_usernames));
@@ -982,40 +1031,124 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string GetTrackProfile(Database database, User requestedBy, int id)
         {
-            var Track = database.PlayerCreations
-                .AsSplitQuery()
-                .Include(x => x.Hearts)
-                .Include(x => x.Ratings)
-                .Include(x => x.RacesStarted)
-                .Include(x => x.Author)
-                .Include(x => x.Points)
-                .Include(x => x.Downloads)
-                .Include(x => x.UniqueRacers)
-                .Include(x => x.Views)
-                .Include(x => x.Scores)
-                .ThenInclude(s => s.User)
-                .Include(x => x.Comments)
-                .Include(x => x.Bookmarks)
-                .Include(x => x.Reviews)
-                .ThenInclude(r => r.ReviewRatings)
-                .Include(x => x.Reviews)
-                .ThenInclude(r => r.User)
-                .Include(c => c.ActivityLog)
-                .ThenInclude(e => e.Author)
-                .FirstOrDefault(match => match.PlayerCreationId == id);
-            var TrackPhotos = database.PlayerCreations
+            var track = database.PlayerCreations
+                .Select(creationData => new Track
+                {
+                    id = creationData.PlayerCreationId,
+                    ai = creationData.AI,
+                    associated_item_ids = creationData.AssociatedItemIds,
+                    auto_reset = creationData.AutoReset,
+                    battle_friendly_fire = creationData.BattleFriendlyFire,
+                    battle_kill_count = creationData.BattleKillCount,
+                    battle_time_limit = creationData.BattleTimeLimit,
+                    coolness = creationData.Coolness,
+                    created_at = creationData.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    description = creationData.Description,
+                    difficulty = creationData.Difficulty.ToString(),
+                    dlc_keys = creationData.DLCKeys,
+                    downloads = creationData.Downloads,
+                    downloads_last_week = creationData.DownloadsLastWeek,
+                    downloads_this_week = creationData.DownloadsThisWeek,
+                    first_published = creationData.FirstPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    last_published = creationData.LastPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    hearts = creationData.Hearts,
+                    is_remixable = creationData.IsRemixable,
+                    is_team_pick = creationData.IsTeamPick,
+                    level_mode = creationData.LevelMode,
+                    longest_drift = creationData.LongestDrift,
+                    longest_hang_time = creationData.LongestHangTime,
+                    max_humans = creationData.MaxHumans,
+                    name = creationData.Name,
+                    num_laps = creationData.NumLaps,
+                    num_racers = creationData.NumRacers,
+                    platform = creationData.Platform.ToString(),
+                    player_creation_type = (creationData.Type == PlayerCreationType.STORY ? PlayerCreationType.TRACK : creationData.Type).ToString(),
+                    player_id = creationData.PlayerId,
+                    races_finished = creationData.RacesFinished,
+                    races_started = creationData.RacesStarted,
+                    races_started_this_month = creationData.RacesStartedThisMonth,
+                    races_started_this_week = creationData.RacesStartedThisWeek,
+                    races_won = creationData.RacesWon,
+                    race_type = creationData.RaceType.ToString(),
+                    rank = (int)Sql.Window.RowNumber(f => f.OrderBy(creationData.Points)),
+                    rating_down = creationData.RatingDown,
+                    rating_up = creationData.RatingUp,
+                    scoreboard_mode = creationData.ScoreboardMode,
+                    speed = creationData.Speed.ToString(),
+                    tags = creationData.Tags,
+                    track_theme = creationData.TrackTheme,
+                    unique_racer_count = creationData.UniqueRacers,
+                    updated_at = creationData.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    username = creationData.Username,
+                    user_tags = creationData.UserTags,
+                    version = creationData.Version,
+                    views = creationData.Views,
+                    views_last_week = creationData.ViewsLastWeek,
+                    views_this_week = creationData.ViewsThisWeek,
+                    votes = creationData.Votes,
+                    weapon_set = creationData.WeaponSet,
+                    hearted_by_me = (requestedBy == null) ? "false" : creationData.IsHeartedByMe(requestedBy.UserId).ToString().ToLower(),
+                    queued_by_me = (requestedBy == null) ? "false" : creationData.IsBookmarkedByMe(requestedBy.UserId).ToString().ToLower(),
+                    reviewed_by_me = (requestedBy == null) ? "false" : creationData.IsReviewedByMe(requestedBy.UserId).ToString().ToLower(),
+                })
+                .FirstOrDefault(match => match.id == id);
+            var photos = database.PlayerCreations
                 .Where(match => match.TrackId == id && match.Type == PlayerCreationType.PHOTO)
                 .OrderByDescending(match => match.CreatedAt)
-                .Take(3)
-                .ToList();
+                .Select(photo => new Photo
+                {
+                    id = photo.PlayerCreationId
+                });
+            var scores = database.Scores
+                .Where(match => match.SubKeyId == id)
+                .Select(score => new SubLeaderboardPlayer
+                {
+                    player_id = score.PlayerId,
+                    username = score.Username,
+                    rank = (int)Sql.Window.RowNumber(f => track.scoreboard_mode == 1 ? f.OrderBy(score.FinishTime) : 
+                                                              f.OrderByDesc(score.Points)),
+                    score = score.Points,
+                    finish_time = score.FinishTime
+                })
+                .ToLinqToDB();
+            var comments = database.PlayerCreationComments
+                .Where(match => match.PlayerCreationId == id)
+                .OrderByDescending(match => match.CreatedAt)
+                .Select(comment => new Comment
+                {
+                    id = comment.Id,
+                    player_id = comment.PlayerId,
+                    username = comment.Username,
+                    body = comment.Body,
+                    rating_up = comment.RatingUp,
+                    rated_by_me = false,
+                    updated_at = comment.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
+                });
+            var reviews = database.PlayerCreationReviews
+                .Where(match => match.PlayerCreationId == id)
+                .OrderByDescending(match => match.CreatedAt)
+                .Select(review => new Review
+                {
+                    id = review.Id,
+                    content = review.Content,
+                    mine = (requestedBy == null) ? "false" : review.IsMine(requestedBy.UserId).ToString().ToLower(),
+                    player_creation_id = review.PlayerCreationId,
+                    player_creation_name = review.PlayerCreationName,
+                    player_creation_username = review.PlayerCreationUsername,
+                    player_id = review.PlayerId,
+                    rated_by_me = (requestedBy == null) ? "false" : review.IsRatedByMe(requestedBy.UserId).ToString().ToLower(),
+                    rating_down = review.RatingDown.ToString(),
+                    rating_up = review.RatingUp.ToString(),
+                    username = review.Username,
+                    tags = review.Tags,
+                    updated_at = review.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
+                });
+            var activityLog = database.ActivityLog
+                .Where(match => match.PlayerCreationId == id)
+                .Include(a => a.Author)
+                .OrderByDescending(match => match.CreatedAt);
 
-            List<Photo> PhotoList = [];
-            List<SubLeaderboardPlayer> ScoresList = [];
-            List<Comment> CommentsList = [];
-            List<Review> ReviewsList = [];
-            List<Activity> ActivityList = [];
-
-            if (Track == null || id < 9000)
+            if (track == null || id < 9000)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -1025,179 +1158,60 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            Track.Comments.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
-            Track.Reviews.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
-            Track.ActivityLog.Sort((curr, prev) => prev.CreatedAt.CompareTo(curr.CreatedAt));
-
-            if (Track.ScoreboardMode == 1)
-                Track.Scores.Sort((curr, prev) => curr.FinishTime.CompareTo(prev.FinishTime));
+            if (track.scoreboard_mode == 1)
+                scores = scores.OrderBy(score => score.finish_time);
             else
-                Track.Scores.Sort((curr, prev) => prev.Points.CompareTo(curr.Points));
+                scores = scores.OrderByDescending(score => score.score);
 
-            foreach (PlayerCreationData Photo in TrackPhotos)
-            {
-                PhotoList.Add(new Photo
-                {
-                    id = Photo.PlayerCreationId
-                });
-            }
+            List<Activity> activityList = [];
 
-            foreach (Score Score in Track.Scores.Take(3))
+            foreach (var activity in activityLog.Take(3).ToList())
             {
-                ScoresList.Add(new SubLeaderboardPlayer
-                {
-                    player_id = Score.PlayerId,
-                    username = Score.Username,
-                    rank = Score.GetRank(database, Track.ScoreboardMode == 1 ? SortColumn.finish_time : SortColumn.score),
-                    score = Score.Points,
-                    finish_time = Score.FinishTime
-                });
-            }
-
-            foreach (PlayerCreationCommentData Comment in Track.Comments.Take(3))
-            {
-                if (Comment != null)
-                {
-                    CommentsList.Add(new Comment
-                    {
-                        id = Comment.Id,
-                        player_id = Comment.PlayerId,
-                        username = Comment.Username,
-                        body = Comment.Body,
-                        rating_up = 0,
-                        rated_by_me = false,
-                        updated_at = Comment.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
-                    });
-                }
-            }
-
-            foreach (PlayerCreationReview Review in Track.Reviews.Take(3))
-            {
-                if (Review != null)
-                {
-                    ReviewsList.Add(new Review
-                    {
-                        id = Review.Id,
-                        content = Review.Content,
-                        mine = "false",
-                        player_creation_id = Review.PlayerCreationId,
-                        player_creation_name = Review.PlayerCreationName,
-                        player_creation_username = Review.PlayerCreationUsername,
-                        player_id = Review.PlayerId,
-                        rated_by_me = "false",
-                        rating_down = Review.RatingDown.ToString(),
-                        rating_up = Review.RatingUp.ToString(),
-                        username = Review.Username,
-                        tags = Review.Tags,
-                        updated_at = Review.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
-                    });
-                }
-            }
-
-            foreach (var Activity in Track.ActivityLog.Take(3))
-            {
-                ActivityList.Add(new Activity
+                activityList.Add(new Activity
                 {
                     player_creation_id = id,
-                    player_creation_hearts = Track.HeartsCount,
-                    player_creation_rating_up = Track.RatingUp,
-                    player_creation_rating_down = Track.RatingDown,
-                    player_creation_races_started = Track.RacesStartedCount,
-                    player_creation_username = Track.Author.Username,
-                    player_creation_description = Track.Description,
-                    player_creation_name = Track.Name,
-                    player_creation_player_id = Track.PlayerId,
-                    player_creation_associated_item_ids = Track.AssociatedItemIds,
-                    player_creation_level_mode = Track.LevelMode,
-                    player_creation_is_team_pick = Track.IsTeamPick,
+                    player_creation_hearts = track.hearts,
+                    player_creation_rating_up = track.rating_up,
+                    player_creation_rating_down = track.rating_down,
+                    player_creation_races_started = track.races_started,
+                    player_creation_username = track.username,
+                    player_creation_description = track.description,
+                    player_creation_name = track.name,
+                    player_creation_player_id = track.player_id,
+                    player_creation_associated_item_ids = track.associated_item_ids,
+                    player_creation_level_mode = track.level_mode,
+                    player_creation_is_team_pick = track.is_team_pick,
                     type = "player_creation_activity",
                     events = [
-                            new Event
-                            {
-                                topic = Activity.Type.ToString(),
-                                type = Activity.Topic,
-                                details = Activity.Description,
-                                creator_username = Activity.Author?.Username ?? "",
-                                creator_id = Activity.AuthorId ?? 0,
-                                timestamp = Activity.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                                seconds_ago = TimeUtils.SecondsAgo(Activity.CreatedAt),
-                                tags = Activity.Tags,
-                                allusion_type = Activity.AllusionType,
-                                allusion_id = Activity.AllusionId,
-                                player_id = Activity.PlayerId ?? 0
-                            }
-                        ]
+                        new Event
+                        {
+                            topic = activity.Type.ToString(),
+                            type = activity.Topic,
+                            details = activity.Description,
+                            creator_username = activity.Author.Username ?? "",
+                            creator_id = activity.AuthorId ?? 0,
+                            timestamp = activity.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                            seconds_ago = TimeUtils.SecondsAgo(activity.CreatedAt),
+                            tags = activity.Tags,
+                            allusion_type = activity.AllusionType,
+                            allusion_id = activity.AllusionId,
+                            player_id = activity.PlayerId ?? 0
+                        }
+                    ]
                 });
             }
-
+            
+            track.activities = [new Activities { total = activityLog.Count(), ActivityList = activityList }];
+            track.comments = comments.Take(3).ToList();
+            track.leaderboard = [new SubLeaderboard { total = scores.Count(), LeaderboardPlayersList = scores.Take(3).ToList() }];
+            track.photos = [new Photos { total = photos.Count(), PhotoList = photos.Take(3).ToList() }];
+            track.reviews = [new Reviews { total = reviews.Count(), ReviewList = reviews.Take(3).ToList() }];
+            
             var resp = new Response<List<Track>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [
-                    new Track
-                    {
-                        id = Track.PlayerCreationId,
-                        ai = Track.AI,
-                        associated_item_ids = Track.AssociatedItemIds,
-                        auto_reset = Track.AutoReset,
-                        battle_friendly_fire = Track.BattleFriendlyFire,
-                        battle_kill_count = Track.BattleKillCount,
-                        battle_time_limit = Track.BattleTimeLimit,
-                        coolness = Track.Coolness,
-                        created_at = Track.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        description = Track.Description,
-                        difficulty = Track.Difficulty.ToString(),
-                        dlc_keys = Track.DLCKeys,
-                        downloads = Track.DownloadsCount,
-                        downloads_last_week = Track.DownloadsLastWeek,
-                        downloads_this_week = Track.DownloadsThisWeek,
-                        first_published = Track.FirstPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        last_published = Track.LastPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        hearts = Track.HeartsCount,
-                        is_remixable = Track.IsRemixable,
-                        is_team_pick = Track.IsTeamPick,
-                        level_mode = Track.LevelMode,
-                        longest_drift = Track.LongestDrift,
-                        longest_hang_time = Track.LongestHangTime,
-                        max_humans = Track.MaxHumans,
-                        name = Track.Name,
-                        num_laps = Track.NumLaps,
-                        num_racers = Track.NumRacers,
-                        platform = Track.Platform.ToString(),
-                        player_creation_type = (Track.Type == PlayerCreationType.STORY ? PlayerCreationType.TRACK : Track.Type).ToString(),
-                        player_id = Track.PlayerId,
-                        races_finished = Track.RacesFinished,
-                        races_started = Track.RacesStartedCount,
-                        races_started_this_month = Track.RacesStartedThisMonth,
-                        races_started_this_week = Track.RacesStartedThisWeek,
-                        races_won = Track.RacesWon,
-                        race_type = Track.RaceType.ToString(),
-                        rank = Track.GetRank(database),
-                        rating_down = Track.RatingDown,
-                        rating_up = Track.RatingUp,
-                        scoreboard_mode = Track.ScoreboardMode,
-                        speed = Track.Speed.ToString(),
-                        tags = Track.Tags,
-                        track_theme = Track.TrackTheme,
-                        unique_racer_count = Track.UniqueRacerCount,
-                        updated_at = Track.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        username = Track.Author.Username,
-                        user_tags = Track.UserTags,
-                        version = Track.Version,
-                        views = Track.ViewsCount,
-                        views_last_week = Track.ViewsLastWeek,
-                        views_this_week = Track.ViewsThisWeek,
-                        votes = Track.Ratings.Count(match => !Track.IsMNR || match.Rating != 0),
-                        weapon_set = Track.WeaponSet,
-                        hearted_by_me = (requestedBy == null) ? "false" : Track.IsHeartedByMe(requestedBy.UserId).ToString().ToLower(),
-                        queued_by_me = (requestedBy == null) ? "false" : Track.IsBookmarkedByMe(requestedBy.UserId).ToString().ToLower(),
-                        reviewed_by_me = (requestedBy == null) ? "false" : Track.IsReviewedByMe(requestedBy.UserId).ToString().ToLower(),
-                        activities = [new Activities { total = Track.ActivityLog.Count, ActivityList = ActivityList }],
-                        comments = CommentsList,
-                        leaderboard = [new SubLeaderboard { total = Track.Scores.Count, LeaderboardPlayersList = ScoresList }],
-                        photos = [new Photos { total = PhotoList.Count, PhotoList = PhotoList }],
-                        reviews = [new Reviews { total = Track.Reviews.Count, ReviewList = ReviewsList }]
-                    }
+                    track
                 ]
             };
             return resp.Serialize();
@@ -1205,15 +1219,25 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string VerifyPlayerCreations(Database database, List<int> id, List<int> offline_id)
         {
-            List<PlayerCreationToVerify> creations = [];
+            List<PlayerCreationToVerify> processedCreations = [];
+            var creations = database.PlayerCreations
+                .Select(c => new
+                {
+                    c.PlayerCreationId,
+                    c.Type,
+                    c.ModerationStatus
+                })
+                .Where(match => id.Contains(match.PlayerCreationId))
+                .ToList();
+            
             foreach (int item in id)
             {
-                var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == item);
-                if (creation != null
+                var creation = creations.FirstOrDefault(match => match.PlayerCreationId == item);
+                if (creation != null 
                     && creation.ModerationStatus != ModerationStatus.BANNED
                     && creation.ModerationStatus != ModerationStatus.ILLEGAL)
                 {
-                    creations.Add(new PlayerCreationToVerify
+                    processedCreations.Add(new PlayerCreationToVerify
                     {
                         id = item,
                         type = creation.Type.ToString(),
@@ -1222,7 +1246,7 @@ namespace GameServer.Implementation.Player_Creation
                 }
                 else
                 {
-                    creations.Add(new PlayerCreationToVerify
+                    processedCreations.Add(new PlayerCreationToVerify
                     {
                         id = item,
                         type = nameof(PlayerCreationType.TRACK),
@@ -1230,11 +1254,12 @@ namespace GameServer.Implementation.Player_Creation
                     });
                 }
             }
+            
             var resp = new Response<List<PlayerCreationVerify>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [
-                    new PlayerCreationVerify { total = creations.Count, PlayerCreationsList = creations }
+                    new PlayerCreationVerify { total = processedCreations.Count, PlayerCreationsList = processedCreations }
                 ]
             };
             return resp.Serialize();
@@ -1242,9 +1267,9 @@ namespace GameServer.Implementation.Player_Creation
 
         public static string GetPlanet(Database database, int player_id)
         {
-            var Planet = database.PlayerCreations.FirstOrDefault(match => match.PlayerId == player_id && match.Type == PlayerCreationType.PLANET);
+            var planet = database.PlayerCreations.FirstOrDefault(match => match.PlayerId == player_id && match.Type == PlayerCreationType.PLANET);
 
-            if (Planet == null)
+            if (planet == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -1257,19 +1282,17 @@ namespace GameServer.Implementation.Player_Creation
             var resp = new Response<List<Planet>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
-                response = [new Planet { id = Planet.PlayerCreationId }]
+                response = [new Planet { id = planet.PlayerCreationId }]
             };
             return resp.Serialize();
         }
 
         public static string GetPlanetProfile(Database database, int player_id)
         {
-            var Planet = database.PlayerCreations
-                .Include(x => x.Author)
-                .Include(x => x.Author.PlayerCreations)
+            var planet = database.PlayerCreations
                 .FirstOrDefault(match => match.PlayerId == player_id && match.Type == PlayerCreationType.PLANET);
 
-            if (Planet == null)
+            if (planet == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -1278,91 +1301,79 @@ namespace GameServer.Implementation.Player_Creation
                 };
                 return errorResp.Serialize();
             }
-            var trackList = new List<Track> { };
 
             var creations = database.PlayerCreations
-                .AsSplitQuery()
-                .Include(x => x.Downloads)
-                .Include(x => x.Hearts)
-                .Include(x => x.RacesStarted)
-                .Include(x => x.Ratings)
-                .Include(x => x.UniqueRacers)
-                .Include(x => x.Author)
-                .Include(x => x.Views)
                 .Where(match => match.PlayerId == player_id && match.Type == PlayerCreationType.TRACK && !match.IsMNR)
-                .ToList();
-
-            foreach (PlayerCreationData Track in creations)
-            {
-                trackList.Add(new Track
+                .Select(track => new Track
                 {
-                    id = Track.PlayerCreationId,
-                    ai = Track.AI,
-                    associated_item_ids = Track.AssociatedItemIds,
-                    auto_reset = Track.AutoReset,
-                    battle_friendly_fire = Track.BattleFriendlyFire,
-                    battle_kill_count = Track.BattleKillCount,
-                    battle_time_limit = Track.BattleTimeLimit,
-                    coolness = Track.Coolness,
-                    created_at = Track.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    description = Track.Description,
-                    difficulty = Track.Difficulty.ToString(),
-                    dlc_keys = Track.DLCKeys,
-                    downloads = Track.DownloadsCount,
-                    downloads_last_week = Track.DownloadsLastWeek,
-                    downloads_this_week = Track.DownloadsThisWeek,
-                    first_published = Track.FirstPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    last_published = Track.LastPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    hearts = Track.HeartsCount,
-                    is_remixable = Track.IsRemixable,
-                    is_team_pick = Track.IsTeamPick,
-                    level_mode = Track.LevelMode,
-                    longest_drift = Track.LongestDrift,
-                    longest_hang_time = Track.LongestHangTime,
-                    max_humans = Track.MaxHumans,
-                    name = Track.Name,
-                    num_laps = Track.NumLaps,
-                    num_racers = Track.NumRacers,
-                    platform = Track.Platform.ToString(),
-                    player_creation_type = (Track.Type == PlayerCreationType.STORY ? PlayerCreationType.TRACK : Track.Type).ToString(),
-                    player_id = Track.PlayerId,
-                    races_finished = Track.RacesFinished,
-                    races_started = Track.RacesStartedCount,
-                    races_started_this_month = Track.RacesStartedThisMonth,
-                    races_started_this_week = Track.RacesStartedThisWeek,
-                    races_won = Track.RacesWon,
-                    race_type = Track.RaceType.ToString(),
-                    rank = Track.GetRank(database),
-                    rating_down = Track.RatingDown,
-                    rating_up = Track.RatingUp,
-                    scoreboard_mode = Track.ScoreboardMode,
-                    speed = Track.Speed.ToString(),
-                    tags = Track.Tags,
-                    track_theme = Track.TrackTheme,
-                    unique_racer_count = Track.UniqueRacerCount,
-                    updated_at = Track.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    username = Track.Author.Username,
-                    user_tags = Track.UserTags,
-                    version = Track.Version,
-                    views = Track.ViewsCount,
-                    views_last_week = Track.ViewsLastWeek,
-                    views_this_week = Track.ViewsThisWeek,
-                    votes = Track.Votes,
-                    weapon_set = Track.WeaponSet
-                });
-            }
+                    id = track.PlayerCreationId,
+                    ai = track.AI,
+                    associated_item_ids = track.AssociatedItemIds,
+                    auto_reset = track.AutoReset,
+                    battle_friendly_fire = track.BattleFriendlyFire,
+                    battle_kill_count = track.BattleKillCount,
+                    battle_time_limit = track.BattleTimeLimit,
+                    coolness = track.Coolness,
+                    created_at = track.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    description = track.Description,
+                    difficulty = track.Difficulty.ToString(),
+                    dlc_keys = track.DLCKeys,
+                    downloads = track.Downloads,
+                    downloads_last_week = track.DownloadsLastWeek,
+                    downloads_this_week = track.DownloadsThisWeek,
+                    first_published = track.FirstPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    last_published = track.LastPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    hearts = track.Hearts,
+                    is_remixable = track.IsRemixable,
+                    is_team_pick = track.IsTeamPick,
+                    level_mode = track.LevelMode,
+                    longest_drift = track.LongestDrift,
+                    longest_hang_time = track.LongestHangTime,
+                    max_humans = track.MaxHumans,
+                    name = track.Name,
+                    num_laps = track.NumLaps,
+                    num_racers = track.NumRacers,
+                    platform = track.Platform.ToString(),
+                    player_creation_type = (track.Type == PlayerCreationType.STORY ? PlayerCreationType.TRACK : track.Type).ToString(),
+                    player_id = track.PlayerId,
+                    races_finished = track.RacesFinished,
+                    races_started = track.RacesStarted,
+                    races_started_this_month = track.RacesStartedThisMonth,
+                    races_started_this_week = track.RacesStartedThisWeek,
+                    races_won = track.RacesWon,
+                    race_type = track.RaceType.ToString(),
+                    rank = (int)Sql.Window.RowNumber(f => f.OrderBy(track.Points)),
+                    rating_down = track.RatingDown,
+                    rating_up = track.RatingUp,
+                    scoreboard_mode = track.ScoreboardMode,
+                    speed = track.Speed.ToString(),
+                    tags = track.Tags,
+                    track_theme = track.TrackTheme,
+                    unique_racer_count = track.UniqueRacers,
+                    updated_at = track.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    username = track.Author.Username,
+                    user_tags = track.UserTags,
+                    version = track.Version,
+                    views = track.Views,
+                    views_last_week = track.ViewsLastWeek,
+                    views_this_week = track.ViewsThisWeek,
+                    votes = track.Votes,
+                    weapon_set = track.WeaponSet
+                })
+                .ToLinqToDB()
+                .ToList();
 
             var resp = new Response<List<Planet>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [ new Planet {
-                    id = Planet.PlayerCreationId,
-                    name = Planet.Name,
-                    player_id = Planet.PlayerId,
-                    username = Planet.Author.Username,
+                    id = planet.PlayerCreationId,
+                    name = planet.Name,
+                    player_id = planet.PlayerId,
+                    username = planet.Username,
                     tracks = new Tracks {
-                        total = Planet.Author.TotalTracks,
-                        TrackList = trackList
+                        total = creations.Count,
+                        TrackList = creations
                     }
                 } ]
             };

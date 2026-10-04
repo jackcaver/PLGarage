@@ -8,8 +8,8 @@ namespace GameServer.Models.PlayerData.PlayerCreations
 {
     public class PlayerCreationReview
     {
-        public string Content { get; set; }
         public int Id { get; set; }
+        public string Content { get; set; }
         public int PlayerCreationId { get; set; }
 
         [ForeignKey(nameof(PlayerCreationId))]
@@ -18,7 +18,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         [Projectable]
         public string PlayerCreationName => Creation.Name;
         [Projectable]
-        public string PlayerCreationUsername => Creation.Author.Username;
+        public string PlayerCreationUsername => Creation.Username;
         [Projectable]
         public string PlayerCreationAssociatedItemIds => Creation.AssociatedItemIds;
         [Projectable]
@@ -39,7 +39,9 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         [Projectable]
         public string Username => User.Username;
         public string Tags { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime UpdatedAt { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedAt { get; set; }
         [Projectable]
         public bool IsRatedByMe(int id) => ReviewRatings.Any(match => match.PlayerId == id);

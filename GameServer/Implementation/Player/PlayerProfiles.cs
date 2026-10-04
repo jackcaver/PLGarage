@@ -3,6 +3,8 @@ using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
 using GameServer.Utils;
+using LinqToDB;
+using LinqToDB.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Globalization;
@@ -77,20 +79,61 @@ namespace GameServer.Implementation.Player
 
         public static string GetPlayerInfo(Database database, int id, SessionData session)
         {
-            var user = database.Users
-                .AsSplitQuery()
-                .Include(u => u.HeartedByProfiles)
-                .Include(u => u.RacesStarted)
-                .Include(u => u.RacesFinished)
-                .Include(u => u.PlayerRatings)
-                .Include(u => u.PlayerPoints)
-                .Include(u => u.PlayerExperiencePoints)
-                .Include(u => u.PlayerCreations)
-                .Include(u => u.PlayerCreationPoints)
-                .FirstOrDefault(match => match.UserId == id);
             var requestedBy = session.User;
+            var profile = database.Users
+                .Select(user => new PlayerProfileResponse {
+                    id = user.UserId,
+                    player_id = user.UserId,
+                    city = "",
+                    state = "",
+                    province = "",
+                    country = "",
+                    created_at = user.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    hearted_by_me = requestedBy != null && user.IsHeartedByMe(requestedBy.UserId, session.IsMNR),
+                    hearts = user.Hearts,
+                    longest_win_streak = user.LongestWinStreak,
+                    online_disconnected = user.OnlineDisconnected,
+                    online_finished = user.OnlineFinished,
+                    online_finished_last_week = user.OnlineFinishedLastWeek,
+                    online_finished_this_week = user.OnlineFinishedThisWeek,
+                    online_forfeit = user.OnlineForfeit,
+                    online_races = user.OnlineRaces,
+                    online_races_last_week = user.OnlineRacesLastWeek,
+                    online_races_this_week = user.OnlineRacesThisWeek,
+                    online_wins = user.OnlineWins,
+                    online_wins_last_week = user.OnlineWinsLastWeek,
+                    online_wins_this_week = user.OnlineWinsThisWeek,
+                    player_creation_quota = user.Quota,
+                    points = user.Points(session.Platform).ToString("0.0", CultureInfo.InvariantCulture),
+                    presence = user.Presence(database, session.Platform, session.IsMNR).ToString(),
+                    quote = user.Quote != null ? user.Quote.Replace("\0", "") : "",
+                    rank = (int)Sql.Window.RowNumber(f => f.OrderBy(user.TotalXP(session.Platform))),
+                    updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
+                    username = user.Username,
+                    win_streak = user.WinStreak,
+                    //MNR
+                    total_characters = user.TotalCharacters(session.Platform),
+                    total_karts = user.TotalKarts(session.Platform),
+                    total_player_creations = user.TotalPlayerCreations(session.Platform),
+                    total_tracks = session.IsMNR ? user.TotalMNRTracks(session.Platform) : user.TotalTracks,
+                    skill_level = user.SkillLevelName(session.Platform),
+                    skill_level_id = user.SkillLevelId(session.Platform),
+                    skill_level_name = user.SkillLevelName(session.Platform),
+                    rating = user.Rating.ToString("0.00", CultureInfo.InvariantCulture),
+                    star_rating = user.StarRating,
+                    creator_points = user.CreatorPoints(session.Platform),
+                    creator_points_last_week = user.CreatorPointsLastWeek(session.Platform), 
+                    creator_points_this_week = user.CreatorPointsThisWeek(session.Platform),
+                    experience_points = user.ExperiencePoints(session.Platform),
+                    experience_points_last_week = user.ExperiencePointsLastWeek(session.Platform),
+                    experience_points_this_week = user.ExperiencePointsThisWeek(session.Platform),
+                    longest_drift = user.LongestDrift,
+                    longest_hang_time = user.LongestHangTime.ToString(CultureInfo.InvariantCulture)
+                })
+                .ToLinqToDB()
+                .FirstOrDefault(match => match.player_id == id);
 
-            if (user == null)
+            if (profile == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -104,55 +147,7 @@ namespace GameServer.Implementation.Player
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [
-                    new PlayerProfileResponse {
-                        id = user.UserId,
-                        player_id = user.UserId,
-                        city = "",
-                        state = "",
-                        province = "",
-                        country = "",
-                        created_at = user.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        hearted_by_me = requestedBy != null ? user.IsHeartedByMe(requestedBy.UserId, session.IsMNR) : false,
-                        hearts = user.Hearts,
-                        longest_win_streak = user.LongestWinStreak,
-                        online_disconnected = user.OnlineDisconnected,
-                        online_finished = user.OnlineFinished,
-                        online_finished_last_week = user.OnlineFinishedLastWeek,
-                        online_finished_this_week = user.OnlineFinishedThisWeek,
-                        online_forfeit = user.OnlineForfeit,
-                        online_races = user.OnlineRaces,
-                        online_races_last_week = user.OnlineRacesLastWeek,
-                        online_races_this_week = user.OnlineRacesThisWeek,
-                        online_wins = user.OnlineWins,
-                        online_wins_last_week = user.OnlineWinsLastWeek,
-                        online_wins_this_week = user.OnlineWinsThisWeek,
-                        player_creation_quota = user.Quota,
-                        points = user.Points(session.Platform).ToString("0.0", CultureInfo.InvariantCulture),
-                        presence = user.Presence(database, session.Platform, session.IsMNR).ToString(),
-                        quote = user.Quote != null ? user.Quote.Replace("\0", "") : "",
-                        rank = user.Rank(database),
-                        updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        username = user.Username,
-                        win_streak = user.WinStreak,
-                        //MNR
-                        total_characters = user.TotalCharacters(session.Platform),
-                        total_karts = user.TotalKarts(session.Platform),
-                        total_player_creations = user.TotalPlayerCreations(session.Platform),
-                        total_tracks = session.IsMNR ? user.TotalMNRTracks(session.Platform) : user.TotalTracks,
-                        skill_level = user.SkillLevelName(session.Platform),
-                        skill_level_id = user.SkillLevelId(session.Platform),
-                        skill_level_name = user.SkillLevelName(session.Platform),
-                        rating = user.Rating.ToString("0.00", CultureInfo.InvariantCulture),
-                        star_rating = user.StarRating,
-                        creator_points = user.CreatorPoints(session.Platform),
-                        creator_points_last_week = user.CreatorPointsLastWeek(session.Platform), 
-                        creator_points_this_week = user.CreatorPointsThisWeek(session.Platform),
-                        experience_points = user.ExperiencePoints(session.Platform),
-                        experience_points_last_week = user.ExperiencePointsLastWeek(session.Platform),
-                        experience_points_this_week = user.ExperiencePointsThisWeek(session.Platform),
-                        longest_drift = user.LongestDrift,
-                        longest_hang_time = user.LongestHangTime.ToString()
-                    }
+                    profile
                 ]
             };
             return resp.Serialize();

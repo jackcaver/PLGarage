@@ -1,17 +1,15 @@
-﻿using EntityFrameworkCore.Projectables;
-using GameServer.Models.PlayerData.PlayerCreations;
-using GameServer.Models.Request;
-using GameServer.Utils;
+﻿using GameServer.Models.PlayerData.PlayerCreations;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
 
 namespace GameServer.Models.PlayerData
 {
+    //TODO: figure out indexing on this table
+    //TODO: calculated params
     public class Score
     {
-        public DateTime CreatedAt { get; set; }
         public int Id { get; set; }
+        public DateTime CreatedAt { get; set; }
         public Platform Platform { get; set; }
         public int PlayerId { get; set; }
 
@@ -26,8 +24,8 @@ namespace GameServer.Models.PlayerData
         public PlayerCreationData Creation { get; set; }
 
         public DateTime UpdatedAt { get; set; }
-        [Projectable]
-        public string Username => User.Username;
+        //[Projectable]
+        public string Username { get; set; }//=> User.Username;
         public float Points { get; set; }
         public float FinishTime { get; set; }
         //MNR
@@ -40,22 +38,5 @@ namespace GameServer.Models.PlayerData
         public float Latitude { get; set; }
         public float Longitude { get; set; }
         public string LocationTag { get; set; }
-
-        public int GetRank(Database database, SortColumn sortColumn)
-        {
-            var scores = database.Scores.Where(match => match.SubKeyId == SubKeyId
-                && match.SubGroupId == SubGroupId
-                && match.Platform == Platform
-                && match.PlaygroupSize == PlaygroupSize);
-
-            if (sortColumn == SortColumn.finish_time)
-                scores = scores.OrderBy(s => s.FinishTime);
-            if (sortColumn == SortColumn.score)
-                scores = scores.OrderByDescending(s => s.Points);
-            if (sortColumn == SortColumn.best_lap_time)
-                scores = scores.OrderBy(s => s.BestLapTime);
-
-            return scores.Select(s => s.Id).ToList().FindIndex(match => match == Id)+1;
-        }
     }
 }

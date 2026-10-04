@@ -24,7 +24,7 @@ namespace GameServer.Utils
             oldStorage.SetAsMigrationSource();
             oldStorage.Initialize();
 
-            Database database = new();
+            using var database = Database.GetContext();
             
             logger.LogInformation($"migrating storage from {Config.MigrateFrom.Type} to {Config.Type}");
             

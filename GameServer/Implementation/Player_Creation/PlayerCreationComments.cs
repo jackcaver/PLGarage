@@ -49,7 +49,7 @@ namespace GameServer.Implementation.Player_Creation
                     username = comment.Username,
                     rating_down = comment.RatingDown,
                     rating_up = comment.RatingUp,
-                    rated_by_me = requestedBy != null ? comment.IsRatedByMe(requestedBy.UserId) : false
+                    rated_by_me = requestedBy != null && comment.IsRatedByMe(requestedBy.UserId)
                 }).ToList();
 
             var resp = new Response<List<player_creation_comments>>

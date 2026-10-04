@@ -18,6 +18,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         [ForeignKey(nameof(BookmarkedPlayerCreationId))]
         public PlayerCreationData BookmarkedCreation { get; set; }
 
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime BookmarkedAt { get; set; }
     }
 }

@@ -153,14 +153,14 @@ namespace GameServer.Implementation.Player
             return resp.Serialize();
         }
 
-        public static string GetSkillLevel(Database database, SessionData session, int[] id)
+        public static string GetSkillLevel(Database database, SessionData session, string[] id)
         {
             var users = database.Users
                     .AsNoTracking()
                     .AsSplitQuery()
                     .Include(u => u.PlayerCreationPoints)
                     .Include(u => u.PlayerExperiencePoints)
-                    .Where(match => id.Contains(match.UserId)).ToList();
+                    .Where(match => id.Contains(match.UserId.ToString())).ToList();
 
             if (users.Count == 0)
             {

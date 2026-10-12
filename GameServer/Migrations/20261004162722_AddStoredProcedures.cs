@@ -139,6 +139,71 @@ BEGIN
 	
 	UPDATE PlayerCreations SET Hearts=hearts, HeartsThisWeek=heartsThisWeek, HeartsThisMonth=heartsThisMonth WHERE PlayerCreationId=creationId;
 END");
+
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdatePlayerCreationRacesStarted`(
+	IN `creationId` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates player creation\'s races started data'
+BEGIN
+	DECLARE racesStarted, racesStartedThisWeek, racesStartedThisMonth INT DEFAULT 0;
+	
+	SELECT COUNT(*) INTO racesStarted FROM PlayerCreationRacesStarted WHERE PlayerCreationId=creationId;
+	SELECT COUNT(*) INTO racesStartedThisWeek FROM PlayerCreationRacesStarted WHERE PlayerCreationId=creationId AND StartedAt > DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	SELECT COUNT(*) INTO racesStartedThisMonth FROM PlayerCreationRacesStarted WHERE PlayerCreationId=creationId AND StartedAt > DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-(DAYOFMONTH(CURRENT_TIMESTAMP(6))-1)) DAY);
+	
+	IF(racesStarted IS NULL) THEN
+		SET racesStarted = 0;
+	END IF;
+	
+	IF(racesStartedThisWeek IS NULL) THEN
+		SET racesStartedThisWeek = 0;
+	END IF;
+	
+	IF(racesStartedThisMonth IS NULL) THEN
+		SET racesStartedThisMonth = 0;
+	END IF;
+	
+	UPDATE PlayerCreations SET RacesStarted=racesStarted, RacesStartedThisWeek=racesStartedThisWeek, RacesStartedThisMonth=racesStartedThisMonth WHERE PlayerCreationId=creationId;
+END");
+
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdatePlayerCreationCoolness`(
+	IN `creationId` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates player creation\'s coolness data'
+BEGIN
+	DECLARE ratingUp, ratingDown, racesStarted, racesFinished, hearts INT DEFAULT 0;
+   DECLARE coolness FLOAT DEFAULT 0;
+   
+   SELECT RatingUp, RatingDown, RacesStarted, RacesFinished, Hearts INTO ratingUp, ratingDown, racesStarted, racesFinished, hearts FROM PlayerCreations WHERE PlayerCreationId=creationId;
+   
+   IF(ratingUp IS NULL) THEN
+		SET ratingUp = 0;
+	END IF;
+   
+   IF(ratingDown IS NULL) THEN
+		SET ratingDown = 0;
+	END IF;
+   
+   IF(racesStarted IS NULL) THEN
+		SET racesStarted = 0;
+	END IF;
+   
+   IF(racesFinished IS NULL) THEN
+		SET racesFinished = 0;
+	END IF;
+   
+   SET coolness = (ratingUp - ratingDown) + ((racesStarted + racesFinished) / 2) + hearts;
+   
+   UPDATE PlayerCreations SET Coolness=coolness WHERE PlayerCreationId=creationId;
+END");
             
 			migrationBuilder.Sql(@"CREATE PROCEDURE `UpdatePlayerCreationsUsername`(
 	IN `userId` INT,
@@ -183,6 +248,8 @@ BEGIN
 		CALL UpdatePlayerCreationDownloads(creation.PlayerCreationId);
 		CALL UpdatePlayerCreationViews(creation.PlayerCreationId);
 		CALL UpdatePlayerCreationHearts(creation.PlayerCreationId);
+		CALL UpdatePlayerCreationRacesStarted(creation.PlayerCreationId);
+		CALL UpdatePlayerCreationCoolness(creation.PlayerCreationId);
 	END FOR;
 END");
 			

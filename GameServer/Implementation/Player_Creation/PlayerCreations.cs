@@ -147,10 +147,9 @@ namespace GameServer.Implementation.Player_Creation
             if (user == null || Creation.player_creation_type == PlayerCreationType.DELETED
                 || (Creation.player_creation_type == PlayerCreationType.PHOTO
                     && !UserGeneratedContentUtils.CheckImage(data)) //check if photo is a valid image
-                || (Creation.player_creation_type != PlayerCreationType.PHOTO 
-                    && UserGeneratedContentUtils.CheckImage(data)) //check if data for player creation is an image
                 || (Creation.player_creation_type != PlayerCreationType.PLANET 
                     && Creation.player_creation_type != PlayerCreationType.PHOTO 
+                    && !UserGeneratedContentUtils.CheckDataArchive(data, session.Platform, Creation) //check creation data
                     && !UserGeneratedContentUtils.CheckImage(preview, 256, 256)) //check if preview for player creation is valid image
                 )
             {

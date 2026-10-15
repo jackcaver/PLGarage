@@ -4,12 +4,12 @@ using System.IO;
 namespace GameServer.Models;
 
 public class DataArchive
-{//TODO: figure out file names
+{
     public byte Version { get; set; }
-    public byte[] UnkData1 { get; set; }
-    public byte[] UnkData2 { get; set; }
-    public byte[] UnkData3 { get; set; }
-    public byte[] UnkData4 { get; set; }
+    public byte[] CreationData { get; set; } //trk or sav
+    public byte[] Metadata { get; set; } //cmd or cm2
+    public byte[] NavData { get; set; } //nav
+    public byte[] HudData { get; set; } //hud
 
     public bool TryParse(Stream data, bool isVita)
     {
@@ -23,8 +23,8 @@ public class DataArchive
 
         var intBuffer1 = new byte[4];
         var intBuffer2 = new byte[4];
-        int unkData1Size;
-        int unkData2Size;
+        int creationData1Size;
+        int metadataSize;
         
         switch (Version)
         {
@@ -32,40 +32,40 @@ public class DataArchive
                 data.ReadExactly(intBuffer1);
                 data.ReadExactly(intBuffer2);
 
-                unkData1Size = isVita ? BinaryPrimitives.ReadInt32LittleEndian(intBuffer1) 
+                creationData1Size = isVita ? BinaryPrimitives.ReadInt32LittleEndian(intBuffer1) 
                     : BinaryPrimitives.ReadInt32BigEndian(intBuffer1);
-                unkData2Size = isVita ? BinaryPrimitives.ReadInt32LittleEndian(intBuffer2) 
+                metadataSize = isVita ? BinaryPrimitives.ReadInt32LittleEndian(intBuffer2) 
                     : BinaryPrimitives.ReadInt32BigEndian(intBuffer2);
 
-                UnkData1 = new byte[unkData1Size];
-                UnkData2 = new byte[unkData2Size];
+                CreationData = new byte[creationData1Size];
+                Metadata = new byte[metadataSize];
                 
-                data.ReadExactly(UnkData1);
-                data.ReadExactly(UnkData2);
+                data.ReadExactly(CreationData);
+                data.ReadExactly(Metadata);
                 break;
             
             case 4 when !isVita:
                 data.ReadExactly(intBuffer1);
                 data.ReadExactly(intBuffer2);
 
-                unkData1Size = BinaryPrimitives.ReadInt32BigEndian(intBuffer1);
-                unkData2Size = BinaryPrimitives.ReadInt32BigEndian(intBuffer2);
+                creationData1Size = BinaryPrimitives.ReadInt32BigEndian(intBuffer1);
+                metadataSize = BinaryPrimitives.ReadInt32BigEndian(intBuffer2);
                 
                 data.ReadExactly(intBuffer1);
                 data.ReadExactly(intBuffer2);
 
-                var unkData3Size = BinaryPrimitives.ReadInt32BigEndian(intBuffer1);
-                var unkData4Size = BinaryPrimitives.ReadInt32BigEndian(intBuffer2);
+                var navDataSize = BinaryPrimitives.ReadInt32BigEndian(intBuffer1);
+                var hudDataSize = BinaryPrimitives.ReadInt32BigEndian(intBuffer2);
             
-                UnkData1 = new byte[unkData1Size];
-                UnkData2 = new byte[unkData2Size];
-                UnkData3 = new byte[unkData3Size];
-                UnkData4 = new byte[unkData4Size];
+                CreationData = new byte[creationData1Size];
+                Metadata = new byte[metadataSize];
+                NavData = new byte[navDataSize];
+                HudData = new byte[hudDataSize];
                 
-                data.ReadExactly(UnkData1);
-                data.ReadExactly(UnkData2);
-                data.ReadExactly(UnkData3);
-                data.ReadExactly(UnkData4);
+                data.ReadExactly(CreationData);
+                data.ReadExactly(Metadata);
+                data.ReadExactly(NavData);
+                data.ReadExactly(HudData);
                 break;
             
             default:
@@ -89,39 +89,39 @@ public class DataArchive
         {
             case 1:
                 if (isVita)
-                    BinaryPrimitives.WriteInt32LittleEndian(intBuffer1, UnkData1.Length);
+                    BinaryPrimitives.WriteInt32LittleEndian(intBuffer1, CreationData.Length);
                 else
-                    BinaryPrimitives.WriteInt32BigEndian(intBuffer1, UnkData1.Length);
+                    BinaryPrimitives.WriteInt32BigEndian(intBuffer1, CreationData.Length);
                 
                 if (isVita)
-                    BinaryPrimitives.WriteInt32LittleEndian(intBuffer2, UnkData2.Length);
+                    BinaryPrimitives.WriteInt32LittleEndian(intBuffer2, Metadata.Length);
                 else
-                    BinaryPrimitives.WriteInt32BigEndian(intBuffer2, UnkData2.Length);
+                    BinaryPrimitives.WriteInt32BigEndian(intBuffer2, Metadata.Length);
                 
                 stream.Write(intBuffer1);
                 stream.Write(intBuffer2);
                 
-                stream.Write(UnkData1);
-                stream.Write(UnkData2);
+                stream.Write(CreationData);
+                stream.Write(Metadata);
                 break;
             
             case 4 when !isVita:
-                BinaryPrimitives.WriteInt32BigEndian(intBuffer1, UnkData1.Length);
-                BinaryPrimitives.WriteInt32BigEndian(intBuffer2, UnkData2.Length);
+                BinaryPrimitives.WriteInt32BigEndian(intBuffer1, CreationData.Length);
+                BinaryPrimitives.WriteInt32BigEndian(intBuffer2, Metadata.Length);
                 
                 stream.Write(intBuffer1);
                 stream.Write(intBuffer2);
                 
-                BinaryPrimitives.WriteInt32BigEndian(intBuffer1, UnkData3.Length);
-                BinaryPrimitives.WriteInt32BigEndian(intBuffer2, UnkData4.Length);
+                BinaryPrimitives.WriteInt32BigEndian(intBuffer1, NavData.Length);
+                BinaryPrimitives.WriteInt32BigEndian(intBuffer2, HudData.Length);
                 
                 stream.Write(intBuffer1);
                 stream.Write(intBuffer2);
                 
-                stream.Write(UnkData1);
-                stream.Write(UnkData2);
-                stream.Write(UnkData3);
-                stream.Write(UnkData4);
+                stream.Write(CreationData);
+                stream.Write(Metadata);
+                stream.Write(NavData);
+                stream.Write(HudData);
                 break;
             
             default:

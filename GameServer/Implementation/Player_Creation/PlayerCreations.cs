@@ -17,9 +17,12 @@ namespace GameServer.Implementation.Player_Creation
 {
     public class PlayerCreations
     {
-        public static string UpdatePlayerCreation(Database database, IUGCStorage storage, SessionData session, PlayerCreation PlayerCreation, int id = 0)
+        public static string UpdatePlayerCreation(Database database, IUGCStorage storage, SessionData session, PlayerCreation playerCreation, int id = 0)
         {
             var user = session.User;
+            
+            Stream data = null;
+            Stream preview = null;
 
             if (user == null)
             {
@@ -31,17 +34,17 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
-            var Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id && match.PlayerId == user.UserId);
+            var creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == id && match.PlayerId == user.UserId);
 
-            if (PlayerCreation.player_creation_type == PlayerCreationType.PLANET)
-                Creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerId == user.UserId && match.Type == PlayerCreationType.PLANET);
+            if (playerCreation.player_creation_type == PlayerCreationType.PLANET)
+                creation = database.PlayerCreations.FirstOrDefault(match => match.PlayerId == user.UserId && match.Type == PlayerCreationType.PLANET);
 
-            if (Creation == null && PlayerCreation.player_creation_type == PlayerCreationType.PLANET)
+            if (creation == null && playerCreation.player_creation_type == PlayerCreationType.PLANET)
             {
-                return CreatePlayerCreation(database, storage, session, PlayerCreation);
+                return CreatePlayerCreation(database, storage, session, playerCreation);
             }
 
-            if (Creation == null)
+            if (creation == null)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -50,42 +53,67 @@ namespace GameServer.Implementation.Player_Creation
                 };
                 return errorResp.Serialize();
             }
+            
+            if (playerCreation.player_creation_type != PlayerCreationType.DELETED)
+                data = playerCreation.data.OpenReadStream();
 
-            Creation.AI = PlayerCreation.ai;
-            Creation.AssociatedCoordinates = PlayerCreation.associated_coordinates;
-            Creation.AssociatedItemIds = PlayerCreation.associated_item_ids;
-            Creation.AssociatedUsernames = PlayerCreation.associated_usernames;
-            Creation.AutoReset = PlayerCreation.auto_reset;
-            Creation.AutoTags = PlayerCreation.auto_tags;
-            Creation.BattleFriendlyFire = PlayerCreation.battle_friendly_fire;
-            Creation.BattleKillCount = PlayerCreation.battle_kill_count;
-            Creation.BattleTimeLimit = PlayerCreation.battle_time_limit;
-            Creation.Description = PlayerCreation.description;
-            Creation.Difficulty = PlayerCreation.difficulty;
-            Creation.DLCKeys = PlayerCreation.dlc_keys;
-            Creation.IsRemixable = PlayerCreation.is_remixable;
-            Creation.LastPublished = TimeUtils.Now;
-            Creation.LevelMode = PlayerCreation.level_mode;
-            Creation.LongestDrift = PlayerCreation.longest_drift;
-            Creation.LongestHangTime = PlayerCreation.longest_hang_time;
-            Creation.MaxHumans = PlayerCreation.max_humans;
-            Creation.Name = PlayerCreation.name;
-            Creation.NumLaps = PlayerCreation.num_laps;
-            Creation.NumRacers = PlayerCreation.num_racers;
-            Creation.Platform = PlayerCreation.platform;
-            Creation.RaceType = PlayerCreation.race_type;
-            Creation.RequiresDLC = PlayerCreation.requires_dlc;
-            Creation.ScoreboardMode = PlayerCreation.scoreboard_mode;
-            Creation.Speed = PlayerCreation.speed;
-            Creation.Tags = PlayerCreation.tags;
-            Creation.TrackTheme = PlayerCreation.track_theme;
-            Creation.Type = PlayerCreation.player_creation_type;
-            Creation.UpdatedAt = TimeUtils.Now;
-            Creation.UserTags = PlayerCreation.user_tags;
-            Creation.WeaponSet = PlayerCreation.weapon_set;
-            Creation.Version++;
+            if (playerCreation.player_creation_type != PlayerCreationType.PHOTO
+                && playerCreation.player_creation_type != PlayerCreationType.PLANET
+                && playerCreation.player_creation_type != PlayerCreationType.DELETED)
+                preview = playerCreation.preview.OpenReadStream();
+            
+            if (playerCreation.player_creation_type == PlayerCreationType.DELETED
+                || (playerCreation.player_creation_type == PlayerCreationType.PHOTO
+                    && !UserGeneratedContentUtils.CheckImage(data)) //check if photo is a valid image
+                || (playerCreation.player_creation_type != PlayerCreationType.PLANET 
+                    && playerCreation.player_creation_type != PlayerCreationType.PHOTO 
+                    && !UserGeneratedContentUtils.CheckDataArchive(data, session.Platform, playerCreation) //check creation data
+                    && !UserGeneratedContentUtils.CheckImage(preview, 256, 256)) //check if preview for player creation is valid image
+               )
+            {
+                var errorResp = new Response<EmptyResponse>
+                {
+                    status = new ResponseStatus { id = -130, message = "The player doesn't exist" },
+                    response = new EmptyResponse { }
+                };
+                return errorResp.Serialize();
+            }
 
-            if (Creation.Type == PlayerCreationType.TRACK && !session.IsMNR)
+            creation.AI = playerCreation.ai;
+            creation.AssociatedCoordinates = playerCreation.associated_coordinates;
+            creation.AssociatedItemIds = playerCreation.associated_item_ids;
+            creation.AssociatedUsernames = playerCreation.associated_usernames;
+            creation.AutoReset = playerCreation.auto_reset;
+            creation.AutoTags = playerCreation.auto_tags;
+            creation.BattleFriendlyFire = playerCreation.battle_friendly_fire;
+            creation.BattleKillCount = playerCreation.battle_kill_count;
+            creation.BattleTimeLimit = playerCreation.battle_time_limit;
+            creation.Description = playerCreation.description;
+            creation.Difficulty = playerCreation.difficulty;
+            creation.DLCKeys = playerCreation.dlc_keys;
+            creation.IsRemixable = playerCreation.is_remixable;
+            creation.LastPublished = TimeUtils.Now;
+            creation.LevelMode = playerCreation.level_mode;
+            creation.LongestDrift = playerCreation.longest_drift;
+            creation.LongestHangTime = playerCreation.longest_hang_time;
+            creation.MaxHumans = playerCreation.max_humans;
+            creation.Name = playerCreation.name;
+            creation.NumLaps = playerCreation.num_laps;
+            creation.NumRacers = playerCreation.num_racers;
+            creation.Platform = playerCreation.platform;
+            creation.RaceType = playerCreation.race_type;
+            creation.RequiresDLC = playerCreation.requires_dlc;
+            creation.ScoreboardMode = playerCreation.scoreboard_mode;
+            creation.Speed = playerCreation.speed;
+            creation.Tags = playerCreation.tags;
+            creation.TrackTheme = playerCreation.track_theme;
+            creation.Type = playerCreation.player_creation_type;
+            creation.UpdatedAt = TimeUtils.Now;
+            creation.UserTags = playerCreation.user_tags;
+            creation.WeaponSet = playerCreation.weapon_set;
+            creation.Version++;
+
+            if (creation.Type == PlayerCreationType.TRACK && !session.IsMNR)
             {
                 database.ActivityLog.Add(new ActivityEvent
                 {
@@ -95,23 +123,23 @@ namespace GameServer.Implementation.Player_Creation
                     Topic = "player_creation_updated",
                     Description = "",
                     PlayerId = null,
-                    PlayerCreationId = Creation.PlayerCreationId,
+                    PlayerCreationId = creation.PlayerCreationId,
                     CreatedAt = TimeUtils.Now,
-                    AllusionId = Creation.PlayerCreationId,
+                    AllusionId = creation.PlayerCreationId,
                     AllusionType = "PlayerCreation::Track"
                 });
             }
 
             database.SaveChanges();
 
-            if (PlayerCreation.player_creation_type != PlayerCreationType.PLANET)
-                storage.SavePlayerCreation(Creation.PlayerCreationId,
-                   PlayerCreation.data.OpenReadStream(),
-                   PlayerCreation.preview.OpenReadStream());
+            if (playerCreation.player_creation_type == PlayerCreationType.PHOTO)
+                storage.SavePlayerPhoto(id, data);
+            else if (playerCreation.player_creation_type == PlayerCreationType.PLANET)
+                storage.SavePlayerCreation(id, data);
             else
-                storage.SavePlayerCreation(Creation.PlayerCreationId, PlayerCreation.data.OpenReadStream());
+                storage.SavePlayerCreation(id, data, preview);
 
-            if (PlayerCreation.player_creation_type == PlayerCreationType.PLANET)
+            if (playerCreation.player_creation_type == PlayerCreationType.PLANET)
             {
                 var planetUpdateResp = new Response<List<Planet>>
                 {
@@ -129,27 +157,27 @@ namespace GameServer.Implementation.Player_Creation
             return resp.Serialize();
         }
 
-        public static string CreatePlayerCreation(Database database, IUGCStorage storage, SessionData session, PlayerCreation Creation)
+        public static string CreatePlayerCreation(Database database, IUGCStorage storage, SessionData session, PlayerCreation creation)
         {
             var user = session.User;
             
             Stream data = null;
             Stream preview = null;
 
-            if (Creation.player_creation_type != PlayerCreationType.DELETED)
-                data = Creation.data.OpenReadStream();
+            if (creation.player_creation_type != PlayerCreationType.DELETED)
+                data = creation.data.OpenReadStream();
 
-            if (Creation.player_creation_type != PlayerCreationType.PHOTO
-                && Creation.player_creation_type != PlayerCreationType.PLANET
-                && Creation.player_creation_type != PlayerCreationType.DELETED)
-                preview = Creation.preview.OpenReadStream();
+            if (creation.player_creation_type != PlayerCreationType.PHOTO
+                && creation.player_creation_type != PlayerCreationType.PLANET
+                && creation.player_creation_type != PlayerCreationType.DELETED)
+                preview = creation.preview.OpenReadStream();
 
-            if (user == null || Creation.player_creation_type == PlayerCreationType.DELETED
-                || (Creation.player_creation_type == PlayerCreationType.PHOTO
+            if (user == null || creation.player_creation_type == PlayerCreationType.DELETED
+                || (creation.player_creation_type == PlayerCreationType.PHOTO
                     && !UserGeneratedContentUtils.CheckImage(data)) //check if photo is a valid image
-                || (Creation.player_creation_type != PlayerCreationType.PLANET 
-                    && Creation.player_creation_type != PlayerCreationType.PHOTO 
-                    && !UserGeneratedContentUtils.CheckDataArchive(data, session.Platform, Creation) //check creation data
+                || (creation.player_creation_type != PlayerCreationType.PLANET 
+                    && creation.player_creation_type != PlayerCreationType.PHOTO 
+                    && !UserGeneratedContentUtils.CheckDataArchive(data, session.Platform, creation) //check creation data
                     && !UserGeneratedContentUtils.CheckImage(preview, 256, 256)) //check if preview for player creation is valid image
                 )
             {
@@ -166,8 +194,8 @@ namespace GameServer.Implementation.Player_Creation
                 && match.Type != PlayerCreationType.DELETED && match.ModerationStatus != ModerationStatus.BANNED 
                 && match.ModerationStatus != ModerationStatus.ILLEGAL
                 && match.IsMNR == session.IsMNR && match.Platform == session.Platform);
-            if (quota >= user.Quota && Creation.player_creation_type != PlayerCreationType.PHOTO 
-                && Creation.player_creation_type != PlayerCreationType.ITEM)
+            if (quota >= user.Quota && creation.player_creation_type != PlayerCreationType.PHOTO 
+                && creation.player_creation_type != PlayerCreationType.ITEM)
             {
                 var errorResp = new Response<EmptyResponse>
                 {
@@ -179,50 +207,50 @@ namespace GameServer.Implementation.Player_Creation
 
             var playerCreation = new PlayerCreationData
             {
-                AI = Creation.ai,
-                AssociatedCoordinates = Creation.associated_coordinates,
-                AssociatedItemIds = Creation.associated_item_ids,
-                AssociatedUsernames = Creation.associated_usernames,
-                AutoReset = Creation.auto_reset,
-                AutoTags = Creation.auto_tags,
-                BattleFriendlyFire = Creation.battle_friendly_fire,
-                BattleKillCount = Creation.battle_kill_count,
-                BattleTimeLimit = Creation.battle_time_limit,
+                AI = creation.ai,
+                AssociatedCoordinates = creation.associated_coordinates,
+                AssociatedItemIds = creation.associated_item_ids,
+                AssociatedUsernames = creation.associated_usernames,
+                AutoReset = creation.auto_reset,
+                AutoTags = creation.auto_tags,
+                BattleFriendlyFire = creation.battle_friendly_fire,
+                BattleKillCount = creation.battle_kill_count,
+                BattleTimeLimit = creation.battle_time_limit,
                 CreatedAt = TimeUtils.Now,
-                Description = Creation.description,
-                Difficulty = Creation.difficulty,
-                DLCKeys = Creation.dlc_keys,
+                Description = creation.description,
+                Difficulty = creation.difficulty,
+                DLCKeys = creation.dlc_keys,
                 FirstPublished = TimeUtils.Now,
-                IsRemixable = Creation.is_remixable,
-                IsTeamPick = Creation.is_team_pick,
+                IsRemixable = creation.is_remixable,
+                IsTeamPick = creation.is_team_pick,
                 LastPublished = TimeUtils.Now,
-                LevelMode = Creation.level_mode,
-                LongestDrift = Creation.longest_drift,
-                LongestHangTime = Creation.longest_hang_time,
-                MaxHumans = Creation.max_humans,
-                Name = Creation.name,
-                NumLaps = Creation.num_laps,
-                NumRacers = Creation.num_racers,
-                Platform = Creation.platform,
+                LevelMode = creation.level_mode,
+                LongestDrift = creation.longest_drift,
+                LongestHangTime = creation.longest_hang_time,
+                MaxHumans = creation.max_humans,
+                Name = creation.name,
+                NumLaps = creation.num_laps,
+                NumRacers = creation.num_racers,
+                Platform = creation.platform,
                 PlayerId = user.UserId,
-                RaceType = Creation.race_type,
-                RequiresDLC = Creation.requires_dlc,
-                ScoreboardMode = Creation.scoreboard_mode,
-                Speed = Creation.speed,
-                Tags = Creation.tags,
-                TrackTheme = Creation.track_theme,
-                Type = Creation.player_creation_type,
+                RaceType = creation.race_type,
+                RequiresDLC = creation.requires_dlc,
+                ScoreboardMode = creation.scoreboard_mode,
+                Speed = creation.speed,
+                Tags = creation.tags,
+                TrackTheme = creation.track_theme,
+                Type = creation.player_creation_type,
                 UpdatedAt = TimeUtils.Now,
-                UserTags = Creation.user_tags,
-                WeaponSet = Creation.weapon_set,
-                TrackId = Creation.track_id,
+                UserTags = creation.user_tags,
+                WeaponSet = creation.weapon_set,
+                TrackId = creation.track_id,
                 Version = 1,
                 //MNR
                 IsMNR = session.IsMNR,
-                ParentCreationId = database.PlayerCreations.Any(match => match.PlayerCreationId == Creation.parent_creation_id) || Creation.parent_creation_id < 10000 ? Creation.parent_creation_id : 0,
-                ParentPlayerId = database.Users.Any(match => match.UserId == Creation.parent_player_id) ? Creation.parent_player_id : 0,
-                OriginalPlayerId = database.Users.Any(match => match.UserId == Creation.original_player_id) ? Creation.original_player_id : 0,
-                BestLapTime = Creation.best_lap_time
+                ParentCreationId = database.PlayerCreations.Any(match => match.PlayerCreationId == creation.parent_creation_id) || creation.parent_creation_id < 10000 ? creation.parent_creation_id : 0,
+                ParentPlayerId = database.Users.Any(match => match.UserId == creation.parent_player_id) ? creation.parent_player_id : 0,
+                OriginalPlayerId = database.Users.Any(match => match.UserId == creation.original_player_id) ? creation.original_player_id : 0,
+                BestLapTime = creation.best_lap_time
             };
             database.PlayerCreations.Add(playerCreation);
             database.SaveChanges();
@@ -245,7 +273,7 @@ namespace GameServer.Implementation.Player_Creation
 
             var id = playerCreation.PlayerCreationId;
 
-            if (Creation.player_creation_type == PlayerCreationType.TRACK && !session.IsMNR)
+            if (creation.player_creation_type == PlayerCreationType.TRACK && !session.IsMNR)
             {
                 database.ActivityLog.Add(new ActivityEvent
                 {
@@ -265,14 +293,14 @@ namespace GameServer.Implementation.Player_Creation
             database.SaveChanges();
 
 
-            if (Creation.player_creation_type == PlayerCreationType.PHOTO)
+            if (creation.player_creation_type == PlayerCreationType.PHOTO)
                 storage.SavePlayerPhoto(id, data);
-            else if (Creation.player_creation_type == PlayerCreationType.PLANET)
+            else if (creation.player_creation_type == PlayerCreationType.PLANET)
                 storage.SavePlayerCreation(id, data);
             else
                 storage.SavePlayerCreation(id, data, preview);
 
-            if (Creation.player_creation_type == PlayerCreationType.PLANET)
+            if (creation.player_creation_type == PlayerCreationType.PLANET)
             {
                 var planetUpdateResp = new Response<List<Planet>>
                 {

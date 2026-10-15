@@ -28,9 +28,10 @@ namespace GameServer.Controllers.Player
         [Authorize]
         [AllowAnonymous]
         [Route("players/skill_levels.xml")]
-        public IActionResult GetSkillLevel(int[] id)
+        public IActionResult GetSkillLevel()
         {
             var session = Session.GetSession(database, User);
+            string[] id = Request.Query.Keys.Contains("id") ? Request.Query["id"].ToString().Split(',') : [];
             return Content(PlayerProfiles.GetSkillLevel(database, session, id), "application/xml;charset=utf-8");
         }
 

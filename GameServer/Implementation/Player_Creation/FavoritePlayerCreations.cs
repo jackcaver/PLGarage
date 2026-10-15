@@ -15,7 +15,7 @@ namespace GameServer.Implementation.Player_Creation
         {
             var user = session.User;
             var Creation = database.PlayerCreations
-                .Include(x => x.Hearts)
+                .Include(x => x.HeartsData)
                 .FirstOrDefault(match => match.PlayerCreationId == id);
 
             if (user == null)

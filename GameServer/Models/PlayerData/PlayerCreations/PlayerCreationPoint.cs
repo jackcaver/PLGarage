@@ -20,6 +20,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
 
         public Platform Platform { get; set; }
         public PlayerCreationType Type { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedAt { get; set; }
         public int Amount { get; set; }
     }

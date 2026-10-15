@@ -2,6 +2,7 @@ using System.IO;
 using GameServer.Implementation.Common;
 using GameServer.Models.Config;
 using GameServer.Utils;
+using LinqToDB.EntityFrameworkCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -13,7 +14,7 @@ namespace GameServer
 {
     public class Program
     {
-        public static void Main(string[] args)
+        private static void CreateLogger()
         {
             var log = new LoggerConfiguration()
 #if DEBUG
@@ -21,11 +22,15 @@ namespace GameServer
 #endif
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+                //.MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
                 .WriteTo.Console()
                 .CreateLogger();
 
             Log.Logger = log;
-
+        }
+        
+        private static void UnpackResources() 
+        {
             // Create placeholder images if they do not already exist
             if (!File.Exists("./placeholder.png") &&
                 !File.Exists("./placeholder_128x128.png") &&
@@ -46,6 +51,7 @@ namespace GameServer
                         rs64.CopyTo(fs64);
                 }
             }
+            
             if (!File.Exists("./placeholderALT.png") &&
                 !File.Exists("./placeholderALT_128x128.png") &&
                 !File.Exists("./placeholderALT_64x64.png"))
@@ -65,8 +71,12 @@ namespace GameServer
                         rs64.CopyTo(fs64);
                 }
             }
+        }
 
-            Database database = new();
+        private static void MigrateDatabase()
+        {
+            //setting command timeout to 0 so migrations wouldn't fail on instances with large amounts of data
+            using var database = Database.GetContext(0); 
             var newDb = !database.Database.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalDatabaseCreator>().Exists();
             database.Database.Migrate();
             if (newDb)
@@ -79,13 +89,9 @@ namespace GameServer
                 Moderation.CreateDefaultModerator(database);
             
             UserGeneratedContentUtils.CheckStoryLevels(database);
-
-            database.Dispose();
-
-            CreateHostBuilder(args).Build().Run();
         }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
+        
+        private static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder =>
@@ -93,5 +99,18 @@ namespace GameServer
                     webBuilder.UseStartup<Startup>();
                     webBuilder.UseWebRoot("GameResources");
                 });
+        
+        public static void Main(string[] args)
+        {
+            CreateLogger();
+            
+            UnpackResources();
+            
+            LinqToDBForEFTools.Initialize();
+            
+            MigrateDatabase();
+
+            CreateHostBuilder(args).Build().Run();
+        }
     }
 }

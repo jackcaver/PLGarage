@@ -15,7 +15,9 @@ namespace GameServer.Models.PlayerData
         public User User { get; set; }
         
         public string Data { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedAt { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime UpdatedAt { get; set; }
     }
 }

@@ -27,9 +27,8 @@ namespace GameServer.Utils
 
             try
             {
-                var database = new Database();
+                using var database = Database.GetContext();
                 ContentUpdates.GetNewHotLap(database);
-                database.Dispose();
             }
             catch (Exception e)
             {

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace GameServer.Models.PlayerData.PlayerCreations
+namespace GameServer.Models.Response
 {
     public class ScoreSnapshotDto
     {

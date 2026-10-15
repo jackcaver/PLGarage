@@ -17,7 +17,7 @@ namespace GameServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.19")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -40,7 +40,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
 
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
@@ -92,13 +95,19 @@ namespace GameServer.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
 
                     b.Property<string>("Data")
                         .HasColumnType("longtext");
 
                     b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlComputedColumn(b.Property<DateTime>("UpdatedAt"));
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -119,7 +128,10 @@ namespace GameServer.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
 
                     b.Property<string>("LanguageCode")
                         .HasColumnType("longtext");
@@ -250,7 +262,10 @@ namespace GameServer.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("HeartedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("HeartedAt"));
 
                     b.Property<int>("HeartedUserId")
                         .HasColumnType("int");
@@ -285,7 +300,10 @@ namespace GameServer.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
 
                     b.Property<bool>("HasForwarded")
                         .HasColumnType("tinyint(1)");
@@ -312,7 +330,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlComputedColumn(b.Property<DateTime>("UpdatedAt"));
 
                     b.HasKey("Id");
 
@@ -513,7 +534,10 @@ namespace GameServer.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
 
                     b.Property<int>("Platform")
                         .HasColumnType("int");
@@ -522,7 +546,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlComputedColumn(b.Property<DateTime>("UpdatedAt"));
 
                     b.HasKey("Id");
 
@@ -548,7 +575,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("RatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("RatedAt"));
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
@@ -666,7 +696,10 @@ namespace GameServer.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("BookmarkedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("BookmarkedAt"));
 
                     b.Property<int>("BookmarkedPlayerCreationId")
                         .HasColumnType("int");
@@ -695,7 +728,10 @@ namespace GameServer.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
 
                     b.Property<int>("Platform")
                         .HasColumnType("int");
@@ -707,7 +743,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlComputedColumn(b.Property<DateTime>("UpdatedAt"));
 
                     b.HasKey("Id");
 
@@ -733,7 +772,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("RatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("RatedAt"));
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
@@ -785,8 +827,14 @@ namespace GameServer.Migrations
                     b.Property<float>("BestLapTime")
                         .HasColumnType("float");
 
+                    b.Property<float>("Coolness")
+                        .HasColumnType("float");
+
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
 
                     b.Property<string>("DLCKeys")
                         .HasColumnType("longtext");
@@ -797,13 +845,34 @@ namespace GameServer.Migrations
                     b.Property<int>("Difficulty")
                         .HasColumnType("int");
 
+                    b.Property<int>("Downloads")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DownloadsLastWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DownloadsThisWeek")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("FirstPublished")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("FirstPublished"));
 
                     b.Property<bool>("HasPreview")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("tinyint(1)")
                         .HasDefaultValue(true);
+
+                    b.Property<int>("Hearts")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HeartsThisMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HeartsThisWeek")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsMNR")
                         .HasColumnType("tinyint(1)");
@@ -856,13 +925,52 @@ namespace GameServer.Migrations
                     b.Property<int>("PlayerId")
                         .HasColumnType("int");
 
+                    b.Property<float>("Points")
+                        .HasColumnType("float");
+
+                    b.Property<float>("PointsLastWeek")
+                        .HasColumnType("float");
+
+                    b.Property<float>("PointsThisWeek")
+                        .HasColumnType("float");
+
+                    b.Property<float>("PointsToday")
+                        .HasColumnType("float");
+
+                    b.Property<float>("PointsYesterday")
+                        .HasColumnType("float");
+
                     b.Property<int>("RaceType")
                         .HasColumnType("int");
 
                     b.Property<int>("RacesFinished")
                         .HasColumnType("int");
 
+                    b.Property<int>("RacesStarted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RacesStartedThisMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RacesStartedThisWeek")
+                        .HasColumnType("int");
+
                     b.Property<int>("RacesWon")
+                        .HasColumnType("int");
+
+                    b.Property<float>("Rating")
+                        .HasColumnType("float");
+
+                    b.Property<int>("RatingDown")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RatingUp")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RatingUpThisMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RatingUpThisWeek")
                         .HasColumnType("int");
 
                     b.Property<bool>("RequiresDLC")
@@ -886,13 +994,34 @@ namespace GameServer.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
+                    b.Property<int>("UniqueRacers")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlComputedColumn(b.Property<DateTime>("UpdatedAt"));
 
                     b.Property<string>("UserTags")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("Username")
+                        .HasColumnType("longtext");
+
                     b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Views")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ViewsLastWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ViewsThisWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Votes")
                         .HasColumnType("int");
 
                     b.Property<string>("WeaponSet")
@@ -914,7 +1043,10 @@ namespace GameServer.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("DownloadedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("DownloadedAt"));
 
                     b.Property<int>("PlayerCreationId")
                         .HasColumnType("int");
@@ -943,7 +1075,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
 
                     b.Property<int>("Platform")
                         .HasColumnType("int");
@@ -978,7 +1113,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("StartedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("StartedAt"));
 
                     b.HasKey("Id");
 
@@ -1005,7 +1143,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("RatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("RatedAt"));
 
                     b.Property<int>("Rating")
                         .HasColumnType("int");
@@ -1034,7 +1175,10 @@ namespace GameServer.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
 
                     b.Property<int>("PlayerCreationId")
                         .HasColumnType("int");
@@ -1046,7 +1190,10 @@ namespace GameServer.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlComputedColumn(b.Property<DateTime>("UpdatedAt"));
 
                     b.HasKey("Id");
 
@@ -1072,7 +1219,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("RatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("RatedAt"));
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
@@ -1127,7 +1277,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("ViewedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("ViewedAt"));
 
                     b.HasKey("Id");
 
@@ -1150,7 +1303,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
 
                     b.Property<int>("Platform")
                         .HasColumnType("int");
@@ -1177,7 +1333,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
 
                     b.Property<int>("Platform")
                         .HasColumnType("int");
@@ -1210,7 +1369,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("RatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("RatedAt"));
 
                     b.Property<int>("Rating")
                         .HasColumnType("int");
@@ -1233,7 +1395,10 @@ namespace GameServer.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("FinishedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("FinishedAt"));
 
                     b.Property<bool>("IsWinner")
                         .HasColumnType("tinyint(1)");
@@ -1260,7 +1425,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("StartedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("StartedAt"));
 
                     b.HasKey("Id");
 
@@ -1328,6 +1496,9 @@ namespace GameServer.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("Username")
+                        .HasColumnType("longtext");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PlayerId");
@@ -1358,7 +1529,10 @@ namespace GameServer.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("LastPing")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlComputedColumn(b.Property<DateTime>("LastPing"));
 
                     b.Property<int>("Platform")
                         .HasColumnType("int");
@@ -1391,7 +1565,10 @@ namespace GameServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
 
                     b.Property<int>("PlayerId")
                         .HasColumnType("int");
@@ -1414,17 +1591,128 @@ namespace GameServer.Migrations
                     b.Property<bool>("AllowOppositePlatform")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<float>("CharacterCreatorPointsLastWeekPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CharacterCreatorPointsLastWeekPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CharacterCreatorPointsLastWeekPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CharacterCreatorPointsPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CharacterCreatorPointsPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CharacterCreatorPointsPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CharacterCreatorPointsThisWeekPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CharacterCreatorPointsThisWeekPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CharacterCreatorPointsThisWeekPSV")
+                        .HasColumnType("float");
+
                     b.Property<int>("CharacterIdx")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<DateTime>("CreatedAt"));
+
+                    b.Property<float>("CreatorPointsLastWeekPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CreatorPointsLastWeekPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CreatorPointsLastWeekPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CreatorPointsPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CreatorPointsPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CreatorPointsPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CreatorPointsThisWeekPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CreatorPointsThisWeekPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("CreatorPointsThisWeekPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("ExperiencePointsLastWeekPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("ExperiencePointsLastWeekPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("ExperiencePointsLastWeekPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("ExperiencePointsPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("ExperiencePointsPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("ExperiencePointsPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("ExperiencePointsThisWeekPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("ExperiencePointsThisWeekPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("ExperiencePointsThisWeekPSV")
+                        .HasColumnType("float");
 
                     b.Property<bool>("HasCheckedInBefore")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsBanned")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<float>("KartCreatorPointsLastWeekPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("KartCreatorPointsLastWeekPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("KartCreatorPointsLastWeekPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("KartCreatorPointsPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("KartCreatorPointsPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("KartCreatorPointsPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("KartCreatorPointsThisWeekPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("KartCreatorPointsThisWeekPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("KartCreatorPointsThisWeekPSV")
+                        .HasColumnType("float");
 
                     b.Property<int>("KartIdx")
                         .HasColumnType("int");
@@ -1450,7 +1738,34 @@ namespace GameServer.Migrations
                     b.Property<int>("OnlineDisconnected")
                         .HasColumnType("int");
 
+                    b.Property<int>("OnlineFinished")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OnlineFinishedLastWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OnlineFinishedThisWeek")
+                        .HasColumnType("int");
+
                     b.Property<int>("OnlineForfeit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OnlineRaces")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OnlineRacesLastWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OnlineRacesThisWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OnlineWins")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OnlineWinsLastWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OnlineWinsThisWeek")
                         .HasColumnType("int");
 
                     b.Property<ulong>("PSNID")
@@ -1463,6 +1778,33 @@ namespace GameServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(2);
+
+                    b.Property<int>("PointsLastWeekPS3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsLastWeekPSP")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsLastWeekPSV")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsPS3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsPSP")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsPSV")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsThisWeekPS3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsThisWeekPSP")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsThisWeekPSV")
+                        .HasColumnType("int");
 
                     b.Property<bool>("PolicyAccepted")
                         .HasColumnType("tinyint(1)");
@@ -1484,8 +1826,92 @@ namespace GameServer.Migrations
                     b.Property<bool>("ShowCreationsWithoutPreviews")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int>("TotalCharactersPS3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalCharactersPSP")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalCharactersPSV")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalKartsPS3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalKartsPSP")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalKartsPSV")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalTracksPS3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalTracksPSP")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalTracksPSV")
+                        .HasColumnType("int");
+
+                    b.Property<float>("TotalXPLastWeekPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TotalXPLastWeekPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TotalXPLastWeekPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TotalXPPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TotalXPPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TotalXPPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TotalXPThisWeekPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TotalXPThisWeekPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TotalXPThisWeekPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TrackCreatorPointsLastWeekPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TrackCreatorPointsLastWeekPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TrackCreatorPointsLastWeekPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TrackCreatorPointsPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TrackCreatorPointsPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TrackCreatorPointsPSV")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TrackCreatorPointsThisWeekPS3")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TrackCreatorPointsThisWeekPSP")
+                        .HasColumnType("float");
+
+                    b.Property<float>("TrackCreatorPointsThisWeekPSV")
+                        .HasColumnType("float");
+
                     b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime(6)");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlComputedColumn(b.Property<DateTime>("UpdatedAt"));
 
                     b.Property<string>("Username")
                         .HasColumnType("longtext");
@@ -1766,7 +2192,7 @@ namespace GameServer.Migrations
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.HeartedPlayerCreation", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "HeartedCreation")
-                        .WithMany("Hearts")
+                        .WithMany("HeartsData")
                         .HasForeignKey("HeartedPlayerCreationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1853,7 +2279,7 @@ namespace GameServer.Migrations
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationDownload", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "Creation")
-                        .WithMany("Downloads")
+                        .WithMany("DownloadsData")
                         .HasForeignKey("PlayerCreationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1872,7 +2298,7 @@ namespace GameServer.Migrations
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationPoint", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "Creation")
-                        .WithMany("Points")
+                        .WithMany("PointsData")
                         .HasForeignKey("PlayerCreationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1891,7 +2317,7 @@ namespace GameServer.Migrations
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationRaceStarted", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "Creation")
-                        .WithMany("RacesStarted")
+                        .WithMany("RacesStartedData")
                         .HasForeignKey("PlayerCreationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1902,7 +2328,7 @@ namespace GameServer.Migrations
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationRatingData", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "Creation")
-                        .WithMany("Ratings")
+                        .WithMany("RatingsData")
                         .HasForeignKey("PlayerCreationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1959,7 +2385,7 @@ namespace GameServer.Migrations
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationUniqueRacer", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "Creation")
-                        .WithMany("UniqueRacers")
+                        .WithMany("UniqueRacersData")
                         .HasForeignKey("PlayerCreationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1978,7 +2404,7 @@ namespace GameServer.Migrations
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationView", b =>
                 {
                     b.HasOne("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationData", "Creation")
-                        .WithMany("Views")
+                        .WithMany("ViewsData")
                         .HasForeignKey("PlayerCreationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -2131,23 +2557,23 @@ namespace GameServer.Migrations
 
                     b.Navigation("Comments");
 
-                    b.Navigation("Downloads");
+                    b.Navigation("DownloadsData");
 
-                    b.Navigation("Hearts");
+                    b.Navigation("HeartsData");
 
-                    b.Navigation("Points");
+                    b.Navigation("PointsData");
 
-                    b.Navigation("RacesStarted");
+                    b.Navigation("RacesStartedData");
 
-                    b.Navigation("Ratings");
+                    b.Navigation("RatingsData");
 
                     b.Navigation("Reviews");
 
                     b.Navigation("Scores");
 
-                    b.Navigation("UniqueRacers");
+                    b.Navigation("UniqueRacersData");
 
-                    b.Navigation("Views");
+                    b.Navigation("ViewsData");
                 });
 
             modelBuilder.Entity("GameServer.Models.PlayerData.PlayerCreations.PlayerCreationReview", b =>

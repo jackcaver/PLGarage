@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<resource name="ps3.player_creation.search" login_required="true">
+<resource name="ps3.player_creations.search" login_required="true">
   <request method="GET" url="player_creations/search.xml">
     <param name="search" type="string" minlength="2" required="false" />
     <param name="search_tags" type="string" minlength="2" required="false" />

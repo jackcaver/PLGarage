@@ -24,7 +24,9 @@ namespace GameServer.Models.PlayerData
 
         public string Subject { get; set; }
         public string Body { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedAt { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime UpdatedAt { get; set; }
         public string RecipientList { get; set; }
         public string AttachmentReference { get; set; }

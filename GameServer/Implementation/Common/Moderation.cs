@@ -401,8 +401,8 @@ namespace GameServer.Implementation.Common
             var pageStart = PageCalculator.GetPageStart(page, per_page);
 
             var creations = (sortOrder == SortOrder.asc
-                ? query.OrderBy(match => match.PlayerCreationId)
-                : query.OrderByDescending(match => match.PlayerCreationId))
+                ? query.OrderBy(match => match.CreatedAt)
+                : query.OrderByDescending(match => match.CreatedAt))
             .Select(creation => new MinimalCreationInfo
             {
                 ID = creation.PlayerCreationId,

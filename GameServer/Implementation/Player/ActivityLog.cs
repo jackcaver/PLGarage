@@ -18,17 +18,7 @@ namespace GameServer.Implementation.Player
                 .AsSplitQuery()
                 .AsNoTracking()
                 .Include(e => e.Author)
-                .ThenInclude(u => u.HeartedByProfiles)
-                .Include(e => e.Player)
-                .ThenInclude(u => u.HeartedByProfiles)
                 .Include(e => e.PlayerCreation)
-                .ThenInclude(c => c.Hearts)
-                .Include(e => e.PlayerCreation)
-                .ThenInclude(c => c.Ratings)
-                .Include(e => e.PlayerCreation)
-                .ThenInclude(c => c.RacesStarted)
-                .Include(e => e.PlayerCreation)
-                .ThenInclude(c => c.Author)
                 .Where(match => (user == null || ((match.AuthorId == null || !match.Author.IsBlockedByMe(user.UserId)) 
                             && (match.PlayerId == null || !match.Player.IsBlockedByMe(user.UserId))
                             && (match.PlayerCreationId == null || !match.PlayerCreation.Author.IsBlockedByMe(user.UserId))))
@@ -123,10 +113,10 @@ namespace GameServer.Implementation.Player
                         activityList.Add(new Activity
                         {
                             player_creation_id = activity.PlayerCreationId ?? 0,
-                            player_creation_hearts = activity.PlayerCreation?.HeartsCount ?? 0,
+                            player_creation_hearts = activity.PlayerCreation?.Hearts ?? 0,
                             player_creation_rating_up = activity.PlayerCreation?.RatingUp ?? 0,
                             player_creation_rating_down = activity.PlayerCreation?.RatingDown ?? 0,
-                            player_creation_races_started = activity.PlayerCreation?.RacesStartedCount ?? 0,
+                            player_creation_races_started = activity.PlayerCreation?.RacesStarted ?? 0,
                             player_creation_username = activity.PlayerCreation?.Author?.Username ?? "",
                             player_creation_description = activity.PlayerCreation?.Description ?? "",
                             player_creation_name = activity.PlayerCreation?.Name ?? "",

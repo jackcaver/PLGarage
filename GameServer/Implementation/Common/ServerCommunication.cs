@@ -112,9 +112,8 @@ namespace GameServer.Implementation.Common
                     if (message != null)
                     {
                         message.From = ServerID.ToString();
-                        Database database = new();
+                        await using var database = Database.GetContext();
                         ProcessMessage(database, webSocket, message);
-                        await database.DisposeAsync();
                     }
                 }
                 catch (Exception e)
@@ -408,6 +407,7 @@ namespace GameServer.Implementation.Common
                                                     FinishTime = player.FinishTime,
                                                     Platform = creation.Platform,
                                                     PlayerId = player.PlayerConnectId,
+                                                    Username = user.Username,
                                                     PlaygroupSize = player.PlaygroupSize,
                                                     Points = player.Points,
                                                     SubGroupId = info.IsMNR ? (int)info.GameType - 10 : (int)info.GameType,

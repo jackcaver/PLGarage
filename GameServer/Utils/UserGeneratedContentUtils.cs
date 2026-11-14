@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using GameServer.Models.Request;
 
 namespace GameServer.Utils
 {
@@ -258,6 +259,7 @@ namespace GameServer.Utils
                 {
                     AI = true,
                     PlayerId = UFGUser.UserId,
+                    Username = UFGUser.Username,
                     TrackId = id,
                     PlayerCreationId = id,
                     ScoreboardMode = storyLevel.ScoreboardMode,
@@ -310,6 +312,22 @@ namespace GameServer.Utils
                 || (MaxHeight != 0 && info.Height > MaxHeight))
                 return false;
 
+            return true;
+        }
+        
+        public static bool CheckDataArchive(Stream data, Platform platform, PlayerCreation creation)
+        {
+            if (platform == Platform.PSP)//TODO: figure out psp data archive format
+                return true;
+
+            DataArchive content = new();
+
+            if (!content.TryParse(data, platform == Platform.PSV))
+                return false;
+            
+            //TODO: fix autoReset in track cmd file
+            
+            data.Position = 0;
             return true;
         }
     }

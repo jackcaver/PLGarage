@@ -1,5 +1,6 @@
 ﻿using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
+using GameServer.Models.Response;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +32,7 @@ namespace GameServer.Controllers.Api
             PlayerCreationData track = database.PlayerCreations
                 .AsNoTracking()
                 .Include(c => c.Author)
-                .Include(c => c.Ratings)
+                .Include(c => c.RatingsData)
                 .FirstOrDefault(c => c.PlayerCreationId == trackId
                     && c.Type != PlayerCreationType.DELETED
                     && c.ModerationStatus != ModerationStatus.BANNED
@@ -40,7 +41,7 @@ namespace GameServer.Controllers.Api
             if (track == null)
                 return NotFound(new { error = "error_creation_not_found", trackId });
 
-            var dto = new ScoreSnapshotDto
+            var dto = new ScoreSnapshotDto()
             {
                 track = new ScoreTrackDto
                 {
@@ -223,9 +224,9 @@ namespace GameServer.Controllers.Api
                 c.Type,
                 c.PlayerId,
                 c.Author.Username,
-                Xp = c.Points.Sum(p => (int?)p.Amount) ?? 0,
-                Downloads = c.Hearts.Count(),
-                Views = c.Views.Count()
+                Xp = c.PointsData.Sum(p => (int?)p.Amount) ?? 0,
+                Downloads = c.HeartsData.Count(),
+                Views = c.ViewsData.Count()
             });
 
             var sort = (sortBy ?? "xp").ToLowerInvariant();

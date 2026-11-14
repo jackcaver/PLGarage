@@ -8,9 +8,10 @@ namespace GameServer.Models.PlayerData
 {
     public class PlayerCommentData
     {
-        public string Body { get; set; }
-        public DateTime CreatedAt { get; set; }
         public int Id { get; set; }
+        public string Body { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public DateTime CreatedAt { get; set; }
         public Platform Platform { get; set; }
         public int AuthorId { get; set; }
 
@@ -22,6 +23,7 @@ namespace GameServer.Models.PlayerData
         [ForeignKey(nameof(PlayerId))]
         public User Player { get; set; }
 
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime UpdatedAt { get; set; }
         [Projectable]
         public string AuthorUsername => Author.Username;

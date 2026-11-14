@@ -148,7 +148,6 @@ namespace GameServer.Implementation.Common
             {
                 user = new User
                 {
-                    UserId = database.Users.Count(match => match.Username != "ufg") + 11,
                     Username = NPTicket.Username,
                     Quota = 30,
                     CreatedAt = TimeUtils.Now,
@@ -162,6 +161,16 @@ namespace GameServer.Implementation.Common
                 
                 database.Users.Add(user);
                 database.SaveChanges();
+                
+                if (user.UserId < 10)
+                {
+                    database.Users.Remove(user);
+                    database.SaveChanges();
+
+                    user.UserId = 11;
+                    database.Users.Add(user);
+                    database.SaveChanges();
+                }
             }
 
             if (user == null || user.IsBanned
@@ -247,7 +256,7 @@ namespace GameServer.Implementation.Common
 
         public static string SetPresence(Database database, string presenceString, SessionInfo sessionInfo)
         {
-            Ping(database, sessionInfo);
+            ClearSessions(database);
             int id = -130;
             string message = "The player doesn't exist";
 
@@ -260,6 +269,7 @@ namespace GameServer.Implementation.Common
                 message = "Successful completion";
 
                 session.Presence = presence;
+                session.LastPing = TimeUtils.Now;
                 database.SaveChanges();
             }
 
@@ -324,7 +334,7 @@ namespace GameServer.Implementation.Common
 
         private static SessionData GetSession(Database database, SessionInfo sessionInfo)
         {
-            Ping(database, sessionInfo);
+            ClearSessions(database);
 
             var session = database.Sessions
                 .Include(s => s.User)
@@ -334,7 +344,11 @@ namespace GameServer.Implementation.Common
             if (session == null)
                 return new SessionData();
             else
+            {
+                session.LastPing = TimeUtils.Now;
+                database.SaveChanges();
                 return session;
+            }
         }
         
         public static SessionData GetSession(Database database, ClaimsPrincipal user)

@@ -197,6 +197,7 @@ namespace GameServer.Controllers.Api
                     c.Id,
                     comment = c.Body,
                     c.CreatedAt,
+                    c.Author.UserId,
                     c.Author.Username
                 })
                 .ToList();
@@ -236,6 +237,7 @@ namespace GameServer.Controllers.Api
                 .Select(x => new
                 {
                     x.HeartedUserId,
+                    x.HeartedUser.UserId,
                     x.HeartedUser.Username,
                     x.HeartedAt
                 })

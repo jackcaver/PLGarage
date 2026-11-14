@@ -455,6 +455,7 @@ namespace GameServer.Implementation.Common
                         FinishTime = stats.finish_time,
                         Platform = session.Platform,
                         PlayerId = user.UserId,
+                        Username = user.Username,
                         SubGroupId = session.IsMNR ? (int)game.Type - 10 : (int)game.Type,
                         SubKeyId = stats.track_idx,
                         BestLapTime = stats.best_lap_time,

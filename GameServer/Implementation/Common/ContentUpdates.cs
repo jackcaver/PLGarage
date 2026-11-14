@@ -142,9 +142,9 @@ namespace GameServer.Implementation.Common
 
             var query = database.PlayerCreations
                 .AsSplitQuery()
-                .Include(p => p.Downloads)
-                .Include(p => p.Ratings)
-                .OrderByDescending(p => p.Downloads.Count)
+                .Include(p => p.DownloadsData)
+                .Include(p => p.RatingsData)
+                .OrderByDescending(p => p.DownloadsData.Count)
                 .Where(match => (match.Type == PlayerCreationType.TRACK || match.Type == PlayerCreationType.STORY)
                     && match.IsMNR
                     && match.AutoReset
@@ -153,7 +153,7 @@ namespace GameServer.Implementation.Common
                     && match.ModerationStatus != ModerationStatus.ILLEGAL);
 
             var candidates = query
-                .Where(match => match.DownloadsCount >= 10 && match.Rating >= 3.5)
+                .Where(match => match.Downloads >= 10 && match.Rating >= 3.5)
                 .Select(p => p.PlayerCreationId);
 
             if (!candidates.Any())
@@ -243,8 +243,8 @@ namespace GameServer.Implementation.Common
         private static string GetTopTracksData(Database database)
         {
             var creations = database.PlayerCreations
-                .Include(p => p.Downloads)
-                .OrderByDescending(match => match.Downloads.Count)
+                .Include(p => p.DownloadsData)
+                .OrderByDescending(match => match.DownloadsData.Count)
                 .Where(match => match.Type == PlayerCreationType.TRACK && match.IsMNR && match.Platform == Platform.PS3)
                 .Take(5)
                 .ToList();

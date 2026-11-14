@@ -9,7 +9,6 @@ using System.Linq;
 namespace GameServer.Models.PlayerData.PlayerCreations
 {
     //TODO: figure out indexing on this table
-    //TODO: calculated params
     /*[Index(nameof(PlayerId))]//Hopefully will prevent ef from attempting to delete FK
     [Index(nameof(ModerationStatus), nameof(CreatedAt), Name = "ModAPISearch")]
     [Index(nameof(Platform), nameof(IsMNR), nameof(Type), nameof(Username), nameof(PlayerCreationId),
@@ -98,58 +97,32 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         public List<Score> Scores { get; set; }
         public List<ActivityEvent> ActivityLog { get; set; }
 
-        //[Projectable]
-        public int RacesStarted { get; set; }//=> RacesStartedData.Count;
-        //[Projectable]
-        public int Votes { get; set; }//=> RatingsData.Count(match => !IsMNR || match.Rating != 0);
-        //[Projectable]
-        public int RacesStartedThisWeek { get; set; }//=> RacesStartedData.Count(match => match.StartedAt >= TimeUtils.ThisWeekStart);
-        //[Projectable]
-        public int RacesStartedThisMonth { get; set; }//=> RacesStartedData.Count(match => match.StartedAt >= TimeUtils.ThisMonthStart);
-        //[Projectable]
-        public int UniqueRacers { get; set; }//=> UniqueRacersData.Count;
-        //[Projectable]
-        public float Coolness { get; set; }//=> (RatingUp - RatingDown) + ((RacesStarted + RacesFinished) / 2) + Hearts;
-        //[Projectable]
-        public int Downloads { get; set; }//=> DownloadsData.Count;
-        //[Projectable]
-        public int DownloadsLastWeek { get; set; }//=> DownloadsData.Count(match => match.DownloadedAt >= TimeUtils.LastWeekStart && match.DownloadedAt < TimeUtils.ThisWeekStart);
-        //[Projectable]
-        public int DownloadsThisWeek { get; set; }//=> DownloadsData.Count(match => match.DownloadedAt >= TimeUtils.ThisWeekStart);
-        //[Projectable]
-        public int Hearts { get; set; }//=> HeartsData.Count;
-        //[Projectable]
-        public int HeartsThisWeek { get; set; }//=> HeartsData.Count(match => match.HeartedAt >= TimeUtils.ThisWeekStart);
-        //[Projectable]
-        public int HeartsThisMonth { get; set; }//=> HeartsData.Count(match => match.HeartedAt >= TimeUtils.ThisMonthStart);
-        //[Projectable]
-        public int RatingDown { get; set; }//=> RatingsData.Count(match => match.Type == RatingType.BOO);
-        //[Projectable]
-        public int RatingUp { get; set; }//=> RatingsData.Count(match => match.Type == RatingType.YAY);
-        //[Projectable]
-        public int RatingUpThisWeek { get; set; }//=> RatingsData.Count(match => match.Type == RatingType.YAY && match.RatedAt >= TimeUtils.ThisWeekStart);
-        //[Projectable]
-        public int RatingUpThisMonth { get; set; }//=> RatingsData.Count(match => match.Type == RatingType.YAY && match.RatedAt >= TimeUtils.ThisMonthStart);
-        //[Projectable]
-        public string Username { get; set; }//=> Author.Username;
-        //[Projectable]
-        public int Views { get; set; }//=> ViewsData.Count;
-        //[Projectable]
-        public int ViewsLastWeek { get; set; }//=> ViewsData.Count(match => match.ViewedAt >= TimeUtils.LastWeekStart && match.ViewedAt < TimeUtils.ThisWeekStart);
-        //[Projectable]
-        public int ViewsThisWeek { get; set; }//=> ViewsData.Count(match => match.ViewedAt >= TimeUtils.ThisWeekStart);
-        //[Projectable]
-        public float Points { get; set; }//=> PointsData.Sum(p => p.Amount);
-        //[Projectable]
-        public float PointsLastWeek { get; set; }//=> PointsData.Where(match => match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount);
-        //[Projectable]
-        public float PointsThisWeek { get; set; }//=> PointsData.Where(match => match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount);
-        //[Projectable]
-        public float PointsToday { get; set; }//=> PointsData.Where(match => match.CreatedAt >= TimeUtils.DayStart).Sum(p => p.Amount);
-        //[Projectable]
-        public float PointsYesterday { get; set; }//=> PointsData.Where(match => match.CreatedAt >= TimeUtils.YesterdayStart && match.CreatedAt < TimeUtils.DayStart).Sum(p => p.Amount);
-        //[Projectable]
-        public float Rating { get; set; }//=> RatingsData.Count != 0 ? (float)RatingsData.Average(r => r.Rating) : 0;
+        public int RacesStarted { get; set; }
+        public int Votes { get; set; }
+        public int RacesStartedThisWeek { get; set; }
+        public int RacesStartedThisMonth { get; set; }
+        public int UniqueRacers { get; set; }
+        public float Coolness { get; set; }
+        public int Downloads { get; set; }
+        public int DownloadsLastWeek { get; set; }
+        public int DownloadsThisWeek { get; set; }
+        public int Hearts { get; set; }
+        public int HeartsThisWeek { get; set; }
+        public int HeartsThisMonth { get; set; }
+        public int RatingDown { get; set; }
+        public int RatingUp { get; set; }
+        public int RatingUpThisWeek { get; set; }
+        public int RatingUpThisMonth { get; set; }
+        public string Username { get; set; }
+        public int Views { get; set; }
+        public int ViewsLastWeek { get; set; }
+        public int ViewsThisWeek { get; set; }
+        public float Points { get; set; }
+        public float PointsLastWeek { get; set; }
+        public float PointsThisWeek { get; set; }
+        public float PointsToday { get; set; }
+        public float PointsYesterday { get; set; }
+        public float Rating { get; set; }
         [Projectable]
         public string StarRating => Rating.ToString("0.0", CultureInfo.InvariantCulture);
         [Projectable]

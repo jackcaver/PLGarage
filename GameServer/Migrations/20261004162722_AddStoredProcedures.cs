@@ -10,6 +10,7 @@ namespace GameServer.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+	        //Procedures
             migrationBuilder.Sql(@"CREATE PROCEDURE `UpdatePlayerCreationPoints`(
 	IN `creationId` INT
 )
@@ -179,30 +180,114 @@ MODIFIES SQL DATA
 SQL SECURITY DEFINER
 COMMENT 'Updates player creation\'s coolness data'
 BEGIN
-	DECLARE ratingUp, ratingDown, racesStarted, racesFinished, hearts INT DEFAULT 0;
-   DECLARE coolness FLOAT DEFAULT 0;
+	DECLARE ratingUpData, ratingDownData, racesStartedData, racesFinishedData, heartsData INT DEFAULT 0;
+    DECLARE coolness FLOAT DEFAULT 0;
    
-   SELECT RatingUp, RatingDown, RacesStarted, RacesFinished, Hearts INTO ratingUp, ratingDown, racesStarted, racesFinished, hearts FROM PlayerCreations WHERE PlayerCreationId=creationId;
+    SELECT RatingUp, RatingDown, RacesStarted, RacesFinished, Hearts INTO ratingUpData, ratingDownData, racesStartedData, racesFinishedData, heartsData FROM PlayerCreations WHERE PlayerCreationId=creationId;
    
-   IF(ratingUp IS NULL) THEN
-		SET ratingUp = 0;
+    IF(ratingUpData IS NULL) THEN
+		SET ratingUpData = 0;
 	END IF;
    
-   IF(ratingDown IS NULL) THEN
+    IF(ratingDownData IS NULL) THEN
+		SET ratingDownData = 0;
+	END IF;
+   
+    IF(racesStartedData IS NULL) THEN
+		SET racesStartedData = 0;
+	END IF;
+   
+    IF(racesFinishedData IS NULL) THEN
+		SET racesFinishedData = 0;
+	END IF;
+   
+    SET coolness = (ratingUpData - ratingDownData) + ((racesStartedData + racesFinishedData) / 2) + heartsData;
+   
+	UPDATE PlayerCreations SET Coolness=coolness WHERE PlayerCreationId=creationId;
+END");
+
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdatePlayerCreationUniqueRacers`(
+	IN `creationId` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates player creation\'s unique racers data'
+BEGIN
+	DECLARE uniqueRacers, versionData INT DEFAULT 0;
+	
+	SELECT Version INTO versionData FROM PlayerCreations WHERE PlayerCreationId=creationId;
+
+	IF(versionData IS NULL) THEN
+		SET versionData = 0;
+	END IF;
+
+	SELECT COUNT(*) INTO uniqueRacers FROM PlayerCreationUniqueRacers WHERE PlayerCreationId=creationId AND Version=versionData;
+   	
+	IF(uniqueRacers IS NULL) THEN
+		SET uniqueRacers = 0;
+	END IF;
+	
+	UPDATE PlayerCreations SET UniqueRacers=uniqueRacers WHERE PlayerCreationId=creationId;
+END");
+
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdatePlayerCreationRating`(
+	IN `creationId` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates player creation\'s rating data'
+BEGIN
+	DECLARE MNR TINYINT(1) DEFAULT 0;
+	DECLARE votes, ratingDown, ratingUp, ratingUpThisWeek, ratingUpThisMonth INT DEFAULT 0;
+    DECLARE starRating FLOAT DEFAULT 0;
+   
+    SELECT IsMNR INTO MNR FROM PlayerCreations WHERE PlayerCreationId=creationId;
+   
+    IF(MNR IS NULL) THEN
+		SET MNR = 0;
+	END IF;
+	
+    IF(MNR=1) THEN
+		SELECT COUNT(*) INTO votes FROM PlayerCreationRatings WHERE PlayerCreationId=creationId AND Rating != 0;
+    ELSE
+   		SELECT COUNT(*) INTO votes FROM PlayerCreationRatings WHERE PlayerCreationId=creationId;
+	END IF;
+   
+    SELECT COUNT(*) INTO ratingDown FROM PlayerCreationRatings WHERE PlayerCreationId=creationId AND Type=0;
+    SELECT COUNT(*) INTO ratingUp FROM PlayerCreationRatings WHERE PlayerCreationId=creationId AND Type=1;
+	SELECT COUNT(*) INTO ratingUpThisWeek FROM PlayerCreationRatings WHERE PlayerCreationId=creationId AND Type=1 AND RatedAt > DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	SELECT COUNT(*) INTO ratingUpThisMonth FROM PlayerCreationRatings WHERE PlayerCreationId=creationId AND Type=1 AND RatedAt > DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-(DAYOFMONTH(CURRENT_TIMESTAMP(6))-1)) DAY);
+	SELECT CAST(AVG(Rating) AS FLOAT) INTO starRating FROM PlayerCreationRatings WHERE PlayerCreationId=creationId;
+   
+	IF(votes IS NULL) THEN
+		SET votes = 0;
+	END IF;
+	
+    IF(ratingDown IS NULL) THEN
 		SET ratingDown = 0;
 	END IF;
    
-   IF(racesStarted IS NULL) THEN
-		SET racesStarted = 0;
+    IF(ratingUp IS NULL) THEN
+		SET ratingUp = 0;
 	END IF;
    
-   IF(racesFinished IS NULL) THEN
-		SET racesFinished = 0;
+    IF(ratingUpThisWeek IS NULL) THEN
+		SET ratingUpThisWeek = 0;
 	END IF;
    
-   SET coolness = (ratingUp - ratingDown) + ((racesStarted + racesFinished) / 2) + hearts;
+    IF(ratingUpThisMonth IS NULL) THEN
+		SET ratingUpThisMonth = 0;
+	END IF;
    
-   UPDATE PlayerCreations SET Coolness=coolness WHERE PlayerCreationId=creationId;
+    IF(starRating IS NULL) THEN
+		SET starRating = 0;
+	END IF;
+   
+	UPDATE PlayerCreations SET Votes=votes, RatingDown=ratingDown, RatingUp=ratingUp, RatingUpThisWeek=ratingUpThisWeek, RatingUpThisMonth=ratingUpThisMonth, Rating=starRating WHERE PlayerCreationId=creationId;
 END");
             
 			migrationBuilder.Sql(@"CREATE PROCEDURE `UpdatePlayerCreationsUsername`(
@@ -249,10 +334,13 @@ BEGIN
 		CALL UpdatePlayerCreationViews(creation.PlayerCreationId);
 		CALL UpdatePlayerCreationHearts(creation.PlayerCreationId);
 		CALL UpdatePlayerCreationRacesStarted(creation.PlayerCreationId);
+		CALL UpdatePlayerCreationUniqueRacers(creation.PlayerCreationId);
+		CALL UpdatePlayerCreationRating(creation.PlayerCreationId);
 		CALL UpdatePlayerCreationCoolness(creation.PlayerCreationId);
 	END FOR;
 END");
 			
+			//Triggers
 			migrationBuilder.Sql(@"CREATE TRIGGER `AfterUsersUpdate` AFTER UPDATE ON `Users` FOR EACH ROW BEGIN
 	IF (NEW.Username != OLD.Username) THEN
 		CALL UpdateScoresUsername(NEW.UserId, NEW.Username);
@@ -260,10 +348,41 @@ END");
 	END IF;
 END");
 
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationsUpdate` AFTER UPDATE ON `PlayerCreations` FOR EACH ROW BEGIN
+	IF (NEW.RatingUp != OLD.RatingUp OR NEW.RatingDown != OLD.RatingDown OR NEW.RacesStarted != OLD.RacesStarted OR NEW.RacesFinished != OLD.RacesFinished OR NEW.Hearts != OLD.Hearts) THEN
+		CALL UpdatePlayerCreationCoolness(NEW.PlayerCreationId);
+	END IF;
+END");
+			
 			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationPointsInsert` AFTER INSERT ON `PlayerCreationPoints` FOR EACH ROW BEGIN
 	CALL UpdatePlayerCreationPoints(NEW.PlayerCreationId);
 END");
-
+			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationDownloadsInsert` AFTER INSERT ON `PlayerCreationDownloads` FOR EACH ROW BEGIN
+	CALL UpdatePlayerCreationDownloads(NEW.PlayerCreationId);
+END");
+			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationViewsInsert` AFTER INSERT ON `PlayerCreationViews` FOR EACH ROW BEGIN
+	CALL UpdatePlayerCreationViews(NEW.PlayerCreationId);
+END");
+			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationHeartsInsert` AFTER INSERT ON `HeartedPlayerCreations` FOR EACH ROW BEGIN
+	CALL UpdatePlayerCreationHearts(NEW.HeartedPlayerCreationId);
+END");
+			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationRacesStartedInsert` AFTER INSERT ON `PlayerCreationRacesStarted` FOR EACH ROW BEGIN
+	CALL UpdatePlayerCreationRacesStarted(NEW.PlayerCreationId);
+END");
+			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationUniqueRacersInsert` AFTER INSERT ON `PlayerCreationUniqueRacers` FOR EACH ROW BEGIN
+	CALL UpdatePlayerCreationUniqueRacers(NEW.PlayerCreationId);
+END");
+			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationRatingsInsert` AFTER INSERT ON `PlayerCreationRatings` FOR EACH ROW BEGIN
+	CALL UpdatePlayerCreationRating(NEW.PlayerCreationId);
+END");
+			
+			//Events
 			migrationBuilder.Sql(@"CREATE EVENT `DailyRefresh`
 	ON SCHEDULE
 		EVERY 1 DAY STARTS '2026-09-24'
@@ -271,6 +390,8 @@ END");
 	ENABLE
 	COMMENT 'Refresh all calculated params each day'
 	DO CALL RefreshAll()");
+
+			migrationBuilder.Sql("CALL RefreshAll()");
         }
 
         /// <inheritdoc />
@@ -278,8 +399,25 @@ END");
         {//TODO: drop whatever was created
 	        migrationBuilder.Sql("DROP EVENT `DailyRefresh`");
 	        migrationBuilder.Sql("DROP TRIGGER `AfterUsersUpdate`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationsUpdate`");
 	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationPointsInsert`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationDownloadsInsert`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationViewsInsert`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationHeartsInsert`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationRacesStartedInsert`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationUniqueRacersInsert`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationRatingsInsert`");
 	        migrationBuilder.Sql("DROP PROCEDURE `RefreshAll`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdateScoresUsername`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationsUsername`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationRacesStarted`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationHearts`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationViews`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationDownloads`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationPoints`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationCoolness`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationUniqueRacers`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationRating`");
         }
     }
 }

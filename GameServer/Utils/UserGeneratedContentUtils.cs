@@ -259,6 +259,7 @@ namespace GameServer.Utils
                 {
                     AI = true,
                     PlayerId = UFGUser.UserId,
+                    Username = UFGUser.Username,
                     TrackId = id,
                     PlayerCreationId = id,
                     ScoreboardMode = storyLevel.ScoreboardMode,

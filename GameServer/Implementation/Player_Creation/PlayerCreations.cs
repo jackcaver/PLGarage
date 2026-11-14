@@ -233,6 +233,7 @@ namespace GameServer.Implementation.Player_Creation
                 NumRacers = creation.num_racers,
                 Platform = creation.platform,
                 PlayerId = user.UserId,
+                Username = user.Username,
                 RaceType = creation.race_type,
                 RequiresDLC = creation.requires_dlc,
                 ScoreboardMode = creation.scoreboard_mode,
@@ -827,9 +828,7 @@ namespace GameServer.Implementation.Player_Creation
             }
 
             if (LuckyDip)
-                creationQuery = creationQuery.OrderBy(match => EF.Functions.Random());  // TODO: is session.RandomSeed required? Will this even add onto the above, needs ThenBy?
-
-            // TODO: sort_order
+                creationQuery = creationQuery.OrderBy(match => EF.Functions.Random());
 
             var total = creationQuery.Count();
 

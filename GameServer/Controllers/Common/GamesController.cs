@@ -331,6 +331,7 @@ namespace GameServer.Controllers.Common
                     FinishTime = game_player_stats.finish_time,
                     Platform = session.Platform,
                     PlayerId = game.host_player_id,
+                    Username = user.Username,
                     PlaygroupSize = game_player_stats.playgroup_size,
                     Points = game_player_stats.score,
                     SubGroupId = session.IsMNR ? (int)game.game_type - 10 : (int)game.game_type,

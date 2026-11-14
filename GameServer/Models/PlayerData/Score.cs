@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace GameServer.Models.PlayerData
 {
     //TODO: figure out indexing on this table
-    //TODO: calculated params
     public class Score
     {
         public int Id { get; set; }

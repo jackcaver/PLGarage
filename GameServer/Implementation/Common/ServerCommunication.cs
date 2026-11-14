@@ -215,9 +215,9 @@ namespace GameServer.Implementation.Common
                                         if (info.IsMNR)
                                         {
                                             var character = database.PlayerCreations.FirstOrDefault(match =>
-                                                match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx && match.PlayerId != user.UserId);
+                                                match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
                                             var kart = database.PlayerCreations.FirstOrDefault(match =>
-                                                match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx && match.PlayerId != user.UserId);
+                                                match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
                                             if (character != null)
                                             {
                                                 database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = TimeUtils.Now });

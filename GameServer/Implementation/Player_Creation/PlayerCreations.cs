@@ -5,6 +5,7 @@ using GameServer.Models.Response;
 using GameServer.Utils;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using GameServer.Models.PlayerData.PlayerCreations;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
@@ -467,6 +468,21 @@ namespace GameServer.Implementation.Player_Creation
                 }
             }
 
+            // pioneer racer fix: when a new track is raced, pioneer racer is looking for it to report 0 races started, so this reports 0 only if the creation is starting its first race, otherwise everything behaves like normal
+            int racesStarted = Creation.RacesStartedCount;
+            if (!IsCounted && session?.User != null && racesStarted == 1 &&
+                Creation.Type == PlayerCreationType.TRACK)
+            {
+                DateTime firstRace = Creation.RacesStarted.Min(race => race.StartedAt);
+                bool wasInFirstRace = database.OnlineRacesStarted.Any(race =>
+                    race.PlayerId == session.UserId &&
+                    race.StartedAt >= firstRace.AddSeconds(-10) &&
+                    race.StartedAt <= firstRace.AddSeconds(10)); // this is being generous in case of weird emulator quirks
+
+                if (wasInFirstRace)
+                    racesStarted = 0; // temporarily send this in the response to trigger the achivement, while not permanently altering anything in the db
+            }
+
             var resp = new Response<List<player_creation>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
@@ -504,7 +520,7 @@ namespace GameServer.Implementation.Player_Creation
                         player_creation_type = (Creation.Type == PlayerCreationType.STORY ? PlayerCreationType.TRACK : Creation.Type).ToString(),
                         player_id = Creation.PlayerId,
                         races_finished = Creation.RacesFinished,
-                        races_started = Creation.RacesStartedCount,
+                        races_started = racesStarted,
                         races_started_this_month = Creation.RacesStartedThisMonth,
                         races_started_this_week = Creation.RacesStartedThisWeek,
                         races_won = Creation.RacesWon,

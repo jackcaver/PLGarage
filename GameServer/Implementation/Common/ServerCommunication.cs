@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using GameServer.Models.PlayerData;
 using GameServer.Models.ServerCommunication.Events;
 using GameServer.Models.PlayerData.PlayerCreations;
+using GameServer.Implementation.Player_Creation;
 
 namespace GameServer.Implementation.Common
 {
@@ -190,6 +191,10 @@ namespace GameServer.Implementation.Common
                                     PlayerCreationId = info.TrackId,
                                     StartedAt = TimeUtils.Now,
                                 });
+
+                                if (info.IsMNR && creation.Type == PlayerCreationType.TRACK)
+                                    RaceCreatorPoints.Add(database, creation);
+
                                 foreach (int playerId in info.PlayerIds)
                                 {
                                     User user = database.Users.FirstOrDefault(match => match.UserId == playerId);
@@ -210,13 +215,19 @@ namespace GameServer.Implementation.Common
                                         if (info.IsMNR)
                                         {
                                             var character = database.PlayerCreations.FirstOrDefault(match =>
-                                                match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx && match.PlayerId != user.UserId);
+                                                match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
                                             var kart = database.PlayerCreations.FirstOrDefault(match =>
-                                                match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx && match.PlayerId != user.UserId);
+                                                match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
                                             if (character != null)
+                                            {
                                                 database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = TimeUtils.Now });
+                                                RaceCreatorPoints.Add(database, character);
+                                            }
                                             if (kart != null)
+                                            {
                                                 database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = TimeUtils.Now });
+                                                RaceCreatorPoints.Add(database, kart);
+                                            }                          
                                         }
                                         else
                                         {
@@ -259,8 +270,8 @@ namespace GameServer.Implementation.Common
                                     {
                                         if (info.IsMNR)
                                         {
-                                            var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx && match.PlayerId != user.UserId);
-                                            var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx && match.PlayerId != user.UserId);
+                                            var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == user.CharacterIdx);
+                                            var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == user.KartIdx);
 
                                             if (character != null)
                                             {

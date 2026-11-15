@@ -4,6 +4,7 @@ using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
+using GameServer.Implementation.Player_Creation;
 using GameServer.Utils;
 using System.Collections.Generic;
 using System.Linq;
@@ -153,7 +154,11 @@ namespace GameServer.Implementation.Common
                 var track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.Track);
 
                 if (track != null)
+                {
                     database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = track.PlayerCreationId, StartedAt = TimeUtils.Now });
+                    if (track.Type == PlayerCreationType.TRACK)
+                        RaceCreatorPoints.Add(database, track);
+                }
 
                 foreach (var player in game.Players)
                 {
@@ -165,15 +170,21 @@ namespace GameServer.Implementation.Common
                     player.State = GameState.ACTIVE;
 
                     var Player = database.Users.FirstOrDefault(match => match.UserId == player.PlayerId);
-                    if (Player == null)
+                    if (Player != null)
                     {
                         var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == Player.CharacterIdx);
                         var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == Player.KartIdx);
 
                         if (character != null)
+                        {
                             database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = TimeUtils.Now });
+                            RaceCreatorPoints.Add(database, character);
+                        }       
                         if (kart != null)
+                        {
                             database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = TimeUtils.Now });
+                            RaceCreatorPoints.Add(database, kart);
+                        }
                     }
                 }
             }

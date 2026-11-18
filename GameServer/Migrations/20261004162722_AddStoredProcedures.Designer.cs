@@ -1783,31 +1783,31 @@ namespace GameServer.Migrations
                         .HasDefaultValue(2);
 
                     b.Property<int>("PointsLastWeekPS3")
-                        .HasColumnType("int");
+                        .HasColumnType("float");
 
                     b.Property<int>("PointsLastWeekPSP")
-                        .HasColumnType("int");
+                        .HasColumnType("float");
 
                     b.Property<int>("PointsLastWeekPSV")
-                        .HasColumnType("int");
+                        .HasColumnType("float");
 
                     b.Property<int>("PointsPS3")
-                        .HasColumnType("int");
+                        .HasColumnType("float");
 
                     b.Property<int>("PointsPSP")
-                        .HasColumnType("int");
+                        .HasColumnType("float");
 
                     b.Property<int>("PointsPSV")
-                        .HasColumnType("int");
+                        .HasColumnType("float");
 
                     b.Property<int>("PointsThisWeekPS3")
-                        .HasColumnType("int");
+                        .HasColumnType("float");
 
                     b.Property<int>("PointsThisWeekPSP")
-                        .HasColumnType("int");
+                        .HasColumnType("float");
 
                     b.Property<int>("PointsThisWeekPSV")
-                        .HasColumnType("int");
+                        .HasColumnType("float");
 
                     b.Property<bool>("PolicyAccepted")
                         .HasColumnType("tinyint(1)");
@@ -1847,13 +1847,16 @@ namespace GameServer.Migrations
                     b.Property<int>("TotalKartsPSV")
                         .HasColumnType("int");
 
-                    b.Property<int>("TotalTracksPS3")
+                    b.Property<int>("TotalMNRTracksPS3")
                         .HasColumnType("int");
 
-                    b.Property<int>("TotalTracksPSP")
+                    b.Property<int>("TotalMNRTracksPSP")
                         .HasColumnType("int");
 
-                    b.Property<int>("TotalTracksPSV")
+                    b.Property<int>("TotalMNRTracksPSV")
+                        .HasColumnType("int");
+                    
+                    b.Property<int>("TotalTracks")
                         .HasColumnType("int");
 
                     b.Property<float>("TotalXPLastWeekPS3")

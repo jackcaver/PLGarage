@@ -348,63 +348,63 @@ namespace GameServer.Migrations
             migrationBuilder.AddColumn<int>(
                 name: "PointsLastWeekPS3",
                 table: "Users",
-                type: "int",
+                type: "float",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "PointsLastWeekPSP",
                 table: "Users",
-                type: "int",
+                type: "float",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "PointsLastWeekPSV",
                 table: "Users",
-                type: "int",
+                type: "float",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "PointsPS3",
                 table: "Users",
-                type: "int",
+                type: "float",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "PointsPSP",
                 table: "Users",
-                type: "int",
+                type: "float",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "PointsPSV",
                 table: "Users",
-                type: "int",
+                type: "float",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "PointsThisWeekPS3",
                 table: "Users",
-                type: "int",
+                type: "float",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "PointsThisWeekPSP",
                 table: "Users",
-                type: "int",
+                type: "float",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "PointsThisWeekPSV",
                 table: "Users",
-                type: "int",
+                type: "float",
                 nullable: false,
                 defaultValue: 0);
 
@@ -451,21 +451,28 @@ namespace GameServer.Migrations
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
-                name: "TotalTracksPS3",
+                name: "TotalMNRTracksPS3",
                 table: "Users",
                 type: "int",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
-                name: "TotalTracksPSP",
+                name: "TotalMNRTracksPSP",
                 table: "Users",
                 type: "int",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
-                name: "TotalTracksPSV",
+                name: "TotalMNRTracksPSV",
+                table: "Users",
+                type: "int",
+                nullable: false,
+                defaultValue: 0);
+            
+            migrationBuilder.AddColumn<int>(
+                name: "TotalTracks",
                 table: "Users",
                 type: "int",
                 nullable: false,
@@ -1319,15 +1326,19 @@ namespace GameServer.Migrations
                 table: "Users");
 
             migrationBuilder.DropColumn(
-                name: "TotalTracksPS3",
+                name: "TotalMNRTracksPS3",
                 table: "Users");
 
             migrationBuilder.DropColumn(
-                name: "TotalTracksPSP",
+                name: "TotalMNRTracksPSP",
                 table: "Users");
 
             migrationBuilder.DropColumn(
-                name: "TotalTracksPSV",
+                name: "TotalMNRTracksPSV",
+                table: "Users");
+            
+            migrationBuilder.DropColumn(
+                name: "TotalTracks",
                 table: "Users");
 
             migrationBuilder.DropColumn(

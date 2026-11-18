@@ -289,6 +289,225 @@ BEGIN
    
 	UPDATE PlayerCreations SET Votes=votes, RatingDown=ratingDown, RatingUp=ratingUp, RatingUpThisWeek=ratingUpThisWeek, RatingUpThisMonth=ratingUpThisMonth, Rating=starRating WHERE PlayerCreationId=creationId;
 END");
+
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdateUserOnlineRaces`(
+	IN `user` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates user\'s online races data'
+BEGIN
+	DECLARE onlineRaces, onlineRacesThisWeek, onlineRacesLastWeek INT DEFAULT 0;
+	
+	SELECT COUNT(*) INTO onlineRaces FROM OnlineRacesStarted WHERE PlayerId=user;
+	SELECT COUNT(*) INTO onlineRacesThisWeek FROM OnlineRacesStarted WHERE PlayerId=user AND StartedAt > DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	SELECT COUNT(*) INTO onlineRacesLastWeek FROM OnlineRacesStarted WHERE PlayerId=user AND StartedAt > DATE_ADD(DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY), INTERVAL -1 WEEK) AND StartedAt < DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	
+	IF(onlineRaces IS NULL) THEN
+		SET onlineRaces = 0;
+	END IF;
+	
+	IF(onlineRacesThisWeek IS NULL) THEN
+		SET onlineRacesThisWeek = 0;
+	END IF;
+	
+	IF(onlineRacesLastWeek IS NULL) THEN
+		SET onlineRacesLastWeek = 0;
+	END IF;
+	
+	UPDATE Users SET OnlineRaces=onlineRaces, OnlineRacesThisWeek=onlineRacesThisWeek, OnlineRacesLastWeek=onlineRacesLastWeek WHERE UserId=user;
+END");
+
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdateUserOnlineFinished`(
+	IN `user` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates user\'s online finished data'
+BEGIN
+	DECLARE onlineFinished, onlineFinishedThisWeek, onlineFinishedLastWeek INT DEFAULT 0;
+	
+	SELECT COUNT(*) INTO onlineFinished FROM OnlineRacesFinished WHERE PlayerId=user;
+	SELECT COUNT(*) INTO onlineFinishedThisWeek FROM OnlineRacesFinished WHERE PlayerId=user AND FinishedAt > DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	SELECT COUNT(*) INTO onlineFinishedLastWeek FROM OnlineRacesFinished WHERE PlayerId=user AND FinishedAt > DATE_ADD(DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY), INTERVAL -1 WEEK) AND FinishedAt < DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	
+	IF(onlineFinished IS NULL) THEN
+		SET onlineFinished = 0;
+	END IF;
+	
+	IF(onlineFinishedThisWeek IS NULL) THEN
+		SET onlineFinishedThisWeek = 0;
+	END IF;
+	
+	IF(onlineFinishedLastWeek IS NULL) THEN
+		SET onlineFinishedLastWeek = 0;
+	END IF;
+	
+	UPDATE Users SET OnlineFinished=onlineFinished, OnlineFinishedThisWeek=onlineFinishedThisWeek, OnlineFinishedLastWeek=onlineFinishedLastWeek WHERE UserId=user;
+END");
+
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdateUserOnlineWins`(
+	IN `user` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates user\'s online wins data'
+BEGIN
+	DECLARE onlineWins, onlineWinsThisWeek, onlineWinsLastWeek INT DEFAULT 0;
+	
+	SELECT COUNT(*) INTO onlineWins FROM OnlineRacesFinished WHERE PlayerId=user AND IsWinner=1;
+	SELECT COUNT(*) INTO onlineWinsThisWeek FROM OnlineRacesFinished WHERE PlayerId=user AND IsWinner=1 AND FinishedAt > DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	SELECT COUNT(*) INTO onlineWinsLastWeek FROM OnlineRacesFinished WHERE PlayerId=user AND IsWinner=1 AND FinishedAt > DATE_ADD(DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY), INTERVAL -1 WEEK) AND FinishedAt < DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	
+	IF(onlineWins IS NULL) THEN
+		SET onlineWins = 0;
+	END IF;
+	
+	IF(onlineWinsThisWeek IS NULL) THEN
+		SET onlineWinsThisWeek = 0;
+	END IF;
+	
+	IF(onlineWinsLastWeek IS NULL) THEN
+		SET onlineWinsLastWeek = 0;
+	END IF;
+	
+	UPDATE Users SET OnlineWins=onlineWins, OnlineWinsThisWeek=onlineWinsThisWeek, OnlineWinsLastWeek=onlineWinsLastWeek WHERE UserId=user;
+END");
+
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdateUserPoints`(
+	IN `user` INT,
+	IN `forPlatform` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates user\'s points data'
+BEGIN
+	DECLARE points, pointsThisWeek, pointsLastWeek FLOAT DEFAULT 0;
+	
+	SELECT AVG(Amount) INTO points FROM PlayerPoints WHERE PlayerId=user AND Platform=forPlatform;
+	SELECT SUM(Amount) INTO pointsThisWeek FROM PlayerPoints WHERE PlayerId=user AND Platform=forPlatform AND CreatedAt > DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	SELECT SUM(Amount) INTO pointsLastWeek FROM PlayerPoints WHERE PlayerId=user AND Platform=forPlatform AND CreatedAt > DATE_ADD(DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY), INTERVAL -1 WEEK) AND CreatedAt < DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	
+	IF(points IS NULL) THEN
+		SET points = 0;
+	END IF;
+	
+	IF(pointsThisWeek IS NULL) THEN
+		SET pointsThisWeek = 0;
+	END IF;
+	
+	IF(pointsLastWeek IS NULL) THEN
+		SET pointsLastWeek = 0;
+	END IF;
+   
+	IF(points<0) THEN
+   		SET points=0;
+	END IF;
+   
+	IF(points>3000) THEN
+   		SET points=3000;
+	END IF;
+	
+	IF(forPlatform=4) THEN
+		UPDATE Users SET PointsPSV=points, PointsThisWeekPSV=pointsThisWeek, PointsLastWeekPSV=pointsLastWeek WHERE UserId=user;
+	ELSEIF(forPlatform=1) THEN
+   		UPDATE Users SET PointsPSP=points, PointsThisWeekPSP=pointsThisWeek, PointsLastWeekPSP=pointsLastWeek WHERE UserId=user;
+	ELSE
+   		UPDATE Users SET PointsPS3=points, PointsThisWeekPS3=pointsThisWeek, PointsLastWeekPS3=pointsLastWeek WHERE UserId=user;
+	END IF;
+END");
+
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdateUserTotalTracks`(
+	IN `user` INT,
+	IN `forPlatform` INT,
+	IN `MNR` TINYINT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates user\'s total tracks data'
+BEGIN
+	DECLARE totalTracks INT DEFAULT 0;
+	
+	SELECT COUNT(*) INTO totalTracks FROM PlayerCreations WHERE PlayerId=user AND Type=2 AND Platform=forPlatform AND IsMNR=MNR;
+	
+	IF(totalTracks IS NULL) THEN
+		SET totalTracks = 0;
+	END IF;
+	
+	IF(MNR=0) THEN
+		UPDATE Users SET TotalTracks=totalTracks WHERE UserId=user;
+	ELSEIF(forPlatform=4) THEN
+   		UPDATE Users SET TotalMNRTracksPSV=totalTracks WHERE UserId=user;
+	ELSEIF(forPlatform=1) THEN
+   		UPDATE Users SET TotalMNRTracksPSP=totalTracks WHERE UserId=user;
+	ELSE
+   		UPDATE Users SET TotalMNRTracksPS3=totalTracks WHERE UserId=user;
+	END IF;
+END");
+            
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdateUserTotalCharacters`(
+	IN `user` INT,
+	IN `forPlatform` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates user\'s total characters data'
+BEGIN
+	DECLARE totalCharacters INT DEFAULT 0;
+	
+	SELECT COUNT(*) INTO totalCharacters FROM PlayerCreations WHERE PlayerId=user AND Type=6 AND Platform=forPlatform;
+	
+	IF(totalCharacters IS NULL) THEN
+		SET totalCharacters = 0;
+	END IF;
+	
+	IF(forPlatform=4) THEN
+   		UPDATE Users SET TotalCharactersPSV=totalCharacters WHERE UserId=user;
+	ELSEIF(forPlatform=1) THEN
+   		UPDATE Users SET TotalCharactersPSP=totalCharacters WHERE UserId=user;
+	ELSE
+   		UPDATE Users SET TotalCharactersPS3=totalCharacters WHERE UserId=user;
+	END IF;
+END");
+            
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdateUserTotalKarts`(
+	IN `user` INT,
+	IN `forPlatform` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates user\'s total karts data'
+BEGIN
+	DECLARE totalKarts INT DEFAULT 0;
+	
+	SELECT COUNT(*) INTO totalKarts FROM PlayerCreations WHERE PlayerId=user AND Type=7 AND Platform=forPlatform;
+	
+	IF(totalKarts IS NULL) THEN
+		SET totalKarts = 0;
+	END IF;
+	
+	IF(forPlatform=4) THEN
+   		UPDATE Users SET TotalKartsPSV=totalKarts WHERE UserId=user;
+	ELSEIF(forPlatform=1) THEN
+   		UPDATE Users SET TotalKartsPSP=totalKarts WHERE UserId=user;
+	ELSE
+   		UPDATE Users SET TotalKartsPS3=totalKarts WHERE UserId=user;
+	END IF;
+END");
             
 			migrationBuilder.Sql(@"CREATE PROCEDURE `UpdatePlayerCreationsUsername`(
 	IN `userId` INT,
@@ -326,6 +545,22 @@ BEGIN
 	FOR user IN (SELECT UserId, Username FROM Users) DO
 		CALL UpdatePlayerCreationsUsername(user.UserId, user.Username);
 		CALL UpdateScoresUsername(user.UserId, user.Username);
+		CALL UpdateUserOnlineRaces(user.UserId);
+		CALL UpdateUserOnlineFinished(user.UserId);
+		CALL UpdateUserOnlineWins(user.UserId);
+		CALL UpdateUserPoints(user.UserId, 1);
+		CALL UpdateUserPoints(user.UserId, 2);
+		CALL UpdateUserPoints(user.UserId, 4);
+		CALL UpdateUserTotalTracks(user.UserId, 2, 0);
+		CALL UpdateUserTotalTracks(user.UserId, 1, 1);
+		CALL UpdateUserTotalTracks(user.UserId, 2, 1);
+		CALL UpdateUserTotalTracks(user.UserId, 4, 1);
+		CALL UpdateUserTotalCharacters(user.UserId, 1);
+		CALL UpdateUserTotalCharacters(user.UserId, 2);
+		CALL UpdateUserTotalCharacters(user.UserId, 4);
+		CALL UpdateUserTotalKarts(user.UserId, 1);
+		CALL UpdateUserTotalKarts(user.UserId, 2);
+		CALL UpdateUserTotalKarts(user.UserId, 4);
 	END FOR;
 	
 	FOR creation IN (SELECT PlayerCreationId FROM PlayerCreations) DO
@@ -418,6 +653,13 @@ END");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationCoolness`");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationUniqueRacers`");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationRating`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserOnlineRaces`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserOnlineFinished`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserOnlineWins`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserPoints`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserTotalTracks`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserTotalCharacters`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserTotalKarts`");
         }
     }
 }

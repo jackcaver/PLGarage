@@ -181,7 +181,7 @@ namespace GameServer.Controllers.Common
                     Track.RacesWon++;
 
                 if (Track.Type == PlayerCreationType.TRACK)
-                    RaceCreatorPoints.Add(database, Track);
+                    CreateXp.Add(database, Track);
             }
 
             if (session.IsMNR)

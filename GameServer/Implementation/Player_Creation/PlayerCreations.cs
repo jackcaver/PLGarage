@@ -435,15 +435,7 @@ namespace GameServer.Implementation.Player_Creation
 
                         if (session.IsMNR)
                         {
-                            database.PlayerCreationPoints.Add(new PlayerCreationPoint
-                            {
-                                PlayerCreationId = Creation.PlayerCreationId,
-                                PlayerId = Creation.PlayerId,
-                                Platform = Creation.Platform,
-                                Type = Creation.Type,
-                                CreatedAt = TimeUtils.Now,
-                                Amount = 100
-                            });
+                            CreateXp.Add(database, Creation, CreateXp.PerDownload, User.UserId);
                         }
 
                         if (!session.IsMNR)

@@ -157,7 +157,7 @@ namespace GameServer.Implementation.Common
                 {
                     database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = track.PlayerCreationId, StartedAt = TimeUtils.Now });
                     if (track.Type == PlayerCreationType.TRACK)
-                        RaceCreatorPoints.Add(database, track);
+                        CreateXp.Add(database, track);
                 }
 
                 foreach (var player in game.Players)
@@ -178,12 +178,12 @@ namespace GameServer.Implementation.Common
                         if (character != null)
                         {
                             database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = TimeUtils.Now });
-                            RaceCreatorPoints.Add(database, character);
+                            CreateXp.Add(database, character);
                         }       
                         if (kart != null)
                         {
                             database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = TimeUtils.Now });
-                            RaceCreatorPoints.Add(database, kart);
+                            CreateXp.Add(database, kart);
                         }
                     }
                 }

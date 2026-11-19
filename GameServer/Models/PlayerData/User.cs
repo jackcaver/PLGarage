@@ -12,7 +12,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace GameServer.Models.PlayerData
 {
     //TODO: figure out indexing on this table
-    //TODO: calculated params
     public class User
     {
         public int UserId { get; set; }
@@ -35,8 +34,7 @@ namespace GameServer.Models.PlayerData
 
         public List<PlayerCreationData> PlayerCreations { get; set; }
 
-        //[Projectable]
-        public int TotalTracks { get; set; }//=> PlayerCreations.Count(match => match.Type == PlayerCreationType.TRACK && !match.IsMNR);
+        public int TotalTracks { get; set; }
 
         public List<PlayerPoint> PlayerPoints { get; set; }
 
@@ -49,7 +47,7 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => PointsPSV,
             Platform.PSP => PointsPSP,
             _ => PointsPS3 
-        };//PlayerPoints.Count >= 10 ? float.Clamp((float)PlayerPoints.Where(match => match.Platform == platform).Average(p => p.Amount), 0, 3000) : 1500;
+        };
         
         public float PointsThisWeekPS3 { get; set; }
         public float PointsThisWeekPSV { get; set; }
@@ -76,28 +74,19 @@ namespace GameServer.Models.PlayerData
         public List<RaceStarted> RacesStarted { get; set; }
         public List<RaceFinished> RacesFinished { get; set; }
 
-        //[Projectable]
-        public int OnlineRaces { get; set; }//=> RacesStarted.Count;
-        //[Projectable]
-        public int OnlineWins { get; set; }//=> RacesFinished.Count(match => match.IsWinner);
-        //[Projectable]
-        public int OnlineFinished { get; set; }//=> RacesFinished.Count;
+        public int OnlineRaces { get; set; }
+        public int OnlineWins { get; set; }
+        public int OnlineFinished { get; set; }
         public int OnlineForfeit { get; set; }
         public int OnlineDisconnected { get; set; }
         public int WinStreak { get; set; }
         public int LongestWinStreak { get; set; }
-        //[Projectable]
-        public int OnlineRacesThisWeek { get; set; }//=> RacesStarted.Count(match => match.StartedAt >= TimeUtils.ThisWeekStart);
-        //[Projectable]
-        public int OnlineWinsThisWeek { get; set; }//=> RacesFinished.Count(match => match.IsWinner && match.FinishedAt >= TimeUtils.ThisWeekStart);
-        //[Projectable]
-        public int OnlineFinishedThisWeek { get; set; }//=> RacesFinished.Count(match => match.FinishedAt >= TimeUtils.ThisWeekStart);
-        //[Projectable]
-        public int OnlineRacesLastWeek { get; set; }//=> RacesStarted.Count(match => match.StartedAt >= TimeUtils.LastWeekStart && match.StartedAt < TimeUtils.ThisWeekStart);
-        //[Projectable]
-        public int OnlineWinsLastWeek { get; set; }//=> RacesFinished.Count(match => match.IsWinner && match.FinishedAt >= TimeUtils.LastWeekStart && match.FinishedAt < TimeUtils.ThisWeekStart);
-        //[Projectable]
-        public int OnlineFinishedLastWeek { get; set; }//=> RacesFinished.Count(match => match.FinishedAt >= TimeUtils.LastWeekStart && match.FinishedAt < TimeUtils.ThisWeekStart);
+        public int OnlineRacesThisWeek { get; set; }
+        public int OnlineWinsThisWeek { get; set; }
+        public int OnlineFinishedThisWeek { get; set; }
+        public int OnlineRacesLastWeek { get; set; }
+        public int OnlineWinsLastWeek { get; set; }
+        public int OnlineFinishedLastWeek { get; set; }
         public bool PolicyAccepted { get; set; }
         public bool IsBanned { get; set; }
         public bool ShowCreationsWithoutPreviews { get; set; }
@@ -122,7 +111,7 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => TotalCharactersPSV,
             Platform.PSP => TotalCharactersPSP,
             _ => TotalCharactersPS3 
-        };//PlayerCreations.Count(match => match.Type == PlayerCreationType.CHARACTER && match.Platform == platform);
+        };
         public int TotalKartsPS3 { get; set; }
         public int TotalKartsPSV { get; set; }
         public int TotalKartsPSP { get; set; }
@@ -132,7 +121,7 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => TotalKartsPSV,
             Platform.PSP => TotalKartsPSP,
             _ => TotalKartsPS3
-        };//PlayerCreations.Count(match => match.Type == PlayerCreationType.KART && match.Platform == platform);
+        };
         public int TotalMNRTracksPS3 { get; set; }
         public int TotalMNRTracksPSV { get; set; }
         public int TotalMNRTracksPSP { get; set; }
@@ -142,9 +131,9 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => TotalMNRTracksPSV,
             Platform.PSP => TotalMNRTracksPSP,
             _ => TotalMNRTracksPS3
-        };//PlayerCreations.Count(match => match.Type == PlayerCreationType.TRACK && match.IsMNR && match.Platform == platform);
+        };
         [Projectable]
-        public int TotalPlayerCreations(Platform platform) => TotalCharacters(platform) + TotalKarts(platform) + TotalMNRTracks(platform);//PlayerCreations.Count(match => match.Type != PlayerCreationType.PHOTO && match.Type != PlayerCreationType.DELETED && match.IsMNR && match.Platform == platform);
+        public int TotalPlayerCreations(Platform platform) => TotalCharacters(platform) + TotalKarts(platform) + TotalMNRTracks(platform);
         
         public List<PlayerCreationPoint> PlayerCreationPoints { get; set; }
 
@@ -178,7 +167,7 @@ namespace GameServer.Models.PlayerData
                 Platform.PSP => TrackCreatorPointsPSP,
                 _ => TrackCreatorPointsPS3
             }
-        };//PlayerCreationPoints.Where(match => match.Platform == platform && match.Type == type).Sum(p => p.Amount);
+        };
         
         public float CharacterCreatorPointsLastWeekPS3 { get; set; }
         public float CharacterCreatorPointsLastWeekPSV { get; set; }
@@ -210,7 +199,7 @@ namespace GameServer.Models.PlayerData
                 Platform.PSP => TrackCreatorPointsLastWeekPSP,
                 _ => TrackCreatorPointsLastWeekPS3
             }
-        };//PlayerCreationPoints.Where(match => match.Platform == platform && match.Type == type && match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount);
+        };
         
         public float CharacterCreatorPointsThisWeekPS3 { get; set; }
         public float CharacterCreatorPointsThisWeekPSV { get; set; }
@@ -242,7 +231,7 @@ namespace GameServer.Models.PlayerData
                 Platform.PSP => TrackCreatorPointsThisWeekPSP,
                 _ => TrackCreatorPointsThisWeekPS3
             }
-        };//PlayerCreationPoints.Where(match => match.Platform == platform && match.Type == type && match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount);
+        };
         
         public float CreatorPointsPS3 { get; set; }
         public float CreatorPointsPSV { get; set; }
@@ -253,7 +242,7 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => CreatorPointsPSV,
             Platform.PSP => CreatorPointsPSP,
             _ => CreatorPointsPS3
-        };//PlayerCreationPoints.Where(match => match.Platform == platform).Sum(p => p.Amount);
+        };
         
         public float CreatorPointsLastWeekPS3 { get; set; }
         public float CreatorPointsLastWeekPSV { get; set; }
@@ -264,7 +253,7 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => CreatorPointsLastWeekPSV,
             Platform.PSP => CreatorPointsLastWeekPSP,
             _ => CreatorPointsLastWeekPS3
-        };//PlayerCreationPoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount);
+        };
         
         public float CreatorPointsThisWeekPS3 { get; set; }
         public float CreatorPointsThisWeekPSV { get; set; }
@@ -275,7 +264,7 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => CreatorPointsThisWeekPSV,
             Platform.PSP => CreatorPointsThisWeekPSP,
             _ => CreatorPointsThisWeekPS3
-        };//PlayerCreationPoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount);
+        };
         
         public List<PlayerExperiencePoint> PlayerExperiencePoints { get; set; }
 
@@ -288,7 +277,7 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => ExperiencePointsPSV,
             Platform.PSP => ExperiencePointsPSP,
             _ => ExperiencePointsPS3
-        };//PlayerExperiencePoints.Where(match => match.Platform == platform).Sum(p => p.Amount);
+        };
         
         public float ExperiencePointsLastWeekPS3 { get; set; }
         public float ExperiencePointsLastWeekPSV { get; set; }
@@ -299,7 +288,7 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => ExperiencePointsLastWeekPSV,
             Platform.PSP => ExperiencePointsLastWeekPSP,
             _ => ExperiencePointsLastWeekPS3
-        };//PlayerExperiencePoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.LastWeekStart && match.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount);
+        };
         
         public float ExperiencePointsThisWeekPS3 { get; set; }
         public float ExperiencePointsThisWeekPSV { get; set; }
@@ -310,7 +299,7 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => ExperiencePointsThisWeekPSV,
             Platform.PSP => ExperiencePointsThisWeekPSP,
             _ => ExperiencePointsThisWeekPS3
-        };//PlayerExperiencePoints.Where(match => match.Platform == platform && match.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount);
+        };
 
         [InverseProperty(nameof(PlayerRatingData.Player))]
         public List<PlayerRatingData> PlayerRatings { get; set; }
@@ -329,7 +318,7 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => TotalXPPSV,
             Platform.PSP => TotalXPPSP,
             _ => TotalXPPS3
-        };//ExperiencePoints(platform) + CreatorPoints(platform);
+        };
         
         public float TotalXPLastWeekPS3 { get; set; }
         public float TotalXPLastWeekPSV { get; set; }
@@ -340,7 +329,7 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => TotalXPLastWeekPSV,
             Platform.PSP => TotalXPLastWeekPSP,
             _ => TotalXPLastWeekPS3
-        };//ExperiencePointsLastWeek(platform) + CreatorPointsLastWeek(platform);
+        };
         
         public float TotalXPThisWeekPS3 { get; set; }
         public float TotalXPThisWeekPSV { get; set; }
@@ -351,7 +340,7 @@ namespace GameServer.Models.PlayerData
             Platform.PSV => TotalXPThisWeekPSV,
             Platform.PSP => TotalXPThisWeekPSP,
             _ => TotalXPThisWeekPS3
-        };//ExperiencePointsThisWeek(platform) + CreatorPointsThisWeek(platform);
+        };
         [Projectable]
         public int SkillLevelId(Platform platform) => SkillConfig.Instance.GetSkillLevel((int)float.Floor(TotalXP(platform))).Id;
         [Projectable]

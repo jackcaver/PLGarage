@@ -438,7 +438,7 @@ COMMENT 'Updates user\'s total tracks data'
 BEGIN
 	DECLARE totalTracks INT DEFAULT 0;
 	
-	SELECT COUNT(*) INTO totalTracks FROM PlayerCreations WHERE PlayerId=user AND Type=2 AND Platform=forPlatform AND IsMNR=MNR;
+	SELECT COUNT(*) INTO totalTracks FROM PlayerCreations WHERE PlayerId=user AND Type=2 AND Platform=forPlatform AND IsMNR=MNR AND ModerationStatus!=1204 AND ModerationStatus!=1205;
 	
 	IF(totalTracks IS NULL) THEN
 		SET totalTracks = 0;
@@ -467,7 +467,7 @@ COMMENT 'Updates user\'s total characters data'
 BEGIN
 	DECLARE totalCharacters INT DEFAULT 0;
 	
-	SELECT COUNT(*) INTO totalCharacters FROM PlayerCreations WHERE PlayerId=user AND Type=6 AND Platform=forPlatform;
+	SELECT COUNT(*) INTO totalCharacters FROM PlayerCreations WHERE PlayerId=user AND Type=6 AND Platform=forPlatform AND ModerationStatus!=1204 AND ModerationStatus!=1205;
 	
 	IF(totalCharacters IS NULL) THEN
 		SET totalCharacters = 0;
@@ -494,7 +494,7 @@ COMMENT 'Updates user\'s total karts data'
 BEGIN
 	DECLARE totalKarts INT DEFAULT 0;
 	
-	SELECT COUNT(*) INTO totalKarts FROM PlayerCreations WHERE PlayerId=user AND Type=7 AND Platform=forPlatform;
+	SELECT COUNT(*) INTO totalKarts FROM PlayerCreations WHERE PlayerId=user AND Type=7 AND Platform=forPlatform AND ModerationStatus!=1204 AND ModerationStatus!=1205;
 	
 	IF(totalKarts IS NULL) THEN
 		SET totalKarts = 0;
@@ -506,6 +506,154 @@ BEGIN
    		UPDATE Users SET TotalKartsPSP=totalKarts WHERE UserId=user;
 	ELSE
    		UPDATE Users SET TotalKartsPS3=totalKarts WHERE UserId=user;
+	END IF;
+END");
+            
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdateUserCharacterCreatorPoints`(
+	IN `user` INT,
+	IN `forPlatform` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates user\'s character creator points data'
+BEGIN
+	DECLARE points, pointsThisWeek, pointsLastWeek FLOAT DEFAULT 0;
+	
+	SELECT SUM(Amount) INTO points FROM PlayerCreationPoints WHERE PlayerId=user AND Platform=forPlatform AND Type=6;
+	SELECT SUM(Amount) INTO pointsThisWeek FROM PlayerCreationPoints WHERE PlayerId=user AND Platform=forPlatform AND Type=6 AND CreatedAt > DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	SELECT SUM(Amount) INTO pointsLastWeek FROM PlayerCreationPoints WHERE PlayerId=user AND Platform=forPlatform AND Type=6 AND CreatedAt > DATE_ADD(DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY), INTERVAL -1 WEEK) AND CreatedAt < DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	
+	IF(points IS NULL) THEN
+		SET points = 0;
+	END IF;
+	
+	IF(pointsThisWeek IS NULL) THEN
+		SET pointsThisWeek = 0;
+	END IF;
+	
+	IF(pointsLastWeek IS NULL) THEN
+		SET pointsLastWeek = 0;
+	END IF;
+	
+	IF(forPlatform=4) THEN
+		UPDATE Users SET CharacterCreatorPointsPSV=points, CharacterCreatorPointsThisWeekPSV=pointsThisWeek, CharacterCreatorPointsLastWeekPSV=pointsLastWeek WHERE UserId=user;
+	ELSEIF(forPlatform=1) THEN
+   		UPDATE Users SET CharacterCreatorPointsPSP=points, CharacterCreatorPointsThisWeekPSP=pointsThisWeek, CharacterCreatorPointsLastWeekPSP=pointsLastWeek WHERE UserId=user;
+	ELSE
+   		UPDATE Users SET CharacterCreatorPointsPS3=points, CharacterCreatorPointsThisWeekPS3=pointsThisWeek, CharacterCreatorPointsLastWeekPS3=pointsLastWeek WHERE UserId=user;
+	END IF;
+END");
+            
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdateUserKartCreatorPoints`(
+	IN `user` INT,
+	IN `forPlatform` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates user\'s kart creator points data'
+BEGIN
+	DECLARE points, pointsThisWeek, pointsLastWeek FLOAT DEFAULT 0;
+	
+	SELECT SUM(Amount) INTO points FROM PlayerCreationPoints WHERE PlayerId=user AND Platform=forPlatform AND Type=7;
+	SELECT SUM(Amount) INTO pointsThisWeek FROM PlayerCreationPoints WHERE PlayerId=user AND Platform=forPlatform AND Type=7 AND CreatedAt > DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	SELECT SUM(Amount) INTO pointsLastWeek FROM PlayerCreationPoints WHERE PlayerId=user AND Platform=forPlatform AND Type=7 AND CreatedAt > DATE_ADD(DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY), INTERVAL -1 WEEK) AND CreatedAt < DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	
+	IF(points IS NULL) THEN
+		SET points = 0;
+	END IF;
+	
+	IF(pointsThisWeek IS NULL) THEN
+		SET pointsThisWeek = 0;
+	END IF;
+	
+	IF(pointsLastWeek IS NULL) THEN
+		SET pointsLastWeek = 0;
+	END IF;
+	
+	IF(forPlatform=4) THEN
+		UPDATE Users SET KartCreatorPointsPSV=points, KartCreatorPointsThisWeekPSV=pointsThisWeek, KartCreatorPointsLastWeekPSV=pointsLastWeek WHERE UserId=user;
+	ELSEIF(forPlatform=1) THEN
+   		UPDATE Users SET KartCreatorPointsPSP=points, KartCreatorPointsThisWeekPSP=pointsThisWeek, KartCreatorPointsLastWeekPSP=pointsLastWeek WHERE UserId=user;
+	ELSE
+   		UPDATE Users SET KartCreatorPointsPS3=points, KartCreatorPointsThisWeekPS3=pointsThisWeek, KartCreatorPointsLastWeekPS3=pointsLastWeek WHERE UserId=user;
+	END IF;
+END");
+            
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdateUserTrackCreatorPoints`(
+	IN `user` INT,
+	IN `forPlatform` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates user\'s track creator points data'
+BEGIN
+	DECLARE points, pointsThisWeek, pointsLastWeek FLOAT DEFAULT 0;
+	
+	SELECT SUM(Amount) INTO points FROM PlayerCreationPoints WHERE PlayerId=user AND Platform=forPlatform AND Type=2;
+	SELECT SUM(Amount) INTO pointsThisWeek FROM PlayerCreationPoints WHERE PlayerId=user AND Platform=forPlatform AND Type=2 AND CreatedAt > DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	SELECT SUM(Amount) INTO pointsLastWeek FROM PlayerCreationPoints WHERE PlayerId=user AND Platform=forPlatform AND Type=2 AND CreatedAt > DATE_ADD(DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY), INTERVAL -1 WEEK) AND CreatedAt < DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	
+	IF(points IS NULL) THEN
+		SET points = 0;
+	END IF;
+	
+	IF(pointsThisWeek IS NULL) THEN
+		SET pointsThisWeek = 0;
+	END IF;
+	
+	IF(pointsLastWeek IS NULL) THEN
+		SET pointsLastWeek = 0;
+	END IF;
+	
+	IF(forPlatform=4) THEN
+		UPDATE Users SET TrackCreatorPointsPSV=points, TrackCreatorPointsThisWeekPSV=pointsThisWeek, TrackCreatorPointsLastWeekPSV=pointsLastWeek WHERE UserId=user;
+	ELSEIF(forPlatform=1) THEN
+   		UPDATE Users SET TrackCreatorPointsPSP=points, TrackCreatorPointsThisWeekPSP=pointsThisWeek, TrackCreatorPointsLastWeekPSP=pointsLastWeek WHERE UserId=user;
+	ELSE
+   		UPDATE Users SET TrackCreatorPointsPS3=points, TrackCreatorPointsThisWeekPS3=pointsThisWeek, TrackCreatorPointsLastWeekPS3=pointsLastWeek WHERE UserId=user;
+	END IF;
+END");
+            
+            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdateUserExperiencePoints`(
+	IN `user` INT,
+	IN `forPlatform` INT
+)
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY DEFINER
+COMMENT 'Updates user\'s experience points data'
+BEGIN
+	DECLARE points, pointsThisWeek, pointsLastWeek FLOAT DEFAULT 0;
+	
+	SELECT SUM(Amount) INTO points FROM PlayerExperiencePoints WHERE PlayerId=user AND Platform=forPlatform;
+	SELECT SUM(Amount) INTO pointsThisWeek FROM PlayerExperiencePoints WHERE PlayerId=user AND Platform=forPlatform AND CreatedAt > DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	SELECT SUM(Amount) INTO pointsLastWeek FROM PlayerExperiencePoints WHERE PlayerId=user AND Platform=forPlatform AND CreatedAt > DATE_ADD(DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY), INTERVAL -1 WEEK) AND CreatedAt < DATE_ADD(DATE(CURRENT_TIMESTAMP(6)), INTERVAL(-WEEKDAY(CURRENT_TIMESTAMP(6))) DAY);
+	
+	IF(points IS NULL) THEN
+		SET points = 0;
+	END IF;
+	
+	IF(pointsThisWeek IS NULL) THEN
+		SET pointsThisWeek = 0;
+	END IF;
+	
+	IF(pointsLastWeek IS NULL) THEN
+		SET pointsLastWeek = 0;
+	END IF;
+	
+	IF(forPlatform=4) THEN
+		UPDATE Users SET ExperiencePointsPSV=points, ExperiencePointsThisWeekPSV=pointsThisWeek, ExperiencePointsLastWeekPSV=pointsLastWeek WHERE UserId=user;
+	ELSEIF(forPlatform=1) THEN
+   		UPDATE Users SET ExperiencePointsPSP=points, ExperiencePointsThisWeekPSP=pointsThisWeek, ExperiencePointsLastWeekPSP=pointsLastWeek WHERE UserId=user;
+	ELSE
+   		UPDATE Users SET ExperiencePointsPS3=points, ExperiencePointsThisWeekPS3=pointsThisWeek, ExperiencePointsLastWeekPS3=pointsLastWeek WHERE UserId=user;
 	END IF;
 END");
             
@@ -561,6 +709,18 @@ BEGIN
 		CALL UpdateUserTotalKarts(user.UserId, 1);
 		CALL UpdateUserTotalKarts(user.UserId, 2);
 		CALL UpdateUserTotalKarts(user.UserId, 4);
+		CALL UpdateUserCharacterCreatorPoints(user.UserId, 1);
+		CALL UpdateUserCharacterCreatorPoints(user.UserId, 2);
+		CALL UpdateUserCharacterCreatorPoints(user.UserId, 4);
+		CALL UpdateUserKartCreatorPoints(user.UserId, 1);
+		CALL UpdateUserKartCreatorPoints(user.UserId, 2);
+		CALL UpdateUserKartCreatorPoints(user.UserId, 4);
+		CALL UpdateUserTrackCreatorPoints(user.UserId, 1);
+		CALL UpdateUserTrackCreatorPoints(user.UserId, 2);
+		CALL UpdateUserTrackCreatorPoints(user.UserId, 4);
+		CALL UpdateUserExperiencePoints(user.UserId, 1);
+		CALL UpdateUserExperiencePoints(user.UserId, 2);
+		CALL UpdateUserExperiencePoints(user.UserId, 4);
 	END FOR;
 	
 	FOR creation IN (SELECT PlayerCreationId FROM PlayerCreations) DO
@@ -576,21 +736,91 @@ BEGIN
 END");
 			
 			//Triggers
+			migrationBuilder.Sql(@"CREATE TRIGGER `BeforeUsersUpdate` BEFORE UPDATE ON `Users` FOR EACH ROW BEGIN
+	SET NEW.CreatorPointsPSV = NEW.CharacterCreatorPointsPSV+NEW.KartCreatorPointsPSV+NEW.TrackCreatorPointsPSV;
+	SET NEW.CreatorPointsPSP = NEW.CharacterCreatorPointsPSP+NEW.KartCreatorPointsPSP+NEW.TrackCreatorPointsPSP;
+   	SET NEW.CreatorPointsPS3 = NEW.CharacterCreatorPointsPS3+NEW.KartCreatorPointsPS3+NEW.TrackCreatorPointsPS3;
+   	SET NEW.CreatorPointsThisWeekPSV = NEW.CharacterCreatorPointsThisWeekPSV+NEW.KartCreatorPointsThisWeekPSV+NEW.TrackCreatorPointsThisWeekPSV;
+   	SET NEW.CreatorPointsThisWeekPSP = NEW.CharacterCreatorPointsThisWeekPSP+NEW.KartCreatorPointsThisWeekPSP+NEW.TrackCreatorPointsThisWeekPSP;
+   	SET NEW.CreatorPointsThisWeekPS3 = NEW.CharacterCreatorPointsThisWeekPS3+NEW.KartCreatorPointsThisWeekPS3+NEW.TrackCreatorPointsThisWeekPS3;
+   	SET NEW.CreatorPointsLastWeekPSV = NEW.CharacterCreatorPointsLastWeekPSV+NEW.KartCreatorPointsLastWeekPSV+NEW.TrackCreatorPointsLastWeekPSV;
+   	SET NEW.CreatorPointsLastWeekPSP = NEW.CharacterCreatorPointsLastWeekPSP+NEW.KartCreatorPointsLastWeekPSP+NEW.TrackCreatorPointsLastWeekPSP;
+   	SET NEW.CreatorPointsLastWeekPS3 = NEW.CharacterCreatorPointsLastWeekPS3+NEW.KartCreatorPointsLastWeekPS3+NEW.TrackCreatorPointsLastWeekPS3;
+   	
+   	SET NEW.TotalXPPSV = NEW.CreatorPointsPSV+NEW.ExperiencePointsPSV;
+   	SET NEW.TotalXPPSP = NEW.CreatorPointsPSP+NEW.ExperiencePointsPSP;
+   	SET NEW.TotalXPPS3 = NEW.CreatorPointsPS3+NEW.ExperiencePointsPS3;
+   	SET NEW.TotalXPThisWeekPSV = NEW.CreatorPointsThisWeekPSV+NEW.ExperiencePointsThisWeekPSV;
+   	SET NEW.TotalXPThisWeekPSP = NEW.CreatorPointsThisWeekPSP+NEW.ExperiencePointsThisWeekPSP;
+   	SET NEW.TotalXPThisWeekPS3 = NEW.CreatorPointsThisWeekPS3+NEW.ExperiencePointsThisWeekPS3;
+   	SET NEW.TotalXPLastWeekPSV = NEW.CreatorPointsLastWeekPSV+NEW.ExperiencePointsLastWeekPSV;
+   	SET NEW.TotalXPLastWeekPSP = NEW.CreatorPointsLastWeekPSP+NEW.ExperiencePointsLastWeekPSP;
+   	SET NEW.TotalXPLastWeekPS3 = NEW.CreatorPointsLastWeekPS3+NEW.ExperiencePointsLastWeekPS3;	
+END");
+			
 			migrationBuilder.Sql(@"CREATE TRIGGER `AfterUsersUpdate` AFTER UPDATE ON `Users` FOR EACH ROW BEGIN
 	IF (NEW.Username != OLD.Username) THEN
 		CALL UpdateScoresUsername(NEW.UserId, NEW.Username);
 		CALL UpdatePlayerCreationsUsername(NEW.UserId, NEW.Username);
 	END IF;
 END");
+			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationsInsert` AFTER INSERT ON `PlayerCreations` FOR EACH ROW BEGIN
+	IF (NEW.Type = 7) THEN
+		CALL UpdateUserTotalKarts(NEW.PlayerId, NEW.Platform);
+	ELSEIF (NEW.Type = 6) THEN
+		CALL UpdateUserTotalCharacters(NEW.PlayerId, NEW.Platform);
+	ELSEIF (NEW.Type = 2) THEN
+		CALL UpdateUserTotalTracks(NEW.PlayerId, NEW.Platform, NEW.IsMNR);
+	END IF;
+END");
 
 			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationsUpdate` AFTER UPDATE ON `PlayerCreations` FOR EACH ROW BEGIN
 	IF (NEW.RatingUp != OLD.RatingUp OR NEW.RatingDown != OLD.RatingDown OR NEW.RacesStarted != OLD.RacesStarted OR NEW.RacesFinished != OLD.RacesFinished OR NEW.Hearts != OLD.Hearts) THEN
 		CALL UpdatePlayerCreationCoolness(NEW.PlayerCreationId);
+	ELSEIF (NEW.Type != OLD.Type OR NEW.ModerationStatus != OLD.ModerationStatus) THEN
+		IF (OLD.Type = 7) THEN
+			CALL UpdateUserTotalKarts(NEW.PlayerId, NEW.Platform);
+		ELSEIF (OLD.Type = 6) THEN
+			CALL UpdateUserTotalCharacters(NEW.PlayerId, NEW.Platform);
+		ELSEIF (OLD.Type = 2) THEN
+			CALL UpdateUserTotalTracks(NEW.PlayerId, NEW.Platform, NEW.IsMNR);
+		END IF;
+	END IF;
+END");
+			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationsDelete` AFTER DELETE ON `PlayerCreations` FOR EACH ROW BEGIN
+	IF (OLD.Type = 7) THEN
+		CALL UpdateUserTotalKarts(OLD.PlayerId, OLD.Platform);
+	ELSEIF (OLD.Type = 6) THEN
+		CALL UpdateUserTotalCharacters(OLD.PlayerId, OLD.Platform);
+	ELSEIF (OLD.Type = 2) THEN
+		CALL UpdateUserTotalTracks(OLD.PlayerId, OLD.Platform, OLD.IsMNR);
 	END IF;
 END");
 			
 			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationPointsInsert` AFTER INSERT ON `PlayerCreationPoints` FOR EACH ROW BEGIN
 	CALL UpdatePlayerCreationPoints(NEW.PlayerCreationId);
+
+	IF (NEW.Type = 7) THEN
+		CALL UpdateUserKartCreatorPoints(NEW.PlayerId, NEW.Platform);
+	ELSEIF (NEW.Type = 6) THEN
+		CALL UpdateUserCharacterCreatorPoints(NEW.PlayerId, NEW.Platform);
+	ELSE
+		CALL UpdateUserTrackCreatorPoints(NEW.PlayerId, NEW.Platform);
+	END IF;
+END");
+			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationPointsDelete` AFTER DELETE ON `PlayerCreationPoints` FOR EACH ROW BEGIN
+	CALL UpdatePlayerCreationPoints(OLD.PlayerCreationId);
+
+	IF (OLD.Type = 7) THEN
+		CALL UpdateUserKartCreatorPoints(OLD.PlayerId, OLD.Platform);
+	ELSEIF (OLD.Type = 6) THEN
+		CALL UpdateUserCharacterCreatorPoints(OLD.PlayerId, OLD.Platform);
+	ELSE
+		CALL UpdateUserTrackCreatorPoints(OLD.PlayerId, OLD.Platform);
+	END IF;
 END");
 			
 			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationDownloadsInsert` AFTER INSERT ON `PlayerCreationDownloads` FOR EACH ROW BEGIN
@@ -617,6 +847,26 @@ END");
 	CALL UpdatePlayerCreationRating(NEW.PlayerCreationId);
 END");
 			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterExperiencePointsInsert` AFTER INSERT ON `PlayerExperiencePoints` FOR EACH ROW BEGIN
+	CALL UpdateUserExperiencePoints(NEW.PlayerId, NEW.Platform);
+END");
+			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterPointsInsert` AFTER INSERT ON `PlayerPoints` FOR EACH ROW BEGIN
+	CALL UpdateUserPoints(NEW.PlayerId, NEW.Platform);
+END");
+			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterRacesStartedInsert` AFTER INSERT ON `OnlineRacesStarted` FOR EACH ROW BEGIN
+	CALL UpdateUserOnlineRaces(NEW.PlayerId);
+END");
+			
+			migrationBuilder.Sql(@"CREATE TRIGGER `AfterRacesFinishedInsert` AFTER INSERT ON `OnlineRacesFinished` FOR EACH ROW BEGIN
+	CALL UpdateUserOnlineFinished(NEW.PlayerId);
+
+	IF (NEW.IsWinner=1) THEN
+		CALL UpdateUserOnlineWins(NEW.PlayerId);
+	END IF;
+END");
+			
 			//Events
 			migrationBuilder.Sql(@"CREATE EVENT `DailyRefresh`
 	ON SCHEDULE
@@ -633,15 +883,23 @@ END");
         protected override void Down(MigrationBuilder migrationBuilder)
         {//TODO: drop whatever was created
 	        migrationBuilder.Sql("DROP EVENT `DailyRefresh`");
+	        migrationBuilder.Sql("DROP TRIGGER `BeforeUsersUpdate`");
 	        migrationBuilder.Sql("DROP TRIGGER `AfterUsersUpdate`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationsInsert`");
 	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationsUpdate`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationsDelete`");
 	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationPointsInsert`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationPointsDelete`");
 	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationDownloadsInsert`");
 	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationViewsInsert`");
 	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationHeartsInsert`");
 	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationRacesStartedInsert`");
 	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationUniqueRacersInsert`");
 	        migrationBuilder.Sql("DROP TRIGGER `AfterCreationRatingsInsert`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterExperiencePointsInsert`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterPointsInsert`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterRacesStartedInsert`");
+	        migrationBuilder.Sql("DROP TRIGGER `AfterRacesFinishedInsert`");
 	        migrationBuilder.Sql("DROP PROCEDURE `RefreshAll`");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdateScoresUsername`");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationsUsername`");
@@ -660,6 +918,10 @@ END");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserTotalTracks`");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserTotalCharacters`");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserTotalKarts`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserCharacterCreatorPoints`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserKartCreatorPoints`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserTrackCreatorPoints`");
+	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserExperiencePoints`");
         }
     }
 }

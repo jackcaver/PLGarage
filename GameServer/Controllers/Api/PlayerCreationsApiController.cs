@@ -627,7 +627,9 @@ namespace GameServer.Controllers.Api
                     && x.ModerationStatus != ModerationStatus.BANNED
                     && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
-            query = query.OrderByDescending(x => x.PointsYesterday);
+            query = query.OrderByDescending(x => x.PointsYesterday)
+                .ThenByDescending(x => x.DownloadsCount)
+                .ThenBy(x => x.PlayerCreationId); // small edit to keep in line with top tracks (where there is a fallback in case not all 3 mods/karts or 5 tracks have xp earned)
 
             var total = query.Count();
 

@@ -233,9 +233,13 @@ namespace GameServer.Implementation.Common
         private static string GetTopTracksData(Database database)
         {
             var creations = database.PlayerCreations
-                .Include(p => p.Downloads)
-                .OrderByDescending(match => match.Downloads.Count)
-                .Where(match => match.Type == PlayerCreationType.TRACK && match.IsMNR && match.Platform == Platform.PS3)
+                .AsNoTracking()
+                .Where(match => match.Type == PlayerCreationType.TRACK && match.IsMNR && match.Platform == Platform.PS3
+                    && match.ModerationStatus != ModerationStatus.BANNED
+                    && match.ModerationStatus != ModerationStatus.ILLEGAL)
+                .OrderByDescending(match => match.PointsYesterday)
+                .ThenByDescending(match => match.DownloadsCount)
+                .ThenBy(match => match.PlayerCreationId)
                 .Take(5)
                 .ToList();
 

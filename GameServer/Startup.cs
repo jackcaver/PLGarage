@@ -2,11 +2,13 @@ using GameServer.Implementation.Common;
 using GameServer.Models;
 using GameServer.Models.Config;
 using GameServer.Utils;
+using LinqToDB.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
@@ -44,6 +46,7 @@ namespace GameServer
                         }
                     };
                 });
+            
             services.AddAuthorizationBuilder()
                 .SetDefaultPolicy(new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
@@ -55,7 +58,12 @@ namespace GameServer
                     .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
                     .RequireClaim(JWTUtils.Role, JWTUtils.RoleModerator)
                     .Build());
-            services.AddDbContext<Database>();
+
+            var connectionString = ServerConfig.Instance.MysqlConnectionString;
+            
+            services.AddDbContext<Database>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+                .UseProjectables().UseLinqToDB());
+            
             services.AddHostedService<DailyTickService>();
 
             IUGCStorage storage = UserGeneratedContentUtils.GetStorage(ServerConfig.Instance.Storage.Type);

@@ -47,7 +47,7 @@ namespace GameServer.Models.Config
         public bool BlockLBPK = false;
         public bool EnableRequestLogging = false;
         public bool EnablePlaceholderImage = true;
-        public bool EnableRateLimiting = true;
+        public bool EnableRateLimiting = false;
         public bool DeleteCreationData = true;
         public bool CreateDefaultModerator = true;
         public bool HideUnmoderatedCreationsFromSearch = false;

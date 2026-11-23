@@ -13,6 +13,7 @@ namespace GameServer.Models.PlayerData
         [ForeignKey(nameof(PlayerId))]
         public User Player { get; set; }
 
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime StartedAt { get; set; }
     }
 }

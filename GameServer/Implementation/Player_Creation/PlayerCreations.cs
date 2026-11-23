@@ -549,7 +549,7 @@ namespace GameServer.Implementation.Player_Creation
                         {
                             var c = database.PlayerCreations
                                 .First(match => match.PlayerCreationId == creation.id);
-                            CreateXp.Add(database, c, CreateXp.PerDownload, user.UserId);
+                            CreateExperience.Add(database, c, CreateExperience.PerDownload, user.UserId);
                         }
 
                         if (!session.IsMNR)

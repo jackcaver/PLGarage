@@ -192,7 +192,7 @@ namespace GameServer.Implementation.Common
                                 });
 
                                 if (info.IsMNR && creation.Type == PlayerCreationType.TRACK)
-                                    CreateXp.Add(database, creation);
+                                    CreateExperience.Add(database, creation);
 
                                 foreach (int playerId in info.PlayerIds)
                                 {
@@ -220,12 +220,12 @@ namespace GameServer.Implementation.Common
                                             if (character != null)
                                             {
                                                 database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = TimeUtils.Now });
-                                                CreateXp.Add(database, character);
+                                                CreateExperience.Add(database, character);
                                             }
                                             if (kart != null)
                                             {
                                                 database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = TimeUtils.Now });
-                                                CreateXp.Add(database, kart);
+                                                CreateExperience.Add(database, kart);
                                             }                          
                                         }
                                         else

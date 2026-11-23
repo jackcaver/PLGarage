@@ -1,12 +1,16 @@
 ﻿using GameServer.Models.Config;
 using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
+using LinqToDB.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameServer.Utils
 {
     public class Database : DbContext
     {
+        public Database() : base() {}
+        public Database(DbContextOptions options) : base(options) {}
+        
         public DbSet<User> Users { get; set; }
         public DbSet<HeartedProfile> HeartedProfiles { get; set; }
         public DbSet<PlayerCommentData> PlayerComments { get; set; }
@@ -51,10 +55,6 @@ namespace GameServer.Utils
         public DbSet<SessionData> Sessions { get; set; }
         public DbSet<ModeratorSession> ModeratorSessions { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder options) =>
-            options.UseMySql(ServerConfig.Instance.MysqlConnectionString, ServerVersion.AutoDetect(ServerConfig.Instance.MysqlConnectionString))
-                .UseProjectables();
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<PlayerCreationData>()
@@ -70,6 +70,23 @@ namespace GameServer.Utils
                 .HasDefaultValue(PrivacyType.AllowAll);
 
             base.OnModelCreating(modelBuilder);
+        }
+        
+        public static Database GetContext(int? commandTimeout = null) 
+        {
+            var options = new DbContextOptionsBuilder<Database>();
+
+            var connectionString = ServerConfig.Instance.MysqlConnectionString;
+            
+            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), mysqlOptions =>
+                {
+                    if (commandTimeout != null)
+                        mysqlOptions.CommandTimeout(commandTimeout);
+                })
+                .UseProjectables()
+                .UseLinqToDB();
+            
+            return new(options.Options);
         }
     }
 }

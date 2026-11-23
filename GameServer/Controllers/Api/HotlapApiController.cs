@@ -29,7 +29,7 @@ namespace GameServer.Controllers.Api
             PlayerCreationData track = database.PlayerCreations
                 .AsNoTracking()
                 .Include(c => c.Author)
-                .Include(c => c.Ratings)
+                .Include(c => c.RatingsData)
                 .FirstOrDefault(c => c.PlayerCreationId == hotlap.TrackId);
 
             if (track == null)

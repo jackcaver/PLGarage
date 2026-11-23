@@ -18,6 +18,7 @@ namespace GameServer.Models.PlayerData.PlayerCreations
         [ForeignKey(nameof(PlayerCreationId))]
         public PlayerCreationData Creation { get; set; }
 
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime ViewedAt { get; set; }
     }
 }

@@ -171,41 +171,6 @@ BEGIN
 	UPDATE PlayerCreations SET RacesStarted=racesStarted, RacesStartedThisWeek=racesStartedThisWeek, RacesStartedThisMonth=racesStartedThisMonth WHERE PlayerCreationId=creationId;
 END");
 
-            migrationBuilder.Sql(@"CREATE PROCEDURE `UpdatePlayerCreationCoolness`(
-	IN `creationId` INT
-)
-LANGUAGE SQL
-NOT DETERMINISTIC
-MODIFIES SQL DATA
-SQL SECURITY DEFINER
-COMMENT 'Updates player creation\'s coolness data'
-BEGIN
-	DECLARE ratingUpData, ratingDownData, racesStartedData, racesFinishedData, heartsData INT DEFAULT 0;
-    DECLARE coolness FLOAT DEFAULT 0;
-   
-    SELECT RatingUp, RatingDown, RacesStarted, RacesFinished, Hearts INTO ratingUpData, ratingDownData, racesStartedData, racesFinishedData, heartsData FROM PlayerCreations WHERE PlayerCreationId=creationId;
-   
-    IF(ratingUpData IS NULL) THEN
-		SET ratingUpData = 0;
-	END IF;
-   
-    IF(ratingDownData IS NULL) THEN
-		SET ratingDownData = 0;
-	END IF;
-   
-    IF(racesStartedData IS NULL) THEN
-		SET racesStartedData = 0;
-	END IF;
-   
-    IF(racesFinishedData IS NULL) THEN
-		SET racesFinishedData = 0;
-	END IF;
-   
-    SET coolness = (ratingUpData - ratingDownData) + ((racesStartedData + racesFinishedData) / 2) + heartsData;
-   
-	UPDATE PlayerCreations SET Coolness=coolness WHERE PlayerCreationId=creationId;
-END");
-
             migrationBuilder.Sql(@"CREATE PROCEDURE `UpdatePlayerCreationUniqueRacers`(
 	IN `creationId` INT
 )
@@ -731,7 +696,6 @@ BEGIN
 		CALL UpdatePlayerCreationRacesStarted(creation.PlayerCreationId);
 		CALL UpdatePlayerCreationUniqueRacers(creation.PlayerCreationId);
 		CALL UpdatePlayerCreationRating(creation.PlayerCreationId);
-		CALL UpdatePlayerCreationCoolness(creation.PlayerCreationId);
 	END FOR;
 END");
 			
@@ -755,7 +719,7 @@ END");
    	SET NEW.TotalXPThisWeekPS3 = NEW.CreatorPointsThisWeekPS3+NEW.ExperiencePointsThisWeekPS3;
    	SET NEW.TotalXPLastWeekPSV = NEW.CreatorPointsLastWeekPSV+NEW.ExperiencePointsLastWeekPSV;
    	SET NEW.TotalXPLastWeekPSP = NEW.CreatorPointsLastWeekPSP+NEW.ExperiencePointsLastWeekPSP;
-   	SET NEW.TotalXPLastWeekPS3 = NEW.CreatorPointsLastWeekPS3+NEW.ExperiencePointsLastWeekPS3;	
+   	SET NEW.TotalXPLastWeekPS3 = NEW.CreatorPointsLastWeekPS3+NEW.ExperiencePointsLastWeekPS3;
 END");
 			
 			migrationBuilder.Sql(@"CREATE TRIGGER `AfterUsersUpdate` AFTER UPDATE ON `Users` FOR EACH ROW BEGIN
@@ -775,10 +739,12 @@ END");
 	END IF;
 END");
 
+			migrationBuilder.Sql(@"CREATE TRIGGER `BeforeCreationsUpdate` BEFORE UPDATE ON `PlayerCreations` FOR EACH ROW BEGIN
+	SET NEW.Coolness = (NEW.RatingUp - NEW.RatingDown) + ((NEW.RacesStarted + NEW.RacesFinished) / 2) + NEW.Hearts;
+END");
+			
 			migrationBuilder.Sql(@"CREATE TRIGGER `AfterCreationsUpdate` AFTER UPDATE ON `PlayerCreations` FOR EACH ROW BEGIN
-	IF (NEW.RatingUp != OLD.RatingUp OR NEW.RatingDown != OLD.RatingDown OR NEW.RacesStarted != OLD.RacesStarted OR NEW.RacesFinished != OLD.RacesFinished OR NEW.Hearts != OLD.Hearts) THEN
-		CALL UpdatePlayerCreationCoolness(NEW.PlayerCreationId);
-	ELSEIF (NEW.Type != OLD.Type OR NEW.ModerationStatus != OLD.ModerationStatus) THEN
+	IF (NEW.Type != OLD.Type OR NEW.ModerationStatus != OLD.ModerationStatus) THEN
 		IF (OLD.Type = 7) THEN
 			CALL UpdateUserTotalKarts(NEW.PlayerId, NEW.Platform);
 		ELSEIF (OLD.Type = 6) THEN
@@ -908,7 +874,6 @@ END");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationViews`");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationDownloads`");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationPoints`");
-	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationCoolness`");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationUniqueRacers`");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdatePlayerCreationRating`");
 	        migrationBuilder.Sql("DROP PROCEDURE `UpdateUserOnlineRaces`");

@@ -1,4 +1,6 @@
 ﻿using GameServer.Models.PlayerData.PlayerCreations;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace GameServer.Models.Moderation
 {
@@ -7,7 +9,8 @@ namespace GameServer.Models.Moderation
         public int ID { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public string Type { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public PlayerCreationType Type { get; set; }
         public int PlayerID { get; set; }
         public string Username { get; set; }
         public int ParentPlayerID { get; set; }

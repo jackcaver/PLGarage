@@ -547,25 +547,9 @@ namespace GameServer.Implementation.Player_Creation
 
                         if (session.IsMNR)
                         {
-<<<<<<< HEAD
-                            CreateXp.Add(database, Creation, CreateXp.PerDownload, User.UserId);
-=======
-                            var pointData = database.PlayerCreations
-                                .Select(c => new { c.PlayerCreationId, c.PlayerId, c.Platform, c.Type })
-                                .FirstOrDefault(match => match.PlayerCreationId == creation.id);
-                            if (pointData != null)
-                            {
-                                database.PlayerCreationPoints.Add(new PlayerCreationPoint
-                                {
-                                    PlayerCreationId = pointData.PlayerCreationId,
-                                    PlayerId = pointData.PlayerId,
-                                    Platform = pointData.Platform,
-                                    Type = pointData.Type,
-                                    CreatedAt = TimeUtils.Now,
-                                    Amount = 100
-                                });
-                            }
->>>>>>> upstream/dev
+                            var c = database.PlayerCreations
+                                .First(match => match.PlayerCreationId == creation.id);
+                            CreateXp.Add(database, c, CreateXp.PerDownload, user.UserId);
                         }
 
                         if (!session.IsMNR)
@@ -591,11 +575,13 @@ namespace GameServer.Implementation.Player_Creation
             }
 
             // pioneer racer fix: when a new track is raced, pioneer racer is looking for it to report 0 races started, so this reports 0 only if the creation is starting its first race, otherwise everything behaves like normal
-            int racesStarted = Creation.RacesStartedCount;
+            int racesStarted = creation.races_started;
             if (!IsCounted && session?.User != null && racesStarted == 1 &&
-                Creation.Type == PlayerCreationType.TRACK)
+                creation.player_creation_type == PlayerCreationType.TRACK.ToString())
             {
-                DateTime firstRace = Creation.RacesStarted.Min(race => race.StartedAt);
+                DateTime firstRace = database.PlayerCreationRacesStarted
+                    .Where(race => race.PlayerCreationId == creation.id)
+                    .Min(race => race.StartedAt);
                 bool wasInFirstRace = database.OnlineRacesStarted.Any(race =>
                     race.PlayerId == session.UserId &&
                     race.StartedAt >= firstRace.AddSeconds(-10) &&
@@ -609,88 +595,7 @@ namespace GameServer.Implementation.Player_Creation
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },
                 response = [
-<<<<<<< HEAD
-                    new player_creation
-                    {
-                        id = Creation.PlayerCreationId,
-                        ai = Creation.AI,
-                        associated_item_ids = Creation.AssociatedItemIds,
-                        auto_reset = Creation.AutoReset,
-                        battle_friendly_fire = Creation.BattleFriendlyFire,
-                        battle_kill_count = Creation.BattleKillCount,
-                        battle_time_limit = Creation.BattleTimeLimit,
-                        coolness = Creation.Coolness,
-                        created_at = Creation.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        description = Creation.Description,
-                        difficulty = Creation.Difficulty.ToString(),
-                        dlc_keys = Creation.DLCKeys ?? "",
-                        downloads = Creation.DownloadsCount,
-                        downloads_last_week = Creation.DownloadsLastWeek,
-                        downloads_this_week = Creation.DownloadsThisWeek,
-                        first_published = Creation.FirstPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        last_published = Creation.LastPublished.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        hearts = Creation.HeartsCount,
-                        is_remixable = Creation.IsRemixable,
-                        is_team_pick = Creation.IsTeamPick,
-                        level_mode = Creation.LevelMode,
-                        longest_drift = Creation.LongestDrift,
-                        longest_hang_time = Creation.LongestHangTime,
-                        max_humans = Creation.MaxHumans,
-                        name = Creation.Name,
-                        num_laps = Creation.NumLaps,
-                        num_racers = Creation.NumRacers,
-                        platform = Creation.Platform.ToString(),
-                        player_creation_type = (Creation.Type == PlayerCreationType.STORY ? PlayerCreationType.TRACK : Creation.Type).ToString(),
-                        player_id = Creation.PlayerId,
-                        races_finished = Creation.RacesFinished,
-                        races_started = racesStarted,
-                        races_started_this_month = Creation.RacesStartedThisMonth,
-                        races_started_this_week = Creation.RacesStartedThisWeek,
-                        races_won = Creation.RacesWon,
-                        race_type = Creation.RaceType.ToString(),
-                        rank = Creation.GetRank(database),
-                        rating_down = Creation.RatingDown,
-                        rating_up = Creation.RatingUp,
-                        scoreboard_mode = Creation.ScoreboardMode,
-                        speed = Creation.Speed.ToString(),
-                        tags = Creation.Tags,
-                        track_theme = Creation.TrackTheme,
-                        unique_racer_count = Creation.UniqueRacerCount,
-                        updated_at = Creation.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                        username = Creation.Author.Username,
-                        user_tags = Creation.UserTags,
-                        version = Creation.Version,
-                        views = Creation.ViewsCount,
-                        views_last_week = Creation.ViewsLastWeek,
-                        views_this_week = Creation.ViewsThisWeek,
-                        votes = Creation.Votes,
-                        weapon_set = Creation.WeaponSet,
-                        data_md5 = download ? storage.CalculateMD5(id, "data.bin") : null,
-                        data_size = download ? storage.CalculateSize(id, "data.bin").ToString() : null,
-                        preview_md5 = download ? storage.CalculateMD5(id, "preview_image.png") : null,
-                        preview_size = download ? storage.CalculateSize(id, "preview_image.png").ToString() : null,
-                        //MNR
-                        // TODO: Remove some DB queries here and use one to many links in EF model
-                        points = Creation.PointsAmount,
-                        points_last_week = Creation.PointsLastWeek,
-                        points_this_week = Creation.PointsThisWeek,
-                        points_today = Creation.PointsToday,
-                        points_yesterday = Creation.PointsYesterday,
-                        rating = Creation.Rating.ToString("0.0", CultureInfo.InvariantCulture),
-                        star_rating = Creation.StarRating,
-                        original_player_id = Creation.OriginalPlayerId,
-                        original_player_username = database.Users.Any(match => match.UserId == Creation.OriginalPlayerId) ? database.Users.FirstOrDefault(match => match.UserId == Creation.OriginalPlayerId).Username : "",
-                        parent_creation_id = Creation.ParentCreationId != 0 ? Creation.ParentCreationId.ToString() : "",
-                        parent_creation_name = database.PlayerCreations.Any(match => match.PlayerCreationId == Creation.ParentCreationId) ? database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == Creation.ParentCreationId).Name : "",
-                        parent_player_id = Creation.ParentPlayerId != 0 ? Creation.ParentPlayerId.ToString() : "",
-                        parent_player_username = database.Users.Any(match => match.UserId == Creation.ParentPlayerId) ? database.Users.FirstOrDefault(match => match.UserId == Creation.ParentPlayerId).Username : "",
-                        best_lap_time = Creation.BestLapTime,
-                        moderation_status = Creation.ModerationStatus.ToString(),
-                        moderation_status_id = (int)Creation.ModerationStatus,
-                    }
-=======
                     creation
->>>>>>> upstream/dev
                 ]
             };
             return resp.Serialize();

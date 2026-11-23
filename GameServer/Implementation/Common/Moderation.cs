@@ -411,7 +411,7 @@ namespace GameServer.Implementation.Common
                 ID = creation.PlayerCreationId,
                 Name = creation.Name,
                 Description = creation.Description,
-                Type = creation.Type.ToString(),
+                Type = creation.Type,
                 OriginalPlayerID = creation.OriginalPlayerId,
                 OriginalUsername = database.Users
                     .Where(user => user.UserId == creation.OriginalPlayerId)
@@ -1310,7 +1310,7 @@ namespace GameServer.Implementation.Common
                     ID = creation.PlayerCreationId,
                     Name = creation.Name,
                     Description = creation.Description,
-                    Type = creation.Type.ToString(),
+                    Type = creation.Type,
                     OriginalPlayerID = creation.OriginalPlayerId,
                     OriginalUsername = database.Users
                         .Where(user => user.UserId == creation.OriginalPlayerId)

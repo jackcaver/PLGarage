@@ -33,20 +33,8 @@ namespace GameServer.Controllers.Player
         public IActionResult GetSkillLevel()
         {
             var session = Session.GetSession(database, User);
-<<<<<<< HEAD
-
-            // Logs show that this request causes commas to get converted to %2c so levels disappear when there is more than one in the lobby
-            int[] ids = string.Join(",", Request.Query["id"].ToArray())
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(value => int.TryParse(value, out int parsed) ? parsed : -1)
-                .Where(parsed => parsed > 0)
-                .ToArray();
-
-            return Content(PlayerProfiles.GetSkillLevel(database, session, ids), "application/xml;charset=utf-8");
-=======
             string[] id = Request.Query.Keys.Contains("id") ? Request.Query["id"].ToString().Split(',') : [];
             return Content(PlayerProfiles.GetSkillLevel(database, session, id), "application/xml;charset=utf-8");
->>>>>>> upstream/dev
         }
 
         [Route("skill_levels.xml")]

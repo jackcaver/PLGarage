@@ -17,9 +17,9 @@ namespace GameServer
         private static void CreateLogger()
         {
             var log = new LoggerConfiguration()
-if DEBUG
+#if DEBUG
                 .MinimumLevel.Debug()
-endif
+#endif
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
                 //.MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)

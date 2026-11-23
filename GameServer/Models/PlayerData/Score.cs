@@ -37,26 +37,5 @@ namespace GameServer.Models.PlayerData
         public float Latitude { get; set; }
         public float Longitude { get; set; }
         public string LocationTag { get; set; }
-<<<<<<< HEAD
-
-        public int GetRank(Database database, SortColumn sortColumn)
-        {
-            var scores = database.Scores.Where(match => match.SubKeyId == SubKeyId
-                && match.SubGroupId == SubGroupId
-                && match.Platform == Platform
-                && match.PlaygroupSize == PlaygroupSize
-                && !match.User.IsBanned);
-
-            if (sortColumn == SortColumn.finish_time)
-                scores = scores.OrderBy(s => s.FinishTime);
-            if (sortColumn == SortColumn.score)
-                scores = scores.OrderByDescending(s => s.Points);
-            if (sortColumn == SortColumn.best_lap_time)
-                scores = scores.OrderBy(s => s.BestLapTime);
-
-            return scores.Select(s => s.Id).ToList().FindIndex(match => match == Id)+1;
-        }
-=======
->>>>>>> upstream/dev
     }
 }

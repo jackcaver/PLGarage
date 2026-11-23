@@ -5,7 +5,7 @@ using GameServer.Utils;
 
 namespace GameServer.Implementation.Player_Creation
 {
-    public static class CreateXp
+    public static class CreateExperience
     {
         public const int PerRace = 25; // remember these for xp modifier
         public const int PerDownload = 100;

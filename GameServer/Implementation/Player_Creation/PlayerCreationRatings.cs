@@ -135,7 +135,7 @@ namespace GameServer.Implementation.Player_Creation
             if (newComment != null && (rating == null || rating.Comment == null))
             {
                 if (session.IsMNR)
-                    CreateXp.Add(database, Creation, CreateXp.PerComment, user.UserId);
+                    CreateExperience.Add(database, Creation, CreateExperience.PerComment, user.UserId);
                 if (session.IsMNR && session.Platform == Platform.PS3)
                 {
                     database.MailMessages.Add(new MailMessageData
@@ -155,7 +155,7 @@ namespace GameServer.Implementation.Player_Creation
 
             if (player_creation_rating.rating != 0 && (rating == null || rating.Rating == 0) && session.IsMNR)
             {
-                CreateXp.Add(database, Creation, CreateXp.PerRating, user.UserId);
+                CreateExperience.Add(database, Creation, CreateExperience.PerRating, user.UserId);
                 database.SaveChanges();
             }
 

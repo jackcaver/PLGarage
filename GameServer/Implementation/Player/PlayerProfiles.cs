@@ -1,4 +1,5 @@
 ﻿using GameServer.Models;
+using GameServer.Implementation.Common;
 using GameServer.Models.PlayerData;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
@@ -9,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using EntityFrameworkCore.Projectables.Extensions;
 
 namespace GameServer.Implementation.Player
 {
@@ -80,6 +82,7 @@ namespace GameServer.Implementation.Player
         public static string GetPlayerInfo(Database database, int id, SessionData session)
         {
             var requestedBy = session.User;
+            var presence = Session.GetPresence(database, id, session.Platform, session.IsMNR).ToString();
             var profile = database.Users
                 .Select(user => new PlayerProfileResponse {
                     id = user.UserId,
@@ -105,9 +108,9 @@ namespace GameServer.Implementation.Player
                     online_wins_this_week = user.OnlineWinsThisWeek,
                     player_creation_quota = user.Quota,
                     points = user.Points(session.Platform).ToString("0.0", CultureInfo.InvariantCulture),
-                    presence = user.Presence(database, session.Platform, session.IsMNR).ToString(),
+                    presence = presence,
                     quote = user.Quote != null ? user.Quote.Replace("\0", "") : "",
-                    rank = (int)Sql.Window.RowNumber(f => f.OrderBy(user.TotalXP(session.Platform))),
+                    rank = (int)Sql.Window.RowNumber(f => f.OrderByDesc(user.TotalXP(session.Platform))),
                     updated_at = user.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
                     username = user.Username,
                     win_streak = user.WinStreak,
@@ -130,6 +133,7 @@ namespace GameServer.Implementation.Player
                     longest_drift = user.LongestDrift,
                     longest_hang_time = user.LongestHangTime.ToString(CultureInfo.InvariantCulture)
                 })
+                .ExpandProjectables()
                 .ToLinqToDB()
                 .FirstOrDefault(match => match.player_id == id);
 

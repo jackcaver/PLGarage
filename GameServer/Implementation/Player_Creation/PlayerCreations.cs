@@ -13,6 +13,7 @@ using System.IO;
 using GameServer.Models.Config;
 using LinqToDB;
 using LinqToDB.EntityFrameworkCore;
+using EntityFrameworkCore.Projectables.Extensions;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -962,6 +963,7 @@ namespace GameServer.Implementation.Player_Creation
                 })
                 .Skip(pageStart)
                 .Take(per_page)
+                .ExpandProjectables()
                 .ToLinqToDB()
                 .ToList();
 
@@ -1142,6 +1144,7 @@ namespace GameServer.Implementation.Player_Creation
                     score = score.Points,
                     finish_time = score.FinishTime
                 })
+                .ExpandProjectables()
                 .ToLinqToDB();
             var comments = database.PlayerCreationComments
                 .Where(match => match.PlayerCreationId == id)
@@ -1392,6 +1395,7 @@ namespace GameServer.Implementation.Player_Creation
                     votes = track.Votes,
                     weapon_set = track.WeaponSet
                 })
+                .ExpandProjectables()
                 .ToLinqToDB()
                 .ToList();
 

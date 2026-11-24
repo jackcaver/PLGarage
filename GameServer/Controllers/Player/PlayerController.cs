@@ -5,8 +5,6 @@ using GameServer.Models.PlayerData;
 using GameServer.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Linq;
 
 namespace GameServer.Controllers.Player
 {

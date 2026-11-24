@@ -10,6 +10,7 @@ using LinqToDB.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using EntityFrameworkCore.Projectables.Extensions;
 
 namespace GameServer.Implementation.Player
 {
@@ -92,7 +93,7 @@ namespace GameServer.Implementation.Player
                 kart_idx = score.KartIdx,
                 skill_level_id = score.User.SkillLevelId(platform),
                 skill_level_name = score.User.SkillLevelName(platform)
-            }).ToLinqToDB();
+            }).ExpandProjectables().ToLinqToDB();
 
             var myStats = new SubLeaderboardPlayer { };
 
@@ -204,7 +205,7 @@ namespace GameServer.Implementation.Player
                 sub_group_id = score.SubGroupId,
                 sub_key_id = score.SubKeyId,
                 updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
-            }).ToLinqToDB();
+            }).ExpandProjectables().ToLinqToDB();
             
             var myStats = finalQuery
                 .Select(s => new { s.player_id, s.rank })
@@ -292,7 +293,7 @@ namespace GameServer.Implementation.Player
                 latitude = score.Latitude,
                 longitude = score.Longitude,
                 location_tag = score.LocationTag ?? "Unnamed location"
-            }).ToLinqToDB();
+            }).ExpandProjectables().ToLinqToDB();
 
             var scores = finalQuery.Skip(pageStart).Take(per_page).ToList();
 
@@ -530,7 +531,7 @@ namespace GameServer.Implementation.Player
                                   user.TotalXP(platform))),
                 skill_level_id = user.SkillLevelId(platform),
                 skill_level_name = user.SkillLevelName(platform)
-            }).ToLinqToDB();
+            }).ExpandProjectables().ToLinqToDB();
             var finalScoresQuery = scoresQuery.Select(score => new LeaderboardPlayer
             {
                 best_lap_time = score.BestLapTime,
@@ -549,7 +550,7 @@ namespace GameServer.Implementation.Player
                     sort_column == SortColumn.best_lap_time ? f.OrderBy(score.BestLapTime) : f.OrderByDesc(score.Points)),
                 skill_level_id = score.User.SkillLevelId(platform),
                 skill_level_name = score.User.SkillLevelName(platform)
-            }).ToLinqToDB();
+            }).ExpandProjectables().ToLinqToDB();
             
             if (game_type == GameType.OVERALL_CREATORS || game_type == GameType.CHARACTER_CREATORS 
                 || game_type == GameType.TRACK_CREATORS || game_type == GameType.KART_CREATORS 
@@ -800,6 +801,7 @@ namespace GameServer.Implementation.Player
                     skill_level_id = user.SkillLevelId(platform),
                     skill_level_name = user.SkillLevelName(platform)
                 })
+                .ExpandProjectables()
                 .ToLinqToDB()
                 .FirstOrDefault(match => match.player_id == player_id);
             
@@ -824,6 +826,7 @@ namespace GameServer.Implementation.Player
                     skill_level_id = score.User.SkillLevelId(platform),
                     skill_level_name = score.User.SkillLevelName(platform)
                 })
+                .ExpandProjectables()
                 .ToLinqToDB()
                 .FirstOrDefault(match => match.player_id == player_id);
 

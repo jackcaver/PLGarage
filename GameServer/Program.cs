@@ -22,8 +22,10 @@ namespace GameServer
 #endif
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-                //.MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
-                .WriteTo.Console()
+#if RELEASE
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
+#endif                
+		.WriteTo.Console()
                 .CreateLogger();
 
             Log.Logger = log;

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using GameServer.Implementation.Common;
+using GameServer.Implementation.Player_Creation;
 using GameServer.Models;
 using GameServer.Models.GameBrowser;
 using GameServer.Models.PlayerData;
@@ -171,10 +172,17 @@ namespace GameServer.Controllers.Common
                     Version = Track.Version
                 });
             }
-            database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = game.track_idx, StartedAt = TimeUtils.Now });
-            Track.RacesFinished++;
-            if (game_player_stats.is_winner == 1)
-                Track.RacesWon++;
+            
+            if (game.game_type == GameType.ONLINE_HOT_SEAT_RACE && score == null)
+            {
+                database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = game.track_idx, StartedAt = TimeUtils.Now });
+                Track.RacesFinished++;
+                if (game_player_stats.is_winner == 1)
+                    Track.RacesWon++;
+
+                if (Track.Type == PlayerCreationType.TRACK)
+                    CreateExperience.Add(database, Track);
+            }
 
             if (session.IsMNR)
             {
@@ -183,40 +191,30 @@ namespace GameServer.Controllers.Common
                 
                 if (character != null)
                 {
-                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId });
-                    character.RacesFinished++;
-                    if (game_player_stats.is_winner == 1)
-                        character.RacesWon++;
-
                     if (game_player_stats.longest_drift > character.LongestDrift)
                         character.LongestDrift = game_player_stats.longest_drift;
                     if (game_player_stats.longest_hang_time > character.LongestHangTime)
                         character.LongestHangTime = game_player_stats.longest_hang_time;
-                    if (game_player_stats.best_lap_time > character.BestLapTime)
-                        character.BestLapTime = game_player_stats.longest_hang_time;
+                    if (game_player_stats.best_lap_time > 0 && (character.BestLapTime <= 0 || game_player_stats.best_lap_time < character.BestLapTime))
+                        character.BestLapTime = game_player_stats.best_lap_time;
                 }
 
                 if (kart != null)
                 {
-                    database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId });
-                    kart.RacesFinished++;
-                    if (game_player_stats.is_winner == 1)
-                        kart.RacesWon++;
-
                     if (game_player_stats.longest_drift > kart.LongestDrift)
                         kart.LongestDrift = game_player_stats.longest_drift;
                     if (game_player_stats.longest_hang_time > kart.LongestHangTime)
                         kart.LongestHangTime = game_player_stats.longest_hang_time;
-                    if (game_player_stats.best_lap_time > kart.BestLapTime)
-                        kart.BestLapTime = game_player_stats.longest_hang_time;
+                    if (game_player_stats.best_lap_time > 0 && (kart.BestLapTime <= 0 || game_player_stats.best_lap_time < kart.BestLapTime))
+                        kart.BestLapTime = game_player_stats.best_lap_time;
                 }
 
                 if (game_player_stats.longest_drift > Track.LongestDrift)
                     Track.LongestDrift = game_player_stats.longest_drift;
                 if (game_player_stats.longest_hang_time > Track.LongestHangTime)
                     Track.LongestHangTime = game_player_stats.longest_hang_time;
-                if (game_player_stats.best_lap_time > Track.BestLapTime)
-                    Track.BestLapTime = game_player_stats.longest_hang_time;
+                if (game_player_stats.best_lap_time > 0 && (Track.BestLapTime <= 0 || game_player_stats.best_lap_time < Track.BestLapTime))
+                    Track.BestLapTime = game_player_stats.best_lap_time;
             }
 
             if (!session.IsMNR)

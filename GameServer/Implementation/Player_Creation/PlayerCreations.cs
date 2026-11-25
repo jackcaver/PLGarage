@@ -5,6 +5,7 @@ using GameServer.Models.Response;
 using GameServer.Utils;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using GameServer.Models.PlayerData.PlayerCreations;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ using System.IO;
 using GameServer.Models.Config;
 using LinqToDB;
 using LinqToDB.EntityFrameworkCore;
+using EntityFrameworkCore.Projectables.Extensions;
 
 namespace GameServer.Implementation.Player_Creation
 {
@@ -546,21 +548,9 @@ namespace GameServer.Implementation.Player_Creation
 
                         if (session.IsMNR)
                         {
-                            var pointData = database.PlayerCreations
-                                .Select(c => new { c.PlayerCreationId, c.PlayerId, c.Platform, c.Type })
-                                .FirstOrDefault(match => match.PlayerCreationId == creation.id);
-                            if (pointData != null)
-                            {
-                                database.PlayerCreationPoints.Add(new PlayerCreationPoint
-                                {
-                                    PlayerCreationId = pointData.PlayerCreationId,
-                                    PlayerId = pointData.PlayerId,
-                                    Platform = pointData.Platform,
-                                    Type = pointData.Type,
-                                    CreatedAt = TimeUtils.Now,
-                                    Amount = 100
-                                });
-                            }
+                            var c = database.PlayerCreations
+                                .First(match => match.PlayerCreationId == creation.id);
+                            CreateExperience.Add(database, c, CreateExperience.PerDownload, user.UserId);
                         }
 
                         if (!session.IsMNR)
@@ -583,6 +573,23 @@ namespace GameServer.Implementation.Player_Creation
                         database.SaveChanges();
                     }
                 }
+            }
+
+            // pioneer racer fix: when a new track is raced, pioneer racer is looking for it to report 0 races started, so this reports 0 only if the creation is starting its first race, otherwise everything behaves like normal
+            int racesStarted = creation.races_started;
+            if (!IsCounted && session?.User != null && racesStarted == 1 &&
+                creation.player_creation_type == PlayerCreationType.TRACK.ToString())
+            {
+                DateTime firstRace = database.PlayerCreationRacesStarted
+                    .Where(race => race.PlayerCreationId == creation.id)
+                    .Min(race => race.StartedAt);
+                bool wasInFirstRace = database.OnlineRacesStarted.Any(race =>
+                    race.PlayerId == session.UserId &&
+                    race.StartedAt >= firstRace.AddSeconds(-10) &&
+                    race.StartedAt <= firstRace.AddSeconds(10)); // this is being generous in case of weird emulator quirks
+
+                if (wasInFirstRace)
+                    racesStarted = 0; // temporarily send this in the response to trigger the achivement, while not permanently altering anything in the db
             }
 
             var resp = new Response<List<player_creation>>
@@ -956,6 +963,7 @@ namespace GameServer.Implementation.Player_Creation
                 })
                 .Skip(pageStart)
                 .Take(per_page)
+                .ExpandProjectables()
                 .ToLinqToDB()
                 .ToList();
 
@@ -1136,6 +1144,7 @@ namespace GameServer.Implementation.Player_Creation
                     score = score.Points,
                     finish_time = score.FinishTime
                 })
+                .ExpandProjectables()
                 .ToLinqToDB();
             var comments = database.PlayerCreationComments
                 .Where(match => match.PlayerCreationId == id)
@@ -1386,6 +1395,7 @@ namespace GameServer.Implementation.Player_Creation
                     votes = track.Votes,
                     weapon_set = track.WeaponSet
                 })
+                .ExpandProjectables()
                 .ToLinqToDB()
                 .ToList();
 

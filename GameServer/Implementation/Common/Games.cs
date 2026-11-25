@@ -4,6 +4,7 @@ using GameServer.Models.PlayerData;
 using GameServer.Models.PlayerData.PlayerCreations;
 using GameServer.Models.Request;
 using GameServer.Models.Response;
+using GameServer.Implementation.Player_Creation;
 using GameServer.Utils;
 using System.Collections.Generic;
 using System.Linq;
@@ -153,7 +154,11 @@ namespace GameServer.Implementation.Common
                 var track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.Track);
 
                 if (track != null)
+                {
                     database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = track.PlayerCreationId, StartedAt = TimeUtils.Now });
+                    if (track.Type == PlayerCreationType.TRACK)
+                        CreateExperience.Add(database, track);
+                }
 
                 foreach (var player in game.Players)
                 {
@@ -165,15 +170,21 @@ namespace GameServer.Implementation.Common
                     player.State = GameState.ACTIVE;
 
                     var Player = database.Users.FirstOrDefault(match => match.UserId == player.PlayerId);
-                    if (Player == null)
+                    if (Player != null)
                     {
                         var character = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.CHARACTER && match.PlayerCreationId == Player.CharacterIdx);
                         var kart = database.PlayerCreations.FirstOrDefault(match => match.Type == PlayerCreationType.KART && match.PlayerCreationId == Player.KartIdx);
 
                         if (character != null)
+                        {
                             database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = character.PlayerCreationId, StartedAt = TimeUtils.Now });
+                            CreateExperience.Add(database, character);
+                        }       
                         if (kart != null)
+                        {
                             database.PlayerCreationRacesStarted.Add(new PlayerCreationRaceStarted { PlayerCreationId = kart.PlayerCreationId, StartedAt = TimeUtils.Now });
+                            CreateExperience.Add(database, kart);
+                        }
                     }
                 }
             }
@@ -491,8 +502,8 @@ namespace GameServer.Implementation.Common
                     character.LongestDrift = stats.longest_drift;
                 if (stats.longest_hang_time > character.LongestHangTime)
                     character.LongestHangTime = stats.longest_hang_time;
-                if (stats.best_lap_time > character.BestLapTime)
-                    character.BestLapTime = stats.longest_hang_time;
+                if (stats.best_lap_time > 0 && (character.BestLapTime <= 0 || stats.best_lap_time < character.BestLapTime))
+                    character.BestLapTime = stats.best_lap_time;
             }
 
             if (kart != null)
@@ -501,8 +512,8 @@ namespace GameServer.Implementation.Common
                     kart.LongestDrift = stats.longest_drift;
                 if (stats.longest_hang_time > kart.LongestHangTime)
                     kart.LongestHangTime = stats.longest_hang_time;
-                if (stats.best_lap_time > kart.BestLapTime)
-                    kart.BestLapTime = stats.longest_hang_time;
+                if (stats.best_lap_time > 0 && (kart.BestLapTime <= 0 || stats.best_lap_time < kart.BestLapTime))
+                    kart.BestLapTime = stats.best_lap_time;
             }
 
             var Track = database.PlayerCreations.FirstOrDefault(match => match.PlayerCreationId == game.Track);
@@ -513,8 +524,8 @@ namespace GameServer.Implementation.Common
                     Track.LongestDrift = stats.longest_drift;
                 if (stats.longest_hang_time > Track.LongestHangTime)
                     Track.LongestHangTime = stats.longest_hang_time;
-                if (stats.best_lap_time > Track.BestLapTime)
-                    Track.BestLapTime = stats.longest_hang_time;
+                if (stats.best_lap_time > 0 && (Track.BestLapTime <= 0 || stats.best_lap_time < Track.BestLapTime))
+                    Track.BestLapTime = stats.best_lap_time;
             }
 
             database.SaveChanges();

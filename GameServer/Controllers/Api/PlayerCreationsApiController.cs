@@ -61,13 +61,17 @@ namespace GameServer.Controllers.Api
                 );
 
             var lbpkTotal = q.Count(x => !x.IsMNR);
-            var mnrTotal = q.Count(x => x.IsMNR);
+            var mnrPS3Total = q.Count(x => x.IsMNR && x.Platform == Platform.PS3);
+            var mnrPSPTotal = q.Count(x => x.IsMNR && x.Platform == Platform.PSP);
+            var mnrPSVTotal = q.Count(x => x.IsMNR && x.Platform == Platform.PSV);
 
             return Json(new
             {
                 total,
                 totalLBPK = lbpkTotal,
-                totalMNR = mnrTotal,
+                totalMNRPS3 = mnrPS3Total,
+                totalMNRPSP = mnrPSPTotal,
+                totalMNRPSV = mnrPSVTotal,
                 lbpk = lbpkTypeCounts,
                 mnr = mnrPlatformCounts
             });
@@ -95,7 +99,7 @@ namespace GameServer.Controllers.Api
                     x.Tags,
                     x.Platform,
                     x.IsMNR,
-                    x.ModerationStatus,
+                    ModerationStatus = x.ModerationStatus == 0 ? "APPROVED" : x.ModerationStatus.ToString(),
                     x.CreatedAt,
                     pointsAllTime = x.Points,
                     pointsThisWeek = x.PointsThisWeek,
@@ -178,13 +182,12 @@ namespace GameServer.Controllers.Api
 
             var q = database.PlayerCreations
                 .AsNoTracking()
-                .Where(x => x.Type != PlayerCreationType.DELETED 
-                && x.Type != PlayerCreationType.STORY
-                && x.Type != PlayerCreationType.PHOTO
-                && x.Type != PlayerCreationType.PLANET
-                && x.Type != PlayerCreationType.ITEM
-                && x.ModerationStatus != ModerationStatus.BANNED
-                && x.ModerationStatus != ModerationStatus.ILLEGAL);
+                .Where(x =>
+                    (x.Type == PlayerCreationType.CHARACTER
+                    || x.Type == PlayerCreationType.KART
+                    || x.Type == PlayerCreationType.TRACK)
+                    && x.ModerationStatus != ModerationStatus.BANNED
+                    && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
             if (type.HasValue)
             {
@@ -310,13 +313,16 @@ namespace GameServer.Controllers.Api
             var q = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.Author.Username == username
-                && x.Type != PlayerCreationType.DELETED
-                && x.Type != PlayerCreationType.PHOTO
-                && x.Type != PlayerCreationType.PLANET
-                && x.Type != PlayerCreationType.ITEM
+                && (x.Type == PlayerCreationType.CHARACTER
+                || x.Type == PlayerCreationType.KART
+                || x.Type == PlayerCreationType.TRACK)
                 && x.ModerationStatus != ModerationStatus.BANNED
-                && x.ModerationStatus != ModerationStatus.ILLEGAL
-                && (!isMnr.HasValue || x.IsMNR == isMnr.Value));
+                && x.ModerationStatus != ModerationStatus.ILLEGAL);
+
+            if (isMnr.HasValue)
+            {
+                q = q.Where(x => x.IsMNR == isMnr.Value);
+            }
 
             if (type.HasValue)
             {
@@ -493,21 +499,21 @@ namespace GameServer.Controllers.Api
         [Route("/api/topmods")]
         public IActionResult GetTopMods([FromQuery] Platform platform = Platform.PS3)
         {
-            return JsonTopCreations(PlayerCreationType.CHARACTER, platform);
+            return TopCreations(PlayerCreationType.CHARACTER, platform);
         }
 
         [HttpGet]
         [Route("/api/topkarts")]
         public IActionResult GetTopKarts([FromQuery] Platform platform = Platform.PS3)
         {
-            return JsonTopCreations(PlayerCreationType.KART, platform);
+            return TopCreations(PlayerCreationType.KART, platform);
         }
 
         [HttpGet]
         [Route("/api/toptracks")]
         public IActionResult GetTopTracks([FromQuery] Platform platform = Platform.PS3)
         {
-            return JsonTopCreations(PlayerCreationType.TRACK, platform);
+            return TopCreations(PlayerCreationType.TRACK, platform);
         }
 
         [HttpGet]
@@ -519,8 +525,6 @@ namespace GameServer.Controllers.Api
                 .Where(x => x.Platform == platform
                     && !x.IsMNR
                     && x.Type == PlayerCreationType.TRACK
-                    && x.Type != PlayerCreationType.DELETED
-                    && x.Type != PlayerCreationType.STORY
                     && x.ModerationStatus != ModerationStatus.BANNED
                     && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
@@ -582,11 +586,7 @@ namespace GameServer.Controllers.Api
             var query = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.IsTeamPick
-                    && x.Type != PlayerCreationType.DELETED
-                    && x.Type != PlayerCreationType.STORY
-                    && x.Type != PlayerCreationType.PHOTO
-                    && x.Type != PlayerCreationType.PLANET
-                    && x.Type != PlayerCreationType.ITEM
+                    && x.Type == PlayerCreationType.TRACK
                     && x.ModerationStatus != ModerationStatus.BANNED
                     && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
@@ -623,7 +623,7 @@ namespace GameServer.Controllers.Api
             });
         }
 
-        private IActionResult JsonTopCreations(
+        private IActionResult TopCreations(
             PlayerCreationType playerCreationType,
             Platform platform)
         {
@@ -637,7 +637,9 @@ namespace GameServer.Controllers.Api
                     && x.ModerationStatus != ModerationStatus.BANNED
                     && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
-            query = query.OrderByDescending(x => x.PointsToday);
+            query = query.OrderByDescending(x => x.PointsYesterday)
+                .ThenByDescending(x => x.Downloads)
+                .ThenBy(x => x.PlayerCreationId); // small edit to keep in line with top tracks (where there is a fallback in case not all 3 mods/karts or 5 tracks have xp earned)
 
             var total = query.Count();
 
@@ -656,7 +658,7 @@ namespace GameServer.Controllers.Api
                     x.Tags,
                     x.CreatedAt,
                     x.UpdatedAt,
-                    pointsToday = x.PointsToday,
+                    pointsYesterday = x.PointsYesterday,
                     points = x.Points,
                     pointsThisWeek = x.PointsThisWeek,
                     pointsLastWeek = x.PointsLastWeek,
@@ -702,7 +704,7 @@ namespace GameServer.Controllers.Api
                 x.longestHangTime,
                 points = new
                 {
-                    today = x.pointsToday,
+                    yesterday = x.pointsYesterday,
                     all_time = x.points,
                     this_week = x.pointsThisWeek,
                     last_week = x.pointsLastWeek

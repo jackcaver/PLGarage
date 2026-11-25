@@ -10,6 +10,7 @@ using LinqToDB.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using EntityFrameworkCore.Projectables.Extensions;
 
 namespace GameServer.Implementation.Player
 {
@@ -24,7 +25,8 @@ namespace GameServer.Implementation.Player
                 .Include(s => s.User)
                 .Where(match => match.SubKeyId == sub_key_id && match.SubGroupId == sub_group_id 
                     && match.PlaygroupSize == playgroup_size && match.IsMNR == session.IsMNR 
-                    && match.Platform == platform);
+                    && match.Platform == platform
+                    && !match.User.IsBanned);
 
             UserGeneratedContentUtils.AddStoryLevel(database, sub_key_id);
 
@@ -91,7 +93,7 @@ namespace GameServer.Implementation.Player
                 kart_idx = score.KartIdx,
                 skill_level_id = score.User.SkillLevelId(platform),
                 skill_level_name = score.User.SkillLevelName(platform)
-            }).ToLinqToDB();
+            }).ExpandProjectables().ToLinqToDB();
 
             var myStats = new SubLeaderboardPlayer { };
 
@@ -167,7 +169,7 @@ namespace GameServer.Implementation.Player
                 .AsNoTracking()
                 .Where(match => match.SubKeyId == sub_key_id 
                     && match.SubGroupId == sub_group_id && match.PlaygroupSize == playgroup_size 
-                    && match.Platform == platform && match.IsMNR == session.IsMNR);
+                    && match.Platform == platform && match.IsMNR == session.IsMNR && !match.User.IsBanned);
             var user = session.User;
 
             if (sort_column == SortColumn.finish_time)
@@ -203,7 +205,7 @@ namespace GameServer.Implementation.Player
                 sub_group_id = score.SubGroupId,
                 sub_key_id = score.SubKeyId,
                 updated_at = score.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz")
-            }).ToLinqToDB();
+            }).ExpandProjectables().ToLinqToDB();
             
             var myStats = finalQuery
                 .Select(s => new { s.player_id, s.rank })
@@ -256,7 +258,7 @@ namespace GameServer.Implementation.Player
                 .Include(s => s.User)
                 .Where(match => match.PlayerId == user.UserId 
                     && match.SubGroupId == sub_group_id && match.SubKeyId == sub_key_id 
-                    && match.Platform == platform && match.IsMNR);
+                    && match.Platform == platform && match.IsMNR && !match.User.IsBanned);
 
             if (sort_column == SortColumn.finish_time)
                 scoresQuery = scoresQuery.OrderBy(s => s.FinishTime);
@@ -291,7 +293,7 @@ namespace GameServer.Implementation.Player
                 latitude = score.Latitude,
                 longitude = score.Longitude,
                 location_tag = score.LocationTag ?? "Unnamed location"
-            }).ToLinqToDB();
+            }).ExpandProjectables().ToLinqToDB();
 
             var scores = finalQuery.Skip(pageStart).Take(per_page).ToList();
 
@@ -331,11 +333,11 @@ namespace GameServer.Implementation.Player
 
             var usersQuery = database.Users
                 .AsNoTracking()
-                .Where(match => match.Username != "ufg" && match.PlayedMNR);
+                .Where(match => match.Username != "ufg" && match.PlayedMNR && !match.IsBanned);
             var scoresQuery = database.Scores
                 .AsNoTracking()
                 .Include(s => s.User)
-                .Where(match => match.IsMNR && match.SubGroupId == (int)game_type-10);
+                .Where(match => match.IsMNR && match.SubGroupId == (int)game_type-10 && !match.User.IsBanned);
 
             if (usernameFilter != null)
             {
@@ -529,7 +531,7 @@ namespace GameServer.Implementation.Player
                                   user.TotalXP(platform))),
                 skill_level_id = user.SkillLevelId(platform),
                 skill_level_name = user.SkillLevelName(platform)
-            }).ToLinqToDB();
+            }).ExpandProjectables().ToLinqToDB();
             var finalScoresQuery = scoresQuery.Select(score => new LeaderboardPlayer
             {
                 best_lap_time = score.BestLapTime,
@@ -548,7 +550,7 @@ namespace GameServer.Implementation.Player
                     sort_column == SortColumn.best_lap_time ? f.OrderBy(score.BestLapTime) : f.OrderByDesc(score.Points)),
                 skill_level_id = score.User.SkillLevelId(platform),
                 skill_level_name = score.User.SkillLevelName(platform)
-            }).ToLinqToDB();
+            }).ExpandProjectables().ToLinqToDB();
             
             if (game_type == GameType.OVERALL_CREATORS || game_type == GameType.CHARACTER_CREATORS 
                 || game_type == GameType.TRACK_CREATORS || game_type == GameType.KART_CREATORS 
@@ -721,7 +723,7 @@ namespace GameServer.Implementation.Player
         {
             var user = database.Users
                 .AsNoTracking()
-                .Where(match => match.PlayedMNR)
+                .Where(match => match.PlayedMNR && !match.IsBanned)
                 .Select(user => game_type == GameType.OVERALL_RACE ? new LeaderboardPlayer
                 {
                     created_at = user.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
@@ -799,13 +801,14 @@ namespace GameServer.Implementation.Player
                     skill_level_id = user.SkillLevelId(platform),
                     skill_level_name = user.SkillLevelName(platform)
                 })
+                .ExpandProjectables()
                 .ToLinqToDB()
                 .FirstOrDefault(match => match.player_id == player_id);
             
             var score = database.Scores
                 .AsNoTracking()
                 .Include(s => s.User)
-                .Where(match => match.IsMNR && match.SubGroupId == (int)game_type-10)
+                .Where(match => match.IsMNR && match.SubGroupId == (int)game_type-10 && !match.User.IsBanned)
                 .Select(score => new LeaderboardPlayer
                 {
                     best_lap_time = score.BestLapTime,
@@ -823,6 +826,7 @@ namespace GameServer.Implementation.Player
                     skill_level_id = score.User.SkillLevelId(platform),
                     skill_level_name = score.User.SkillLevelName(platform)
                 })
+                .ExpandProjectables()
                 .ToLinqToDB()
                 .FirstOrDefault(match => match.player_id == player_id);
 

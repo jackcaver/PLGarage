@@ -13,15 +13,17 @@ namespace GameServer.Controllers.Api
     [Route("api/score")]
     public class ScoreApiController(Database database) : Controller
     {
-        private const int TimeTrialGroup = 703;
         private const int RaceGroup = 701;
+        private const int ActionRaceGroup = 702;
+        private const int TimeTrialGroup = 703;
+        private const int PureRaceGroup = 705;
 
         [HttpGet]
         public IActionResult Leaderboard(
             [FromQuery] int trackId,
+            [FromQuery] int subGroupId,
             [FromQuery] Platform? platform = null,
             [FromQuery] string sortBy = null,
-            [FromQuery] bool? mnr = null,
             [FromQuery] int page = 1,
             [FromQuery] int perPage = 10)
         {
@@ -29,12 +31,21 @@ namespace GameServer.Controllers.Api
             if (perPage < 1) perPage = 10;
             if (perPage > 10) perPage = 10;
 
+            if (subGroupId != RaceGroup
+                && subGroupId != TimeTrialGroup
+                && subGroupId != ActionRaceGroup
+                && subGroupId != PureRaceGroup)
+            {
+                return BadRequest(new { error = "error_invalid_sub_group_id" });
+            }
+
             PlayerCreationData track = database.PlayerCreations
                 .AsNoTracking()
                 .Include(c => c.Author)
                 .Include(c => c.RatingsData)
                 .FirstOrDefault(c => c.PlayerCreationId == trackId
-                    && c.Type != PlayerCreationType.DELETED
+                    && (c.Type == PlayerCreationType.TRACK
+                    || c.Type == PlayerCreationType.STORY)
                     && c.ModerationStatus != ModerationStatus.BANNED
                     && c.ModerationStatus != ModerationStatus.ILLEGAL);
 
@@ -58,88 +69,23 @@ namespace GameServer.Controllers.Api
                 .Include(s => s.User)
                 .Where(s => s.SubKeyId == trackId);
 
-            var mnrQ = baseQ
-                .Where(s => s.IsMNR)
-                .Where(s => s.SubGroupId == TimeTrialGroup);
+            IQueryable<Score> q = baseQ
+                .Where(s => s.SubGroupId == subGroupId)
+                .Where(s => s.IsMNR == (subGroupId != RaceGroup));
 
-            IQueryable<Score> q;
-
-            if (mnr == true)
+            if (platform == null)
             {
-                q = mnrQ;
-
-                if (platform == null)
-                {
-                    platform = q
-                        .GroupBy(s => s.Platform)
-                        .OrderByDescending(g => g.Count())
-                        .Select(g => (Platform?)g.Key)
-                        .FirstOrDefault();
-                }
-
-                if (platform != null)
-                    q = q.Where(s => s.Platform == platform.Value);
-
-                sortBy ??= "bestLapTime";
+                platform = q
+                    .GroupBy(s => s.Platform)
+                    .OrderByDescending(g => g.Count())
+                    .Select(g => (Platform?)g.Key)
+                    .FirstOrDefault();
             }
-            else if (mnr == false)
-            {
-                q = baseQ
-                    .Where(s => !s.IsMNR)
-                    .Where(s => s.SubGroupId == RaceGroup);
 
-                if (platform == null)
-                {
-                    platform = q
-                        .GroupBy(s => s.Platform)
-                        .OrderByDescending(g => g.Count())
-                        .Select(g => (Platform?)g.Key)
-                        .FirstOrDefault();
-                }
+            if (platform != null)
+                q = q.Where(s => s.Platform == platform.Value);
 
-                if (platform != null)
-                    q = q.Where(s => s.Platform == platform.Value);
-
-                sortBy ??= "finishTime";
-            }
-            else if (mnrQ.Any())
-            {
-                q = mnrQ;
-
-                if (platform == null)
-                {
-                    platform = q
-                        .GroupBy(s => s.Platform)
-                        .OrderByDescending(g => g.Count())
-                        .Select(g => (Platform?)g.Key)
-                        .FirstOrDefault();
-                }
-
-                if (platform != null)
-                    q = q.Where(s => s.Platform == platform.Value);
-
-                sortBy ??= "bestLapTime";
-            }
-            else
-            {
-                q = baseQ
-                    .Where(s => !s.IsMNR)
-                    .Where(s => s.SubGroupId == RaceGroup);
-
-                if (platform == null)
-                {
-                    platform = q
-                        .GroupBy(s => s.Platform)
-                        .OrderByDescending(g => g.Count())
-                        .Select(g => (Platform?)g.Key)
-                        .FirstOrDefault();
-                }
-
-                if (platform != null)
-                    q = q.Where(s => s.Platform == platform.Value);
-
-                sortBy ??= "finishTime";
-            }
+            sortBy ??= subGroupId == TimeTrialGroup ? "bestLapTime" : "finishTime";
 
             if (sortBy == "score")
                 q = q.OrderByDescending(s => s.Points).ThenBy(s => s.Id);
@@ -211,6 +157,7 @@ namespace GameServer.Controllers.Api
                 .Where(c => c.IsMNR 
                         && c.Platform == platform 
                         && c.Type != PlayerCreationType.DELETED
+                        && c.Type != PlayerCreationType.STORY
                         && c.ModerationStatus != ModerationStatus.BANNED
                         && c.ModerationStatus != ModerationStatus.ILLEGAL);
 
@@ -225,7 +172,7 @@ namespace GameServer.Controllers.Api
                 c.PlayerId,
                 c.Author.Username,
                 Xp = c.PointsData.Sum(p => (int?)p.Amount) ?? 0,
-                Downloads = c.HeartsData.Count(),
+                Downloads = c.DownloadsData.Count(),
                 Views = c.ViewsData.Count()
             });
 

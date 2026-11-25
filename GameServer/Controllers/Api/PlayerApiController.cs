@@ -81,7 +81,9 @@ namespace GameServer.Controllers.Api
                     x.IsBanned,
                     x.CreatedAt,
                     creationTypes = x.PlayerCreations
-                        .Where(c => c.Type != PlayerCreationType.DELETED)
+                        .Where(c => c.Type != PlayerCreationType.DELETED
+                            && c.ModerationStatus != ModerationStatus.BANNED 
+                            && c.ModerationStatus != ModerationStatus.ILLEGAL)
                         .Select(c => new { c.Type, c.IsMNR, c.Platform })
                         .ToList()
                 })
@@ -223,8 +225,10 @@ namespace GameServer.Controllers.Api
 
             var query = database.HeartedProfiles
                 .AsNoTracking()
-                .Where(x => x.UserId == player.UserId)
-                .Where(x => isMnr == true ? x.IsMNR : !x.IsMNR);
+                .Where(x => x.UserId == player.UserId);
+
+            if (isMnr.HasValue)
+                query = query.Where(x => x.IsMNR == isMnr.Value);
 
             var total = query.Count();
             var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
@@ -239,7 +243,8 @@ namespace GameServer.Controllers.Api
                     x.HeartedUserId,
                     x.HeartedUser.UserId,
                     x.HeartedUser.Username,
-                    x.HeartedAt
+                    x.HeartedAt,
+                    x.IsMNR
                 })
                 .ToList();
 

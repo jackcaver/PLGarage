@@ -139,7 +139,7 @@ namespace GameServer.Models.Response
         [XmlAttribute]
         public string star_rating { get; set; }
         [XmlAttribute]
-        public int original_player_id { get; set; }
+        public string original_player_id { get; set; }
         [XmlAttribute]
         public string original_player_username { get; set; }
         [XmlAttribute]

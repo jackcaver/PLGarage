@@ -99,6 +99,7 @@ namespace GameServer.Implementation.Player_Creation
                 return errorResp.Serialize();
             }
 
+            string newComment = string.IsNullOrWhiteSpace(player_creation_rating.comments) ? null : player_creation_rating.comments;
             var rating = database.PlayerCreationRatings.FirstOrDefault(match => match.PlayerCreationId == player_creation_rating.player_creation_id && match.PlayerId == user.UserId);
 
             if (rating == null)
@@ -110,7 +111,7 @@ namespace GameServer.Implementation.Player_Creation
                     Type = RatingType.YAY,
                     RatedAt = TimeUtils.Now,
                     Rating = player_creation_rating.rating,
-                    Comment = player_creation_rating.comments
+                    Comment = newComment
                 });
                 if (!session.IsMNR)
                 {
@@ -131,15 +132,15 @@ namespace GameServer.Implementation.Player_Creation
                 database.SaveChanges();
             }
 
-            if (player_creation_rating.comments != null && (rating == null || rating.Comment == null))
+            if (newComment != null && (rating == null || rating.Comment == null))
             {
                 if (session.IsMNR)
-                    database.PlayerCreationPoints.Add(new PlayerCreationPoint { PlayerCreationId = Creation.PlayerCreationId, PlayerId = Creation.PlayerId, Platform = Creation.Platform, Type = Creation.Type, CreatedAt = TimeUtils.Now, Amount = 20 });
+                    CreateExperience.Add(database, Creation, CreateExperience.PerComment, user.UserId);
                 if (session.IsMNR && session.Platform == Platform.PS3)
                 {
                     database.MailMessages.Add(new MailMessageData
                     {
-                        Body = player_creation_rating.comments,
+                        Body = newComment,
                         Subject = Creation.Name,
                         RecipientList = Creation.Username,
                         Type = MailMessageType.ALERT,
@@ -154,14 +155,14 @@ namespace GameServer.Implementation.Player_Creation
 
             if (player_creation_rating.rating != 0 && (rating == null || rating.Rating == 0) && session.IsMNR)
             {
-                database.PlayerCreationPoints.Add(new PlayerCreationPoint { PlayerCreationId = Creation.PlayerCreationId, PlayerId = Creation.PlayerId, Platform = Creation.Platform, Type = Creation.Type, CreatedAt = TimeUtils.Now, Amount = 20 });
+                CreateExperience.Add(database, Creation, CreateExperience.PerRating, user.UserId);
                 database.SaveChanges();
             }
 
             if (rating != null)
             {
                 rating.Rating = player_creation_rating.rating;
-                rating.Comment = player_creation_rating.comments;
+                rating.Comment = newComment ?? (rating.Comment == null ? null : "");
                 database.SaveChanges();
             }
 

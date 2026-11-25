@@ -23,6 +23,7 @@ namespace GameServer.Models.PlayerData
         public string Username => User.Username;
         public Guid SessionId { get; set; }
         public Presence Presence { get; set; } = Presence.OFFLINE;
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime LastPing { get; set; } = TimeUtils.Now;
         public Platform Platform { get; set; }
         public bool IsMNR { get; set; }

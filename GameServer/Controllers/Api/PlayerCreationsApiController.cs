@@ -61,13 +61,17 @@ namespace GameServer.Controllers.Api
                 );
 
             var lbpkTotal = q.Count(x => !x.IsMNR);
-            var mnrTotal = q.Count(x => x.IsMNR);
+            var mnrPS3Total = q.Count(x => x.IsMNR && x.Platform == Platform.PS3);
+            var mnrPSPTotal = q.Count(x => x.IsMNR && x.Platform == Platform.PSP);
+            var mnrPSVTotal = q.Count(x => x.IsMNR && x.Platform == Platform.PSV);
 
             return Json(new
             {
                 total,
                 totalLBPK = lbpkTotal,
-                totalMNR = mnrTotal,
+                totalMNRPS3 = mnrPS3Total,
+                totalMNRPSP = mnrPSPTotal,
+                totalMNRPSV = mnrPSVTotal,
                 lbpk = lbpkTypeCounts,
                 mnr = mnrPlatformCounts
             });
@@ -87,24 +91,25 @@ namespace GameServer.Controllers.Api
                     x.PlayerCreationId,
                     x.Name,
                     x.Description,
-                    rating = x.Ratings.Count != 0 ? (float?)x.Ratings.Average(r => r.Rating) : 0,
-                    x.HeartsCount,
+                    rating = x.RatingsData.Count != 0 ? (float?)x.RatingsData.Average(r => r.Rating) : 0,
+                    x.Hearts,
+                    x.Author.UserId,
                     x.Author.Username,
                     x.Type,
                     x.Tags,
                     x.Platform,
                     x.IsMNR,
-                    x.ModerationStatus,
+                    ModerationStatus = x.ModerationStatus == 0 ? "APPROVED" : x.ModerationStatus.ToString(),
                     x.CreatedAt,
-                    pointsAllTime = x.Points.Sum(p => p.Amount),
-                    pointsThisWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount),
-                    pointsLastWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.LastWeekStart && p.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount),
-                    downloadsAllTime = x.Downloads.Count,
-                    downloadsThisWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.ThisWeekStart),
-                    downloadsLastWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.LastWeekStart && d.DownloadedAt < TimeUtils.ThisWeekStart),
-                    viewsAllTime = x.Views.Count,
-                    viewsThisWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
-                    viewsLastWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
+                    pointsAllTime = x.Points,
+                    pointsThisWeek = x.PointsThisWeek,
+                    pointsLastWeek = x.PointsLastWeek,
+                    downloadsAllTime = x.Downloads,
+                    downloadsThisWeek = x.DownloadsThisWeek,
+                    downloadsLastWeek = x.DownloadsLastWeek,
+                    viewsAllTime = x.Views,
+                    viewsThisWeek = x.ViewsThisWeek,
+                    viewsLastWeek = x.ViewsLastWeek,
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
                         ? x.Scores.Where(s => s.SubGroupId == 703).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
                         : null,
@@ -128,7 +133,8 @@ namespace GameServer.Controllers.Api
                 creation.Name,
                 creation.Description,
                 rating = (creation.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
-                hearts = creation.HeartsCount,
+                hearts = creation.Hearts,
+                creatorUserId = creation.UserId,
                 creatorUsername = creation.Username,
                 Type = creation.Type.ToString(),
                 creation.Tags,
@@ -176,17 +182,12 @@ namespace GameServer.Controllers.Api
 
             var q = database.PlayerCreations
                 .AsNoTracking()
-                .Where(x => x.Type != PlayerCreationType.DELETED 
-                && x.Type != PlayerCreationType.STORY
-                && x.Type != PlayerCreationType.PHOTO
-                && x.Type != PlayerCreationType.PLANET
-                && x.ModerationStatus != ModerationStatus.BANNED
-                && x.ModerationStatus != ModerationStatus.ILLEGAL);
-
-            if (!string.IsNullOrEmpty(query))
-            {
-                q = q.Where(x => x.Name.Contains(query) || x.Author.Username.Contains(query));
-            }
+                .Where(x =>
+                    (x.Type == PlayerCreationType.CHARACTER
+                    || x.Type == PlayerCreationType.KART
+                    || x.Type == PlayerCreationType.TRACK)
+                    && x.ModerationStatus != ModerationStatus.BANNED
+                    && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
             if (type.HasValue)
             {
@@ -202,6 +203,11 @@ namespace GameServer.Controllers.Api
             {
                 q = q.Where(x => x.IsMNR == isMnr.Value);
             }
+            
+            if (!string.IsNullOrEmpty(query))
+            {
+                q = q.Where(x => x.Name.Contains(query) || x.Author.Username.Contains(query));
+            }
 
             var total = q.Count();
             var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
@@ -216,23 +222,24 @@ namespace GameServer.Controllers.Api
                     x.PlayerCreationId,
                     x.Name,
                     x.Description,
-                    rating = x.Ratings.Count != 0 ? (float?)x.Ratings.Average(r => r.Rating) : 0,
-                    x.HeartsCount,
+                    rating = x.RatingsData.Count != 0 ? (float?)x.RatingsData.Average(r => r.Rating) : 0,
+                    x.Hearts,
+                    x.Author.UserId,
                     x.Author.Username,
                     x.Type,
                     x.Tags,
                     x.Platform,
                     x.IsMNR,
                     x.CreatedAt,
-                    pointsAllTime = x.Points.Sum(p => p.Amount),
-                    pointsThisWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount),
-                    pointsLastWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.LastWeekStart && p.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount),
-                    downloadsAllTime = x.Downloads.Count,
-                    downloadsThisWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.ThisWeekStart),
-                    downloadsLastWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.LastWeekStart && d.DownloadedAt < TimeUtils.ThisWeekStart),
-                    viewsAllTime = x.Views.Count,
-                    viewsThisWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
-                    viewsLastWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
+                    pointsAllTime = x.Points,
+                    pointsThisWeek = x.PointsThisWeek,
+                    pointsLastWeek = x.PointsLastWeek,
+                    downloadsAllTime = x.Downloads,
+                    downloadsThisWeek = x.DownloadsThisWeek,
+                    downloadsLastWeek = x.DownloadsLastWeek,
+                    viewsAllTime = x.Views,
+                    viewsThisWeek = x.ViewsThisWeek,
+                    viewsLastWeek = x.ViewsLastWeek,
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
                         ? x.Scores.Where(s => s.SubGroupId == 703).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
                         : null,
@@ -258,7 +265,8 @@ namespace GameServer.Controllers.Api
                     x.Name,
                     x.Description,
                     rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
-                    hearts = x.HeartsCount,
+                    hearts = x.Hearts,
+                    creatorUserId = x.UserId,
                     creatorUsername = x.Username,
                     Type = x.Type.ToString(),
                     x.Tags,
@@ -305,13 +313,16 @@ namespace GameServer.Controllers.Api
             var q = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.Author.Username == username
-                && x.Type != PlayerCreationType.DELETED
-                && x.Type != PlayerCreationType.PHOTO
-                && x.Type != PlayerCreationType.PLANET
-                && x.Type != PlayerCreationType.ITEM
+                && (x.Type == PlayerCreationType.CHARACTER
+                || x.Type == PlayerCreationType.KART
+                || x.Type == PlayerCreationType.TRACK)
                 && x.ModerationStatus != ModerationStatus.BANNED
-                && x.ModerationStatus != ModerationStatus.ILLEGAL
-                && (!isMnr.HasValue || x.IsMNR == isMnr.Value));
+                && x.ModerationStatus != ModerationStatus.ILLEGAL);
+
+            if (isMnr.HasValue)
+            {
+                q = q.Where(x => x.IsMNR == isMnr.Value);
+            }
 
             if (type.HasValue)
             {
@@ -336,23 +347,24 @@ namespace GameServer.Controllers.Api
                     x.PlayerCreationId,
                     x.Name,
                     x.Description,
-                    rating = x.Ratings.Count != 0 ? (float?)x.Ratings.Average(r => r.Rating) : 0,
-                    x.HeartsCount,
+                    rating = x.RatingsData.Count != 0 ? (float?)x.RatingsData.Average(r => r.Rating) : 0,
+                    x.Hearts,
+                    x.Author.UserId,
                     x.Author.Username,
                     x.Type,
                     x.Tags,
                     x.Platform,
                     x.IsMNR,
                     x.CreatedAt,
-                    pointsAllTime = x.Points.Sum(p => p.Amount),
-                    pointsThisWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount),
-                    pointsLastWeek = x.Points.Where(p => p.CreatedAt >= TimeUtils.LastWeekStart && p.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount),
-                    downloadsAllTime = x.Downloads.Count,
-                    downloadsThisWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.ThisWeekStart),
-                    downloadsLastWeek = x.Downloads.Count(d => d.DownloadedAt >= TimeUtils.LastWeekStart && d.DownloadedAt < TimeUtils.ThisWeekStart),
-                    viewsAllTime = x.Views.Count,
-                    viewsThisWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
-                    viewsLastWeek = x.Views.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
+                    pointsAllTime = x.PointsData.Sum(p => p.Amount),
+                    pointsThisWeek = x.PointsData.Where(p => p.CreatedAt >= TimeUtils.ThisWeekStart).Sum(p => p.Amount),
+                    pointsLastWeek = x.PointsData.Where(p => p.CreatedAt >= TimeUtils.LastWeekStart && p.CreatedAt < TimeUtils.ThisWeekStart).Sum(p => p.Amount),
+                    downloadsAllTime = x.DownloadsData.Count,
+                    downloadsThisWeek = x.DownloadsData.Count(d => d.DownloadedAt >= TimeUtils.ThisWeekStart),
+                    downloadsLastWeek = x.DownloadsData.Count(d => d.DownloadedAt >= TimeUtils.LastWeekStart && d.DownloadedAt < TimeUtils.ThisWeekStart),
+                    viewsAllTime = x.ViewsData.Count,
+                    viewsThisWeek = x.ViewsData.Count(v => v.ViewedAt >= TimeUtils.ThisWeekStart),
+                    viewsLastWeek = x.ViewsData.Count(v => v.ViewedAt >= TimeUtils.LastWeekStart && v.ViewedAt < TimeUtils.ThisWeekStart),
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
                         ? x.Scores.Where(s => s.SubGroupId == 703).OrderBy(s => s.BestLapTime).Select(s => (float?)s.BestLapTime).FirstOrDefault()
                         : null,
@@ -378,7 +390,8 @@ namespace GameServer.Controllers.Api
                     x.Name,
                     x.Description,
                     rating = (x.rating ?? 0).ToString("0.0", CultureInfo.InvariantCulture),
-                    hearts = x.HeartsCount,
+                    hearts = x.Hearts,
+                    creatorUserId = x.UserId,
                     creatorUsername = x.Username,
                     Type = x.Type.ToString(),
                     x.Tags,
@@ -473,6 +486,7 @@ namespace GameServer.Controllers.Api
                         x.Id,
                         comment = x.Body,
                         x.CreatedAt,
+                        x.Player.UserId,
                         x.Player.Username
                     })
                     .ToList();
@@ -485,21 +499,21 @@ namespace GameServer.Controllers.Api
         [Route("/api/topmods")]
         public IActionResult GetTopMods([FromQuery] Platform platform = Platform.PS3)
         {
-            return JsonTopCreations(PlayerCreationType.CHARACTER, platform);
+            return TopCreations(PlayerCreationType.CHARACTER, platform);
         }
 
         [HttpGet]
         [Route("/api/topkarts")]
         public IActionResult GetTopKarts([FromQuery] Platform platform = Platform.PS3)
         {
-            return JsonTopCreations(PlayerCreationType.KART, platform);
+            return TopCreations(PlayerCreationType.KART, platform);
         }
 
         [HttpGet]
         [Route("/api/toptracks")]
         public IActionResult GetTopTracks([FromQuery] Platform platform = Platform.PS3)
         {
-            return JsonTopCreations(PlayerCreationType.TRACK, platform);
+            return TopCreations(PlayerCreationType.TRACK, platform);
         }
 
         [HttpGet]
@@ -511,14 +525,12 @@ namespace GameServer.Controllers.Api
                 .Where(x => x.Platform == platform
                     && !x.IsMNR
                     && x.Type == PlayerCreationType.TRACK
-                    && x.Type != PlayerCreationType.DELETED
-                    && x.Type != PlayerCreationType.STORY
                     && x.ModerationStatus != ModerationStatus.BANNED
                     && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
             var orderedQuery = ((sortOrder ?? SortOrder.desc) == SortOrder.asc)
-                ? query.OrderBy(x => x.HeartsCount).ThenBy(x => x.CreatedAt)
-                : query.OrderByDescending(x => x.HeartsCount).ThenByDescending(x => x.CreatedAt);
+                ? query.OrderBy(x => x.Hearts).ThenBy(x => x.CreatedAt)
+                : query.OrderByDescending(x => x.Hearts).ThenByDescending(x => x.CreatedAt);
 
             var total = orderedQuery.Count();
 
@@ -530,14 +542,15 @@ namespace GameServer.Controllers.Api
                     x.Name,
                     x.Description,
                     x.Type,
+                    creatorUserId = x.Author.UserId,
                     creatorUsername = x.Author.Username,
                     platform = x.Platform.ToString(),
                     x.Tags,
                     x.CreatedAt,
                     x.UpdatedAt,
-                    hearts = x.HeartsCount,
+                    hearts = x.Hearts,
                     rating = x.RatingUp,
-                    racesStarted = x.RacesStartedCount,
+                    racesStarted = x.RacesStarted,
                     recordScore = x.Scores.Max(s => (float?)s.Points),
                     recordFinishTime = x.Scores.Max(s => (float?)s.FinishTime),
                 })
@@ -549,6 +562,7 @@ namespace GameServer.Controllers.Api
                 x.Name,
                 x.Description,
                 Type = x.Type.ToString(),
+                x.creatorUserId,
                 x.creatorUsername,
                 x.platform,
                 x.Tags,
@@ -572,11 +586,7 @@ namespace GameServer.Controllers.Api
             var query = database.PlayerCreations
                 .AsNoTracking()
                 .Where(x => x.IsTeamPick
-                    && x.Type != PlayerCreationType.DELETED
-                    && x.Type != PlayerCreationType.STORY
-                    && x.Type != PlayerCreationType.PHOTO
-                    && x.Type != PlayerCreationType.PLANET
-                    && x.Type != PlayerCreationType.ITEM
+                    && x.Type == PlayerCreationType.TRACK
                     && x.ModerationStatus != ModerationStatus.BANNED
                     && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
@@ -595,13 +605,14 @@ namespace GameServer.Controllers.Api
                     x.Name,
                     x.Description,
                     Type = x.Type.ToString(),
+                    creatorUserId = x.Author.UserId,
                     creatorUsername = x.Author.Username,
                     platform = x.Platform.ToString(),
                     isMnr = x.IsMNR,
                     x.Tags,
                     x.CreatedAt,
                     x.UpdatedAt,
-                    hearts = x.HeartsCount,
+                    hearts = x.Hearts,
                 })
                 .ToList();
 
@@ -612,7 +623,7 @@ namespace GameServer.Controllers.Api
             });
         }
 
-        private IActionResult JsonTopCreations(
+        private IActionResult TopCreations(
             PlayerCreationType playerCreationType,
             Platform platform)
         {
@@ -626,7 +637,9 @@ namespace GameServer.Controllers.Api
                     && x.ModerationStatus != ModerationStatus.BANNED
                     && x.ModerationStatus != ModerationStatus.ILLEGAL);
 
-            query = query.OrderByDescending(x => x.PointsToday);
+            query = query.OrderByDescending(x => x.PointsYesterday)
+                .ThenByDescending(x => x.Downloads)
+                .ThenBy(x => x.PlayerCreationId); // small edit to keep in line with top tracks (where there is a fallback in case not all 3 mods/karts or 5 tracks have xp earned)
 
             var total = query.Count();
 
@@ -638,24 +651,25 @@ namespace GameServer.Controllers.Api
                     x.Name,
                     x.Description,
                     x.Type,
+                    creatorUserId = x.Author.UserId,
                     creatorUsername = x.Author.Username,
                     platform = x.Platform.ToString(),
                     isMnr = x.IsMNR,
                     x.Tags,
                     x.CreatedAt,
                     x.UpdatedAt,
-                    pointsToday = x.PointsToday,
-                    points = x.PointsAmount,
+                    pointsYesterday = x.PointsYesterday,
+                    points = x.Points,
                     pointsThisWeek = x.PointsThisWeek,
                     pointsLastWeek = x.PointsLastWeek,
-                    downloads = x.DownloadsCount,
+                    downloads = x.Downloads,
                     downloadsThisWeek = x.DownloadsThisWeek,
                     downloadsLastWeek = x.DownloadsLastWeek,
-                    views = x.ViewsCount,
+                    views = x.Views,
                     viewsThisWeek = x.ViewsThisWeek,
                     viewsLastWeek = x.ViewsLastWeek,
-                    hearts = x.HeartsCount,
-                    racesStarted = x.RacesStartedCount,
+                    hearts = x.Hearts,
+                    racesStarted = x.RacesStarted,
                     longestDrift = x.LongestDrift,
                     longestHangTime = x.LongestHangTime,
                     recordBestLapTime = x.Type == PlayerCreationType.TRACK && x.IsMNR
@@ -667,7 +681,7 @@ namespace GameServer.Controllers.Api
                     recordFinishTime = x.Type == PlayerCreationType.TRACK && !x.IsMNR
                         ? x.Scores.Max(s => (float?)s.FinishTime)
                         : null,
-                    ratingValue = x.Ratings.Count != 0 ? (float?)x.Ratings.Average(r => r.Rating) : 0
+                    ratingValue = x.RatingsData.Count != 0 ? (float?)x.RatingsData.Average(r => r.Rating) : 0
                 })
                 .ToList();
 
@@ -677,6 +691,7 @@ namespace GameServer.Controllers.Api
                 x.Name,
                 x.Description,
                 Type = x.Type.ToString(),
+                x.creatorUserId,
                 x.creatorUsername,
                 x.platform,
                 x.isMnr,
@@ -689,7 +704,7 @@ namespace GameServer.Controllers.Api
                 x.longestHangTime,
                 points = new
                 {
-                    today = x.pointsToday,
+                    yesterday = x.pointsYesterday,
                     all_time = x.points,
                     this_week = x.pointsThisWeek,
                     last_week = x.pointsLastWeek

@@ -135,16 +135,16 @@ namespace GameServer.Implementation.Common
         public static void GetNewHotLap(Database database)
         {
             database.Scores.RemoveRange(database.Scores.Where(match => match.SubGroupId == 700 && match.IsMNR).ToList());
-
             database.SaveChanges();
 
-            HotLapData hotlap = ReadHotlapData();
+            HotLapData hotlap = ReadHotlapData() ?? new HotLapData { TrackId = -1, Queue = [] };
+            hotlap.Queue ??= [];
 
             var query = database.PlayerCreations
                 .AsSplitQuery()
-                .Include(p => p.Downloads)
-                .Include(p => p.Ratings)
-                .OrderByDescending(p => p.Downloads.Count)
+                .Include(p => p.DownloadsData)
+                .Include(p => p.RatingsData)
+                .OrderByDescending(p => p.DownloadsData.Count)
                 .Where(match => (match.Type == PlayerCreationType.TRACK || match.Type == PlayerCreationType.STORY)
                     && match.IsMNR
                     && match.AutoReset
@@ -153,63 +153,53 @@ namespace GameServer.Implementation.Common
                     && match.ModerationStatus != ModerationStatus.ILLEGAL);
 
             var candidates = query
-                .Where(match => match.DownloadsCount >= 10 && match.Rating >= 3.5)
+                .Where(match => match.Downloads >= 10 && match.Rating >= 3.5)
                 .Select(p => p.PlayerCreationId);
 
             if (!candidates.Any())
                 candidates = query.Select(p => p.PlayerCreationId);
 
-            if (hotlap == null || hotlap.Queue == null || hotlap.Queue.Count == 0)
+            int? picked = null;
+
+            while (picked == null && hotlap.Queue.Count != 0)
             {
-                int count = candidates.Count();
+                int queued = hotlap.Queue[0];
+                hotlap.Queue.RemoveAt(0);
+
+                if (query.Any(match => match.PlayerCreationId == queued))
+                {
+                    picked = queued;
+                    Log.Debug($"New hotlap track picked from queue {queued}");
+                }
+                else
+                    Log.Error($"Queued hotlap track {queued} isn't a valid hotlap track, skipping it");
+            }
+
+            if (picked == null)
+            {
+                int currentId = hotlap.TrackId;
+                var pool = candidates.Where(id => id != currentId);
+                int count = pool.Count();
+
+                if (count == 0)
+                {
+                    pool = candidates;
+                    count = pool.Count();
+                }
 
                 if (count > 0)
                 {
-                    Random random = new();
-
-                    int trackid;
-
-                    if (count > 1)
-                        trackid = candidates.Skip(random.Next(0, count)).FirstOrDefault();
-                    else
-                        trackid = candidates.FirstOrDefault();
-
-                    if (hotlap == null)
-                    {
-                        hotlap = new()
-                        {
-                            TrackId = trackid,
-                            Queue = []
-                        };
-                    }
-                    else
-                        hotlap.TrackId = trackid;
-
-                    Log.Debug($"New hotlap track picked {hotlap.TrackId}");
+                    picked = pool.Skip(Random.Shared.Next(0, count)).FirstOrDefault();
+                    Log.Debug($"New hotlap track picked {picked}");
                 }
                 else
                     Log.Debug("There were no candidates to choose hotlap from");
             }
-            else
-            {
-                int candidate = hotlap.Queue.FirstOrDefault();
 
-                if (candidates.Any(match => match == candidate))
-                {
-                    hotlap.TrackId = candidate;
-                    Log.Debug($"New hotlap track picked from queue {hotlap.TrackId}");
-                }
-                else
-                    Log.Error($"Unable to find candidate {candidate} from hotlap queue");
+            if (picked != null)
+                hotlap.TrackId = picked.Value;
 
-                hotlap.Queue.Remove(candidate);
-            }
-
-            if (hotlap != null)
-            {
-                WriteHotlapData(hotlap);
-            }
-
+            WriteHotlapData(hotlap);
             ServerCommunication.NotifyHotSeatPlaylistReset();
         }
         
@@ -243,9 +233,14 @@ namespace GameServer.Implementation.Common
         private static string GetTopTracksData(Database database)
         {
             var creations = database.PlayerCreations
-                .Include(p => p.Downloads)
-                .OrderByDescending(match => match.Downloads.Count)
-                .Where(match => match.Type == PlayerCreationType.TRACK && match.IsMNR && match.Platform == Platform.PS3)
+                .AsNoTracking()
+                .Where(match => match.Type == PlayerCreationType.TRACK
+                    && match.IsMNR
+                    && match.Platform == Platform.PS3
+                    && match.ModerationStatus != ModerationStatus.BANNED
+                    && match.ModerationStatus != ModerationStatus.ILLEGAL)
+                .OrderByDescending(match => match.PointsYesterday)
+                .ThenBy(match => match.PlayerCreationId)
                 .Take(5)
                 .ToList();
 

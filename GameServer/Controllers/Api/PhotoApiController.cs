@@ -28,8 +28,8 @@ namespace GameServer.Controllers.Api
                 photo.PlayerCreationId,
                 photo.AssociatedUsernames,
                 photo.TrackId,
-                AuthorUsername = photo.Author.Username,
-                photo.ModerationStatus,
+                TakenBy = photo.Author.Username,
+                ModerationStatus = photo.ModerationStatus == 0 ? "APPROVED" : photo.ModerationStatus.ToString(),
                 photo.CreatedAt
             });
         }
@@ -104,7 +104,7 @@ namespace GameServer.Controllers.Api
                 {
                     c.PlayerCreationId,
                     c.AssociatedUsernames,
-                    AuthorUsername = c.Author.Username,
+                    TakenBy = c.Author.Username,
                     c.CreatedAt
                 })
                 .ToList();
@@ -143,7 +143,7 @@ namespace GameServer.Controllers.Api
                     c.PlayerCreationId,
                     c.AssociatedUsernames,
                     c.TrackId,
-                    AuthorUsername = c.Author.Username,
+                    TakenBy = c.Author.Username,
                     c.CreatedAt
                 })
                 .ToList();

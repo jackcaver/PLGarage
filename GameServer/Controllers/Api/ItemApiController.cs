@@ -26,10 +26,10 @@ namespace GameServer.Controllers.Api
             return Json(new
             {
                 item.PlayerCreationId,
-                item.AssociatedUsernames,
-                item.TrackId,
+                item.Name,
+                item.Description,
                 AuthorUsername = item.Author.Username,
-                item.ModerationStatus,
+                ModerationStatus = item.ModerationStatus == 0 ? "APPROVED" : item.ModerationStatus.ToString(),
                 item.CreatedAt
             });
         }
@@ -63,8 +63,9 @@ namespace GameServer.Controllers.Api
                 .Select(c => new
                 {
                     c.PlayerCreationId,
-                    c.AssociatedUsernames,
-                    c.TrackId,
+                    c.Name,
+                    c.Description,
+                    creatorUsername = c.Author.Username,
                     c.CreatedAt
                 })
                 .ToList();
@@ -100,8 +101,9 @@ namespace GameServer.Controllers.Api
                 .Select(c => new
                 {
                     c.PlayerCreationId,
-                    c.AssociatedUsernames,
-                    c.TrackId,
+                    c.Name,
+                    c.Description,
+                    creatorUsername = c.Author.Username,
                     c.CreatedAt
                 })
                 .ToList();

@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using GameServer.Models.Request;
 
 namespace GameServer.Utils
 {
@@ -187,6 +188,7 @@ namespace GameServer.Utils
             { 628, new StoryLevelData { Name = "T5_GreatWall", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
             { 629, new StoryLevelData { Name = "T5_HiddenForest", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
             { 631, new StoryLevelData { Name = "T5_Fortress", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
+            { 632, new StoryLevelData { Name = "T5_ImperialGardens", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
             { 633, new StoryLevelData { Name = "T7_GridlockRiver", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
             { 634, new StoryLevelData { Name = "T7_SubwayMayhem", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
             { 635, new StoryLevelData { Name = "T7_TouristTrap", RaceType = RaceType.RACE, ScoreboardMode = 1, Platform = Platform.PS3, IsMNR = true, AutoReset = true } },
@@ -258,6 +260,7 @@ namespace GameServer.Utils
                 {
                     AI = true,
                     PlayerId = UFGUser.UserId,
+                    Username = UFGUser.Username,
                     TrackId = id,
                     PlayerCreationId = id,
                     ScoreboardMode = storyLevel.ScoreboardMode,
@@ -310,6 +313,22 @@ namespace GameServer.Utils
                 || (MaxHeight != 0 && info.Height > MaxHeight))
                 return false;
 
+            return true;
+        }
+        
+        public static bool CheckDataArchive(Stream data, Platform platform, PlayerCreation creation)
+        {
+            if (platform == Platform.PSP)//TODO: figure out psp data archive format
+                return true;
+
+            DataArchive content = new();
+
+            if (!content.TryParse(data, platform == Platform.PSV))
+                return false;
+            
+            //TODO: fix autoReset in track cmd file
+            
+            data.Position = 0;
             return true;
         }
     }

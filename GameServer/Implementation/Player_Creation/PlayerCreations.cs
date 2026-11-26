@@ -461,10 +461,10 @@ namespace GameServer.Implementation.Player_Creation
                     views_this_week = creationData.ViewsThisWeek,
                     votes = creationData.Votes,
                     weapon_set = creationData.WeaponSet,
-                    data_md5 = download ? storage.CalculateMD5(id, "data.bin") : null,
-                    data_size = download ? storage.CalculateSize(id, "data.bin").ToString() : null,
-                    preview_md5 = download ? storage.CalculateMD5(id, "preview_image.png") : null,
-                    preview_size = download ? storage.CalculateSize(id, "preview_image.png").ToString() : null,
+                    data_md5 = null,
+                    data_size = null,
+                    preview_md5 = null,
+                    preview_size = null,
                     //MNR
                     // TODO: Remove some DB queries here and use one to many links in EF model
                     points = creationData.Points,
@@ -493,6 +493,14 @@ namespace GameServer.Implementation.Player_Creation
                     response = new EmptyResponse { }
                 };
                 return errorResp.Serialize();
+            }
+
+            if (download)
+            {
+                creation.data_md5 = storage.CalculateMD5(id, "data.bin");
+                creation.data_size = storage.CalculateSize(id, "data.bin").ToString();
+                creation.preview_md5 = storage.CalculateMD5(id, "preview_image.png");
+                creation.preview_size = storage.CalculateSize(id, "preview_image.png").ToString();
             }
 
             if (int.TryParse(creation.original_player_id, out int originalPlayerId))

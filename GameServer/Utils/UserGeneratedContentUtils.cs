@@ -323,18 +323,13 @@ namespace GameServer.Utils
 
             DataArchive content = new();
 
-            try
-            {
-                return content.TryParse(data, platform == Platform.PSV);
-            }
-            catch (EndOfStreamException)
-            {
-                return false; 
-            }
-            finally
-            {
-                data.Position = 0; 
-            }
+            if (content.TryParse(data, platform == Platform.PSV))
+                return false;
+
+            //TODO: fix autoReset in track cmd file
+            
+            data.Position = 0;
+            return true;
         }
     }
 }

@@ -23,6 +23,10 @@ public class DataArchive
         {
             return false;
         }
+        finally
+        {
+            data.Position = 0;
+        }
     }
 
     private void FromArray(Stream data, bool isVita)

@@ -1,3 +1,4 @@
+using System;
 using System.Buffers.Binary;
 using System.IO;
 
@@ -13,12 +14,24 @@ public class DataArchive
 
     public bool TryParse(Stream data, bool isVita)
     {
+        try
+        {
+            FromArray(data, isVita);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private void FromArray(Stream data, bool isVita)
+    {
         var header = new byte[4];
         data.ReadExactly(header);
 
         if (!header[0 .. 3].Equals("CTH"u8.ToArray()))
-            return false;
-        
+            throw new FormatException("Invalid header.");
         Version = header[3];
 
         var intBuffer1 = new byte[4];
@@ -69,10 +82,8 @@ public class DataArchive
                 break;
             
             default:
-                return false;
+                throw new FormatException("Invalid version.");
         }
-        
-        return true;
     }
 
     public byte[] ToArray(bool isVita)

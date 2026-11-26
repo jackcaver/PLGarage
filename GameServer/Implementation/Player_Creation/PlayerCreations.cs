@@ -417,7 +417,7 @@ namespace GameServer.Implementation.Player_Creation
                     battle_time_limit = creationData.BattleTimeLimit,
                     coolness = creationData.Coolness,
                     created_at = creationData.CreatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
-                    description = creationData.Description,
+                    description = creationData.Description ?? "",
                     difficulty = creationData.Difficulty.ToString(),
                     dlc_keys = creationData.DLCKeys ?? "",
                     downloads = creationData.Downloads,
@@ -449,7 +449,7 @@ namespace GameServer.Implementation.Player_Creation
                     rating_up = creationData.RatingUp,
                     scoreboard_mode = creationData.ScoreboardMode,
                     speed = creationData.Speed.ToString(),
-                    tags = creationData.Tags,
+                    tags = creationData.Tags ?? "",
                     track_theme = creationData.TrackTheme,
                     unique_racer_count = creationData.UniqueRacers,
                     updated_at = creationData.UpdatedAt.ToString("yyyy-MM-ddThh:mm:sszzz"),
@@ -474,9 +474,9 @@ namespace GameServer.Implementation.Player_Creation
                     points_yesterday = creationData.PointsYesterday,
                     rating = creationData.Rating.ToString("0.0", CultureInfo.InvariantCulture),
                     star_rating = creationData.StarRating,
-                    original_player_id = creationData.ParentPlayerId != 0 ? creationData.ParentPlayerId.ToString() : "",
-                    parent_creation_id = creationData.ParentCreationId != 0 ? creationData.ParentCreationId.ToString() : "",
-                    parent_player_id = creationData.ParentPlayerId != 0 ? creationData.ParentPlayerId.ToString() : "",
+                    original_player_id = null,
+                    parent_creation_id = null,
+                    parent_player_id = null,
                     best_lap_time = creationData.BestLapTime,
                     moderation_status = creationData.ModerationStatus.ToString(),
                     moderation_status_id = (int)creationData.ModerationStatus,
@@ -503,20 +503,28 @@ namespace GameServer.Implementation.Player_Creation
                 creation.preview_size = storage.CalculateSize(id, "preview_image.png").ToString();
             }
 
-            if (int.TryParse(creation.original_player_id, out int originalPlayerId))
-                creation.original_player_username = database.Users
-                    .Select(u => new { u.UserId, u.Username })
-                    .FirstOrDefault(match => match.UserId == originalPlayerId)?.Username ?? "";
-            
-            if (int.TryParse(creation.parent_player_id, out int parentPlayerId))
-                creation.parent_player_username = database.Users
-                    .Select(u => new { u.UserId, u.Username })
-                    .FirstOrDefault(match => match.UserId == parentPlayerId)?.Username ?? "";
-            
-            if (int.TryParse(creation.parent_creation_id, out int parentCreationId))
-                creation.parent_player_username = database.PlayerCreations
-                    .Select(c => new { c.PlayerCreationId, c.Name })
-                    .FirstOrDefault(match => match.PlayerCreationId == parentCreationId)?.Name ?? "";
+            var lineage = database.PlayerCreations
+                .AsNoTracking()
+                .Where(c => c.PlayerCreationId == id)
+                .Select(c => new { c.OriginalPlayerId, c.ParentCreationId, c.ParentPlayerId })
+                .First();
+
+            int originalPlayerId = lineage.OriginalPlayerId != 0 ? lineage.OriginalPlayerId : creation.player_id;
+            creation.original_player_id = originalPlayerId.ToString();
+            creation.original_player_username = database.Users
+                .Where(u => u.UserId == originalPlayerId)
+                .Select(u => u.Username)
+                .FirstOrDefault() ?? "";
+
+            creation.parent_player_id = lineage.ParentPlayerId != 0 ? lineage.ParentPlayerId.ToString() : "";
+            creation.parent_player_username = lineage.ParentPlayerId != 0
+                ? database.Users.Where(u => u.UserId == lineage.ParentPlayerId).Select(u => u.Username).FirstOrDefault() ?? ""
+                : "";
+
+            creation.parent_creation_id = lineage.ParentCreationId != 0 ? lineage.ParentCreationId.ToString() : "";
+            creation.parent_creation_name = lineage.ParentCreationId != 0
+                ? database.PlayerCreations.Where(c => c.PlayerCreationId == lineage.ParentCreationId).Select(c => c.Name).FirstOrDefault() ?? ""
+                : "";
 
             if (user != null)
             {
@@ -588,18 +596,19 @@ namespace GameServer.Implementation.Player_Creation
             if (!IsCounted && session?.User != null && racesStarted == 1 &&
                 creation.player_creation_type == PlayerCreationType.TRACK.ToString())
             {
-                DateTime firstRace = database.PlayerCreationRacesStarted
+                DateTime? firstRace = database.PlayerCreationRacesStarted
                     .Where(race => race.PlayerCreationId == creation.id)
-                    .Min(race => race.StartedAt);
-                bool wasInFirstRace = database.OnlineRacesStarted.Any(race =>
+                    .Min(race => (DateTime?) race.StartedAt);
+                bool wasInFirstRace = firstRace != null && database.OnlineRacesStarted.Any(race =>
                     race.PlayerId == session.UserId &&
-                    race.StartedAt >= firstRace.AddSeconds(-10) &&
-                    race.StartedAt <= firstRace.AddSeconds(10)); // this is being generous in case of weird emulator quirks
+                    race.StartedAt >= firstRace.Value.AddSeconds(-10) &&
+                    race.StartedAt <= firstRace.Value.AddSeconds(10)); // this is being generous in case of weird emulator quirks
 
                 if (wasInFirstRace)
                     racesStarted = 0; // temporarily send this in the response to trigger the achivement, while not permanently altering anything in the db
             }
-
+            
+            creation.races_started = racesStarted;
             var resp = new Response<List<player_creation>>
             {
                 status = new ResponseStatus { id = 0, message = "Successful completion" },

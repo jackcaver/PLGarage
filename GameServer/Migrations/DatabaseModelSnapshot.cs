@@ -1529,10 +1529,7 @@ namespace GameServer.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("LastPing")
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime(6)");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlComputedColumn(b.Property<DateTime>("LastPing"));
 
                     b.Property<int>("Platform")
                         .HasColumnType("int");
@@ -1779,31 +1776,31 @@ namespace GameServer.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(2);
 
-                    b.Property<int>("PointsLastWeekPS3")
+                    b.Property<float>("PointsLastWeekPS3")
                         .HasColumnType("float");
 
-                    b.Property<int>("PointsLastWeekPSP")
+                    b.Property<float>("PointsLastWeekPSP")
                         .HasColumnType("float");
 
-                    b.Property<int>("PointsLastWeekPSV")
+                    b.Property<float>("PointsLastWeekPSV")
                         .HasColumnType("float");
 
-                    b.Property<int>("PointsPS3")
+                    b.Property<float>("PointsPS3")
                         .HasColumnType("float");
 
-                    b.Property<int>("PointsPSP")
+                    b.Property<float>("PointsPSP")
                         .HasColumnType("float");
 
-                    b.Property<int>("PointsPSV")
+                    b.Property<float>("PointsPSV")
                         .HasColumnType("float");
 
-                    b.Property<int>("PointsThisWeekPS3")
+                    b.Property<float>("PointsThisWeekPS3")
                         .HasColumnType("float");
 
-                    b.Property<int>("PointsThisWeekPSP")
+                    b.Property<float>("PointsThisWeekPSP")
                         .HasColumnType("float");
 
-                    b.Property<int>("PointsThisWeekPSV")
+                    b.Property<float>("PointsThisWeekPSV")
                         .HasColumnType("float");
 
                     b.Property<bool>("PolicyAccepted")
@@ -1852,8 +1849,8 @@ namespace GameServer.Migrations
 
                     b.Property<int>("TotalMNRTracksPSV")
                         .HasColumnType("int");
-                    
-                    b.Property<int>("TotalTracksPSV")
+
+                    b.Property<int>("TotalTracks")
                         .HasColumnType("int");
 
                     b.Property<float>("TotalXPLastWeekPS3")

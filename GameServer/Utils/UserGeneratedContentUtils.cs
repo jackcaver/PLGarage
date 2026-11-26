@@ -325,10 +325,9 @@ namespace GameServer.Utils
 
             if (!content.TryParse(data, platform == Platform.PSV))
                 return false;
-            
+
             //TODO: fix autoReset in track cmd file
             
-            data.Position = 0;
             return true;
         }
     }

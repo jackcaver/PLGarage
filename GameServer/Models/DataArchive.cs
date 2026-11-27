@@ -34,7 +34,7 @@ public class DataArchive
         var header = new byte[4];
         data.ReadExactly(header);
 
-        if (!header[0 .. 3].Equals("CTH"u8.ToArray()))
+        if (!header.AsSpan(0, 3).SequenceEqual("CTH"u8))
             throw new FormatException("Invalid header.");
         Version = header[3];
 

@@ -426,7 +426,7 @@ namespace GameServer.Implementation.Common
                                                     Platform = creation.Platform,
                                                     PlayerId = player.PlayerConnectId,
                                                     Username = user.Username,
-                                                    PlaygroupSize = player.PlaygroupSize,
+                                                    PlaygroupSize = info.IsMNR ? 0 : player.PlaygroupSize,
                                                     Points = player.Points,
                                                     SubGroupId = info.IsMNR ? (int)info.GameType - 10 : (int)info.GameType,
                                                     SubKeyId = info.TrackId,

@@ -3,6 +3,7 @@ services:
     image: mariadb:latest
     container_name: db
     restart: unless-stopped
+    command: --event-scheduler=ON
     environment:
       MARIADB_ROOT_PASSWORD: PLG
       MARIADB_DATABASE: PLGarage
